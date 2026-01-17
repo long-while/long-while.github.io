@@ -1,0 +1,142 @@
+.commission-guide {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.commission-guide h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.guide-section {
+  margin-bottom: 3rem;
+}
+
+.guide-section h2 {
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  color: #444;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+.process-list {
+  list-style: none;
+  counter-reset: step-counter;
+  padding: 0;
+}
+
+.process-list li {
+  counter-increment: step-counter;
+  margin-bottom: 2rem;
+  padding-left: 3rem;
+  position: relative;
+}
+
+.process-list li::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2rem;
+  height: 2rem;
+  background-color: #667eea;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.process-list li strong {
+  display: block;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.process-list li p {
+  color: #666;
+  line-height: 1.6;
+}
+
+.price-info {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.price-info p {
+  margin-bottom: 0.5rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+.notice-list {
+  list-style: none;
+  padding: 0;
+}
+
+.notice-list li {
+  padding: 0.75rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: #666;
+  line-height: 1.6;
+}
+
+.notice-list li::before {
+  content: '⚠';
+  position: absolute;
+  left: 0;
+  color: #ffa726;
+}
+
+@media (prefers-color-scheme: dark) {
+  .commission-guide h1 {
+    color: #fff;
+  }
+
+  .guide-section h2 {
+    color: #ddd;
+    border-bottom-color: #4dabf7;
+  }
+
+  .process-list li strong {
+    color: #fff;
+  }
+
+  .process-list li p {
+    color: #aaa;
+  }
+
+  .price-info {
+    background-color: #2a2a2a;
+    border-left-color: #4dabf7;
+  }
+
+  .price-info p {
+    color: #aaa;
+  }
+
+  .notice-list li {
+    color: #aaa;
+  }
+}
+
+@media (max-width: 768px) {
+  .commission-guide h1 {
+    font-size: 2rem;
+  }
+
+  .guide-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .process-list li {
+    padding-left: 2.5rem;
+  }
+}

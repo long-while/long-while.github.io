@@ -1,0 +1,347 @@
+/* --- Root & Reset --- */
+:root {
+    --bg-color: #ffffff;
+    --text-main: #1a1a1a;
+    --text-muted: #666;
+    --accent: #2d3436;
+    --border: #e1e1e1;
+    --box-bg: #f8f9fa;
+    --primary-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.home {
+    width: 100%;
+    font-family: var(--primary-font);
+    line-height: 1.7;
+    color: var(--text-main);
+    background: var(--bg-color);
+    word-break: keep-all;
+}
+
+.home .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* --- Header --- */
+.site-header {
+    padding: 5rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.site-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: -0.03em;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: #e3fcef;
+    color: #00b894;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.intro-text {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.quick-links a {
+    text-decoration: none;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    transition: all 0.2s ease;
+}
+
+.quick-links a:hover {
+    background: var(--box-bg);
+    border-color: var(--accent);
+}
+
+/* --- Sections --- */
+.document-section {
+    padding: 4rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+}
+
+/* --- Feature Grid --- */
+.feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.feature-card {
+    padding: 1.5rem;
+    background: var(--box-bg);
+    border-radius: 8px;
+}
+
+.feature-card h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.feature-card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* --- Pricing Menu --- */
+.pricing-group {
+    margin-bottom: 2rem;
+}
+
+.price-main {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.price-main .desc {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+.options-list {
+    margin-top: 1.5rem;
+    border-top: 1px dashed var(--border);
+    padding-top: 1rem;
+}
+
+.option-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+}
+
+.pricing-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.item-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+}
+
+.item-info p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.item-price {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.notice-box {
+    background: #fff9db;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.highlight-options {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--box-bg);
+    border-radius: 8px;
+}
+
+.highlight-options h4 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.highlight-options ul {
+    list-style: none;
+    padding: 0;
+}
+
+.highlight-options li {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+/* --- FAQ & TOS --- */
+.faq-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.faq-item {
+    margin-bottom: 1.5rem;
+}
+
+.question {
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+
+.answer {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    padding-left: 1.2rem;
+    border-left: 2px solid var(--border);
+}
+
+.tos-box {
+    background: #f1f3f5;
+    padding: 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.tos-box ul {
+    list-style: square;
+    padding-left: 1.2rem;
+}
+
+.tos-box li {
+    margin-bottom: 0.5rem;
+}
+
+/* --- Contact --- */
+.contact-area {
+    text-align: center;
+}
+
+.contact-area p {
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+}
+
+.contact-buttons {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    text-decoration: none;
+    padding: 0.8rem 2rem;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.btn:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.btn.primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn.primary:hover {
+    opacity: 0.9;
+}
+
+/* --- Mobile --- */
+@media (max-width: 600px) {
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .site-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .menu-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .contact-buttons {
+        flex-direction: column;
+    }
+
+    .home .container {
+        padding: 0 1rem;
+    }
+}
+
+/* --- Dark Mode Support --- */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1a1a1a;
+        --text-main: #ffffff;
+        --text-muted: #aaaaaa;
+        --border: #404040;
+        --accent: #ffffff;
+        --box-bg: #2a2a2a;
+    }
+
+    .status-badge {
+        background: #1e3a2f;
+        color: #4ade80;
+    }
+
+    .notice-box {
+        background: #2d2d1a;
+        color: #ddd;
+    }
+
+    .tos-box {
+        background: #2a2a2a;
+    }
+
+    .highlight-options {
+        background: #2a2a2a;
+    }
+}

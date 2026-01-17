@@ -1,0 +1,15 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+* {
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+input, textarea, button, select {
+  font-family: 'Noto Sans KR', sans-serif;
+}
