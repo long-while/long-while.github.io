@@ -7,7 +7,9 @@
 - React 18
 - TypeScript
 - Vite
-- React Router
+- Tailwind CSS
+- Radix UI
+- React Router (기존)
 - CSS3
 
 ## 설치 및 실행
@@ -42,14 +44,19 @@ npm run preview
 
 ## GitHub Pages 배포
 
-1. `vite.config.ts`에서 `base` 경로를 저장소 이름에 맞게 수정하세요.
-2. 빌드 후 `dist` 폴더의 내용을 GitHub Pages에 배포하세요.
+이 프로젝트는 `longwhile.github.io` 저장소에 배포됩니다.
+
+1. 빌드 후 `dist` 폴더의 내용을 GitHub Pages에 배포하세요.
+2. 또는 GitHub Actions를 설정하여 자동 배포할 수 있습니다.
 
 ## 프로젝트 구조
 
 ```
 ├── public/          # 정적 파일
-├── src/
+├── app/             # Figma에서 생성된 메인 앱
+│   ├── components/  # 재사용 가능한 컴포넌트
+│   └── contexts/    # React 컨텍스트
+├── src/             # 기존 소스 코드 (레거시)
 │   ├── components/  # 재사용 가능한 컴포넌트
 │   │   ├── Header.tsx
 │   │   └── Header.css
@@ -62,6 +69,8 @@ npm run preview
 │   ├── App.css
 │   ├── main.tsx     # React 엔트리 포인트
 │   └── index.css    # 전역 스타일
+├── styles/          # 전역 스타일 (Tailwind CSS 포함)
+├── imports/         # Figma에서 import된 컴포넌트
 ├── index.html       # HTML 엔트리 포인트
 ├── package.json
 ├── tsconfig.json
