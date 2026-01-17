@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { EstimateProvider } from "@/app/contexts/EstimateContext";
 import Navigation from "@/app/components/Navigation";
 import Header from "@/app/components/Header";
@@ -15,10 +15,17 @@ type PageType = 'home' | 'server' | 'bot' | 'estimate' | 'faq' | 'terms';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
+  const currentPageRef = useRef<PageType>('home');
   const faqRef = useRef<HTMLDivElement>(null);
   const termsRef = useRef<HTMLDivElement>(null);
+  const isUpdatingHashRef = useRef(false);
 
-  const handleNavigate = (page: string) => {
+  // currentPage가 변경될 때마다 ref 업데이트
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+
+  const handleNavigate = useCallback((page: string) => {
     if (page === 'faq') {
       setCurrentPage('home');
       setTimeout(() => {
@@ -34,26 +41,64 @@ function AppContent() {
       // 페이지 이동 시 즉시 스크롤을 맨 위로 이동
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
-  };
+  }, []);
 
-  // URL hash 변경 처리
+  // URL hash 변경 처리 (브라우저 뒤로가기/앞으로가기 포함)
   useEffect(() => {
     const handleHashChange = () => {
+      // 무한 루프 방지: 프로그래밍 방식으로 hash를 변경할 때는 무시
+      if (isUpdatingHashRef.current) {
+        return;
+      }
+
       const hash = window.location.hash.slice(1);
-      if (hash && ['home', 'server', 'bot', 'estimate', 'faq', 'terms'].includes(hash)) {
-        handleNavigate(hash);
+      
+      // hash가 빈 문자열이거나 'home'인 경우 홈으로 이동
+      if (!hash || hash === 'home') {
+        if (currentPageRef.current !== 'home') {
+          setCurrentPage('home');
+        }
+      } else if (['server', 'bot', 'estimate', 'faq', 'terms'].includes(hash)) {
+        if (currentPageRef.current !== hash) {
+          handleNavigate(hash);
+        }
       }
     };
 
+    // 초기 로드 시 hash 확인
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [handleNavigate]);
 
-  // 페이지 변경 시 hash 업데이트
+  // 페이지 변경 시 hash 업데이트 (무한 루프 방지)
   useEffect(() => {
-    if (currentPage !== 'home' || window.location.hash !== '') {
-      window.location.hash = currentPage === 'home' ? '' : currentPage;
+    // hashchange 이벤트로 인한 변경은 무시
+    if (isUpdatingHashRef.current) {
+      return;
+    }
+
+    const currentHash = window.location.hash.slice(1);
+    const expectedHash = currentPage === 'home' ? '' : currentPage;
+
+    // hash와 currentPage가 동기화되어 있는지 확인
+    if (currentHash !== expectedHash) {
+      isUpdatingHashRef.current = true;
+      
+      if (currentPage === 'home') {
+        // home 페이지일 때는 hash를 제거
+        if (window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      } else {
+        // 다른 페이지일 때는 hash 설정
+        window.location.hash = currentPage;
+      }
+      
+      // 다음 이벤트 루프에서 플래그 리셋
+      setTimeout(() => {
+        isUpdatingHashRef.current = false;
+      }, 0);
     }
   }, [currentPage]);
 

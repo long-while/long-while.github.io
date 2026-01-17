@@ -44,7 +44,7 @@ export default function FAQ() {
 
   return (
     <section className="py-15">
-      <div className="mb-16 border-b-2 border-black pb-4">
+      <div className="mb-10 border-b-2 border-black pb-4">
         <h2 className="text-[32px] tracking-[-0.01em] font-semibold">
           자주 묻는 질문
         </h2>

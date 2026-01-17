@@ -10,6 +10,7 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
   const [showToast, setShowToast] = useState(false);
+  const [isHidingToast, setIsHidingToast] = useState(false);
   const [operationWeeks, setOperationWeeks] = useState(0);
 
   const isItemInEstimate = (name: string) => {
@@ -39,9 +40,14 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
       
       // 토스트 표시
       if (newWeeks > oldWeeks) {
+        setIsHidingToast(false);
         setShowToast(true);
         setTimeout(() => {
-          setShowToast(false);
+          setIsHidingToast(true);
+          setTimeout(() => {
+            setShowToast(false);
+            setIsHidingToast(false);
+          }, 300); // 애니메이션 지속 시간
         }, 2000);
       }
     }
@@ -68,9 +74,14 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
       });
       
       // 토스트 표시
+      setIsHidingToast(false);
       setShowToast(true);
       setTimeout(() => {
-        setShowToast(false);
+        setIsHidingToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+          setIsHidingToast(false);
+        }, 300); // 애니메이션 지속 시간
       }, 2000);
       
       // 추가됨 표시
@@ -512,7 +523,11 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
       {/* 토스트 알림 */}
       {showToast && (
         <div className="fixed bottom-8 left-0 right-0 flex justify-center z-50 pointer-events-none">
-          <div className="bg-[#ff7b00] text-white px-8 py-4 rounded-full shadow-lg text-[16px] font-medium animate-[slideUpSimple_0.3s_ease-out]">
+          <div className={`bg-[#ff7b00] text-white px-8 py-4 rounded-full shadow-lg text-[16px] font-medium ${
+            isHidingToast 
+              ? 'animate-[slideDownSimple_0.3s_ease-out]' 
+              : 'animate-[slideUpSimple_0.3s_ease-out]'
+          }`}>
             견적에 추가되었습니다!
           </div>
         </div>
