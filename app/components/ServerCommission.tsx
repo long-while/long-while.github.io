@@ -10,6 +10,7 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
   const [showToast, setShowToast] = useState(false);
+  const [isHidingToast, setIsHidingToast] = useState(false);
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
@@ -36,9 +37,14 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
       });
       
       // 토스트 표시
+      setIsHidingToast(false);
       setShowToast(true);
       setTimeout(() => {
-        setShowToast(false);
+        setIsHidingToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+          setIsHidingToast(false);
+        }, 300); // 애니메이션 지속 시간
       }, 2000);
       
       // 추가됨 표시
@@ -107,10 +113,10 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
           </div>
         </div>
 
-        {/* 기본 안내 */}
-        <section className="py-15">
+        {/* 공지 */}
+        <section className="py-13">
           <div className="mb-16 border-b-2 border-black pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">기본 안내</h2>
+            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">공지</h2>
           </div>
           
           <div className="max-w-4xl space-y-6 text-[17px] leading-[1.8]">
@@ -297,7 +303,11 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
       {/* 토스트 알림 */}
       {showToast && (
         <div className="fixed bottom-8 left-0 right-0 flex justify-center z-50 pointer-events-none">
-          <div className="bg-[#ff7b00] text-white px-8 py-4 rounded-full shadow-lg text-[16px] font-medium animate-[slideUpSimple_0.3s_ease-out]">
+          <div className={`bg-[#ff7b00] text-white px-8 py-4 rounded-full shadow-lg text-[16px] font-medium ${
+            isHidingToast 
+              ? 'animate-[slideDownSimple_0.3s_ease-out]' 
+              : 'animate-[slideUpSimple_0.3s_ease-out]'
+          }`}>
             견적에 추가되었습니다!
           </div>
         </div>

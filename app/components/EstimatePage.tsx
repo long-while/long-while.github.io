@@ -1,7 +1,18 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
+import { Trash2 } from 'lucide-react';
 
 interface EstimatePageProps {
   onBack: () => void;
+}
+
+// 설명에서 [대괄호] 안의 명령어만 추출하는 함수
+function extractCommands(description: string): string {
+  const regex = /\[([^\]]+)\]/g;
+  const matches = description.match(regex);
+  if (!matches || matches.length === 0) {
+    return description; // 대괄호가 없으면 원본 반환
+  }
+  return matches.join(', ');
 }
 
 export default function EstimatePage({ onBack }: EstimatePageProps) {
@@ -20,7 +31,7 @@ export default function EstimatePage({ onBack }: EstimatePageProps) {
         </button>
 
         {/* 타이틀 */}
-        <div className="mb-32">
+        <div className="mb-16">
           <div className="pb-2 mb-8">
             <h1 className="text-[48px] leading-[0.95] tracking-[-0.03em] font-bold text-[#ff7b00]">
               내 견적 확인하기
@@ -66,36 +77,34 @@ export default function EstimatePage({ onBack }: EstimatePageProps) {
                 <h2 className="text-[32px] tracking-[-0.01em]">선택한 항목</h2>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-0 border-t border-black/10">
                 {items.map((item, index) => (
                   <div
                     key={item.id}
-                    className="border-2 border-black/10 p-5 hover:border-[#ff7b00]/30 transition-colors"
+                    className="border-b border-black/10 p-5 hover:bg-black/[0.01] transition-colors"
                   >
                     <div className="flex items-start gap-4">
-                      <span className="text-[12px] font-mono text-[#ff7b00] mt-1">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6 flex-1">
-                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
-                          <h3 className="text-[17px] text-black font-semibold">{item.name}</h3>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col gap-2 mb-4">
+                          <h3 className="text-[17px] text-black font-semibold break-words">
+                            {item.name}
+                          </h3>
                           {item.description && (
-                            <span className="text-[14px] leading-[1.6] text-foreground/60">
-                              {item.description}
-                            </span>
+                            <p className="text-[14px] leading-[1.6] text-foreground/60 break-words">
+                              {extractCommands(item.description)}
+                            </p>
                           )}
                         </div>
-                        <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
-                          <span className="text-[17px] font-mono text-[#ff7b00]">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-[17px] font-mono text-[#ff7b00] shrink-0">
                             ₩{item.price.toLocaleString()}
                           </span>
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="px-3 py-1.5 border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[13px] flex items-center gap-1.5"
+                            className="w-10 h-10 rounded-full bg-[#ff7b00] hover:bg-[#ff7b00]/80 text-white flex items-center justify-center transition-all shrink-0"
                             aria-label="삭제"
                           >
-                            <span>×</span>
-                            <span>삭제</span>
+                            <Trash2 size={18} />
                           </button>
                         </div>
                       </div>
@@ -115,8 +124,8 @@ export default function EstimatePage({ onBack }: EstimatePageProps) {
                   </span>
                 </div>
                 <p className="text-[15px] text-foreground/70">
-                  * 최종 견적은 작업 난이도와 일정에 따라 달라질 수 있습니다.<br />
-                  * 정확한 견적은 신청서 제출 후 확인해드립니다.
+                  • 최종 견적은 작업 난이도와 일정에 따라 달라질 수 있습니다.<br />
+                  • 정확한 견적은 신청서 제출 후 확인해드립니다.
                 </p>
               </div>
             </section>
@@ -124,26 +133,17 @@ export default function EstimatePage({ onBack }: EstimatePageProps) {
             {/* 안내사항 */}
             <section className="mb-16">
               <div className="bg-black/[0.02] border-2 border-black/10 p-8">
-                <h3 className="text-[18px] mb-4 flex items-center gap-2">
-                  <span className="text-[#ff7b00]">ℹ️</span>
+                <h3 className="text-[18px] mb-4">
                   안내사항
                 </h3>
                 <ul className="space-y-2 text-[15px] leading-[1.8] text-foreground/70">
                   <li className="flex gap-3">
                     <span className="text-[#ff7b00]">•</span>
-                    <span>자동봇 구동비는 주당 ₩5,000이며, 실제 구동 기간만큼만 청구됩니다.</span>
+                    <span>자동봇 구동비는 일주일에 5천원이며, 테스트 기간을 제외한 구동 기간을 주 단위로 반올림하여 청구합니다.</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="text-[#ff7b00]">•</span>
-                    <span>서버비는 별도이며, 구글 클라우드 플랫폼에 직접 결제하게 됩니다.</span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="text-[#ff7b00]">•</span>
-                    <span>빠른마감이 필요한 경우 추가금이 발생할 수 있습니다.</span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="text-[#ff7b00]">•</span>
-                    <span>견적은 자동 저장되지 않습니다. 캡처하거나 메모해두세요.</span>
+                    <span>빠른 마감이 필요한 경우 추가금이 발생할 수 있습니다.</span>
                   </li>
                 </ul>
               </div>
