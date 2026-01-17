@@ -44,7 +44,7 @@ npm run preview
 
 ## GitHub Pages 배포
 
-이 프로젝트는 `longwhile.github.io` 저장소에 배포됩니다.
+이 프로젝트는 `long-while.github.io` 저장소에 배포됩니다.
 
 1. 빌드 후 `dist` 폴더의 내용을 GitHub Pages에 배포하세요.
 2. 또는 GitHub Actions를 설정하여 자동 배포할 수 있습니다.
