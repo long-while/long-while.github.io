@@ -1,10 +1,40 @@
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEffect } from 'react';
+import { ShoppingCart } from 'lucide-react';
+
+// 견적에서 선택됨 배지 컴포넌트
+function FromCartBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-[11px] font-medium rounded-full ml-2">
+      <ShoppingCart className="w-3 h-3" />
+      견적에서 선택됨
+    </span>
+  );
+}
 
 export default function Step3Bot() {
-  const { formData, updateStep3 } = useOrder();
+  const { formData, updateStep3, cartSyncState } = useOrder();
   const step3 = formData.step3;
   const step1 = formData.step1;
+
+  // 견적에서 동기화된 항목인지 확인
+  const isFromCart = (itemName: string) => {
+    return cartSyncState?.syncedItems?.some(name => 
+      name.includes(itemName) || itemName.includes(name)
+    ) ?? false;
+  };
+
+  // 봇 타입이 견적에서 선택되었는지
+  const basicBotFromCart = isFromCart('기본 타입');
+  const basicShopBotFromCart = isFromCart('기본&상점 타입') && !isFromCart('기본&상점&스탯');
+  const basicShopStatBotFromCart = isFromCart('기본&상점&스탯 타입');
+  // 추가 기능이 견적에서 선택되었는지
+  const cocBotFromCart = isFromCart('CoC');
+  const reservationFromCart = isFromCart('예약 툿');
+  const autoProfileFromCart = isFromCart('스토리 자동 진행');
+  const tootCurrencyFromCart = isFromCart('툿수 자동 재화 반영');
+  const transferFromCart = isFromCart('양도 기능');
+  const omakaseFromCart = isFromCart('오마카세');
 
   // 운영 주수 동기화
   useEffect(() => {
@@ -77,6 +107,7 @@ export default function Step3Bot() {
         <label className="block">
           <span className="text-[18px] font-medium">
             1) 자동봇을 신청하시나요? <span className="text-red-500">*</span>
+            {step3.applyBot === 'yes' && (basicBotFromCart || basicShopBotFromCart || basicShopStatBotFromCart || cocBotFromCart || omakaseFromCart) && <FromCartBadge />}
           </span>
         </label>
         <div className="flex gap-4">
@@ -201,7 +232,10 @@ export default function Step3Bot() {
                   className="mt-1 w-4 h-4 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-[14px]">기본</div>
+                  <div className="font-medium text-[14px]">
+                    기본
+                    {basicBotFromCart && step3.mainBot === 'basic' && <FromCartBadge />}
+                  </div>
                   <div className="text-[13px] text-gray-600 mt-1">15,000원</div>
                 </div>
               </label>
@@ -222,7 +256,10 @@ export default function Step3Bot() {
                   className="mt-1 w-4 h-4 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-[14px]">기본+상점</div>
+                  <div className="font-medium text-[14px]">
+                    기본+상점
+                    {basicShopBotFromCart && step3.mainBot === 'basicShop' && <FromCartBadge />}
+                  </div>
                   <div className="text-[13px] text-gray-600 mt-1">35,000원</div>
                 </div>
               </label>
@@ -243,7 +280,10 @@ export default function Step3Bot() {
                   className="mt-1 w-4 h-4 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-[14px]">기본+상점+스탯</div>
+                  <div className="font-medium text-[14px]">
+                    기본+상점+스탯
+                    {basicShopStatBotFromCart && step3.mainBot === 'basicShopStat' && <FromCartBadge />}
+                  </div>
                   <div className="text-[13px] text-gray-600 mt-1">45,000원</div>
                 </div>
               </label>
@@ -255,7 +295,11 @@ export default function Step3Bot() {
             <h3 className="text-[18px] font-medium">4) 추가 기능 선택</h3>
 
             {/* CoC 봇 */}
-            <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+            <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+              step3.cocBot 
+                ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+            }`}>
               <input
                 type="checkbox"
                 checked={step3.cocBot}
@@ -263,13 +307,20 @@ export default function Step3Bot() {
                 className="mt-1 w-4 h-4 accent-[#ff7b00]"
               />
               <div className="flex-1">
-                <div className="font-medium text-[14px]">CoC 봇</div>
+                <div className="font-medium text-[14px]">
+                  CoC 봇
+                  {cocBotFromCart && step3.cocBot && <FromCartBadge />}
+                </div>
                 <div className="text-[13px] text-gray-600 mt-1">+30,000원</div>
               </div>
             </label>
 
             {/* 예약 툿 */}
-            <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+            <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+              step3.reservationToot 
+                ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+            }`}>
               <input
                 type="checkbox"
                 checked={step3.reservationToot}
@@ -277,13 +328,20 @@ export default function Step3Bot() {
                 className="mt-1 w-4 h-4 accent-[#ff7b00]"
               />
               <div className="flex-1">
-                <div className="font-medium text-[14px]">예약 툿</div>
+                <div className="font-medium text-[14px]">
+                  예약 툿
+                  {reservationFromCart && step3.reservationToot && <FromCartBadge />}
+                </div>
                 <div className="text-[13px] text-gray-600 mt-1">+5,000원</div>
               </div>
             </label>
 
             {/* 자동 스진 */}
-            <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+            <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+              step3.autoProfileImage 
+                ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+            }`}>
               <input
                 type="checkbox"
                 checked={step3.autoProfileImage}
@@ -291,7 +349,10 @@ export default function Step3Bot() {
                 className="mt-1 w-4 h-4 accent-[#ff7b00]"
               />
               <div className="flex-1">
-                <div className="font-medium text-[14px]">자동 스진</div>
+                <div className="font-medium text-[14px]">
+                  자동 스진
+                  {autoProfileFromCart && step3.autoProfileImage && <FromCartBadge />}
+                </div>
                 <div className="text-[13px] text-gray-600 mt-1">+5,000원</div>
               </div>
             </label>
@@ -332,7 +393,11 @@ export default function Step3Bot() {
 
             {/* 툿-재화 연동 */}
             <div className="space-y-3">
-              <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+              <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+                step3.tootCurrencyLink 
+                  ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                  : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              }`}>
                 <input
                   type="checkbox"
                   checked={step3.tootCurrencyLink}
@@ -340,7 +405,10 @@ export default function Step3Bot() {
                   className="mt-1 w-4 h-4 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-[14px]">툿-재화 연동</div>
+                  <div className="font-medium text-[14px]">
+                    툿-재화 연동
+                    {tootCurrencyFromCart && step3.tootCurrencyLink && <FromCartBadge />}
+                  </div>
                   <div className="text-[13px] text-gray-600 mt-1">+7,000원</div>
                 </div>
               </label>
@@ -365,7 +433,11 @@ export default function Step3Bot() {
             {/* 양도 기능 (조건부) */}
             {showTransferFeature && (
               <div className="space-y-3">
-                <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+                <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+                  step3.transferFeature 
+                    ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                    : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                }`}>
                   <input
                     type="checkbox"
                     checked={step3.transferFeature}
@@ -373,7 +445,10 @@ export default function Step3Bot() {
                     className="mt-1 w-4 h-4 accent-[#ff7b00]"
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-[14px]">양도 기능</div>
+                    <div className="font-medium text-[14px]">
+                      양도 기능
+                      {transferFromCart && step3.transferFeature && <FromCartBadge />}
+                    </div>
                     <div className="text-[13px] text-gray-600 mt-1">+10,000원</div>
                   </div>
                 </label>
@@ -420,7 +495,11 @@ export default function Step3Bot() {
 
             {/* 오마카세 봇 */}
             <div className="space-y-3">
-              <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+              <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+                step3.omakaseBot 
+                  ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                  : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              }`}>
                 <input
                   type="checkbox"
                   checked={step3.omakaseBot}
@@ -428,7 +507,10 @@ export default function Step3Bot() {
                   className="mt-1 w-4 h-4 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-[14px]">오마카세 봇</div>
+                  <div className="font-medium text-[14px]">
+                    오마카세 봇
+                    {omakaseFromCart && step3.omakaseBot && <FromCartBadge />}
+                  </div>
                   <div className="text-[13px] text-gray-600 mt-1">⚠️ 가격 상이 (별도 협의)</div>
                 </div>
               </label>

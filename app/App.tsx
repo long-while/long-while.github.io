@@ -11,6 +11,7 @@ import FAQ from "@/app/components/FAQ";
 import Terms from "@/app/components/Terms";
 import Footer from "@/app/components/Footer";
 import OrderApp from "@/app/components/order/OrderApp";
+import FloatingEstimateButton from "@/app/components/FloatingEstimateButton";
 import type { PageType } from "@/app/types/navigation";
 
 // 초기 hash 값에 따라 초기 페이지 상태 결정
@@ -137,9 +138,10 @@ function AppContent() {
       <>
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="pt-16">
-          <ServerCommission onBack={() => setCurrentPage('home')} />
+          <ServerCommission onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
           <Footer onNavigate={handleNavigate} />
         </div>
+        <FloatingEstimateButton onNavigate={handleNavigate} currentPage={currentPage} />
       </>
     );
   }
@@ -149,9 +151,10 @@ function AppContent() {
       <>
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="pt-16">
-          <BotCommission onBack={() => setCurrentPage('home')} />
+          <BotCommission onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
           <Footer onNavigate={handleNavigate} />
         </div>
+        <FloatingEstimateButton onNavigate={handleNavigate} currentPage={currentPage} />
       </>
     );
   }
@@ -191,6 +194,7 @@ function AppContent() {
         </div>
         <Footer onNavigate={handleNavigate} />
       </div>
+      <FloatingEstimateButton onNavigate={handleNavigate} currentPage={currentPage} />
     </>
   );
 }

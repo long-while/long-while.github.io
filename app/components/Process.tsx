@@ -119,7 +119,7 @@ export default function Process() {
       </div>
 
       {/* 상세 진행 과정 토글 */}
-      <div className="border-2 border-black/10">
+      <div className="border-2 border-black/10 overflow-hidden">
         <button
           onClick={() => setShowDetailedSteps(!showDetailedSteps)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
@@ -127,11 +127,15 @@ export default function Process() {
           <span className="text-[16px] font-medium">
             자세한 진행 과정 보기 (8단계)
           </span>
-          <ChevronDownIcon className={`w-5 h-5 transition-transform ${showDetailedSteps ? 'rotate-180' : ''}`} />
+          <ChevronDownIcon className={`w-5 h-5 transition-transform duration-300 ${showDetailedSteps ? 'rotate-180' : ''}`} />
         </button>
         
-        {showDetailedSteps && (
-          <div className="border-t border-black/10 px-6 py-6 space-y-6">
+        <div 
+          className={`border-t border-black/10 transition-all duration-300 ease-in-out ${
+            showDetailedSteps ? 'max-h-[1500px] opacity-100' : 'max-h-0 opacity-0 border-t-0'
+          }`}
+        >
+          <div className="px-6 py-6 space-y-6">
             {detailedSteps.map((step, index) => (
               <div key={index} className="flex gap-6">
                 <div className="text-[12px] font-mono text-[var(--brand-primary)] shrink-0 mt-1">
@@ -153,7 +157,7 @@ export default function Process() {
               </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
     </section>
   );

@@ -1,16 +1,16 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState } from 'react';
 import { Plus, Trash2, Minus } from 'lucide-react';
+import type { NavigateFunction } from '@/app/types/navigation';
 
 interface BotCommissionProps {
   onBack: () => void;
+  onNavigate?: NavigateFunction;
 }
 
-export default function BotCommission({ onBack }: BotCommissionProps) {
+export default function BotCommission({ onBack, onNavigate }: BotCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
-  const [showToast, setShowToast] = useState(false);
-  const [isHidingToast, setIsHidingToast] = useState(false);
   const [operationWeeks, setOperationWeeks] = useState(0);
 
   const isItemInEstimate = (name: string) => {
@@ -20,7 +20,6 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
   const handleOperationWeeksChange = (newWeeks: number) => {
     if (newWeeks < 0) return;
     
-    const oldWeeks = operationWeeks;
     setOperationWeeks(newWeeks);
     
     // 기존 가동료 항목 제거
@@ -37,19 +36,6 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
         category: 'bot',
         description: `1주당 ₩5,000 × ${newWeeks}주`,
       });
-      
-      // 토스트 표시
-      if (newWeeks > oldWeeks) {
-        setIsHidingToast(false);
-        setShowToast(true);
-        setTimeout(() => {
-          setIsHidingToast(true);
-          setTimeout(() => {
-            setShowToast(false);
-            setIsHidingToast(false);
-          }, 300); // 애니메이션 지속 시간
-        }, 2000);
-      }
     }
   };
 
@@ -72,17 +58,6 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
         category: 'bot',
         description,
       });
-      
-      // 토스트 표시
-      setIsHidingToast(false);
-      setShowToast(true);
-      setTimeout(() => {
-        setIsHidingToast(true);
-        setTimeout(() => {
-          setShowToast(false);
-          setIsHidingToast(false);
-        }, 300); // 애니메이션 지속 시간
-      }, 2000);
       
       // 추가됨 표시
       setAddedItems(prev => new Set(prev).add(name));
@@ -198,7 +173,7 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
         {/* 뒤로가기 버튼 */}
         <button
           onClick={onBack}
-          className="mb-16 flex items-center gap-3 text-[14px] hover:text-[#ff7b00] transition-colors text-foreground/60"
+          className="mb-16 flex items-center gap-3 text-[14px] min-h-[44px] hover:text-[#ff7b00] transition-colors text-foreground/70 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 rounded"
         >
           <span className="text-[18px]">←</span>
           메인으로 돌아가기
@@ -233,6 +208,17 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
             <p className="text-foreground/70">
               개발 중에 요청 기능이 늘어나거나 구현 방식이 변경될 경우 추가금이 발생하거나 마감일이 변경될 수 있습니다.<br />
               봇 가동 중 사전에 발견하지 못한 오류가 발생할 경우 무료로 유지보수를 진행합니다.
+            </p>
+            
+            <p className="text-foreground/70">
+              서버 설치도 함께 필요하시다면{' '}
+              <button 
+                onClick={() => onNavigate?.('server')}
+                className="text-[#ff7b00] hover:underline"
+              >
+                서버 설치 커미션 페이지
+              </button>
+              를 확인해주세요.
             </p>
           </div>
         </section>
@@ -308,7 +294,7 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => handleOperationWeeksChange(Math.max(0, operationWeeks - 1))}
-                  className="w-10 h-10 rounded-full border-2 border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white transition-all text-[20px] flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white transition-all text-[20px] flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
                   disabled={operationWeeks === 0}
                   aria-label="1주 감소"
                 >
@@ -317,7 +303,7 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
                 <span className="text-[20px] font-mono min-w-[80px] text-center">{operationWeeks} 주</span>
                 <button
                   onClick={() => handleOperationWeeksChange(operationWeeks + 1)}
-                  className="w-10 h-10 rounded-full border-2 border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white transition-all text-[20px] flex items-center justify-center"
+                  className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white transition-all text-[20px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
                   aria-label="1주 추가"
                 >
                   <Plus className="w-5 h-5" />
@@ -350,7 +336,7 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
                     {type.price > 0 && (
                       <button
                         onClick={() => handleToggleEstimate(type.name, type.price, type.features.join(', '))}
-                        className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                        className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
                           isItemInEstimate(type.name) 
                             ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                             : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
@@ -402,7 +388,7 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
                               type.upgradeOption.price,
                               type.upgradeOption.description
                             )}
-                            className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                            className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
                               isItemInEstimate(`${type.name} - ${type.upgradeOption.name}`) 
                                 ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                                 : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
@@ -443,7 +429,7 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
                                     option.price,
                                     option.description
                                   )}
-                                  className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                                  className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
                                     isItemInEstimate(`${type.name} - ${option.name}`) 
                                       ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                                       : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
@@ -494,7 +480,7 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
                           option.price,
                           option.note || option.description
                         )}
-                        className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                        className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
                           isItemInEstimate(option.name) 
                             ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                             : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
@@ -519,19 +505,6 @@ export default function BotCommission({ onBack }: BotCommissionProps) {
         </section>
 
       </div>
-
-      {/* 토스트 알림 */}
-      {showToast && (
-        <div className="fixed bottom-8 left-0 right-0 flex justify-center z-50 pointer-events-none">
-          <div className={`bg-[#ff7b00] text-white px-8 py-4 rounded-full shadow-lg text-[16px] font-medium ${
-            isHidingToast 
-              ? 'animate-[slideDownSimple_0.3s_ease-out]' 
-              : 'animate-[slideUpSimple_0.3s_ease-out]'
-          }`}>
-            견적에 추가되었습니다!
-          </div>
-        </div>
-      )}
     </div>
   );
 }
