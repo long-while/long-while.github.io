@@ -1,6 +1,6 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, Minus, AlertTriangle, Info } from 'lucide-react';
+import { Plus, Minus, AlertTriangle, Info, Check } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
 
 interface BotCommissionProps {
@@ -444,19 +444,6 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">봇 타입 상세</h2>
           </div>
           
-          {/* 봇 타입 선택 안내 */}
-          <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[14px] text-blue-800 font-medium">봇 타입 선택 안내</p>
-              <p className="text-[13px] text-blue-700 mt-1">
-                기본&상점 타입은 기본 타입의 모든 기능을 포함합니다.<br/>
-                기본&상점&스탯 타입은 기본&상점 타입의 모든 기능을 포함합니다.<br/>
-                CoC 타입은 기본 타입의 모든 기능을 포함합니다.
-              </p>
-            </div>
-          </div>
-          
           {/* 중복 선택 경고 */}
           {getDuplicateWarnings.length > 0 && (
             <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-400 rounded-lg flex items-start gap-3">
@@ -473,35 +460,50 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           )}
           
           <div className="space-y-8">
-            {botTypes.map((type, index) => (
-              <div key={index} className={`border-2 transition-colors ${isItemInEstimate(type.name) ? 'border-[#ff7b00]' : 'border-black/10 hover:border-[#ff7b00]/30'}`}>
-                <div className="flex justify-between items-center p-8 bg-black/[0.01] border-b-2 border-black/10">
-                  <div className="flex-1">
-                    <h3 className="text-[26px]">{type.name}</h3>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[22px] font-mono text-[#ff7b00]">
-                      {type.price ? `₩${type.price.toLocaleString()}` : '협의'}
-                    </span>
+            {botTypes.map((type, index) => {
+              const typeSelected = isItemInEstimate(type.name);
+              const headerContent = (
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+                  <div className="flex items-start gap-4 flex-1">
                     {type.price > 0 && (
-                      <button
-                        onClick={() => handleToggleEstimate(type.name, type.price, type.features.join(', '))}
-                        className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                          isItemInEstimate(type.name) 
-                            ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
-                            : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
+                      <div
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${
+                          typeSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
                         }`}
-                        aria-label={isItemInEstimate(type.name) ? '견적에서 제거' : '견적에 추가'}
+                        aria-hidden
                       >
-                        {isItemInEstimate(type.name) ? (
-                          <Trash2 className="w-5 h-5" />
-                        ) : (
-                          <Plus className="w-5 h-5" />
-                        )}
-                      </button>
+                        {typeSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                      </div>
                     )}
+                    <div>
+                      <h3 className="text-[26px] font-semibold text-black">{type.name}</h3>
+                      {type.features[0] && (
+                        <span className="text-[14px] leading-[1.6] text-foreground/60">{type.features[0]}</span>
+                      )}
+                    </div>
                   </div>
+                  <span className="text-[22px] font-mono text-[#ff7b00] shrink-0 md:pl-0">
+                    {type.price ? `₩${type.price.toLocaleString()}` : '협의'}
+                  </span>
                 </div>
+              );
+              return (
+              <div key={index} className={`border-2 transition-colors ${typeSelected ? 'border-[#ff7b00] bg-[#fff5eb]/30' : 'border-black/10 hover:border-[#ff7b00]/30'}`}>
+                {type.price > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => handleToggleEstimate(type.name, type.price, type.features.join(', '))}
+                    className="w-full flex justify-between items-center p-8 bg-black/[0.01] border-b-2 border-black/10 text-left hover:bg-[#fff5eb]/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                    aria-pressed={typeSelected}
+                    aria-label={typeSelected ? `${type.name} 견적에서 제거` : `${type.name} 견적에 추가`}
+                  >
+                    {headerContent}
+                  </button>
+                ) : (
+                  <div className="flex justify-between items-center p-8 bg-black/[0.01] border-b-2 border-black/10">
+                    {headerContent}
+                  </div>
+                )}
                 
                 <div className="p-8 space-y-6">
                   <ul className="space-y-3">
@@ -521,40 +523,35 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                     </div>
                   )}
 
-                  {type.upgradeOption && (
-                    <div className={`p-5 mt-6 border-2 transition-all ${isItemInEstimate(`${type.name} - ${type.upgradeOption.name}`) ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
-                          <h4 className="text-[17px] text-black font-semibold">{type.upgradeOption.name}</h4>
-                          <span className="text-[14px] leading-[1.6] text-foreground/60">
-                            {type.upgradeOption.description}
-                          </span>
+                  {type.upgradeOption && (() => {
+                    const optName = `${type.name} - ${type.upgradeOption!.name}`;
+                    const optSelected = isItemInEstimate(optName);
+                    return (
+                      <button
+                        key={optName}
+                        type="button"
+                        onClick={() => handleToggleEstimate(optName, type.upgradeOption!.price, type.upgradeOption!.description)}
+                        className={`w-full mt-6 p-5 border-2 transition-all text-left ${
+                          optSelected ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                        } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                        aria-pressed={optSelected}
+                        aria-label={optSelected ? `${type.upgradeOption!.name} 견적에서 제거` : `${type.upgradeOption!.name} 견적에 추가`}
+                      >
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+                          <div className="flex items-start gap-4 flex-1">
+                            <div className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${optSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'}`} aria-hidden>
+                              {optSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                            </div>
+                            <div>
+                              <h4 className="text-[17px] text-black font-semibold">{type.upgradeOption!.name}</h4>
+                              <span className="text-[14px] leading-[1.6] text-foreground/60">{type.upgradeOption!.description}</span>
+                            </div>
+                          </div>
+                          <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">{type.upgradeOption!.price === 0 ? '협의' : `₩${type.upgradeOption!.price.toLocaleString()}`}</span>
                         </div>
-                        <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
-                          <span className="text-[17px] font-mono text-[#ff7b00]">₩{type.upgradeOption.price.toLocaleString()}</span>
-                          <button
-                            onClick={() => handleToggleEstimate(
-                              `${type.name} - ${type.upgradeOption.name}`,
-                              type.upgradeOption.price,
-                              type.upgradeOption.description
-                            )}
-                            className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                              isItemInEstimate(`${type.name} - ${type.upgradeOption.name}`) 
-                                ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
-                                : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
-                            }`}
-                            aria-label={isItemInEstimate(`${type.name} - ${type.upgradeOption.name}`) ? '견적에서 제거' : '견적에 추가'}
-                          >
-                            {isItemInEstimate(`${type.name} - ${type.upgradeOption.name}`) ? (
-                              <Trash2 className="w-5 h-5" />
-                            ) : (
-                              <Plus className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                      </button>
+                    );
+                  })()}
 
                   {type.options && (
                     <div className="mt-6 pt-6 border-t-2 border-black/10">
@@ -562,46 +559,42 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                         추가 옵션
                       </div>
                       <div className="space-y-3">
-                        {type.options.map((option, i) => (
-                          <div key={i} className={`border-2 p-5 transition-all ${isItemInEstimate(`${type.name} - ${option.name}`) ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
-                            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
-                                <h4 className="text-[17px] text-black font-semibold">{option.name}</h4>
-                                <span className="text-[14px] leading-[1.6] text-foreground/60">
-                                  {option.description}
-                                </span>
+                        {type.options.map((option, i) => {
+                          const optKey = `${type.name} - ${option.name}`;
+                          const optSelected = isItemInEstimate(optKey);
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => handleToggleEstimate(optKey, option.price, option.description)}
+                              className={`w-full border-2 p-5 transition-all text-left ${
+                                optSelected ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                              } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                              aria-pressed={optSelected}
+                              aria-label={optSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
+                            >
+                              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+                                <div className="flex items-start gap-4 flex-1">
+                                  <div className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${optSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'}`} aria-hidden>
+                                    {optSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                                  </div>
+                                  <div>
+                                    <h4 className="text-[17px] text-black font-semibold">{option.name}</h4>
+                                    <span className="text-[14px] leading-[1.6] text-foreground/60">{option.description}</span>
+                                  </div>
+                                </div>
+                                <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">{option.price === 0 ? '협의' : `₩${option.price.toLocaleString()}`}</span>
                               </div>
-                              <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
-                                <span className="text-[17px] font-mono text-[#ff7b00]">₩{option.price.toLocaleString()}</span>
-                                <button
-                                  onClick={() => handleToggleEstimate(
-                                    `${type.name} - ${option.name}`,
-                                    option.price,
-                                    option.description
-                                  )}
-                                  className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                                    isItemInEstimate(`${type.name} - ${option.name}`) 
-                                      ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
-                                      : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
-                                  }`}
-                                  aria-label={isItemInEstimate(`${type.name} - ${option.name}`) ? '견적에서 제거' : '견적에 추가'}
-                                >
-                                  {isItemInEstimate(`${type.name} - ${option.name}`) ? (
-                                    <Trash2 className="w-5 h-5" />
-                                  ) : (
-                                    <Plus className="w-5 h-5" />
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
         </section>
 
@@ -612,42 +605,35 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           </div>
           
           <div className="space-y-3">
-            {additionalOptions.map((option, index) => (
-              <div key={index} className={`border-2 p-5 transition-all ${isItemInEstimate(option.name) ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
-                    <h3 className="text-[17px] text-black font-semibold">{option.name}</h3>
-                    <span className="text-[14px] leading-[1.6] text-foreground/60">
-                      {option.note || option.description}
-                    </span>
-                  </div>
-                  {option.price > 0 && (
-                    <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
-                      <span className="text-[17px] font-mono text-[#ff7b00]">₩{option.price.toLocaleString()}</span>
-                      <button
-                        onClick={() => handleToggleEstimate(
-                          option.name,
-                          option.price,
-                          option.note || option.description
-                        )}
-                        className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                          isItemInEstimate(option.name) 
-                            ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
-                            : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
-                        }`}
-                        aria-label={isItemInEstimate(option.name) ? '견적에서 제거' : '견적에 추가'}
-                      >
-                        {isItemInEstimate(option.name) ? (
-                          <Trash2 className="w-5 h-5" />
-                        ) : (
-                          <Plus className="w-5 h-5" />
-                        )}
-                      </button>
+            {additionalOptions.map((option, index) => {
+              const isSelected = isItemInEstimate(option.name);
+              const desc = option.note || option.description;
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleToggleEstimate(option.name, option.price, desc)}
+                  className={`w-full border-2 p-5 transition-all text-left ${
+                    isSelected ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                  aria-pressed={isSelected}
+                  aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
+                >
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'}`} aria-hidden>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                      </div>
+                      <div>
+                        <h3 className="text-[17px] text-black font-semibold">{option.name}</h3>
+                        {desc && <span className="text-[14px] leading-[1.6] text-foreground/60">{desc}</span>}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            ))}
+                    <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">{option.price === 0 ? '협의' : `₩${option.price.toLocaleString()}`}</span>
+                  </div>
+                </button>
+              );
+            })}
             <div className="border-2 border-[#ff7b00] p-5 bg-[#ff7b00] text-white">
               <span className="text-[16px]">빠른 마감: 48시간 내 +200%, 일주일 내 +100%</span>
             </div>
