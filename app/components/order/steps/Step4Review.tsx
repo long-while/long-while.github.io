@@ -194,7 +194,7 @@ export default function Step4Review() {
                     {step2.additionalOption === 'logo' && '로고 변경'}
                     {step2.additionalOption === 'dayTheme' && '낮 테마'}
                     {step2.additionalOption === 'nightTheme' && '밤 테마'}
-                    {step2.additionalOption === 'bothTheme' && '낮+밤 테마'}
+                    {step2.additionalOption === 'bothTheme' && '테마 2종'}
                   </p>
                 </div>
               )}
@@ -310,7 +310,7 @@ export default function Step4Review() {
                       {step2.additionalOption === 'logo' && '로고 변경'}
                       {step2.additionalOption === 'dayTheme' && '낮 테마'}
                       {step2.additionalOption === 'nightTheme' && '밤 테마'}
-                      {step2.additionalOption === 'bothTheme' && '낮+밤 테마'}
+                      {step2.additionalOption === 'bothTheme' && '테마 2종'}
                     </span>
                     <span>{PRICING_CONFIG.server.options[step2.additionalOption].toLocaleString()}원</span>
                   </div>

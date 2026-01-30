@@ -445,7 +445,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate): 
         logo: '로고 변경',
         dayTheme: '낮 테마',
         nightTheme: '밤 테마',
-        bothTheme: '낮+밤 테마',
+        bothTheme: '테마 2종',
       };
       text += `+ ${optionNames[step2.additionalOption]}\n`;
     }
@@ -535,7 +535,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate): 
         logo: '로고 변경',
         dayTheme: '낮 테마',
         nightTheme: '밤 테마',
-        bothTheme: '낮+밤 테마',
+        bothTheme: '테마 2종',
       };
       text += `${optionNames[step2.additionalOption]} ${server.options[step2.additionalOption as keyof typeof server.options].toLocaleString()}\n`;
     }
