@@ -229,9 +229,9 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   }`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                    <div className="flex items-start gap-4 flex-1">
+                    <div className="flex items-center gap-4 flex-1">
                       {/* 라디오 버튼 스타일 */}
-                      <div className={`w-6 h-6 min-w-[24px] rounded-full border-2 flex items-center justify-center mt-0.5 transition-all ${
+                      <div className={`w-6 h-6 min-w-[24px] rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
                         isSelected 
                           ? 'border-[#ff7b00] bg-[#ff7b00]' 
                           : 'border-gray-300'
@@ -280,9 +280,9 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                    <div className="flex items-start gap-4 flex-1">
+                    <div className="flex items-center gap-4 flex-1">
                       <div
-                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${
                           isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
                         }`}
                         aria-hidden
@@ -327,9 +327,9 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   aria-label={isSelected ? `${option.displayName} 견적에서 제거` : `${option.displayName} 견적에 추가`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                    <div className="flex items-start gap-4 flex-1">
+                    <div className="flex items-center gap-4 flex-1">
                       <div
-                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${
                           isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
                         }`}
                         aria-hidden
