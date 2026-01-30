@@ -1,12 +1,22 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { useState } from 'react';
-import { Plus, Trash2, Minus } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Trash2, Minus, AlertTriangle, Info } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
 
 interface BotCommissionProps {
   onBack: () => void;
   onNavigate?: NavigateFunction;
 }
+
+// 봇 타입 계층 구조 정의
+const BOT_TYPE_HIERARCHY = {
+  '기본 타입': [],
+  '기본&상점 타입': ['기본 타입'],
+  '기본&상점&스탯 타입': ['기본 타입', '기본&상점 타입'],
+  'CoC 타입': ['기본 타입'],
+  '자동조사 타입': [],
+  '오마카세 타입': [],
+};
 
 export default function BotCommission({ onBack, onNavigate }: BotCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
@@ -16,6 +26,28 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
   };
+
+  // 선택된 봇 타입들 확인
+  const selectedBotTypes = useMemo(() => {
+    const botTypeNames = Object.keys(BOT_TYPE_HIERARCHY);
+    return botTypeNames.filter(typeName => isItemInEstimate(typeName));
+  }, [items]);
+
+  // 중복 선택 경고 메시지 생성
+  const getDuplicateWarnings = useMemo(() => {
+    const warnings: string[] = [];
+    
+    selectedBotTypes.forEach(selectedType => {
+      const includedTypes = BOT_TYPE_HIERARCHY[selectedType as keyof typeof BOT_TYPE_HIERARCHY];
+      includedTypes.forEach(includedType => {
+        if (selectedBotTypes.includes(includedType)) {
+          warnings.push(`"${includedType}"은(는) "${selectedType}"에 이미 포함되어 있습니다. "${selectedType}"만 선택하시면 됩니다.`);
+        }
+      });
+    });
+    
+    return [...new Set(warnings)]; // 중복 제거
+  }, [selectedBotTypes]);
 
   const handleOperationWeeksChange = (newWeeks: number) => {
     if (newWeeks < 0) return;
@@ -316,11 +348,129 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           </div>
         </section>
 
+        {/* 봇 타입 비교 테이블 */}
+        <section className="py-15">
+          <div className="mb-16 border-b-2 border-black pb-4">
+            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">봇 타입 비교</h2>
+          </div>
+          
+          <div className="overflow-x-auto mb-8">
+            <table className="w-full border-collapse text-[14px]">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border-2 border-black/10 p-3 text-left font-semibold">기능</th>
+                  <th className="border-2 border-black/10 p-3 text-center font-semibold">기본</th>
+                  <th className="border-2 border-black/10 p-3 text-center font-semibold">기본&상점</th>
+                  <th className="border-2 border-black/10 p-3 text-center font-semibold">기본&상점&스탯</th>
+                  <th className="border-2 border-black/10 p-3 text-center font-semibold">CoC</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border-2 border-black/10 p-3">구글 시트 연동</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                </tr>
+                <tr className="bg-gray-50/50">
+                  <td className="border-2 border-black/10 p-3">다이스 굴림 (nDm)</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                </tr>
+                <tr>
+                  <td className="border-2 border-black/10 p-3">커스텀 명령어</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                </tr>
+                <tr className="bg-gray-50/50">
+                  <td className="border-2 border-black/10 p-3">재화 시스템</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                </tr>
+                <tr>
+                  <td className="border-2 border-black/10 p-3">상점 & 인벤토리</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                </tr>
+                <tr className="bg-gray-50/50">
+                  <td className="border-2 border-black/10 p-3">스탯 시스템</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                </tr>
+                <tr>
+                  <td className="border-2 border-black/10 p-3">아이템 사용 효과</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                </tr>
+                <tr className="bg-gray-50/50">
+                  <td className="border-2 border-black/10 p-3">CoC 판정</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                </tr>
+                <tr className="bg-[#fff5eb]">
+                  <td className="border-2 border-black/10 p-3 font-semibold">가격</td>
+                  <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩15,000</td>
+                  <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩35,000</td>
+                  <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩45,000</td>
+                  <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩30,000</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <p className="text-[13px] text-foreground/60">
+            * 자동조사 타입(₩20,000)과 오마카세 타입(협의)은 특수 목적 봇으로 아래에서 별도 확인해주세요.
+          </p>
+        </section>
+
         {/* 봇 타입들 */}
         <section className="py-15">
           <div className="mb-16 border-b-2 border-black pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">봇 타입</h2>
+            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">봇 타입 상세</h2>
           </div>
+          
+          {/* 봇 타입 선택 안내 */}
+          <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
+            <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[14px] text-blue-800 font-medium">봇 타입 선택 안내</p>
+              <p className="text-[13px] text-blue-700 mt-1">
+                기본&상점 타입은 기본 타입의 모든 기능을 포함합니다.<br/>
+                기본&상점&스탯 타입은 기본&상점 타입의 모든 기능을 포함합니다.<br/>
+                CoC 타입은 기본 타입의 모든 기능을 포함합니다.
+              </p>
+            </div>
+          </div>
+          
+          {/* 중복 선택 경고 */}
+          {getDuplicateWarnings.length > 0 && (
+            <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-400 rounded-lg flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[14px] text-amber-800 font-medium">중복 선택 안내</p>
+                <ul className="mt-1 space-y-1">
+                  {getDuplicateWarnings.map((warning, idx) => (
+                    <li key={idx} className="text-[13px] text-amber-700">• {warning}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
           
           <div className="space-y-8">
             {botTypes.map((type, index) => (

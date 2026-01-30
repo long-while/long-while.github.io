@@ -80,29 +80,62 @@ function OrderContent({ onNavigate }: OrderContentProps) {
       <Navigation currentPage="order" onNavigate={onNavigate} />
 
       <div className="pt-16 pb-16">
-        {/* 헤더 섹션 - 애니메이션 추가 */}
-        <div className="bg-gradient-to-br from-[var(--brand-bg)] via-[var(--brand-bg-subtle)] to-white border-b-2 border-black py-16 relative overflow-hidden">
+        {/* 헤더 섹션 */}
+        <div className="bg-gradient-to-br from-[var(--brand-bg)] via-[var(--brand-bg-subtle)] to-white border-b-2 border-black py-12 relative overflow-hidden">
           {/* 장식 요소 */}
           <div className="absolute top-0 left-0 w-32 h-32 bg-[var(--brand-primary)] opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-40 h-40 bg-[var(--brand-primary)] opacity-5 rounded-full translate-x-1/2 translate-y-1/2"></div>
 
-          <div className="max-w-[900px] mx-auto px-4 text-center relative z-10">
-            <h1 className="text-[36px] md:text-[42px] font-bold mb-4 text-gradient-brand animate-fadeInDown">
+          <div className="max-w-[700px] mx-auto px-4 relative z-10">
+            <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-center">
               커미션 신청서 작성
             </h1>
-            <p className="text-[16px] md:text-[18px] text-gray-700 mb-3 animate-fadeInDown animation-delay-100 animation-fill-both">
-              커미션 신청은 다음처럼 이루어집니다.
-            </p>
-            <p className="text-[13px] md:text-[14px] text-gray-600 animate-fadeInDown animation-delay-200 animation-fill-both">
-              커미션 페이지에서 정보 확인 → 커미션 페이지에서 신청서 작성 → 4단계에 나온 견적과 신청서 복사 → 크레페 신청서에 신청서 붙여넣기
-            </p>
+            
+            {/* 단계별 안내 - 온보딩 모달 스타일 */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-black/10">
+                <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
+                  1
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[14px] mb-0.5">아래 신청서 작성하기</h3>
+                  <p className="text-[12px] text-foreground/60">
+                    신청자 정보, 서버 설치, 자동봇 옵션을 입력해요.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-black/10">
+                <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
+                  2
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[14px] mb-0.5">4단계에서 신청서 복사하기</h3>
+                  <p className="text-[12px] text-foreground/60">
+                    최종 확인 후 신청서 내용을 클립보드에 복사해요.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-black/10">
+                <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
+                  3
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[14px] mb-0.5">크레페 신청서 제출하기</h3>
+                  <p className="text-[12px] text-foreground/60">
+                    크레페로 이동한 후, 신청하기 버튼을 누르고 복사한 내용을 제출해요.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             {/* 안내 배지 */}
-            <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-[var(--brand-primary)] rounded-full shadow-md animate-fadeInUp animation-delay-300 animation-fill-both">
-              <span className="text-[16px]" aria-hidden="true">💡</span>
-              <span className="text-[13px] text-gray-700">
-                작성 중인 내용은 자동으로 저장됩니다
-              </span>
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 text-[12px] rounded-full border border-green-200">
+                <span>💡</span>
+                <span>작성 중인 내용은 자동으로 저장됩니다</span>
+              </div>
             </div>
           </div>
         </div>

@@ -1,4 +1,9 @@
+import { useState, useMemo } from 'react';
+import { Search, X } from 'lucide-react';
+
 export default function FAQ() {
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const faqs = [
     {
       question: "신청서는 언제 접수해야 하나요?",
@@ -42,33 +47,106 @@ export default function FAQ() {
     }
   ];
 
+  // 검색 필터링
+  const filteredFaqs = useMemo(() => {
+    if (!searchQuery.trim()) return faqs;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return faqs.filter(
+      faq => 
+        faq.question.toLowerCase().includes(query) || 
+        faq.answer.toLowerCase().includes(query)
+    );
+  }, [searchQuery]);
+
+  // 검색어 하이라이트 함수
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return parts.map((part, index) => 
+      part.toLowerCase() === query.toLowerCase() 
+        ? <mark key={index} className="bg-yellow-200 px-0.5 rounded">{part}</mark>
+        : part
+    );
+  };
+
   return (
-    <section className="py-15">
+    <section>
       <div className="mb-10 border-b-2 border-black pb-4">
         <h2 className="text-[32px] tracking-[-0.01em] font-semibold">
           자주 묻는 질문
         </h2>
       </div>
 
-      <div className="space-y-6">
-        {faqs.map((faq, index) => (
-          <div key={index} className="pb-6 border-b border-black/10 last:border-0 last:pb-0">
-            <div className="max-w-4xl">
-              <div className="flex gap-6 mb-2">
-                <div className="text-[12px] font-mono text-[#ff7b00] shrink-0">
-                  {String(index + 1).padStart(2, '0')}
-                </div>
-                <h3 className="text-[18px]">
-                  {faq.question}
-                </h3>
-              </div>
-              <p className="text-[16px] leading-[1.8] text-foreground/70 pl-[calc(12px+1.5rem)]">
-                {faq.answer}
-              </p>
-            </div>
-          </div>
-        ))}
+      {/* 검색 입력란 */}
+      <div className="mb-8">
+        <div className="relative max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="질문 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-10 py-3 border-2 border-black/10 rounded-lg text-[15px] placeholder:text-gray-400 focus:outline-none focus:border-[#ff7b00] transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="검색어 지우기"
+            >
+              <X className="w-4 h-4 text-gray-500" />
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="mt-2 text-[13px] text-foreground/60">
+            {filteredFaqs.length}개의 결과
+          </p>
+        )}
       </div>
+
+      {/* FAQ 목록 */}
+      {filteredFaqs.length > 0 ? (
+        <div className="space-y-6">
+          {filteredFaqs.map((faq, index) => (
+            <div key={index} className="pb-6 border-b border-black/10 last:border-0 last:pb-0">
+              <div className="max-w-4xl">
+                <div className="flex gap-6 mb-2">
+                  <div className="text-[12px] font-mono text-[#ff7b00] shrink-0">
+                    {String(faqs.indexOf(faq) + 1).padStart(2, '0')}
+                  </div>
+                  <h3 className="text-[18px]">
+                    {highlightText(faq.question, searchQuery)}
+                  </h3>
+                </div>
+                <p className="text-[16px] leading-[1.8] text-foreground/70 pl-[calc(12px+1.5rem)]">
+                  {highlightText(faq.answer, searchQuery)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+          <p className="text-[16px] text-foreground/60 mb-2">
+            "{searchQuery}"에 대한 검색 결과가 없습니다.
+          </p>
+          <p className="text-[14px] text-foreground/40">
+            다른 키워드로 검색하거나{' '}
+            <a 
+              href="https://crepe.moe/@longwhile" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[#ff7b00] hover:underline"
+            >
+              직접 문의
+            </a>
+            해 주세요.
+          </p>
+        </div>
+      )}
     </section>
   );
 }

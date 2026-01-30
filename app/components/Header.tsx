@@ -1,9 +1,16 @@
-import { ArrowRightIcon, ArrowDownIcon } from '@/app/components/icons';
-import { useEstimate } from '@/app/contexts/EstimateContext';
+import { ArrowDownIcon } from '@/app/components/icons';
 
 // Hero 섹션만 담당하는 컴포넌트
 export default function Header() {
-  const { items } = useEstimate();
+  const scrollToServices = () => {
+    const servicesSection = document.getElementById('services-section');
+    if (servicesSection) {
+      servicesSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // fallback: 화면 높이만큼 스크롤
+      window.scrollTo({ top: window.innerHeight - 64, behavior: 'smooth' });
+    }
+  };
 
   return (
     <header>
@@ -36,8 +43,8 @@ export default function Header() {
               서버 설치부터 자동봇까지 한번에
             </p>
             
-            {/* 신뢰 배지 추가 */}
-            <div className="flex flex-wrap justify-center gap-3 mb-8">
+            {/* 신뢰 배지 */}
+            <div className="flex flex-wrap justify-center gap-3">
               <span className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-[13px] border border-white/20">
                 3개월 무료 서버비
               </span>
@@ -48,49 +55,16 @@ export default function Header() {
                 1:1 맞춤 설정
               </span>
             </div>
-            
-            {/* CTA 버튼 - 견적 유무에 따라 동적 변경 */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              {items.length > 0 ? (
-                <>
-                  <a 
-                    href="#estimate"
-                    className="inline-flex items-center gap-2 bg-white text-[var(--brand-primary)] px-8 py-4 rounded-full font-semibold text-[16px] md:text-[18px] shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-                  >
-                    견적 확인하기 ({items.length}개)
-                    <ArrowRightIcon className="w-5 h-5" />
-                  </a>
-                  <a 
-                    href="#order"
-                    className="inline-flex items-center gap-2 text-white/90 hover:text-white text-[14px] md:text-[16px] underline underline-offset-4 transition-colors"
-                  >
-                    바로 신청서 작성
-                  </a>
-                </>
-              ) : (
-                <>
-                  <a 
-                    href="#server"
-                    className="inline-flex items-center gap-2 bg-white text-[var(--brand-primary)] px-8 py-4 rounded-full font-semibold text-[16px] md:text-[18px] shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-                  >
-                    서비스 살펴보기
-                    <ArrowRightIcon className="w-5 h-5" />
-                  </a>
-                  <a 
-                    href="#order"
-                    className="inline-flex items-center gap-2 text-white/90 hover:text-white text-[14px] md:text-[16px] underline underline-offset-4 transition-colors"
-                  >
-                    바로 신청서 작성
-                  </a>
-                </>
-              )}
-            </div>
           </div>
 
-          {/* 스크롤 힌트 */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-            <ArrowDownIcon className="w-6 h-6 mx-auto text-white/60" />
-          </div>
+          {/* 스크롤 버튼 */}
+          <button
+            onClick={scrollToServices}
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 p-4 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300 animate-bounce cursor-pointer"
+            aria-label="아래로 스크롤"
+          >
+            <ArrowDownIcon className="w-6 h-6 text-white" />
+          </button>
         </div>
       </section>
     </header>

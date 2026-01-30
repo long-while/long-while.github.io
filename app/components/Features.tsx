@@ -29,7 +29,7 @@ export default function Features() {
   };
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16">
       <div className="mb-10 border-b-2 border-black pb-4">
         <h2 className="text-[32px] tracking-[-0.01em] font-semibold">한참 마스토돈만의 특징</h2>
       </div>

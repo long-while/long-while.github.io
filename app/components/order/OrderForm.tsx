@@ -110,63 +110,90 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
       { num: 4, label: '최종 확인' },
     ];
 
+    const currentStepData = steps.find(s => s.num === currentStep);
+
     return (
       <div className="mb-8">
-        <div className="flex items-center justify-between relative">
-          {/* 프로그레스 라인 */}
-          <div className="absolute left-0 right-0 h-1 bg-gray-200 top-1/2 -translate-y-1/2 -z-10">
-            <div
-              className="h-full bg-[var(--brand-primary)] transition-all duration-500"
-              style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
-            />
+        {/* 모바일: 현재 스텝만 표시 */}
+        <div className="md:hidden">
+          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[var(--brand-primary)] text-white flex items-center justify-center font-medium text-[14px] shadow-md">
+                {currentStep}
+              </div>
+              <div>
+                <p className="text-[14px] font-medium text-black">{currentStepData?.label}</p>
+                <p className="text-[12px] text-foreground/60">Step {currentStep} / 4</p>
+              </div>
+            </div>
+            {/* 미니 진행률 바 */}
+            <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-[var(--brand-primary)] transition-all duration-500"
+                style={{ width: `${(currentStep / 4) * 100}%` }}
+              />
+            </div>
           </div>
+        </div>
 
-          {steps.map((step) => {
-            const isAccessible = stepAccessibility[step.num as 1 | 2 | 3 | 4];
-            return (
-              <button
-                key={step.num}
-                onClick={() => {
-                  if (!isAccessible) {
-                    setValidationErrors(['이전 단계를 먼저 완료해 주세요.']);
-                    return;
-                  }
-                  setIsTransitioning(true);
-                  setTimeout(() => {
-                    setCurrentStep(step.num as 1 | 2 | 3 | 4);
-                    setIsTransitioning(false);
-                  }, 200);
-                }}
-                disabled={!isAccessible}
-                className={`flex flex-col items-center gap-2 bg-white px-2 group ${
-                  !isAccessible ? 'cursor-not-allowed opacity-50' : ''
-                }`}
-              >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-[14px] border-2 transition-all duration-300 ${
-                    currentStep >= step.num
-                      ? 'bg-[var(--brand-primary)] text-white border-[var(--brand-primary)] scale-110 shadow-lg'
-                      : isAccessible
-                        ? 'bg-white text-gray-400 border-gray-300 group-hover:border-[var(--brand-primary)] group-hover:text-[var(--brand-primary)] group-hover:scale-105'
-                        : 'bg-gray-100 text-gray-300 border-gray-200'
+        {/* 데스크톱: 전체 프로그레스 바 */}
+        <div className="hidden md:block">
+          <div className="flex items-center justify-between relative">
+            {/* 프로그레스 라인 */}
+            <div className="absolute left-0 right-0 h-1 bg-gray-200 top-1/2 -translate-y-1/2 -z-10">
+              <div
+                className="h-full bg-[var(--brand-primary)] transition-all duration-500"
+                style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+              />
+            </div>
+
+            {steps.map((step) => {
+              const isAccessible = stepAccessibility[step.num as 1 | 2 | 3 | 4];
+              return (
+                <button
+                  key={step.num}
+                  onClick={() => {
+                    if (!isAccessible) {
+                      setValidationErrors(['이전 단계를 먼저 완료해 주세요.']);
+                      return;
+                    }
+                    setIsTransitioning(true);
+                    setTimeout(() => {
+                      setCurrentStep(step.num as 1 | 2 | 3 | 4);
+                      setIsTransitioning(false);
+                    }, 200);
+                  }}
+                  disabled={!isAccessible}
+                  className={`flex flex-col items-center gap-2 bg-white px-2 group ${
+                    !isAccessible ? 'cursor-not-allowed opacity-50' : ''
                   }`}
                 >
-                  {step.num}
-                </div>
-                <span
-                  className={`text-[12px] md:text-[14px] whitespace-nowrap transition-all duration-300 ${
-                    currentStep >= step.num
-                      ? 'text-[var(--brand-primary)] font-medium'
-                      : isAccessible
-                        ? 'text-gray-400 group-hover:text-[var(--brand-primary)]'
-                        : 'text-gray-300'
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </button>
-            );
-          })}
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-[14px] border-2 transition-all duration-300 ${
+                      currentStep >= step.num
+                        ? 'bg-[var(--brand-primary)] text-white border-[var(--brand-primary)] scale-110 shadow-lg'
+                        : isAccessible
+                          ? 'bg-white text-gray-400 border-gray-300 group-hover:border-[var(--brand-primary)] group-hover:text-[var(--brand-primary)] group-hover:scale-105'
+                          : 'bg-gray-100 text-gray-300 border-gray-200'
+                    }`}
+                  >
+                    {step.num}
+                  </div>
+                  <span
+                    className={`text-[14px] whitespace-nowrap transition-all duration-300 ${
+                      currentStep >= step.num
+                        ? 'text-[var(--brand-primary)] font-medium'
+                        : isAccessible
+                          ? 'text-gray-400 group-hover:text-[var(--brand-primary)]'
+                          : 'text-gray-300'
+                    }`}
+                  >
+                    {step.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
