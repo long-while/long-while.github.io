@@ -64,21 +64,20 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   // 봇 추가 옵션
   '예약 툿 기능': 'reservationToot',
   '스토리 자동 진행': 'autoProfileImage',
-  
-  // 타입별 추가 옵션 - 기본 타입
+  '커스텀 명령어 업그레이드': 'customCommandUpgrade',
+  '양도 기능': 'transferFeature',
+  '툿수 자동 재화 반영': 'tootCurrencyLink',
+  '조사 횟수 제한': 'investigationLimit',
+  '조사 목록 시트 연동': 'investigationSheet',
+
+  // 타입별 추가 옵션 (레거시 - 하단 추가 옵션으로 통합)
   '기본 타입 - 커스텀 명령어 업그레이드': 'customCommandUpgrade',
-  
-  // 타입별 추가 옵션 - 기본&상점 타입
   '기본&상점 타입 - 양도 기능': 'transferFeature',
   '기본&상점 타입 - 툿수 자동 재화 반영': 'tootCurrencyLink',
   '기본&상점 타입 - 커스텀 명령어 업그레이드': 'customCommandUpgrade',
-  
-  // 타입별 추가 옵션 - 기본&상점&스탯 타입
   '기본&상점&스탯 타입 - 양도 기능': 'transferFeature',
   '기본&상점&스탯 타입 - 툿수 자동 재화 반영': 'tootCurrencyLink',
   '기본&상점&스탯 타입 - 커스텀 명령어 업그레이드': 'customCommandUpgrade',
-  
-  // 자동조사 타입 옵션
   '자동조사 타입 - 조사 횟수 제한': 'investigationLimit',
   '자동조사 타입 - 조사 목록 시트 연동': 'investigationSheet',
 };

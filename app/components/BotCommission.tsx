@@ -1,6 +1,6 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState, useMemo } from 'react';
-import { Plus, Minus, AlertTriangle, Info, Check } from 'lucide-react';
+import { Plus, Minus, AlertTriangle, Check } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
 
 interface BotCommissionProps {
@@ -113,7 +113,6 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         "[운세] 명령어와 기본 운세 문구 제공",
         "[가위바위보] [YN] 등 커스텀 명령어 기능 기본 제공"
       ],
-      note: "커스텀 명령어란? = 키워드 반응형 시스템. 시트에 운영진이 적은 키워드에 따른 랜덤 응답 출력 (시트를 통해 수동 추가, 관리, 수정 가능). 이 기능을 활용하여 간단한 자동 조사도 구현할 수 있음",
       upgradeOption: {
         name: "커스텀 명령어 업그레이드",
         price: 5000,
@@ -193,8 +192,13 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
   ];
 
   const additionalOptions = [
+    { name: "커스텀 명령어 업그레이드", price: 5000, description: "유저 이름/은는맞춤/문구 내 다이스 기능이 추가됩니다!", aliases: ["기본 타입 - 커스텀 명령어 업그레이드", "기본&상점 타입 - 커스텀 명령어 업그레이드", "기본&상점&스탯 타입 - 커스텀 명령어 업그레이드"] },
+    { name: "양도 기능", price: 10000, description: "[양도/아이템명/캐릭터명] 캐릭터 간의 아이템, 재화 양도", aliases: ["기본&상점 타입 - 양도 기능", "기본&상점&스탯 타입 - 양도 기능"] },
+    { name: "툿수 자동 재화 반영", price: 7000, description: "툿수에 따른 자동 재화 반영", aliases: ["기본&상점 타입 - 툿수 자동 재화 반영", "기본&상점&스탯 타입 - 툿수 자동 재화 반영"] },
     { name: "예약 툿 기능", price: 5000 },
     { name: "스토리 자동 진행", price: 5000, note: "정말 추천합니다!! 써보니까 운영의 질이 달라져요!" },
+    { name: "조사 횟수 제한", price: 5000, description: "장소별 혹은 캐릭터별 조사 횟수 제한 가능", aliases: ["자동조사 타입 - 조사 횟수 제한"] },
+    { name: "조사 목록 시트 연동", price: 10000, description: "러너 공개용 조사 목록 시트 연동, 조사된 장소 표시 등의 부가기능 추가", aliases: ["자동조사 타입 - 조사 목록 시트 연동"] },
     { name: "특정 상황 DM 전송", price: 0, description: "특정 상황에서 봇이 DM 전송 (ex. 체력이 50 이하로 떨어짐)" },
     { name: "시스템/봇 가이드 문서", price: 0, description: "해당 커뮤니티 서버 캡처본으로 제작합니다" }
   ];
@@ -355,14 +359,13 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           </div>
           
           <div className="overflow-x-auto mb-8">
-            <table className="w-full border-collapse text-[14px]">
+            <table className="w-full border-collapse text-[14px] table-fixed">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border-2 border-black/10 p-3 text-left font-semibold">기능</th>
-                  <th className="border-2 border-black/10 p-3 text-center font-semibold">기본</th>
-                  <th className="border-2 border-black/10 p-3 text-center font-semibold">기본&상점</th>
-                  <th className="border-2 border-black/10 p-3 text-center font-semibold">기본&상점&스탯</th>
-                  <th className="border-2 border-black/10 p-3 text-center font-semibold">CoC</th>
+                  <th className="border-2 border-black/10 p-3 text-left font-semibold w-[52%]">기능</th>
+                  <th className="border-2 border-black/10 p-3 text-center font-semibold w-[16%]">기본</th>
+                  <th className="border-2 border-black/10 p-3 text-center font-semibold w-[16%]">기본&상점</th>
+                  <th className="border-2 border-black/10 p-3 text-center font-semibold w-[16%]">기본&상점&스탯</th>
                 </tr>
               </thead>
               <tbody>
@@ -371,18 +374,21 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr className="bg-gray-50/50">
-                  <td className="border-2 border-black/10 p-3">다이스 굴림 (nDm)</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3">[nDm]</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr>
-                  <td className="border-2 border-black/10 p-3">커스텀 명령어</td>
+                  <td className="border-2 border-black/10 p-3">[운세]</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                </tr>
+                <tr className="bg-gray-50/50">
+                  <td className="border-2 border-black/10 p-3">커스텀 명령어 [홀짝] [가위바위보] 등</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
@@ -392,32 +398,21 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
                 </tr>
                 <tr>
                   <td className="border-2 border-black/10 p-3">상점 & 인벤토리</td>
                   <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
                 </tr>
                 <tr className="bg-gray-50/50">
                   <td className="border-2 border-black/10 p-3">스탯 시스템</td>
                   <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
                   <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr>
-                  <td className="border-2 border-black/10 p-3">아이템 사용 효과</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
-                </tr>
-                <tr className="bg-gray-50/50">
-                  <td className="border-2 border-black/10 p-3">CoC 판정</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
+                  <td className="border-2 border-black/10 p-3">[사용/아이템명]</td>
                   <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
                   <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
                   <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
@@ -427,7 +422,6 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩15,000</td>
                   <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩35,000</td>
                   <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩45,000</td>
-                  <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩30,000</td>
                 </tr>
               </tbody>
             </table>
@@ -436,6 +430,56 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           <p className="text-[13px] text-foreground/60">
             * 자동조사 타입(₩20,000)과 오마카세 타입(협의)은 특수 목적 봇으로 아래에서 별도 확인해주세요.
           </p>
+
+          {/* 커스텀 명령어 업그레이드 설명 */}
+          <div className="mt-12 pt-10 border-t-2 border-black/10">
+            <h3 className="text-[20px] font-semibold mb-2">커스텀 명령어 업그레이드란?</h3>
+            <p className="text-[15px] leading-[1.7] text-foreground/80 mb-4">
+              아래 <span className="font-bold text-[#ff7b00]">{'{중괄호}'}</span> 항목이 모두 업그레이드로 추가되었습니다.
+            </p>
+            <p className="text-[14px] leading-[1.7] text-foreground/70 mb-2">
+              <strong>커스텀 명령어란?</strong> 운영진이 시트에 입력해 둔 명령어를 유저가 입력하면, 해당 명령어와 짝지어진 문구 중 하나가 랜덤으로 출력되는 방식입니다.
+            </p>
+            <p className="text-[14px] leading-[1.7] text-foreground/70 mb-6">
+              만약 <strong>[허기]</strong>라는 명령어를 사용하면 아래 표에 있는 허기 문구 3개 중 하나가 무작위로 반환됩니다.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-[14px]">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border-2 border-black/10 p-3 text-left font-semibold w-[120px]">명령어</th>
+                    <th className="border-2 border-black/10 p-3 text-left font-semibold">예시 문구 (업그레이드 시 사용 가능)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border-2 border-black/10 p-3 align-top">패션</td>
+                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">오늘의 패션 점수는 <span className="font-bold text-[#ff7b00]">{'{1d100}'}</span>점입니다.</td>
+                  </tr>
+                  <tr className="bg-gray-50/50">
+                    <td className="border-2 border-black/10 p-3 align-top">능력치</td>
+                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">능력치는 민첩: <span className="font-bold text-[#ff7b00]">{'{3d6}'}</span> / 힘: <span className="font-bold text-[#ff7b00]">{'{3d10+5}'}</span> / 운: <span className="font-bold text-[#ff7b00]">{'{1d100}'}</span> 입니다.</td>
+                  </tr>
+                  <tr>
+                    <td className="border-2 border-black/10 p-3 align-top">허기</td>
+                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]"><span className="font-bold text-[#ff7b00]">{'{시전자}'}</span><span className="font-bold text-[#ff7b00]">{'{은는}'}</span> 배가 고픕니다.</td>
+                  </tr>
+                  <tr className="bg-gray-50/50">
+                    <td className="border-2 border-black/10 p-3 align-top">허기</td>
+                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">배가 고픈 나머지 <span className="font-bold text-[#ff7b00]">{'{시전자}'}</span><span className="font-bold text-[#ff7b00]">{'{이가}'}</span> 옆에 있던 친구를 잡아먹었습니다.</td>
+                  </tr>
+                  <tr>
+                    <td className="border-2 border-black/10 p-3 align-top">허기</td>
+                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">여러분, <span className="font-bold text-[#ff7b00]">{'{시전자}'}</span><span className="font-bold text-[#ff7b00]">{'{을를}'}</span> 굶기지 마세요.</td>
+                  </tr>
+                  <tr className="bg-gray-50/50">
+                    <td className="border-2 border-black/10 p-3 align-top">즐거운 발견</td>
+                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">당신은 <span className="font-bold text-[#ff7b00]">{'{랜덤: 숟가락, 젓가락, 밥그릇, 깨진 유리}'}</span><span className="font-bold text-[#ff7b00]">{'{을를}'}</span> 찾아냈습니다!</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </section>
 
         {/* 봇 타입들 */}
@@ -464,10 +508,10 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
               const typeSelected = isItemInEstimate(type.name);
               const headerContent = (
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                  <div className="flex items-start gap-4 flex-1">
+                  <div className="flex items-center gap-4 flex-1">
                     {type.price > 0 && (
                       <div
-                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${
                           typeSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
                         }`}
                         aria-hidden
@@ -476,13 +520,10 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                       </div>
                     )}
                     <div>
-                      <h3 className="text-[26px] font-semibold text-black">{type.name}</h3>
-                      {type.features[0] && (
-                        <span className="text-[14px] leading-[1.6] text-foreground/60">{type.features[0]}</span>
-                      )}
+                      <h3 className="text-[18px] font-semibold text-black">{type.name}</h3>
                     </div>
                   </div>
-                  <span className="text-[22px] font-mono text-[#ff7b00] shrink-0 md:pl-0">
+                  <span className="text-[16px] font-mono text-[#ff7b00] shrink-0 md:pl-0 text-right md:text-right">
                     {type.price ? `₩${type.price.toLocaleString()}` : '협의'}
                   </span>
                 </div>
@@ -522,75 +563,6 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                       </p>
                     </div>
                   )}
-
-                  {type.upgradeOption && (() => {
-                    const optName = `${type.name} - ${type.upgradeOption!.name}`;
-                    const optSelected = isItemInEstimate(optName);
-                    return (
-                      <button
-                        key={optName}
-                        type="button"
-                        onClick={() => handleToggleEstimate(optName, type.upgradeOption!.price, type.upgradeOption!.description)}
-                        className={`w-full mt-6 p-5 border-2 transition-all text-left ${
-                          optSelected ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                        } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
-                        aria-pressed={optSelected}
-                        aria-label={optSelected ? `${type.upgradeOption!.name} 견적에서 제거` : `${type.upgradeOption!.name} 견적에 추가`}
-                      >
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                          <div className="flex items-start gap-4 flex-1">
-                            <div className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${optSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'}`} aria-hidden>
-                              {optSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
-                            </div>
-                            <div>
-                              <h4 className="text-[17px] text-black font-semibold">{type.upgradeOption!.name}</h4>
-                              <span className="text-[14px] leading-[1.6] text-foreground/60">{type.upgradeOption!.description}</span>
-                            </div>
-                          </div>
-                          <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">{type.upgradeOption!.price === 0 ? '협의' : `₩${type.upgradeOption!.price.toLocaleString()}`}</span>
-                        </div>
-                      </button>
-                    );
-                  })()}
-
-                  {type.options && (
-                    <div className="mt-6 pt-6 border-t-2 border-black/10">
-                      <div className="text-[11px] tracking-[0.15em] uppercase mb-4 text-[#ff7b00]">
-                        추가 옵션
-                      </div>
-                      <div className="space-y-3">
-                        {type.options.map((option, i) => {
-                          const optKey = `${type.name} - ${option.name}`;
-                          const optSelected = isItemInEstimate(optKey);
-                          return (
-                            <button
-                              key={i}
-                              type="button"
-                              onClick={() => handleToggleEstimate(optKey, option.price, option.description)}
-                              className={`w-full border-2 p-5 transition-all text-left ${
-                                optSelected ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                              } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
-                              aria-pressed={optSelected}
-                              aria-label={optSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
-                            >
-                              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                                <div className="flex items-start gap-4 flex-1">
-                                  <div className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${optSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'}`} aria-hidden>
-                                    {optSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
-                                  </div>
-                                  <div>
-                                    <h4 className="text-[17px] text-black font-semibold">{option.name}</h4>
-                                    <span className="text-[14px] leading-[1.6] text-foreground/60">{option.description}</span>
-                                  </div>
-                                </div>
-                                <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">{option.price === 0 ? '협의' : `₩${option.price.toLocaleString()}`}</span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             );
@@ -606,13 +578,27 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           
           <div className="space-y-3">
             {additionalOptions.map((option, index) => {
-              const isSelected = isItemInEstimate(option.name);
-              const desc = option.note || option.description;
+              const optionNames = option.aliases ? [option.name, ...option.aliases] : [option.name];
+              const isSelected = items.some(item => optionNames.includes(item.name));
+              const desc = option.note ?? option.description;
+              const handleClick = () => {
+                if (isSelected) {
+                  const existing = items.find(item => optionNames.includes(item.name));
+                  if (existing) removeItem(existing.id);
+                } else {
+                  addItem({
+                    name: option.name,
+                    price: option.price,
+                    category: 'bot',
+                    description: desc,
+                  });
+                }
+              };
               return (
                 <button
                   key={index}
                   type="button"
-                  onClick={() => handleToggleEstimate(option.name, option.price, desc)}
+                  onClick={handleClick}
                   className={`w-full border-2 p-5 transition-all text-left ${
                     isSelected ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
@@ -620,16 +606,16 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'}`} aria-hidden>
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'}`} aria-hidden>
                         {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
                       </div>
                       <div>
-                        <h3 className="text-[17px] text-black font-semibold">{option.name}</h3>
+                        <h3 className="text-[15px] text-black font-semibold">{option.name}</h3>
                         {desc && <span className="text-[14px] leading-[1.6] text-foreground/60">{desc}</span>}
                       </div>
                     </div>
-                    <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">{option.price === 0 ? '협의' : `₩${option.price.toLocaleString()}`}</span>
+                    <span className="text-[14px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0 text-right">{option.price === 0 ? '협의' : `₩${option.price.toLocaleString()}`}</span>
                   </div>
                 </button>
               );
