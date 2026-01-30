@@ -104,7 +104,7 @@ export default function WelcomeModal({ onNavigate }: WelcomeModalProps) {
                   신청서 작성하기
                 </h3>
                 <p className="text-[12px] text-foreground/60">
-                  간단한 신청서를 작성하고 크레페 DM으로 제출해요.
+                  신청서를 작성하고 크레페를 통해 제출 및 신청해요.
                 </p>
               </div>
             </div>
@@ -112,13 +112,13 @@ export default function WelcomeModal({ onNavigate }: WelcomeModalProps) {
 
           {/* 혜택 배지 */}
           <div className="flex flex-wrap gap-2 mb-5">
-            <span className="px-2.5 py-1 bg-green-50 text-green-700 text-[11px] rounded-full border border-green-200">
+            <span className="px-2.5 py-1 bg-orange-50 text-orange-700 text-[11px] rounded-full border border-orange-200">
               3개월 무료 서버비
             </span>
-            <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-[11px] rounded-full border border-blue-200">
+            <span className="px-2.5 py-1 bg-orange-50 text-orange-700 text-[11px] rounded-full border border-orange-200">
               무료 유지보수
             </span>
-            <span className="px-2.5 py-1 bg-purple-50 text-purple-700 text-[11px] rounded-full border border-purple-200">
+            <span className="px-2.5 py-1 bg-orange-50 text-orange-700 text-[11px] rounded-full border border-orange-200">
               전공생 맞춤 개발
             </span>
           </div>
