@@ -3,6 +3,7 @@ import { EstimateProvider } from "@/app/contexts/EstimateContext";
 import Navigation from "@/app/components/Navigation";
 import Header from "@/app/components/Header";
 import ServiceCards from "@/app/components/ServiceCards";
+import Features from "@/app/components/Features";
 import ServerCommission from "@/app/components/ServerCommission";
 import BotCommission from "@/app/components/BotCommission";
 import EstimatePage from "@/app/components/EstimatePage";
@@ -12,6 +13,7 @@ import Terms from "@/app/components/Terms";
 import Footer from "@/app/components/Footer";
 import OrderApp from "@/app/components/order/OrderApp";
 import FloatingEstimateButton from "@/app/components/FloatingEstimateButton";
+import WelcomeModal from "@/app/components/WelcomeModal";
 import type { PageType } from "@/app/types/navigation";
 
 // 초기 hash 값에 따라 초기 페이지 상태 결정
@@ -179,22 +181,48 @@ function AppContent() {
     <>
       <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
       <div className="min-h-screen bg-white text-foreground pt-16">
-        {/* Header는 풀 width */}
+        {/* Hero 섹션 - 풀 width */}
         <Header />
-        {/* 나머지 컨텐츠는 max-width 적용 */}
-        <div className="max-w-[1200px] mx-auto px-8 py-16">
-          <ServiceCards onNavigate={handleNavigate} />
-          <Process />
-          <div ref={faqRef}>
+        
+        {/* 섹션 1: 서비스 카드 (뭘 파는지 명확히) */}
+        <div id="services-section" className="bg-white">
+          <div className="max-w-[1200px] mx-auto px-8 py-16">
+            <ServiceCards onNavigate={handleNavigate} />
+          </div>
+        </div>
+        
+        {/* 섹션 2: 특징 하이라이트 (왜 우리를 선택해야 하는지) - 배경색 다변화 */}
+        <div className="bg-gray-50">
+          <div className="max-w-[1200px] mx-auto px-8">
+            <Features />
+          </div>
+        </div>
+        
+        {/* 섹션 3: 진행 순서 */}
+        <div className="bg-white">
+          <div className="max-w-[1200px] mx-auto px-8 py-16">
+            <Process />
+          </div>
+        </div>
+        
+        {/* 섹션 4: FAQ - 배경색 다변화 */}
+        <div className="bg-gray-50">
+          <div className="max-w-[1200px] mx-auto px-8 py-16" ref={faqRef}>
             <FAQ />
           </div>
-          <div ref={termsRef}>
+        </div>
+        
+        {/* 섹션 5: 약관 */}
+        <div className="bg-white">
+          <div className="max-w-[1200px] mx-auto px-8 py-16" ref={termsRef}>
             <Terms />
           </div>
         </div>
+        
         <Footer onNavigate={handleNavigate} />
       </div>
       <FloatingEstimateButton onNavigate={handleNavigate} currentPage={currentPage} />
+      <WelcomeModal onNavigate={handleNavigate} />
     </>
   );
 }

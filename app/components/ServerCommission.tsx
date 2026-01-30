@@ -1,5 +1,5 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, AlertCircle } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
 
 interface ServerCommissionProps {
@@ -14,24 +14,8 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
     return items.some(item => item.name === name);
   };
 
-  const handleToggleEstimate = (name: string, price: number, description?: string) => {
-    const existingItem = items.find(item => item.name === name);
-    
-    if (existingItem) {
-      // 이미 있으면 제거
-      removeItem(existingItem.id);
-    } else {
-      // 없으면 추가
-      addItem({
-        name,
-        price,
-        category: 'server',
-        description,
-      });
-    }
-  };
-
-  const options = [
+  // 테마 옵션들 (택1 그룹)
+  const themeOptions = [
     {
       name: '테마 전체 커스텀',
       price: 30000,
@@ -47,6 +31,10 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
       price: 5000,
       description: '트위터 테마에 로고만 바꾸는 옵션. 로고 PNG 파일 필요. 규격은 신청 후 안내드립니다.'
     },
+  ];
+
+  // 추가 옵션들 (중복 선택 가능)
+  const additionalOptions = [
     {
       name: '툿 글자수 제한 변경',
       price: 5000,
@@ -63,6 +51,51 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
       description: '테마 추가 시 해당 커뮤니티 서버 캡처본으로 작업, 노션 페이지로 제공. 타 플랫폼은 쓰지 않습니다.'
     }
   ];
+
+  // 현재 선택된 테마 옵션
+  const getSelectedThemeOption = () => {
+    return themeOptions.find(option => isItemInEstimate(option.name));
+  };
+
+  // 테마 옵션 선택 (택1)
+  const handleThemeOptionSelect = (name: string, price: number, description?: string) => {
+    // 기존 테마 옵션 모두 제거
+    themeOptions.forEach(option => {
+      const existingItem = items.find(item => item.name === option.name);
+      if (existingItem) {
+        removeItem(existingItem.id);
+      }
+    });
+
+    // 이미 선택된 것을 다시 클릭한 경우 해제만 (위에서 이미 제거됨)
+    if (getSelectedThemeOption()?.name === name) {
+      return;
+    }
+
+    // 새 옵션 추가
+    addItem({
+      name,
+      price,
+      category: 'server',
+      description,
+    });
+  };
+
+  // 추가 옵션 토글 (중복 선택 가능)
+  const handleToggleEstimate = (name: string, price: number, description?: string) => {
+    const existingItem = items.find(item => item.name === name);
+    
+    if (existingItem) {
+      removeItem(existingItem.id);
+    } else {
+      addItem({
+        name,
+        price,
+        category: 'server',
+        description,
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -160,6 +193,63 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           </div>
         </section>
 
+        {/* 테마 선택 (택1) */}
+        <section className="py-15">
+          <div className="mb-16 border-b-2 border-black pb-4">
+            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">테마 선택</h2>
+          </div>
+          
+          {/* 택1 안내 */}
+          <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[14px] text-blue-800 font-medium">택1 옵션</p>
+              <p className="text-[13px] text-blue-700">아래 옵션 중 하나만 선택할 수 있습니다. 커스텀 없이 기본 트위터 테마를 원하시면 선택하지 않으셔도 됩니다.</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            {themeOptions.map((option) => {
+              const isSelected = isItemInEstimate(option.name);
+              return (
+                <button
+                  key={option.name}
+                  onClick={() => handleThemeOptionSelect(option.name, option.price, option.description)}
+                  className={`w-full border-2 p-5 transition-all text-left ${
+                    isSelected 
+                      ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                      : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  }`}
+                >
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+                    <div className="flex items-start gap-4 flex-1">
+                      {/* 라디오 버튼 스타일 */}
+                      <div className={`w-6 h-6 min-w-[24px] rounded-full border-2 flex items-center justify-center mt-0.5 transition-all ${
+                        isSelected 
+                          ? 'border-[#ff7b00] bg-[#ff7b00]' 
+                          : 'border-gray-300'
+                      }`}>
+                        {isSelected && (
+                          <div className="w-2 h-2 rounded-full bg-white" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-[17px] text-black font-semibold">{option.name}</h3>
+                        <span className="text-[14px] leading-[1.6] text-foreground/60">
+                          {option.description}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0 pl-10 md:pl-0">
+                      <span className="text-[17px] font-mono text-[#ff7b00]">₩{option.price.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         {/* 추가 옵션 */}
         <section className="py-15">
           <div className="mb-16 border-b-2 border-black pb-4">
@@ -167,7 +257,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           </div>
           
           <div className="space-y-3">
-            {options.map((option) => (
+            {additionalOptions.map((option) => (
               <div key={option.name} className={`border-2 p-5 transition-all ${isItemInEstimate(option.name) ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                   <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">

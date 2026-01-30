@@ -64,6 +64,8 @@
   --color-info-bg: #eff6ff;
   --color-info-border: #93c5fd;
 
+  --color-amber-50: oklch(0.98 0.02 62.83);
+
   /* ========================================
    * Neutral Colors (Gray Scale)
    * ========================================

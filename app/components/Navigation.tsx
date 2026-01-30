@@ -10,13 +10,13 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
   // 플랫 네비게이션 메뉴 (드롭다운 제거)
   const navItems: MenuItem[] = [
     { id: 'server', label: '서버 커미션' },
-    { id: 'bot', label: '자동봇' },
+    { id: 'bot', label: '자동봇 커미션' },
     { id: 'faq', label: 'FAQ' },
   ];
 
   // 주요 CTA
   const primaryActions: MenuItem[] = [
-    { id: 'estimate', label: items.length > 0 ? '견적 확인' : '견적', badge: items.length > 0 ? items.length : undefined },
+    { id: 'estimate', label: '나의 견적', badge: items.length > 0 ? items.length : undefined },
     { id: 'order', label: '신청하기', isPrimary: true },
   ];
 
