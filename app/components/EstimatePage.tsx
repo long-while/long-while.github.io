@@ -146,7 +146,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                                   </div>
                                   <div className="flex items-center justify-between gap-4">
                                     <span className="text-[16px] font-mono text-[#ff7b00] shrink-0">
-                                      ₩{item.price.toLocaleString()}
+                                      {item.price === 0 ? '협의' : `₩${item.price.toLocaleString()}`}
                                     </span>
                                     <button
                                       onClick={() => removeItem(item.id)}
@@ -196,7 +196,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                                   </div>
                                   <div className="flex items-center justify-between gap-4">
                                     <span className="text-[16px] font-mono text-[#ff7b00] shrink-0">
-                                      ₩{item.price.toLocaleString()}
+                                      {item.price === 0 ? '협의' : `₩${item.price.toLocaleString()}`}
                                     </span>
                                     <button
                                       onClick={() => removeItem(item.id)}
@@ -243,7 +243,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                                   </div>
                                   <div className="flex items-center justify-between gap-4">
                                     <span className="text-[16px] font-mono text-[#ff7b00] shrink-0">
-                                      ₩{item.price.toLocaleString()}
+                                      {item.price === 0 ? '협의' : `₩${item.price.toLocaleString()}`}
                                     </span>
                                     <button
                                       onClick={() => removeItem(item.id)}

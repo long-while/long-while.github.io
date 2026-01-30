@@ -1,5 +1,5 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { Plus, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, Check } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
 
 interface ServerCommissionProps {
@@ -31,6 +31,13 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
       price: 5000,
       description: '트위터 테마에 로고만 바꾸는 옵션. 로고 PNG 파일 필요. 규격은 신청 후 안내드립니다.'
     },
+  ];
+
+  // 빠른마감 옵션들 (체크박스 형태)
+  const rushOptions = [
+    { estimateName: '빠른마감: 24시간 내 기본 서버 설치', displayName: '24시간 내 기본 서버 설치 마감', price: 10000, description: '결제 요청 시각으로부터 24시간 내에 기본 옵션 서버를 설치합니다.' },
+    { estimateName: '빠른마감: 48시간 내 로고 변경 서버 설치', displayName: '48시간 내 로고 변경된 서버 설치 마감', price: 15000, description: '결제 요청 시각으로부터 48시간 내에 로고 변경 옵션 서버를 설치합니다.' },
+    { estimateName: '빠른마감: 48시간 내 테마 커스텀 서버 설치', displayName: '48시간 내 테마 커스텀된 서버 설치 마감', price: 20000, description: '결제 요청 시각으로부터 48시간 내에 커스텀 테마 옵션 서버를 설치합니다.' },
   ];
 
   // 추가 옵션들 (중복 선택 가능)
@@ -257,36 +264,43 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           </div>
           
           <div className="space-y-3">
-            {additionalOptions.map((option) => (
-              <div key={option.name} className={`border-2 p-5 transition-all ${isItemInEstimate(option.name) ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
-                    <h3 className="text-[17px] text-black font-semibold">{option.name}</h3>
-                    <span className="text-[14px] leading-[1.6] text-foreground/60">
-                      {option.description}
-                    </span>
+            {additionalOptions.map((option) => {
+              const isSelected = isItemInEstimate(option.name);
+              return (
+                <button
+                  key={option.name}
+                  type="button"
+                  onClick={() => handleToggleEstimate(option.name, option.price, option.description)}
+                  className={`w-full border-2 p-5 transition-all text-left ${
+                    isSelected
+                      ? 'border-[#ff7b00] bg-[#fff5eb]'
+                      : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                  aria-pressed={isSelected}
+                  aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
+                >
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${
+                          isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
+                        }`}
+                        aria-hidden
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                      </div>
+                      <div>
+                        <h3 className="text-[17px] text-black font-semibold">{option.name}</h3>
+                        <span className="text-[14px] leading-[1.6] text-foreground/60">
+                          {option.description}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
                   </div>
-                  <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
-                    <span className="text-[17px] font-mono text-[#ff7b00]">₩{option.price.toLocaleString()}</span>
-                    <button
-                      onClick={() => handleToggleEstimate(option.name, option.price, option.description)}
-                      className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                        isItemInEstimate(option.name) 
-                          ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
-                          : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
-                      }`}
-                      aria-label={isItemInEstimate(option.name) ? '견적에서 제거' : '견적에 추가'}
-                    >
-                      {isItemInEstimate(option.name) ? (
-                        <Trash2 className="w-5 h-5" />
-                      ) : (
-                        <Plus className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -297,77 +311,41 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           </div>
           
           <div className="space-y-3">
-            <div className={`border-2 p-5 transition-all ${isItemInEstimate('빠른마감: 24시간 내 기본 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                <h3 className="text-[17px] text-black font-semibold flex-1">24시간 내 기본 서버 설치 마감</h3>
-                <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
-                  <span className="text-[17px] font-mono text-[#ff7b00]">₩10,000</span>
-                  <button
-                    onClick={() => handleToggleEstimate('빠른마감: 24시간 내 기본 서버 설치', 10000)}
-                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                      isItemInEstimate('빠른마감: 24시간 내 기본 서버 설치') 
-                        ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
-                        : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
-                    }`}
-                    aria-label={isItemInEstimate('빠른마감: 24시간 내 기본 서버 설치') ? '견적에서 제거' : '견적에 추가'}
-                  >
-                    {isItemInEstimate('빠른마감: 24시간 내 기본 서버 설치') ? (
-                      <Trash2 className="w-5 h-5" />
-                    ) : (
-                      <Plus className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className={`border-2 p-5 transition-all ${isItemInEstimate('빠른마감: 48시간 내 로고 변경 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                <h3 className="text-[17px] text-black font-semibold flex-1">48시간 내 로고 변경된 서버 설치 마감</h3>
-                <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
-                  <span className="text-[17px] font-mono text-[#ff7b00]">₩15,000</span>
-                  <button
-                    onClick={() => handleToggleEstimate('빠른마감: 48시간 내 로고 변경 서버 설치', 15000)}
-                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                      isItemInEstimate('빠른마감: 48시간 내 로고 변경 서버 설치') 
-                        ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
-                        : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
-                    }`}
-                    aria-label={isItemInEstimate('빠른마감: 48시간 내 로고 변경 서버 설치') ? '견적에서 제거' : '견적에 추가'}
-                  >
-                    {isItemInEstimate('빠른마감: 48시간 내 로고 변경 서버 설치') ? (
-                      <Trash2 className="w-5 h-5" />
-                    ) : (
-                      <Plus className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className={`border-2 p-5 transition-all ${isItemInEstimate('빠른마감: 48시간 내 테마 커스텀 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                <h3 className="text-[17px] text-black font-semibold flex-1">48시간 내 테마 커스텀된 서버 설치 마감</h3>
-                <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
-                  <span className="text-[17px] font-mono text-[#ff7b00]">₩20,000</span>
-                  <button
-                    onClick={() => handleToggleEstimate('빠른마감: 48시간 내 테마 커스텀 서버 설치', 20000)}
-                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                      isItemInEstimate('빠른마감: 48시간 내 테마 커스텀 서버 설치') 
-                        ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
-                        : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
-                    }`}
-                    aria-label={isItemInEstimate('빠른마감: 48시간 내 테마 커스텀 서버 설치') ? '견적에서 제거' : '견적에 추가'}
-                  >
-                    {isItemInEstimate('빠른마감: 48시간 내 테마 커스텀 서버 설치') ? (
-                      <Trash2 className="w-5 h-5" />
-                    ) : (
-                      <Plus className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
+            {rushOptions.map((option) => {
+              const isSelected = isItemInEstimate(option.estimateName);
+              return (
+                <button
+                  key={option.estimateName}
+                  type="button"
+                  onClick={() => handleToggleEstimate(option.estimateName, option.price)}
+                  className={`w-full border-2 p-5 transition-all text-left ${
+                    isSelected
+                      ? 'border-[#ff7b00] bg-[#fff5eb]'
+                      : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                  aria-pressed={isSelected}
+                  aria-label={isSelected ? `${option.displayName} 견적에서 제거` : `${option.displayName} 견적에 추가`}
+                >
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center mt-0.5 transition-all shrink-0 ${
+                          isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
+                        }`}
+                        aria-hidden
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                      </div>
+                      <div>
+                        <h3 className="text-[17px] text-black font-semibold">{option.displayName}</h3>
+                        <span className="text-[14px] leading-[1.6] text-foreground/60">{option.description}</span>
+                      </div>
+                    </div>
+                    <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </section>
 

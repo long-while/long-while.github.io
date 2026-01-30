@@ -60,7 +60,7 @@ export default function Header() {
           {/* 스크롤 버튼 */}
           <button
             onClick={scrollToServices}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 p-4 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300 animate-bounce cursor-pointer"
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 p-4 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300 animate-bounce cursor-pointer"
             aria-label="아래로 스크롤"
           >
             <ArrowDownIcon className="w-6 h-6 text-white" />
