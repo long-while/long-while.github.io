@@ -1,8 +1,11 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { Trash2 } from 'lucide-react';
+import { ArrowRightIcon } from '@/app/components/icons';
+import type { NavigateFunction } from '@/app/types/navigation';
 
 interface EstimatePageProps {
   onBack: () => void;
+  onNavigate: NavigateFunction;
 }
 
 // 설명에서 [대괄호] 안의 명령어만 추출하는 함수
@@ -15,7 +18,7 @@ function extractCommands(description: string): string {
   return matches.join(', ');
 }
 
-export default function EstimatePage({ onBack }: EstimatePageProps) {
+export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) {
   const { items, removeItem, clearItems, getTotalPrice } = useEstimate();
 
   return (
@@ -146,6 +149,25 @@ export default function EstimatePage({ onBack }: EstimatePageProps) {
                     <span>빠른 마감이 필요한 경우 추가금이 발생할 수 있습니다.</span>
                   </li>
                 </ul>
+              </div>
+            </section>
+
+            {/* 신청서 작성 CTA */}
+            <section className="mb-16">
+              <div className="text-center">
+                <p className="text-[16px] text-foreground/70 mb-6">
+                  견적 확인이 완료되셨나요? 이제 신청서를 작성해주세요!
+                </p>
+                <button
+                  onClick={() => onNavigate('order')}
+                  className="inline-flex items-center gap-3 bg-[var(--brand-primary)] text-white px-10 py-5 rounded-full font-semibold text-[18px] shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
+                >
+                  신청서 작성하기
+                  <ArrowRightIcon className="w-5 h-5" />
+                </button>
+                <p className="text-[14px] text-foreground/50 mt-4">
+                  견적 항목이 신청서에 자동으로 반영됩니다
+                </p>
               </div>
             </section>
 

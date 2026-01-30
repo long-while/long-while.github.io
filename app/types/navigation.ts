@@ -51,4 +51,5 @@ export interface MenuItem {
   badge?: number;
   isExternal?: boolean;
   url?: string;
+  isPrimary?: boolean;
 }

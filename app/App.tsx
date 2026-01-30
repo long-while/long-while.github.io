@@ -161,7 +161,7 @@ function AppContent() {
       <>
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="pt-16">
-          <EstimatePage onBack={() => setCurrentPage('home')} />
+          <EstimatePage onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
           <Footer onNavigate={handleNavigate} />
         </div>
       </>
