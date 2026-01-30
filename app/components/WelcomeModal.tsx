@@ -119,7 +119,7 @@ export default function WelcomeModal({ onNavigate }: WelcomeModalProps) {
               무료 유지보수
             </span>
             <span className="px-2.5 py-1 bg-orange-50 text-orange-700 text-[11px] rounded-full border border-orange-200">
-              전공생 맞춤 개발
+              일대일 맞춤 개발
             </span>
           </div>
 
