@@ -1,22 +1,59 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { MenuIcon, CloseIcon } from '@/app/components/icons';
+import { MenuIcon, CloseIcon, ChevronDownIcon } from '@/app/components/icons';
 import type { NavigationProps, MenuItem } from '@/app/types/navigation';
+
+interface DropdownGroup {
+  id: string;
+  label: string;
+  items: MenuItem[];
+}
 
 export default function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileExpandedGroup, setMobileExpandedGroup] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { items } = useEstimate();
 
-  const menuItems: MenuItem[] = [
-    { id: 'home', label: '홈' },
-    { id: 'order', label: '신청서 작성' },
-    { id: 'estimate', label: '견적 확인하기', badge: items.length > 0 ? items.length : undefined },
-    { id: 'server', label: '서버 설치 커미션' },
-    { id: 'bot', label: '자동봇 커미션' },
-    { id: 'faq', label: '자주 묻는 질문' },
-    { id: 'terms', label: '약관 및 안내' },
-    { id: 'crepe', label: '크레페로 이동', isExternal: true, url: 'https://crepe.cm/@longwhile/lw5w0ofg' },
+  // 드롭다운 그룹 정의
+  const menuGroups: DropdownGroup[] = [
+    {
+      id: 'services',
+      label: '서비스',
+      items: [
+        { id: 'server', label: '서버 설치 커미션' },
+        { id: 'bot', label: '자동봇 커미션' },
+      ]
+    },
+    {
+      id: 'info',
+      label: '안내',
+      items: [
+        { id: 'faq', label: '자주 묻는 질문' },
+        { id: 'terms', label: '약관 및 안내' },
+        { id: 'crepe', label: '크레페', isExternal: true, url: 'https://crepe.cm/@longwhile/lw5w0ofg' },
+      ]
+    }
   ];
+
+  // 주요 CTA (드롭다운 외부)
+  const primaryActions: MenuItem[] = [
+    { id: 'estimate', label: '견적', badge: items.length > 0 ? items.length : undefined },
+    { id: 'order', label: '신청서 작성', isPrimary: true },
+  ];
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleMenuClick = (item: MenuItem) => {
     if (item.isExternal && item.url) {
@@ -25,6 +62,20 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
       onNavigate(item.id);
     }
     setIsMobileMenuOpen(false);
+    setOpenDropdown(null);
+  };
+
+  const toggleDropdown = (groupId: string) => {
+    setOpenDropdown(openDropdown === groupId ? null : groupId);
+  };
+
+  const toggleMobileGroup = (groupId: string) => {
+    setMobileExpandedGroup(mobileExpandedGroup === groupId ? null : groupId);
+  };
+
+  // 현재 페이지가 특정 그룹에 속하는지 확인
+  const isGroupActive = (group: DropdownGroup) => {
+    return group.items.some(item => item.id === currentPage);
   };
 
   return (
@@ -42,23 +93,70 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
             </button>
 
             {/* 데스크톱 메뉴 */}
-            <div className="hidden md:flex items-center gap-1">
-              {menuItems.map((item) => (
+            <div className="hidden md:flex items-center gap-1" ref={dropdownRef}>
+              {/* 드롭다운 그룹 */}
+              {menuGroups.map((group) => (
+                <div key={group.id} className="relative">
+                  <button
+                    onClick={() => toggleDropdown(group.id)}
+                    className={`flex items-center gap-1 px-4 py-2 text-[14px] hover:text-[var(--brand-primary)] transition-colors ${
+                      isGroupActive(group) ? 'text-[var(--brand-primary)]' : 'text-foreground'
+                    }`}
+                  >
+                    {group.label}
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform ${openDropdown === group.id ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {/* 드롭다운 메뉴 */}
+                  {openDropdown === group.id && (
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-white border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-50">
+                      {group.items.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => handleMenuClick(item)}
+                          className={`w-full text-left px-4 py-3 text-[14px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors flex items-center justify-between ${
+                            currentPage === item.id ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)]' : 'text-foreground'
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {item.isExternal && (
+                            <span className="text-[12px] text-foreground/50">↗</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* 구분선 */}
+              <div className="w-px h-6 bg-black/10 mx-2" />
+
+              {/* 주요 CTA */}
+              {primaryActions.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item)}
-                  className={`px-4 py-2 text-[14px] hover:text-[var(--brand-primary)] transition-colors relative ${
-                    currentPage === item.id ? 'text-[var(--brand-primary)]' : 'text-foreground'
+                  className={`px-4 py-2 text-[14px] transition-all relative ${
+                    item.isPrimary 
+                      ? 'bg-[var(--brand-primary)] text-white rounded-full hover:bg-[var(--brand-primary-hover)] ml-2' 
+                      : currentPage === item.id 
+                        ? 'text-[var(--brand-primary)]' 
+                        : 'text-foreground hover:text-[var(--brand-primary)]'
                   }`}
                 >
                   {item.label}
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-[var(--brand-primary)] text-white text-[10px] font-mono w-5 h-5 rounded-full flex items-center justify-center">
+                    <span 
+                      className={`absolute -top-1 -right-1 text-[11px] font-mono w-5 h-5 rounded-full flex items-center justify-center ${
+                        item.isPrimary ? 'bg-white text-[var(--brand-primary)]' : 'bg-[var(--brand-primary)] text-white'
+                      }`}
+                      role="status"
+                      aria-live="polite"
+                      aria-label={`견적에 ${item.badge}개 항목이 담겨있습니다`}
+                    >
                       {item.badge}
                     </span>
-                  )}
-                  {item.isExternal && (
-                    <span className="ml-1 text-[12px]">↗</span>
                   )}
                 </button>
               ))}
@@ -105,25 +203,75 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
             </div>
 
             <nav className="space-y-2">
-              {menuItems.map((item) => (
+              {/* 홈 */}
+              <button
+                onClick={() => handleMenuClick({ id: 'home', label: '홈' })}
+                className={`w-full text-left px-4 py-3 text-[16px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors rounded ${
+                  currentPage === 'home' ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)]' : 'text-foreground'
+                }`}
+              >
+                홈
+              </button>
+
+              {/* 드롭다운 그룹 */}
+              {menuGroups.map((group) => (
+                <div key={group.id}>
+                  <button
+                    onClick={() => toggleMobileGroup(group.id)}
+                    className={`w-full text-left px-4 py-3 text-[16px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors rounded flex items-center justify-between ${
+                      isGroupActive(group) ? 'text-[var(--brand-primary)]' : 'text-foreground'
+                    }`}
+                  >
+                    <span>{group.label}</span>
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform ${mobileExpandedGroup === group.id ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {/* 펼쳐진 메뉴 */}
+                  {mobileExpandedGroup === group.id && (
+                    <div className="ml-4 mt-1 space-y-1 border-l-2 border-black/10 pl-4">
+                      {group.items.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => handleMenuClick(item)}
+                          className={`w-full text-left px-4 py-2 text-[15px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors rounded flex items-center justify-between ${
+                            currentPage === item.id ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)]' : 'text-foreground/80'
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {item.isExternal && (
+                            <span className="text-[12px] text-foreground/50">↗</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* 구분선 */}
+              <div className="h-px bg-black/10 my-4" />
+
+              {/* 주요 CTA */}
+              {primaryActions.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item)}
-                  className={`w-full text-left px-4 py-3 text-[16px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors rounded flex items-center justify-between ${
-                    currentPage === item.id ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)]' : 'text-foreground'
+                  className={`w-full text-left px-4 py-3 text-[16px] transition-colors rounded flex items-center justify-between ${
+                    item.isPrimary 
+                      ? 'bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-hover)]' 
+                      : currentPage === item.id 
+                        ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)]' 
+                        : 'text-foreground hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)]'
                   }`}
                 >
                   <span>{item.label}</span>
-                  <div className="flex items-center gap-2">
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className="bg-[var(--brand-primary)] text-white text-[10px] font-mono w-5 h-5 rounded-full flex items-center justify-center">
-                        {item.badge}
-                      </span>
-                    )}
-                    {item.isExternal && (
-                      <span className="text-[14px]">↗</span>
-                    )}
-                  </div>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className={`text-[12px] font-mono px-2 py-0.5 rounded-full ${
+                      item.isPrimary ? 'bg-white/20 text-white' : 'bg-[var(--brand-primary)] text-white'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               ))}
             </nav>

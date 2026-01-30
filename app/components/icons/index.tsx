@@ -150,3 +150,37 @@ export function WarningIcon({ className = 'w-5 h-5', strokeWidth = 2 }: IconProp
     </svg>
   );
 }
+
+/**
+ * 아래쪽 쉐브론 아이콘
+ * 드롭다운 메뉴, 아코디언 등에 사용
+ */
+export function ChevronDownIcon({ className = 'w-4 h-4', strokeWidth = 2 }: IconProps) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        strokeWidth={strokeWidth} 
+        d="M19 9l-7 7-7-7" 
+      />
+    </svg>
+  );
+}
+
+/**
+ * 장바구니 아이콘
+ * 견적/장바구니 관련 기능에 사용
+ */
+export function ShoppingCartIcon({ className = 'w-6 h-6', strokeWidth = 2 }: IconProps) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        strokeWidth={strokeWidth} 
+        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" 
+      />
+    </svg>
+  );
+}
