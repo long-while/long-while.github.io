@@ -1,3 +1,5 @@
+import { ArrowRightIcon, ArrowDownIcon } from '@/app/components/icons';
+
 export default function Header() {
   const features = [
     { title: "다중계정 로그인&계정 전환", description: "웹 마스토돈에서도 웹트처럼 여러 계정 간 원활한 전환 가능!\n총괄계에서 NPC 계정으로 옮겨오려면 무조건 로그아웃 후 로그인 과정을 매번 거쳐야 했는데요... 제가 무려 웹트처럼 여러 계정 저장 + 계정 간 전환이 가능하도록 코드를 뜯어고치는 데 성공했습니다!" },
@@ -21,7 +23,7 @@ export default function Header() {
         <div 
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(135deg, #dce3e8 0%, #ffe0b3 25%, #ffc875 45%, #ffb85c 65%, #ff8833 85%, #ff7722 100%)'
+            background: 'var(--hero-gradient)'
           }}
         />
         
@@ -39,17 +41,24 @@ export default function Header() {
             <h1 className="text-[72px] md:text-[96px] leading-[0.95] tracking-[-0.03em] text-white mb-6" style={{ fontFamily: "'Black Han Sans', sans-serif" }}>
               한참 커미션
             </h1>
-            <p className="text-[16px] md:text-[20px] text-white/90 leading-[1.6] max-w-[800px] mx-auto">
+            <p className="text-[16px] md:text-[20px] text-white/90 leading-[1.6] max-w-[800px] mx-auto mb-8">
               마스토돈 자캐커뮤를 위한 최고의 커미션<br/>
               서버 설치부터 자동봇까지 한번에
             </p>
+            
+            {/* CTA 버튼 */}
+            <a 
+              href="#order"
+              className="inline-flex items-center gap-2 bg-white text-[var(--brand-primary)] px-8 py-4 rounded-full font-semibold text-[16px] md:text-[18px] shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+            >
+              신청서 작성하기
+              <ArrowRightIcon className="w-5 h-5" />
+            </a>
           </div>
 
           {/* 스크롤 힌트 */}
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-            <svg className="w-6 h-6 mx-auto text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            <ArrowDownIcon className="w-6 h-6 mx-auto text-white/60" />
           </div>
         </div>
       </section>
@@ -83,10 +92,10 @@ export default function Header() {
             </p>
 
             <div className="pt-6 space-y-4 border-t-2 border-black/10 mt-10">
-              <p className="text-[17px] leading-[1.9] font-bold text-[#ff7b00]">
+              <p className="text-[17px] leading-[1.9] font-bold text-[var(--brand-primary)]">
                 문의하시기 전에 최하단에 위치한 <span className="font-extrabold">자주 묻는 질문</span>을 확인해 주세요!
               </p>
-              <p className="text-[17px] leading-[1.9] font-bold text-[#ff7b00]">
+              <p className="text-[17px] leading-[1.9] font-bold text-[var(--brand-primary)]">
                 신청서는 아무때나 접수해주셔도 괜찮습니다! 결제 요청은 작업 일자가 가까워지면 보내드립니다 ^_^
               </p>
             </div>
@@ -102,7 +111,7 @@ export default function Header() {
           <div className="space-y-8">
             {features.map((feature, index) => (
               <div key={index} className="flex gap-6">
-                <div className="text-[12px] font-mono text-[#ff7b00] shrink-0 mt-1">
+                <div className="text-[12px] font-mono text-[var(--brand-primary)] shrink-0 mt-1">
                   {index === features.length - 1 ? 'X' : String(index + 1).padStart(2, '0')}
                 </div>
                 <div>

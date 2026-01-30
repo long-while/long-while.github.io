@@ -1,0 +1,586 @@
+import { useOrder } from '@/app/contexts/OrderContext';
+import { useEffect } from 'react';
+
+export default function Step3Bot() {
+  const { formData, updateStep3 } = useOrder();
+  const step3 = formData.step3;
+  const step1 = formData.step1;
+
+  // 운영 주수 동기화
+  useEffect(() => {
+    if (step3.operationWeeksOption === 'same' && step1.operationWeeks > 0) {
+      updateStep3({ manualWeeks: step1.operationWeeks });
+    }
+  }, [step3.operationWeeksOption, step1.operationWeeks, updateStep3]);
+
+  // 양도 기능 노출 조건: 상점 또는 스탯 선택 시
+  const showTransferFeature =
+    step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat';
+
+  // 재화 단위 필드 노출 조건: 상점 또는 스탯
+  const showCurrencyUnit = showTransferFeature;
+
+  // 스탯 목록 필드 노출 조건: 스탯 선택 시
+  const showStatList = step3.mainBot === 'basicShopStat';
+
+  // "아니오" 선택 시 모든 하위 필드 초기화
+  const handleBotApplyChange = (value: 'yes' | 'no') => {
+    updateStep3({ applyBot: value });
+    if (value === 'no') {
+      updateStep3({
+        operationWeeksOption: null,
+        manualWeeks: 0,
+        mainBot: null,
+        cocBot: false,
+        omakaseBot: false,
+        reservationToot: false,
+        autoProfileImage: false,
+        tootCurrencyLink: false,
+        transferFeature: false,
+        transferOption: null,
+        currencyUnit: '',
+        statList: '',
+        accountList: '',
+        tootPerCurrency: '',
+        omakaseDetails: '',
+        setupDeadline: '',
+        botSymbol: '✶',
+        botAccountId: '',
+      });
+    }
+  };
+
+  // 메인 봇 변경 시 양도 기능 관련 필드 초기화
+  const handleMainBotChange = (bot: typeof step3.mainBot) => {
+    updateStep3({ mainBot: bot });
+    
+    // 기본 봇 선택 시 양도 기능 초기화
+    if (bot === 'basic') {
+      updateStep3({ transferFeature: false, transferOption: null });
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* 헤더 */}
+      <div className="pb-6 border-b-2 border-black animate-fadeInDown">
+        <h2 className="text-[28px] font-medium mb-2 bg-gradient-to-r from-[#ff7b00] to-[#ff9933] bg-clip-text text-transparent">
+          Step 3. 자동봇 커미션
+        </h2>
+        <p className="text-[14px] text-gray-600">
+          자동봇 기능이 필요하신가요? 필요하지 않으시다면 "아니오"를 선택해 주세요.
+        </p>
+      </div>
+
+      {/* 1) 자동봇 신청 여부 */}
+      <div className="space-y-3">
+        <label className="block">
+          <span className="text-[18px] font-medium">
+            1) 자동봇을 신청하시나요? <span className="text-red-500">*</span>
+          </span>
+        </label>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="applyBot"
+              checked={step3.applyBot === 'yes'}
+              onChange={() => handleBotApplyChange('yes')}
+              className="w-4 h-4 accent-[#ff7b00]"
+            />
+            <span className="text-[14px]">예</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="applyBot"
+              checked={step3.applyBot === 'no'}
+              onChange={() => handleBotApplyChange('no')}
+              className="w-5 h-5 accent-[#ff7b00] cursor-pointer"
+            />
+            <span className="text-[14px]">아니오</span>
+          </label>
+        </div>
+      </div>
+
+      {/* 자동봇 "예" 선택 시에만 표시되는 옵션들 */}
+      {step3.applyBot === 'yes' && (
+        <div className="space-y-8 pt-6 border-t border-gray-200 animate-slideDown">
+          {/* 2) 운영 기간 설정 */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-[18px] font-medium mb-1">2) 운영 기간 설정</h3>
+              <p className="text-[13px] text-gray-600">
+                가동 비용은 주당 5,000원입니다.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="operationWeeksOption"
+                  checked={step3.operationWeeksOption === 'same'}
+                  onChange={() => updateStep3({ operationWeeksOption: 'same' })}
+                  className="w-4 h-4 accent-[#ff7b00]"
+                />
+                <span className="text-[14px]">
+                  1단계에서 입력한 커뮤니티 운영 기간과 동일 ({step1.operationWeeks}주)
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="operationWeeksOption"
+                  checked={step3.operationWeeksOption === 'manual'}
+                  onChange={() => updateStep3({ operationWeeksOption: 'manual' })}
+                  className="w-4 h-4 accent-[#ff7b00]"
+                />
+                <span className="text-[14px]">직접 입력</span>
+              </label>
+
+              {step3.operationWeeksOption === 'manual' && (
+                <div className="ml-6 space-y-2">
+                  <label htmlFor="manualWeeks" className="block text-[14px] font-medium">
+                    운영 주수
+                  </label>
+                  <input
+                    id="manualWeeks"
+                    type="number"
+                    min="1"
+                    value={step3.manualWeeks || ''}
+                    onChange={(e) => updateStep3({ manualWeeks: parseInt(e.target.value) || 0 })}
+                    placeholder="예: 4, 8, 12"
+                    className="w-full md:w-48 px-4 py-2 border-2 border-gray-300 rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                  />
+                </div>
+              )}
+
+              {/* 가동 비용 표시 - 눈에 띄게 */}
+              {((step3.operationWeeksOption === 'manual' && step3.manualWeeks > 0) ||
+                (step3.operationWeeksOption === 'same' && step1.operationWeeks > 0)) && (
+                <div className="mt-3 p-3 bg-[var(--brand-bg)] border border-[var(--brand-primary)] rounded-md">
+                  <p className="text-[14px] text-[var(--brand-primary)] font-medium">
+                    가동 비용: {(
+                      step3.operationWeeksOption === 'manual' 
+                        ? step3.manualWeeks * 5000 
+                        : step1.operationWeeks * 5000
+                    ).toLocaleString()}원 ({
+                      step3.operationWeeksOption === 'manual' 
+                        ? step3.manualWeeks 
+                        : step1.operationWeeks
+                    }주)
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 3) 메인 봇 종류 */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-[18px] font-medium mb-1">3) 메인 봇 종류 <span className="text-red-500">*</span></h3>
+              <p className="text-[13px] text-gray-600">하나를 선택해 주세요.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* 기본 */}
+              <label
+                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
+                  step3.mainBot === 'basic'
+                    ? 'border-[#ff7b00] bg-[#fff5eb] shadow-[2px_2px_0px_0px_rgba(255,123,0,0.3)] scale-[1.02]'
+                    : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="mainBot"
+                  checked={step3.mainBot === 'basic'}
+                  onChange={() => handleMainBotChange('basic')}
+                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">기본</div>
+                  <div className="text-[13px] text-gray-600 mt-1">15,000원</div>
+                </div>
+              </label>
+
+              {/* 기본+상점 */}
+              <label
+                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
+                  step3.mainBot === 'basicShop'
+                    ? 'border-[#ff7b00] bg-[#fff5eb] shadow-[2px_2px_0px_0px_rgba(255,123,0,0.3)] scale-[1.02]'
+                    : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="mainBot"
+                  checked={step3.mainBot === 'basicShop'}
+                  onChange={() => handleMainBotChange('basicShop')}
+                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">기본+상점</div>
+                  <div className="text-[13px] text-gray-600 mt-1">35,000원</div>
+                </div>
+              </label>
+
+              {/* 기본+상점+스탯 */}
+              <label
+                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
+                  step3.mainBot === 'basicShopStat'
+                    ? 'border-[#ff7b00] bg-[#fff5eb] shadow-[2px_2px_0px_0px_rgba(255,123,0,0.3)] scale-[1.02]'
+                    : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="mainBot"
+                  checked={step3.mainBot === 'basicShopStat'}
+                  onChange={() => handleMainBotChange('basicShopStat')}
+                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">기본+상점+스탯</div>
+                  <div className="text-[13px] text-gray-600 mt-1">45,000원</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* 4) 추가 기능 선택 */}
+          <div className="space-y-4">
+            <h3 className="text-[18px] font-medium">4) 추가 기능 선택</h3>
+
+            {/* CoC 봇 */}
+            <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+              <input
+                type="checkbox"
+                checked={step3.cocBot}
+                onChange={(e) => updateStep3({ cocBot: e.target.checked })}
+                className="mt-1 w-4 h-4 accent-[#ff7b00]"
+              />
+              <div className="flex-1">
+                <div className="font-medium text-[14px]">CoC 봇</div>
+                <div className="text-[13px] text-gray-600 mt-1">+30,000원</div>
+              </div>
+            </label>
+
+            {/* 예약 툿 */}
+            <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+              <input
+                type="checkbox"
+                checked={step3.reservationToot}
+                onChange={(e) => updateStep3({ reservationToot: e.target.checked })}
+                className="mt-1 w-4 h-4 accent-[#ff7b00]"
+              />
+              <div className="flex-1">
+                <div className="font-medium text-[14px]">예약 툿</div>
+                <div className="text-[13px] text-gray-600 mt-1">+5,000원</div>
+              </div>
+            </label>
+
+            {/* 자동 스진 */}
+            <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+              <input
+                type="checkbox"
+                checked={step3.autoProfileImage}
+                onChange={(e) => updateStep3({ autoProfileImage: e.target.checked })}
+                className="mt-1 w-4 h-4 accent-[#ff7b00]"
+              />
+              <div className="flex-1">
+                <div className="font-medium text-[14px]">자동 스진</div>
+                <div className="text-[13px] text-gray-600 mt-1">+5,000원</div>
+              </div>
+            </label>
+
+            {/* 예약 툿 또는 자동 스진 선택 시 계정 목록 입력 */}
+            {(step3.reservationToot || step3.autoProfileImage) && (
+              <div className="ml-7 space-y-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="space-y-2">
+                  <label htmlFor="accountList" className="block text-[14px] font-medium">
+                    예약 툿 혹은 스토리 진행에 사용할 계정 목록
+                  </label>
+                  <p className="text-[13px] text-gray-600">
+                    예약 툿을 발송해야 하거나 자동 스토리 진행에 참여하기를 원하는 계정의 희망 아이디를 모두 적어주세요.<br />
+                    마스토돈 개인 서버는 아이디 겹침을 고려하지 않으셔도 됩니다.<br />
+                    최대한 간결한 이름, 특히 전체 대문자로 통일하여 캐릭터 계정과 차이를 두는 것을 추천드립니다.
+                  </p>
+                  <input
+                    id="accountList"
+                    type="text"
+                    value={step3.accountList}
+                    onChange={(e) => updateStep3({ accountList: e.target.value })}
+                    placeholder="예: @NOTICE, @SYSTEM"
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                  />
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                  <p className="text-[13px] text-gray-700">
+                    <span className="font-medium">Q.</span> 저희는 NPC 계정을 만들 거긴 한데, 얘는 예약 툿 굳이 안보내도 되고 스진에도 등장하지 않아요.<br />
+                    <span className="font-medium">A.</span> 빼고 적으시면 됩니다.
+                  </p>
+                  <p className="text-[13px] text-gray-700">
+                    <span className="font-medium">Q.</span> 저희는 시스템 계정이 굳이 예약 툿을 안 보내도 돼요.<br />
+                    <span className="font-medium">A.</span> 빼고 적으시면 됩니다.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* 툿-재화 연동 */}
+            <div className="space-y-3">
+              <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+                <input
+                  type="checkbox"
+                  checked={step3.tootCurrencyLink}
+                  onChange={(e) => updateStep3({ tootCurrencyLink: e.target.checked })}
+                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">툿-재화 연동</div>
+                  <div className="text-[13px] text-gray-600 mt-1">+7,000원</div>
+                </div>
+              </label>
+
+              {step3.tootCurrencyLink && (
+                <div className="ml-7 space-y-2">
+                  <label htmlFor="tootPerCurrency" className="block text-[14px] font-medium">
+                    몇 툿당 소지금에 얼마가 추가되어야 하나요?
+                  </label>
+                  <input
+                    id="tootPerCurrency"
+                    type="text"
+                    value={step3.tootPerCurrency}
+                    onChange={(e) => updateStep3({ tootPerCurrency: e.target.value })}
+                    placeholder="예: 50툿당 1갈레온"
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* 양도 기능 (조건부) */}
+            {showTransferFeature && (
+              <div className="space-y-3">
+                <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+                  <input
+                    type="checkbox"
+                    checked={step3.transferFeature}
+                    onChange={(e) => updateStep3({ transferFeature: e.target.checked })}
+                    className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-[14px]">양도 기능</div>
+                    <div className="text-[13px] text-gray-600 mt-1">+10,000원</div>
+                  </div>
+                </label>
+
+                {step3.transferFeature && (
+                  <div className="ml-7 space-y-3">
+                    <label className="block text-[14px] font-medium">양도 대상</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="transferOption"
+                          checked={step3.transferOption === 'itemOnly'}
+                          onChange={() => updateStep3({ transferOption: 'itemOnly' })}
+                          className="w-4 h-4 accent-[#ff7b00]"
+                        />
+                        <span className="text-[14px]">아이템만</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="transferOption"
+                          checked={step3.transferOption === 'currencyOnly'}
+                          onChange={() => updateStep3({ transferOption: 'currencyOnly' })}
+                          className="w-4 h-4 accent-[#ff7b00]"
+                        />
+                        <span className="text-[14px]">재화만</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="transferOption"
+                          checked={step3.transferOption === 'all'}
+                          onChange={() => updateStep3({ transferOption: 'all' })}
+                          className="w-4 h-4 accent-[#ff7b00]"
+                        />
+                        <span className="text-[14px]">모두</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 오마카세 봇 */}
+            <div className="space-y-3">
+              <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+                <input
+                  type="checkbox"
+                  checked={step3.omakaseBot}
+                  onChange={(e) => updateStep3({ omakaseBot: e.target.checked })}
+                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">오마카세 봇</div>
+                  <div className="text-[13px] text-gray-600 mt-1">⚠️ 가격 상이 (별도 협의)</div>
+                </div>
+              </label>
+
+              {step3.omakaseBot && (
+                <div className="ml-7 space-y-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <label htmlFor="omakaseDetails" className="block text-[14px] font-medium">
+                    오마카세 기능 상세 설명
+                  </label>
+                  <div className="text-[13px] text-gray-600 space-y-2">
+                    <p>
+                      원하시는 기능을 정리한 <span className="font-medium">외부 문서 링크</span>를 전달해 주세요.<br />
+                      (시스템 문서와는 별도의 문서여야 합니다)
+                    </p>
+                  </div>
+                  <div className="mt-3 p-3 bg-white border border-gray-300 rounded-md text-[13px] text-gray-700 space-y-3">
+                    <div>
+                      <p className="font-medium mb-1">문서에 포함되어야 할 내용:</p>
+                      <ul className="list-disc list-inside space-y-1 text-gray-600">
+                        <li>러너가 입력할 명령어 (예: [사용/사과])</li>
+                        <li>명령어 입력 후 봇이 처리할 내용</li>
+                        <li>러너에게 보여줄 결과 메시지</li>
+                      </ul>
+                    </div>
+                    <div className="pt-3 border-t border-gray-200">
+                      <p className="font-medium mb-2">작성 예시:</p>
+                      <div className="bg-gray-50 p-2 rounded text-[12px] space-y-2">
+                        <p className="font-medium">"[사용/아이템명] 명령어를 추가하고 싶어요!"</p>
+                        <p>→ 러너가 [사용/사과]를 입력하면</p>
+                        <p>→ 봇이 러너의 소지품에서 사과를 삭제하고, 체력을 +10 해준 뒤</p>
+                        <p>→ "사과를 사용했습니다! 체력이 +10 되었습니다." 라고 답변해 주세요.</p>
+                      </div>
+                    </div>
+                    <p className="text-[12px] text-amber-600">
+                      내용이 불충분한 경우 신청이 거절될 수 있습니다.
+                    </p>
+                  </div>
+                  <textarea
+                    id="omakaseDetails"
+                    value={step3.omakaseDetails}
+                    onChange={(e) => updateStep3({ omakaseDetails: e.target.value })}
+                    placeholder="외부 문서 링크를 입력해 주세요."
+                    rows={3}
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px] resize-none"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 5) 봇 설정 정보 (조건부) */}
+          {(showCurrencyUnit || showStatList) && (
+            <div className="pt-6 border-t border-gray-200">
+              <h3 className="text-[18px] font-medium mb-4">5) 봇 설정 정보</h3>
+              <div className="space-y-4">
+                {showCurrencyUnit && (
+                  <div className="space-y-2">
+                    <label htmlFor="currencyUnit" className="block text-[14px] font-medium">
+                      재화 단위
+                    </label>
+                    <input
+                      id="currencyUnit"
+                      type="text"
+                      value={step3.currencyUnit}
+                      onChange={(e) => updateStep3({ currencyUnit: e.target.value })}
+                      placeholder="예: 갈레온, 코인, 골드"
+                      className="w-full md:w-96 px-4 py-2 border-2 border-gray-300 rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                    />
+                  </div>
+                )}
+
+                {showStatList && (
+                  <div className="space-y-2">
+                    <label htmlFor="statList" className="block text-[14px] font-medium">
+                      스탯 목록
+                    </label>
+                    <input
+                      id="statList"
+                      type="text"
+                      value={step3.statList}
+                      onChange={(e) => updateStep3({ statList: e.target.value })}
+                      placeholder="예: 체력, 정신력, 행운"
+                      className="w-full md:w-96 px-4 py-2 border-2 border-gray-300 rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 6) 기타 정보 */}
+          <div className="pt-6 border-t border-gray-200">
+            <h3 className="text-[18px] font-medium mb-4">{(showCurrencyUnit || showStatList) ? '6)' : '5)'} 기타 정보</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="botSymbol" className="block text-[14px] font-medium">
+                    봇 기호
+                  </label>
+                  <input
+                    id="botSymbol"
+                    type="text"
+                    value={step3.botSymbol}
+                    onChange={(e) => updateStep3({ botSymbol: e.target.value })}
+                    placeholder="기본값: ✶"
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="botAccountId" className="block text-[14px] font-medium">
+                    봇 계정 ID
+                  </label>
+                  <input
+                    id="botAccountId"
+                    type="text"
+                    value={step3.botAccountId}
+                    onChange={(e) => updateStep3({ botAccountId: e.target.value })}
+                    placeholder="예: @DICE, @BOT"
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="setupDeadline" className="block text-[14px] font-medium">
+                  세팅 마감일
+                </label>
+                <input
+                  id="setupDeadline"
+                  type="text"
+                  value={step3.setupDeadline}
+                  onChange={(e) => updateStep3({ setupDeadline: e.target.value })}
+                  placeholder="MM/DD (예: 03/15)"
+                  className="w-full md:w-64 px-4 py-2 border-2 border-gray-300 rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                />
+                <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* "아니오" 선택 시 안내 메시지 */}
+      {step3.applyBot === 'no' && (
+        <div className="p-6 bg-gray-50 border-2 border-gray-300 rounded-lg animate-slideDown">
+          <p className="text-[14px] text-gray-700 flex items-center gap-2">
+            <span>✓</span>
+            자동봇을 신청하지 않으셨습니다. 다음 단계로 이동해 주세요.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

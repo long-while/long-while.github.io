@@ -1,3 +1,5 @@
+import { ArrowRightIcon } from '@/app/components/icons';
+
 export default function Process() {
   const steps = [
     {
@@ -7,7 +9,11 @@ export default function Process() {
         "테마 신청 시 필요한 이미지 소스 목록과 안내는 신청서 접수 후에 전달드립니다.",
         "이미지 소스는 서버 설치 마감일 1주~2주 전까지 전달해주시면 됩니다. 신청 시점에 준비할 필요 X",
         "서버 설치 이후에도 테마 추가 가능합니다."
-      ]
+      ],
+      link: {
+        href: "#order",
+        label: "온라인 신청서 작성하기"
+      }
     },
     {
       number: "02",
@@ -58,7 +64,7 @@ export default function Process() {
       <div className="space-y-8">
         {steps.map((step, index) => (
           <div key={index} className="flex gap-6">
-            <div className="text-[12px] font-mono text-[#ff7b00] shrink-0 mt-1">
+            <div className="text-[12px] font-mono text-[var(--brand-primary)] shrink-0 mt-1">
               {step.number}
             </div>
             <div>
@@ -67,11 +73,20 @@ export default function Process() {
                 <ul className="space-y-2">
                   {step.details.map((detail, i) => (
                     <li key={i} className="text-[16px] leading-[1.8] text-foreground/70 flex gap-3">
-                      <span className="text-[#ff7b00] shrink-0">—</span>
+                      <span className="text-[var(--brand-primary)] shrink-0">—</span>
                       <span>{detail}</span>
                     </li>
                   ))}
                 </ul>
+              )}
+              {step.link && (
+                <a 
+                  href={step.link.href}
+                  className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-[var(--brand-primary)] text-white rounded-lg font-medium text-[14px] hover:bg-[var(--brand-primary-hover)] transition-colors"
+                >
+                  {step.link.label}
+                  <ArrowRightIcon className="w-4 h-4" />
+                </a>
               )}
             </div>
           </div>

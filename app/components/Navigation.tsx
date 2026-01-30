@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-
-interface NavigationProps {
-  currentPage: string;
-  onNavigate: (page: string) => void;
-}
+import { MenuIcon, CloseIcon } from '@/app/components/icons';
+import type { NavigationProps, MenuItem } from '@/app/types/navigation';
 
 export default function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { items } = useEstimate();
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     { id: 'home', label: '홈' },
+    { id: 'order', label: '신청서 작성' },
     { id: 'estimate', label: '견적 확인하기', badge: items.length > 0 ? items.length : undefined },
     { id: 'server', label: '서버 설치 커미션' },
     { id: 'bot', label: '자동봇 커미션' },
@@ -20,7 +18,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
     { id: 'crepe', label: '크레페로 이동', isExternal: true, url: 'https://crepe.cm/@longwhile/lw5w0ofg' },
   ];
 
-  const handleMenuClick = (item: typeof menuItems[0]) => {
+  const handleMenuClick = (item: MenuItem) => {
     if (item.isExternal && item.url) {
       window.open(item.url, '_blank', 'noopener,noreferrer');
     } else {
@@ -38,9 +36,9 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
             {/* 로고 */}
             <button
               onClick={() => onNavigate('home')}
-              className="text-[20px] font-medium tracking-[-0.01em] hover:text-[#ff7b00] transition-colors"
+              className="text-[20px] font-medium tracking-[-0.01em] hover:text-[var(--brand-primary)] transition-colors"
             >
-              한참 코딩 커미션
+              한참 코딩 커미션 [TEST]
             </button>
 
             {/* 데스크톱 메뉴 */}
@@ -49,13 +47,13 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item)}
-                  className={`px-4 py-2 text-[14px] hover:text-[#ff7b00] transition-colors relative ${
-                    currentPage === item.id ? 'text-[#ff7b00]' : 'text-foreground'
+                  className={`px-4 py-2 text-[14px] hover:text-[var(--brand-primary)] transition-colors relative ${
+                    currentPage === item.id ? 'text-[var(--brand-primary)]' : 'text-foreground'
                   }`}
                 >
                   {item.label}
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-[#ff7b00] text-white text-[10px] font-mono w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-[var(--brand-primary)] text-white text-[10px] font-mono w-5 h-5 rounded-full flex items-center justify-center">
                       {item.badge}
                     </span>
                   )}
@@ -69,36 +67,15 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
             {/* 모바일 햄버거 버튼 */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 hover:text-[#ff7b00] transition-colors relative"
+              className="md:hidden p-2 hover:text-[var(--brand-primary)] transition-colors relative"
               aria-label="메뉴"
             >
               {items.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#ff7b00] text-white text-[10px] font-mono w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-[var(--brand-primary)] text-white text-[10px] font-mono w-5 h-5 rounded-full flex items-center justify-center">
                   {items.length}
                 </span>
               )}
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {isMobileMenuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
+              {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
           </div>
         </div>
@@ -132,14 +109,14 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item)}
-                  className={`w-full text-left px-4 py-3 text-[16px] hover:bg-[#fff5eb] hover:text-[#ff7b00] transition-colors rounded flex items-center justify-between ${
-                    currentPage === item.id ? 'bg-[#fff5eb] text-[#ff7b00]' : 'text-foreground'
+                  className={`w-full text-left px-4 py-3 text-[16px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors rounded flex items-center justify-between ${
+                    currentPage === item.id ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)]' : 'text-foreground'
                   }`}
                 >
                   <span>{item.label}</span>
                   <div className="flex items-center gap-2">
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className="bg-[#ff7b00] text-white text-[10px] font-mono w-5 h-5 rounded-full flex items-center justify-center">
+                      <span className="bg-[var(--brand-primary)] text-white text-[10px] font-mono w-5 h-5 rounded-full flex items-center justify-center">
                         {item.badge}
                       </span>
                     )}

@@ -1,0 +1,445 @@
+/**
+ * Design Tokens - 브랜드 컬러 시스템
+ * =====================================
+ * 
+ * 모든 컬러와 디자인 변수는 이 파일에서 관리합니다.
+ * 컴포넌트에서 하드코딩된 컬러 값 대신 이 토큰을 사용하세요.
+ * 
+ * 사용 예시:
+ * - CSS: color: var(--brand-primary);
+ * - Tailwind: className="text-brand" (tailwind.config.js 설정 후)
+ * 
+ * @author Longwhile Commission
+ * @version 1.0.0
+ */
+
+:root {
+  /* ========================================
+   * Brand Colors - Primary (Orange)
+   * ========================================
+   * 
+   * 주요 브랜드 컬러입니다.
+   * 버튼, 링크, 강조 텍스트 등에 사용합니다.
+   */
+  --brand-primary: #ff7b00;
+  --brand-primary-hover: #e66d00;
+  --brand-primary-active: #cc5f00;
+  --brand-primary-light: #ffa640;
+  --brand-primary-lighter: #ffb85c;
+  
+  /* 브랜드 배경색 */
+  --brand-bg: #fff5eb;
+  --brand-bg-hover: #ffecdb;
+  --brand-bg-subtle: #fffaf5;
+  
+  /* 브랜드 그라디언트 */
+  --brand-gradient-start: #ff7b00;
+  --brand-gradient-mid: #ff9933;
+  --brand-gradient-end: #ffb85c;
+  --brand-gradient: linear-gradient(to right, var(--brand-gradient-start), var(--brand-gradient-mid));
+  --brand-gradient-vibrant: linear-gradient(to right, var(--brand-gradient-start), var(--brand-gradient-end));
+  
+  /* 히어로 섹션 그라디언트 */
+  --hero-gradient: linear-gradient(135deg, #dce3e8 0%, #ffe0b3 25%, #ffc875 45%, #ffb85c 65%, #ff8833 85%, #ff7722 100%);
+
+  /* ========================================
+   * Semantic Colors
+   * ========================================
+   * 
+   * 상태를 나타내는 의미적 컬러입니다.
+   */
+  --color-success: #22c55e;
+  --color-success-bg: #f0fdf4;
+  --color-success-border: #86efac;
+  
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fcd34d;
+  
+  --color-error: #ef4444;
+  --color-error-bg: #fef2f2;
+  --color-error-border: #fca5a5;
+  
+  --color-info: #3b82f6;
+  --color-info-bg: #eff6ff;
+  --color-info-border: #93c5fd;
+
+  /* ========================================
+   * Neutral Colors (Gray Scale)
+   * ========================================
+   * 
+   * 텍스트, 배경, 테두리 등에 사용되는 중립 컬러입니다.
+   */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  
+  /* 흑백 */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* ========================================
+   * Typography Scale
+   * ========================================
+   * 
+   * 일관된 폰트 크기 시스템입니다.
+   */
+  --font-size-2xs: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 28px;
+  --font-size-4xl: 32px;
+  --font-size-5xl: 36px;
+  --font-size-6xl: 42px;
+  --font-size-display: 72px;
+  --font-size-hero: 96px;
+
+  /* ========================================
+   * Spacing Scale
+   * ========================================
+   */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* ========================================
+   * Component-Specific Tokens
+   * ========================================
+   */
+  
+  /* Form Elements */
+  --form-border: var(--gray-300);
+  --form-border-hover: var(--gray-400);
+  --form-border-focus: var(--brand-primary);
+  --form-focus-ring: rgba(255, 123, 0, 0.1);
+  --form-focus-ring-color: rgba(255, 123, 0, 0.3);
+  --form-bg: var(--color-white);
+  --form-bg-disabled: var(--gray-100);
+  
+  /* Navigation */
+  --nav-text: var(--gray-900);
+  --nav-text-hover: var(--brand-primary);
+  --nav-text-active: var(--brand-primary);
+  --nav-bg: var(--color-white);
+  --nav-border: var(--color-black);
+  --nav-mobile-overlay: rgba(0, 0, 0, 0.5);
+  
+  /* Button - Primary */
+  --btn-primary-bg: var(--brand-primary);
+  --btn-primary-bg-hover: var(--brand-primary-hover);
+  --btn-primary-text: var(--color-white);
+  --btn-primary-border: var(--color-black);
+  
+  /* Button - Secondary */
+  --btn-secondary-bg: var(--color-white);
+  --btn-secondary-bg-hover: var(--gray-50);
+  --btn-secondary-text: var(--gray-900);
+  --btn-secondary-border: var(--color-black);
+  
+  /* Card */
+  --card-bg: var(--color-white);
+  --card-border: var(--color-black);
+  --card-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  --card-shadow-hover: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+  --card-shadow-sm: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+  
+  /* Badge */
+  --badge-bg: var(--brand-primary);
+  --badge-text: var(--color-white);
+  --badge-size: 20px;
+  
+  /* Dialog */
+  --dialog-overlay: rgba(0, 0, 0, 0.5);
+  --dialog-bg: var(--color-white);
+  --dialog-border: var(--color-black);
+  --dialog-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+
+  /* ========================================
+   * Animation Durations
+   * ========================================
+   */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+  
+  /* ========================================
+   * Border Radius
+   * ========================================
+   */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  
+  /* ========================================
+   * Z-Index Scale
+   * ========================================
+   */
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-popover: 60;
+  --z-tooltip: 70;
+}
+
+/* ========================================
+ * Utility Classes (CSS Variables 기반)
+ * ========================================
+ * 
+ * Tailwind 설정 전 임시로 사용할 수 있는 유틸리티 클래스
+ */
+
+/* Text Colors */
+.text-brand {
+  color: var(--brand-primary);
+}
+
+.text-brand-hover:hover {
+  color: var(--brand-primary-hover);
+}
+
+/* Background Colors */
+.bg-brand {
+  background-color: var(--brand-primary);
+}
+
+.bg-brand-hover:hover {
+  background-color: var(--brand-primary-hover);
+}
+
+.bg-brand-light {
+  background-color: var(--brand-bg);
+}
+
+/* Border Colors */
+.border-brand {
+  border-color: var(--brand-primary);
+}
+
+/* Gradient */
+.bg-brand-gradient {
+  background: var(--brand-gradient);
+}
+
+.text-brand-gradient {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Focus Ring */
+.focus-brand:focus {
+  border-color: var(--form-border-focus);
+  box-shadow: 0 0 0 3px var(--form-focus-ring);
+  outline: none;
+}
+
+/* ========================================
+ * Form Components
+ * ========================================
+ */
+
+/* 기본 폼 인풋 */
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--form-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  transition: all var(--duration-normal);
+  background-color: var(--form-bg);
+}
+
+.form-input:hover {
+  border-color: var(--form-border-hover);
+}
+
+.form-input:focus {
+  border-color: var(--form-border-focus);
+  box-shadow: 0 0 0 3px var(--form-focus-ring);
+  outline: none;
+}
+
+.form-input:disabled {
+  background-color: var(--form-bg-disabled);
+  cursor: not-allowed;
+}
+
+/* 폼 라디오/체크박스 컨테이너 */
+.form-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid var(--form-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--duration-normal);
+}
+
+.form-option:hover {
+  border-color: var(--brand-primary);
+  background-color: var(--brand-bg);
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.form-option.selected {
+  border-color: var(--brand-primary);
+  background-color: var(--brand-bg);
+  box-shadow: 2px 2px 0px 0px rgba(255, 123, 0, 0.3);
+  transform: scale(1.02);
+}
+
+/* 라디오/체크박스 accent 색상 */
+.form-checkbox,
+.form-radio {
+  accent-color: var(--brand-primary);
+  cursor: pointer;
+}
+
+/* 브랜드 그라디언트 텍스트 */
+.text-gradient-brand {
+  background: linear-gradient(to right, var(--brand-primary), var(--brand-gradient-mid));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========================================
+ * Button Components
+ * ========================================
+ */
+
+/* 기본 버튼 베이스 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-black);
+  cursor: pointer;
+  transition: all var(--duration-normal);
+}
+
+/* Primary 버튼 - 네오 브루탈리즘 스타일 */
+.btn-primary {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  box-shadow: var(--card-shadow-sm);
+}
+
+.btn-primary:hover {
+  background-color: var(--btn-primary-bg-hover);
+  box-shadow: var(--card-shadow);
+  transform: translate(-2px, -2px);
+}
+
+.btn-primary:active {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+.btn-primary:disabled {
+  background-color: var(--gray-300);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--card-shadow-sm);
+}
+
+/* Secondary 버튼 */
+.btn-secondary {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  box-shadow: var(--card-shadow-sm);
+}
+
+.btn-secondary:hover {
+  background-color: var(--btn-secondary-bg-hover);
+  box-shadow: var(--card-shadow);
+  transform: translate(-2px, -2px);
+}
+
+.btn-secondary:active {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+/* 링크 스타일 버튼 */
+.btn-link {
+  color: var(--brand-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.btn-link:hover {
+  color: var(--brand-primary-hover);
+  text-decoration: underline;
+  transform: none;
+}
+
+/* ========================================
+ * Badge/Tag Components
+ * ========================================
+ */
+
+.badge-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  background-color: var(--brand-bg);
+  border: 1px solid var(--brand-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+}
+
+/* ========================================
+ * Card Header
+ * ========================================
+ */
+
+.card-header-brand {
+  background-color: var(--brand-primary);
+  padding: 16px 24px;
+  border-bottom: 2px solid var(--color-black);
+}
+
+/* Card Shadow */
+.shadow-card {
+  box-shadow: var(--card-shadow);
+}
+
+.shadow-card-hover:hover {
+  box-shadow: var(--card-shadow-hover);
+}
