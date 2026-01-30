@@ -19,3 +19,27 @@ body {
 input, textarea, button, select {
   font-family: 'Noto Sans KR', sans-serif;
 }
+
+/* 접근성: 포커스 인디케이터 */
+:focus-visible {
+  outline: 2px solid var(--brand-primary, #ff7b00);
+  outline-offset: 2px;
+}
+
+/* 특정 요소들의 기본 outline 제거 (focus-visible로 대체) */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 색상 대비 개선 */
+.text-foreground\/60 {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.text-foreground\/50 {
+  color: rgba(0, 0, 0, 0.6);
+}

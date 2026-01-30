@@ -2,6 +2,8 @@ import { createContext, useContext, useState, ReactNode, useCallback, useEffect 
 import type { OrderFormData, Step1Data, Step2Data, Step3Data, Step4Data } from '@/app/types/order';
 import { ORDER_STORAGE_KEY, SCHEMA_VERSION } from '@/app/types/order';
 import { FORM_CONFIG } from '@/app/constants/form';
+import type { EstimateItem } from '@/app/contexts/EstimateContext';
+import { syncCartToOrderData, loadSyncState, clearSyncState, type CartSyncState } from '@/app/utils/cartOrderSync';
 
 interface OrderContextType {
   formData: OrderFormData;
@@ -14,6 +16,9 @@ interface OrderContextType {
   resetForm: () => void;
   saveToLocalStorage: () => void;
   loadFromLocalStorage: () => boolean;
+  syncFromCart: (cartItems: EstimateItem[]) => void;
+  cartSyncState: CartSyncState | null;
+  clearCartSync: () => void;
 }
 
 const initialStep1Data: Step1Data = {
@@ -80,6 +85,7 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 export function OrderProvider({ children }: { children: ReactNode }) {
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [cartSyncState, setCartSyncState] = useState<CartSyncState | null>(null);
 
   const updateStep1 = useCallback((data: Partial<Step1Data>) => {
     setFormData(prev => ({
@@ -109,11 +115,35 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  // 장바구니에서 데이터 동기화
+  const syncFromCart = useCallback((cartItems: EstimateItem[]) => {
+    if (cartItems.length === 0) return;
+
+    const { step2, step3 } = syncCartToOrderData(cartItems);
+
+    setFormData(prev => ({
+      ...prev,
+      step2: { ...prev.step2, ...step2 },
+      step3: { ...prev.step3, ...step3 },
+    }));
+
+    // 동기화 상태 업데이트
+    const syncState = loadSyncState();
+    setCartSyncState(syncState);
+  }, []);
+
+  // 장바구니 동기화 상태 초기화
+  const clearCartSync = useCallback(() => {
+    clearSyncState();
+    setCartSyncState(null);
+  }, []);
+
   const resetForm = useCallback(() => {
     setFormData(initialFormData);
     setCurrentStep(1);
     localStorage.removeItem(ORDER_STORAGE_KEY);
-  }, []);
+    clearCartSync();
+  }, [clearCartSync]);
 
   // localStorage 저장 (비밀번호는 보안상 저장하지 않음)
   const saveToLocalStorage = useCallback(() => {
@@ -197,6 +227,14 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [saveToLocalStorage]);
 
+  // 초기 마운트 시 동기화 상태 확인
+  useEffect(() => {
+    const syncState = loadSyncState();
+    if (syncState?.synced) {
+      setCartSyncState(syncState);
+    }
+  }, []);
+
   return (
     <OrderContext.Provider
       value={{
@@ -210,6 +248,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         resetForm,
         saveToLocalStorage,
         loadFromLocalStorage,
+        syncFromCart,
+        cartSyncState,
+        clearCartSync,
       }}
     >
       {children}

@@ -1,17 +1,21 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import { calculateTotalEstimate, generateCopyText } from '@/app/utils/orderUtils';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { PRICING_CONFIG } from '@/app/constants/form';
 
+const CREPE_URL = 'https://crepe.cm/@longwhile/lw5w0ofg';
+
 export default function Step4Review() {
   const { formData, setCurrentStep } = useOrder();
   const { step1, step2, step3 } = formData;
-  const [policyConfirmation, setPolicyConfirmation] = useState('');
+  const [policyConfirmed, setPolicyConfirmed] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 실시간 견적 계산
   const estimate = useMemo(() => {
@@ -30,8 +34,32 @@ export default function Step4Review() {
     }
   }, [formData]);
 
-  // 복사 버튼 활성화 조건: "예"라고 정확히 입력했을 때
-  const isCopyEnabled = policyConfirmation.trim() === '예' && !isCopying;
+  // 복사 버튼 활성화 조건: 체크박스 선택 시
+  const isCopyEnabled = policyConfirmed && !isCopying;
+
+  // 카운트다운 정리
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, []);
+
+  // 크레페 이동 취소
+  const cancelRedirect = useCallback(() => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    setRedirectCountdown(null);
+  }, []);
+
+  // 크레페로 바로 이동
+  const goToCrepe = useCallback(() => {
+    cancelRedirect();
+    window.open(CREPE_URL, '_blank', 'noopener,noreferrer');
+  }, [cancelRedirect]);
 
   // 클립보드 복사 함수
   const handleCopy = useCallback(async () => {
@@ -47,7 +75,23 @@ export default function Step4Review() {
       setCopySuccess(true);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-      setTimeout(() => setCopySuccess(false), 3500);
+      
+      // 3초 카운트다운 시작
+      setRedirectCountdown(3);
+      countdownRef.current = setInterval(() => {
+        setRedirectCountdown(prev => {
+          if (prev === null || prev <= 1) {
+            if (countdownRef.current) {
+              clearInterval(countdownRef.current);
+              countdownRef.current = null;
+            }
+            // 카운트다운 완료 시 자동 이동
+            window.open(CREPE_URL, '_blank', 'noopener,noreferrer');
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } else {
       setError(result.error);
     }
@@ -428,29 +472,18 @@ export default function Step4Review() {
           </div>
         </div>
         
-        <div className="mt-6 pt-4 border-t border-gray-200 space-y-3">
-          <label htmlFor="policyConfirmation" className="block">
-            <span className="text-[15px] font-medium">
-              위 내용을 확인하셨다면 <span className="text-[#ff7b00]">"예"</span>라고 입력해 주세요. <span className="text-red-500">*</span>
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={policyConfirmed}
+              onChange={(e) => setPolicyConfirmed(e.target.checked)}
+              className="mt-1 w-5 h-5 min-w-[20px] min-h-[20px] accent-[#ff7b00] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+            />
+            <span className="text-[15px] text-gray-700 group-hover:text-gray-900 transition-colors">
+              위 질문 정책 안내를 읽고 이해했습니다. <span className="text-red-500">*</span>
             </span>
           </label>
-          <input
-            id="policyConfirmation"
-            type="text"
-            value={policyConfirmation}
-            onChange={(e) => setPolicyConfirmation(e.target.value)}
-            placeholder="예"
-            className={`w-full md:w-48 px-4 py-2 border-2 rounded-md focus:outline-none text-[14px] transition-all duration-300 ${
-              isCopyEnabled
-                ? 'border-[#ff7b00] bg-[#fff5eb] shadow-[0_0_0_3px_rgba(255,123,0,0.1)]'
-                : 'border-gray-300 focus:border-[#ff7b00] focus:shadow-[0_0_0_3px_rgba(255,123,0,0.1)]'
-            }`}
-          />
-          {!isCopyEnabled && policyConfirmation.trim().length > 0 && (
-            <p className="text-[13px] text-red-600">
-              정확히 "예"라고 입력해 주세요. (현재 입력: "{policyConfirmation}")
-            </p>
-          )}
         </div>
       </div>
 
@@ -475,10 +508,34 @@ export default function Step4Review() {
           {isCopying ? '복사 중...' : isCopyEnabled ? '신청서 복사하기' : '정책 동의 후 복사 가능'}
         </button>
 
-        {copySuccess && (
-          <div className="mt-4 p-4 bg-[#fff5eb] border-2 border-[#ff7b00] rounded-lg animate-bounceIn">
+        {copySuccess && redirectCountdown !== null && (
+          <div className="mt-4 p-4 bg-green-50 border-2 border-green-500 rounded-lg animate-bounceIn">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-[14px] text-green-700 font-medium">
+                복사 완료! {redirectCountdown}초 후 크레페로 이동합니다...
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={goToCrepe}
+                  className="px-4 py-2 min-h-[44px] text-[14px] bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
+                >
+                  바로 이동
+                </button>
+                <button
+                  onClick={cancelRedirect}
+                  className="px-4 py-2 min-h-[44px] text-[14px] text-green-700 border border-green-500 rounded-md hover:bg-green-100 transition-colors focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {copySuccess && redirectCountdown === null && (
+          <div className="mt-4 p-4 bg-[#fff5eb] border-2 border-[#ff7b00] rounded-lg">
             <p className="text-[14px] text-[#ff7b00] font-medium">
-              복사에 성공했습니다! 이제 <a href="https://crepe.cm/@longwhile/lw5w0ofg" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-[#e66d00] transition-colors">크레페</a>로 이동해서 신청서에 내용을 붙여넣습니다.
+              복사에 성공했습니다! <button onClick={goToCrepe} className="underline font-medium hover:text-[#e66d00] transition-colors">크레페</button>로 이동해서 신청서에 내용을 붙여넣습니다.
             </p>
           </div>
         )}
@@ -486,7 +543,7 @@ export default function Step4Review() {
         {isCopyEnabled && !copySuccess && (
           <div className="mt-4 p-4 bg-[#fff5eb] border-2 border-[#ff7b00] rounded-lg animate-fadeIn">
             <p className="text-[14px] text-[#ff7b00]">
-              <strong>다음 단계:</strong> 복사하기 버튼을 통해 신청서를 복사한 후, <a href="https://crepe.cm/@longwhile/lw5w0ofg" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-[#e66d00] transition-colors">크레페</a>로 이동해서 신청서에 내용을 붙여넣습니다.
+              <strong>다음 단계:</strong> 복사하기 버튼을 통해 신청서를 복사한 후, 크레페로 이동해서 신청서에 내용을 붙여넣습니다.
             </p>
           </div>
         )}

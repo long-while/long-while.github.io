@@ -1,11 +1,40 @@
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useState, useEffect } from 'react';
 import { validateCharacterLimit } from '@/app/utils/orderUtils';
+import { ShoppingCart } from 'lucide-react';
+
+// 견적에서 선택됨 배지 컴포넌트
+function FromCartBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-[11px] font-medium rounded-full ml-2">
+      <ShoppingCart className="w-3 h-3" />
+      견적에서 선택됨
+    </span>
+  );
+}
 
 export default function Step2Server() {
-  const { formData, updateStep2 } = useOrder();
+  const { formData, updateStep2, cartSyncState } = useOrder();
   const step2 = formData.step2;
   const [characterLimitError, setCharacterLimitError] = useState<string | null>(null);
+
+  // 견적에서 동기화된 항목인지 확인
+  const isFromCart = (itemName: string) => {
+    return cartSyncState?.syncedItems?.some(name => 
+      name.includes(itemName) || itemName.includes(name)
+    ) ?? false;
+  };
+
+  // 서버 설치가 견적에서 선택되었는지
+  const serverFromCart = isFromCart('마스토돈 서버 설치');
+  // 테마 옵션이 견적에서 선택되었는지
+  const themeFromCart = isFromCart('테마') || isFromCart('로고');
+  // 노션 가이드가 견적에서 선택되었는지
+  const notionFromCart = isFromCart('마스토돈 가이드');
+  // 글자수 제한이 견적에서 선택되었는지
+  const charLimitFromCart = isFromCart('글자수');
+  // 빠른 마감이 견적에서 선택되었는지
+  const fastDeadlineFromCart = isFromCart('빠른마감');
 
   // 글자수 값 검증
   useEffect(() => {
@@ -60,6 +89,7 @@ export default function Step2Server() {
         <label className="block">
           <span className="text-[18px] font-medium">
             1) 서버 설치를 신청하시나요? <span className="text-red-500">*</span>
+            {serverFromCart && step2.applyServerInstall === 'yes' && <FromCartBadge />}
           </span>
           <p className="text-[13px] text-gray-600 mt-1 mb-3">
             서버 설치 기본 비용: <span className="font-medium text-[#ff7b00]">20,000원</span>
@@ -95,7 +125,10 @@ export default function Step2Server() {
           {/* 2) 커스텀 옵션 선택 */}
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-medium mb-1">2) 커스텀 옵션 선택</h3>
+              <h3 className="text-[18px] font-medium mb-1">
+                2) 커스텀 옵션 선택
+                {themeFromCart && step2.additionalOption && <FromCartBadge />}
+              </h3>
               <p className="text-[13px] text-gray-600">
                 테마 옵션은 전부 로고 변경 옵션이 포함되어 있습니다.
               </p>
@@ -193,7 +226,11 @@ export default function Step2Server() {
             <h3 className="text-[18px] font-medium">3) 기타 옵션 선택</h3>
 
             {/* 노션 가이드 */}
-            <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+            <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+              step2.notionGuide 
+                ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+            }`}>
               <input
                 type="checkbox"
                 checked={step2.notionGuide}
@@ -201,7 +238,10 @@ export default function Step2Server() {
                 className="mt-1 w-4 h-4 accent-[#ff7b00]"
               />
               <div className="flex-1">
-                <div className="font-medium text-[14px]">노션 마스토돈 가이드 제공 (+5,000원)</div>
+                <div className="font-medium text-[14px]">
+                  노션 마스토돈 가이드 제공 (+5,000원)
+                  {notionFromCart && step2.notionGuide && <FromCartBadge />}
+                </div>
                 <div className="text-[13px] text-gray-600 mt-1">
                   마스토돈 커뮤니티를 처음 러닝하는 러너를 위한 가이드입니다.
                 </div>
@@ -210,7 +250,11 @@ export default function Step2Server() {
 
             {/* 글자수 제한 변경 */}
             <div className="space-y-3">
-              <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+              <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+                step2.changeCharacterLimit 
+                  ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                  : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              }`}>
                 <input
                   type="checkbox"
                   checked={step2.changeCharacterLimit}
@@ -224,7 +268,10 @@ export default function Step2Server() {
                   className="mt-1 w-4 h-4 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-[14px]">글자수 제한 변경 (+5,000원)</div>
+                  <div className="font-medium text-[14px]">
+                    글자수 제한 변경 (+5,000원)
+                    {charLimitFromCart && step2.changeCharacterLimit && <FromCartBadge />}
+                  </div>
                   <div className="text-[13px] text-gray-600 mt-1">
                     기본 공백 포함 1000자. 원하는 글자수 제한을 설정합니다.
                   </div>
@@ -263,7 +310,11 @@ export default function Step2Server() {
 
             {/* 빠른 마감 */}
             <div className="space-y-3">
-              <label className="flex items-start gap-3 p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1">
+              <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+                step2.fastDeadline 
+                  ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                  : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              }`}>
                 <input
                   type="checkbox"
                   checked={step2.fastDeadline}
@@ -276,7 +327,10 @@ export default function Step2Server() {
                   className="mt-1 w-4 h-4 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-[14px]">48시간 이내 빠른 마감</div>
+                  <div className="font-medium text-[14px]">
+                    48시간 이내 빠른 마감
+                    {fastDeadlineFromCart && step2.fastDeadline && <FromCartBadge />}
+                  </div>
                 </div>
               </label>
 

@@ -5,13 +5,22 @@ import Step1Applicant from './steps/Step1Applicant';
 import Step2Server from './steps/Step2Server';
 import Step3Bot from './steps/Step3Bot';
 import Step4Review from './steps/Step4Review';
+import { CheckCircle, X } from 'lucide-react';
 
 interface OrderFormProps {
   onNavigate?: (page: string) => void;
 }
 
 export default function OrderForm({ onNavigate }: OrderFormProps) {
-  const { formData, currentStep, setCurrentStep } = useOrder();
+  const { formData, currentStep, setCurrentStep, cartSyncState, clearCartSync } = useOrder();
+  const [showSyncNotice, setShowSyncNotice] = useState(false);
+
+  // 동기화 상태가 있으면 알림 표시
+  useEffect(() => {
+    if (cartSyncState?.synced) {
+      setShowSyncNotice(true);
+    }
+  }, [cartSyncState]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -163,10 +172,40 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
     );
   };
 
+  const handleDismissSyncNotice = () => {
+    setShowSyncNotice(false);
+    clearCartSync();
+  };
+
   return (
     <div className="max-w-[900px] mx-auto px-4 py-8">
       {/* 프로그레스 바 */}
       {renderProgressBar()}
+
+      {/* 장바구니 동기화 알림 */}
+      {showSyncNotice && cartSyncState && (
+        <div className="mb-6 p-4 bg-green-50 border-2 border-green-500 rounded-md animate-fadeIn flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+            <div>
+              <h3 className="text-[15px] font-medium text-green-800 mb-1">
+                견적 항목이 자동으로 반영되었습니다
+              </h3>
+              <p className="text-[13px] text-green-700">
+                {cartSyncState.itemCount}개 항목이 신청서에 반영되었습니다. 
+                Step 2, Step 3에서 선택된 옵션을 확인해 주세요.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleDismissSyncNotice}
+            className="p-1 hover:bg-green-100 rounded-full transition-colors shrink-0"
+            aria-label="알림 닫기"
+          >
+            <X className="w-4 h-4 text-green-600" />
+          </button>
+        </div>
+      )}
 
       {/* 검증 에러 표시 - 애니메이션 추가 */}
       {validationErrors.length > 0 && (

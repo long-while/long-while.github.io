@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { ArrowRightIcon, ArrowDownIcon, ChevronDownIcon, WarningIcon } from '@/app/components/icons';
+import { useEstimate } from '@/app/contexts/EstimateContext';
 
 export default function Header() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { items } = useEstimate();
 
   // 핵심 특징 4개
   const highlightFeatures = [
@@ -59,14 +61,42 @@ export default function Header() {
               서버 설치부터 자동봇까지 한번에
             </p>
             
-            {/* CTA 버튼 */}
-            <a 
-              href="#order"
-              className="inline-flex items-center gap-2 bg-white text-[var(--brand-primary)] px-8 py-4 rounded-full font-semibold text-[16px] md:text-[18px] shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-            >
-              신청서 작성하기
-              <ArrowRightIcon className="w-5 h-5" />
-            </a>
+            {/* CTA 버튼 - 견적 유무에 따라 동적 변경 */}
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              {items.length > 0 ? (
+                <>
+                  <a 
+                    href="#estimate"
+                    className="inline-flex items-center gap-2 bg-white text-[var(--brand-primary)] px-8 py-4 rounded-full font-semibold text-[16px] md:text-[18px] shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                  >
+                    견적 확인하기 ({items.length}개)
+                    <ArrowRightIcon className="w-5 h-5" />
+                  </a>
+                  <a 
+                    href="#order"
+                    className="inline-flex items-center gap-2 text-white/90 hover:text-white text-[14px] md:text-[16px] underline underline-offset-4 transition-colors"
+                  >
+                    바로 신청서 작성
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a 
+                    href="#server"
+                    className="inline-flex items-center gap-2 bg-white text-[var(--brand-primary)] px-8 py-4 rounded-full font-semibold text-[16px] md:text-[18px] shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                  >
+                    서비스 살펴보기
+                    <ArrowRightIcon className="w-5 h-5" />
+                  </a>
+                  <a 
+                    href="#order"
+                    className="inline-flex items-center gap-2 text-white/90 hover:text-white text-[14px] md:text-[16px] underline underline-offset-4 transition-colors"
+                  >
+                    바로 신청서 작성
+                  </a>
+                </>
+              )}
+            </div>
           </div>
 
           {/* 스크롤 힌트 */}
@@ -144,7 +174,7 @@ export default function Header() {
           </div>
 
           {/* 더 많은 특징 (접이식) */}
-          <div className="border-2 border-black/10 mb-10">
+          <div className="border-2 border-black/10 mb-10 overflow-hidden">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
@@ -152,11 +182,15 @@ export default function Header() {
               <span className="text-[16px] font-medium">
                 더 많은 특징 보기 ({moreFeatures.length}개)
               </span>
-              <ChevronDownIcon className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
             </button>
             
-            {isExpanded && (
-              <div className="border-t border-black/10 px-6 py-6 space-y-6">
+            <div 
+              className={`border-t border-black/10 transition-all duration-300 ease-in-out ${
+                isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 border-t-0'
+              }`}
+            >
+              <div className="px-6 py-6 space-y-6">
                 {moreFeatures.map((feature, index) => (
                   <div key={index} className="flex gap-6">
                     <div className="text-[12px] font-mono text-[var(--brand-primary)] shrink-0 mt-1">
@@ -171,7 +205,7 @@ export default function Header() {
                   </div>
                 ))}
               </div>
-            )}
+            </div>
           </div>
 
           {/* 주의사항 (분리) */}

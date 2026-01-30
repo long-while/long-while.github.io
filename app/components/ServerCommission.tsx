@@ -1,16 +1,14 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import type { NavigateFunction } from '@/app/types/navigation';
 
 interface ServerCommissionProps {
   onBack: () => void;
+  onNavigate?: NavigateFunction;
 }
 
-export default function ServerCommission({ onBack }: ServerCommissionProps) {
+export default function ServerCommission({ onBack, onNavigate }: ServerCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
-  const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
-  const [showToast, setShowToast] = useState(false);
-  const [isHidingToast, setIsHidingToast] = useState(false);
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
@@ -22,11 +20,6 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
     if (existingItem) {
       // 이미 있으면 제거
       removeItem(existingItem.id);
-      setAddedItems(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(name);
-        return newSet;
-      });
     } else {
       // 없으면 추가
       addItem({
@@ -35,27 +28,6 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
         category: 'server',
         description,
       });
-      
-      // 토스트 표시
-      setIsHidingToast(false);
-      setShowToast(true);
-      setTimeout(() => {
-        setIsHidingToast(true);
-        setTimeout(() => {
-          setShowToast(false);
-          setIsHidingToast(false);
-        }, 300); // 애니메이션 지속 시간
-      }, 2000);
-      
-      // 추가됨 표시
-      setAddedItems(prev => new Set(prev).add(name));
-      setTimeout(() => {
-        setAddedItems(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(name);
-          return newSet;
-        });
-      }, 2000);
     }
   };
 
@@ -98,7 +70,7 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
         {/* 뒤로가기 버튼 */}
         <button
           onClick={onBack}
-          className="mb-16 flex items-center gap-3 text-[14px] hover:text-[#ff7b00] transition-colors text-foreground/60"
+          className="mb-16 flex items-center gap-3 text-[14px] min-h-[44px] hover:text-[#ff7b00] transition-colors text-foreground/70 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 rounded"
         >
           <span className="text-[18px]">←</span>
           메인으로 돌아가기
@@ -146,26 +118,26 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
           </div>
           
           <div className="space-y-3">
-            <div className={`border-2 p-5 transition-all ${isItemInEstimate('자동봇 설치') ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
+            <div className={`border-2 p-5 transition-all ${isItemInEstimate('마스토돈 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
-                  <h3 className="text-[17px] text-black font-semibold">자동봇 설치</h3>
+                  <h3 className="text-[17px] text-black font-semibold">마스토돈 서버 설치</h3>
                   <span className="text-[14px] leading-[1.6] text-foreground/60">
-                    마스토돈 서버와 연동되는 자동봇을 설치합니다.
+                    자캐 커뮤에 특화된 한참 인스턴스를 설치합니다.
                   </span>
                 </div>
                 <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
                   <span className="text-[17px] font-mono text-[#ff7b00]">₩20,000</span>
                   <button
-                    onClick={() => handleToggleEstimate('자동봇 설치', 20000, '마스토돈 서버와 연동되는 자동봇을 설치합니다.')}
-                    className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${
-                      isItemInEstimate('자동봇 설치') 
+                    onClick={() => handleToggleEstimate('마스토돈 서버 설치', 20000, '자캐 커뮤에 특화된 한참 인스턴스를 설치합니다.')}
+                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
+                      isItemInEstimate('마스토돈 서버 설치') 
                         ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                         : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
                     }`}
-                    aria-label={isItemInEstimate('자동봇 설치') ? '견적에서 제거' : '견적에 추가'}
+                    aria-label={isItemInEstimate('마스토돈 서버 설치') ? '견적에서 제거' : '견적에 추가'}
                   >
-                    {isItemInEstimate('자동봇 설치') ? (
+                    {isItemInEstimate('마스토돈 서버 설치') ? (
                       <Trash2 className="w-5 h-5" />
                     ) : (
                       <Plus className="w-5 h-5" />
@@ -174,6 +146,17 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
                 </div>
               </div>
             </div>
+            
+            <p className="text-[14px] text-foreground/60 mt-4">
+              자동봇도 함께 필요하시다면{' '}
+              <button 
+                onClick={() => onNavigate?.('bot')}
+                className="text-[#ff7b00] hover:underline"
+              >
+                자동봇 커미션 페이지
+              </button>
+              를 확인해주세요.
+            </p>
           </div>
         </section>
 
@@ -197,7 +180,7 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
                     <span className="text-[17px] font-mono text-[#ff7b00]">₩{option.price.toLocaleString()}</span>
                     <button
                       onClick={() => handleToggleEstimate(option.name, option.price, option.description)}
-                      className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                      className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
                         isItemInEstimate(option.name) 
                           ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                           : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
@@ -231,7 +214,7 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
                   <span className="text-[17px] font-mono text-[#ff7b00]">₩10,000</span>
                   <button
                     onClick={() => handleToggleEstimate('빠른마감: 24시간 내 기본 서버 설치', 10000)}
-                    className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
                       isItemInEstimate('빠른마감: 24시간 내 기본 서버 설치') 
                         ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                         : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
@@ -255,7 +238,7 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
                   <span className="text-[17px] font-mono text-[#ff7b00]">₩15,000</span>
                   <button
                     onClick={() => handleToggleEstimate('빠른마감: 48시간 내 로고 변경 서버 설치', 15000)}
-                    className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
                       isItemInEstimate('빠른마감: 48시간 내 로고 변경 서버 설치') 
                         ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                         : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
@@ -279,7 +262,7 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
                   <span className="text-[17px] font-mono text-[#ff7b00]">₩20,000</span>
                   <button
                     onClick={() => handleToggleEstimate('빠른마감: 48시간 내 테마 커스텀 서버 설치', 20000)}
-                    className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${
+                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
                       isItemInEstimate('빠른마감: 48시간 내 테마 커스텀 서버 설치') 
                         ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                         : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
@@ -299,19 +282,6 @@ export default function ServerCommission({ onBack }: ServerCommissionProps) {
         </section>
 
       </div>
-
-      {/* 토스트 알림 */}
-      {showToast && (
-        <div className="fixed bottom-8 left-0 right-0 flex justify-center z-50 pointer-events-none">
-          <div className={`bg-[#ff7b00] text-white px-8 py-4 rounded-full shadow-lg text-[16px] font-medium ${
-            isHidingToast 
-              ? 'animate-[slideDownSimple_0.3s_ease-out]' 
-              : 'animate-[slideUpSimple_0.3s_ease-out]'
-          }`}>
-            견적에 추가되었습니다!
-          </div>
-        </div>
-      )}
     </div>
   );
 }
