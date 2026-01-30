@@ -198,7 +198,7 @@ export default function Step2Server() {
                 </div>
               </label>
 
-              {/* 낮+밤 테마 */}
+              {/* 테마 2종 */}
               <label
                 className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
                   step2.additionalOption === 'bothTheme'
@@ -214,7 +214,7 @@ export default function Step2Server() {
                   className="mt-1 w-4 h-4 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-[14px]">낮+밤 테마 (둘 다)</div>
+                  <div className="font-medium text-[14px]">커스텀 테마 2종</div>
                   <div className="text-[13px] text-gray-600 mt-1">+30,000원</div>
                 </div>
               </label>
