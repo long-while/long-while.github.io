@@ -104,7 +104,10 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   // 기타 서버 옵션
   notionGuide: [{ step: 2, field: 'notionGuide', value: true }],
   characterLimit: [{ step: 2, field: 'changeCharacterLimit', value: true }],
-  search: [], // 검색 기능은 별도 처리 필요
+  search: [
+    { step: 2, field: 'applyServerInstall', value: 'yes' },
+    { step: 2, field: 'searchOption', value: true }
+  ],
   
   // 빠른 마감
   fastDeadline24h: [
@@ -149,8 +152,10 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   transferFeature: [{ step: 3, field: 'transferFeature', value: true }],
   operationWeeks: [], // 특별 처리 필요 (값이 동적)
   
-  // 기타 봇 옵션 (신청서에 직접 매핑 안됨)
-  customCommandUpgrade: [],
+  // 기타 봇 옵션
+  customCommandUpgrade: [
+    { step: 3, field: 'customCommandUpgrade', value: true }
+  ],
   autoInvestigation: [],
   investigationLimit: [],
   investigationSheet: [],

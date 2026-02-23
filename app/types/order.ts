@@ -43,6 +43,7 @@ export interface Step2Data {
   notionGuide: boolean;
   changeCharacterLimit: boolean;
   characterLimitValue: number;
+  searchOption: boolean;
   fastDeadline: boolean;
   fastDeadlineOption: FastDeadlineOption;
   desiredDeadline: string; // MM/DD
@@ -57,6 +58,7 @@ export interface Step3Data {
   mainBot: MainBotType;
   cocBot: boolean;
   omakaseBot: boolean;
+  customCommandUpgrade: boolean;
   reservationToot: boolean;
   autoProfileImage: boolean;
   tootCurrencyLink: boolean;

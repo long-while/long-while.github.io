@@ -33,6 +33,8 @@ export default function Step2Server() {
   const notionFromCart = isFromCart('마스토돈 가이드');
   // 글자수 제한이 견적에서 선택되었는지
   const charLimitFromCart = isFromCart('글자수');
+  // 검색 옵션이 견적에서 선택되었는지
+  const searchFromCart = isFromCart('검색');
   // 빠른 마감이 견적에서 선택되었는지
   const fastDeadlineFromCart = isFromCart('빠른마감');
 
@@ -64,6 +66,7 @@ export default function Step2Server() {
         notionGuide: false,
         changeCharacterLimit: false,
         characterLimitValue: 0,
+        searchOption: false,
         fastDeadline: false,
         fastDeadlineOption: null,
         desiredDeadline: '',
@@ -308,11 +311,44 @@ export default function Step2Server() {
               )}
             </div>
 
+            {/* 검색 옵션 */}
+            <div className="space-y-3">
+              <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+                step2.searchOption
+                  ? 'border-[#ff7b00] bg-[#fff5eb]'
+                  : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              }`}>
+                <input
+                  type="checkbox"
+                  checked={step2.searchOption}
+                  onChange={(e) => updateStep2({ searchOption: e.target.checked })}
+                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">
+                    검색 옵션 (+30,000원)
+                    {searchFromCart && step2.searchOption && <FromCartBadge />}
+                  </div>
+                  <div className="text-[13px] text-gray-600 mt-1">
+                    서버에 검색 기능을 추가합니다.
+                  </div>
+                </div>
+              </label>
+
+              {step2.searchOption && (
+                <div className="ml-7 p-4 bg-amber-50 border-2 border-amber-400 rounded-lg animate-slideDown">
+                  <p className="text-[13px] text-amber-800 leading-[1.8]">
+                    검색 기능을 활성화하기 위해서는 서버비가 월 $40 정도 소모됩니다. 마스토돈 서버에 서버비 50달러, 검색 기능에 서버비 40달러가 발생하므로 한달 서버비는 약 90달러 (약 13만원) 정도입니다. GCP는 월 300달러의 무료 크레딧을 제공하므로 3개월까진 무리 없이 사용할 수 있습니다. 다만, 3개월 이상 서버를 유지할 계획이 있으시다면 검색 기능은 설치하지 않는 것을 추천드립니다.
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* 빠른 마감 */}
             <div className="space-y-3">
               <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
-                step2.fastDeadline 
-                  ? 'border-[#ff7b00] bg-[#fff5eb]' 
+                step2.fastDeadline
+                  ? 'border-[#ff7b00] bg-[#fff5eb]'
                   : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
               }`}>
                 <input

@@ -1,6 +1,6 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState, useMemo } from 'react';
-import { Plus, Minus, AlertTriangle, Check } from 'lucide-react';
+import { Plus, Minus, AlertTriangle, Check, ChevronDown } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
 
 interface BotCommissionProps {
@@ -22,6 +22,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
   const { addItem, removeItem, items } = useEstimate();
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
   const [operationWeeks, setOperationWeeks] = useState(0);
+  const [omakaseDetailOpen, setOmakaseDetailOpen] = useState(false);
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
@@ -156,7 +157,6 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
       name: "CoC 타입",
       price: 30000,
       features: [
-        "기본 타입에 포함된 모든 기능 +@",
         "숫자만 변경하면 되는 탐사자 시트 제공",
         "[nDm±k]",
         "[판정/능력치명] 예: [판정/근력]",
@@ -555,6 +555,61 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                       </li>
                     ))}
                   </ul>
+
+                  {/* 오마카세 타입 추가 정보 드롭다운 */}
+                  {type.name === '오마카세 타입' && (
+                    <div className="mt-6">
+                      <button
+                        type="button"
+                        onClick={() => setOmakaseDetailOpen(!omakaseDetailOpen)}
+                        className="w-full flex items-center justify-between p-4 bg-black/[0.02] border-2 border-black/10 hover:border-[#ff7b00]/30 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                      >
+                        <span className="text-[15px] font-semibold">오마카세 기능 상세 설명</span>
+                        <ChevronDown className={`w-5 h-5 text-foreground/60 transition-transform duration-300 ${omakaseDetailOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {omakaseDetailOpen && (
+                        <div className="border-2 border-t-0 border-black/10 p-6 space-y-4 animate-slideDown">
+                          <p className="text-[15px] leading-[1.8] text-foreground/80">
+                            구현을 원하는 시스템을 정리한 <span className="font-medium text-[#ff7b00]">외부 문서 링크</span>를 전달해 주세요.<br />
+                            (시스템 문서와는 별도의 문서여야 합니다)
+                          </p>
+                          <div className="bg-white border-2 border-black/10 p-5 space-y-3 text-[14px]">
+                            <p className="font-semibold text-[15px]">문서에 포함되어야 할 내용:</p>
+                            <ul className="list-disc list-inside space-y-1 text-foreground/70">
+                              <li>러너가 입력할 명령어 (예: [사용/사과])</li>
+                              <li>명령어 입력 후 봇이 처리할 내용</li>
+                              <li>러너에게 보여줄 결과 메시지</li>
+                            </ul>
+                          </div>
+                          <div className="bg-white border-2 border-black/10 p-5 space-y-3 text-[14px]">
+                            <p className="font-semibold text-[15px]">작성 예시:</p>
+                            <div className="bg-gray-50 p-4 rounded text-[13px] space-y-2 leading-[1.8]">
+                              <p className="font-medium">"[사용/아이템명] 명령어를 추가하고 싶어요!"</p>
+                              <p>→ 러너가 [사용/사과]를 입력하면</p>
+                              <p>→ 봇이 러너의 소지품에서 사과를 삭제하고, 체력을 +10 해준 뒤</p>
+                              <p>→ "사과를 사용했습니다! 체력이 +10 되었습니다." 라고 답변해 주세요.</p>
+                            </div>
+                          </div>
+                          <a
+                            href="https://stellar-ground-601.notion.site/310d06ebad99807a99d1fbf4e8fc9ace"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block border-2 border-black/10 p-4 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-[14px] font-medium">예시 오마카세 신청서 보기</span>
+                              <span className="text-[#ff7b00] group-hover:translate-x-1 transition-transform">→</span>
+                            </div>
+                          </a>
+                          <div className="text-[13px] text-foreground/60 space-y-1">
+                            <p>군더더기 없이 깔끔한 언어로 작성해 주세요. 불필요한 부사와 형용사는 사용하지 않습니다.</p>
+                            <p>구현을 원하는 시스템만 작성해 주세요.</p>
+                            <p className="text-amber-600 font-medium">오마카세 신청서를 한번에 이해하기 어려울 시, 신청이 거절될 수 있습니다.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {type.note && (
                     <div className="bg-black/[0.02] border-2 border-black/10 p-6 mt-6">

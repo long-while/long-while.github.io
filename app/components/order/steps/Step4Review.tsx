@@ -198,13 +198,14 @@ export default function Step4Review() {
                   </p>
                 </div>
               )}
-              {(step2.notionGuide || step2.changeCharacterLimit || step2.fastDeadline) && (
+              {(step2.notionGuide || step2.changeCharacterLimit || step2.searchOption || step2.fastDeadline) && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
                   <p className="text-[15px] font-medium">
                     {[
                       step2.notionGuide && '노션 가이드',
                       step2.changeCharacterLimit && `글자수 ${step2.characterLimitValue}자`,
+                      step2.searchOption && '검색 옵션',
                       step2.fastDeadline && '빠른 마감',
                     ].filter(Boolean).join(', ') || '-'}
                   </p>
@@ -259,13 +260,14 @@ export default function Step4Review() {
                   </p>
                 </div>
               )}
-              {(step3.cocBot || step3.reservationToot || step3.autoProfileImage || 
+              {(step3.cocBot || step3.customCommandUpgrade || step3.reservationToot || step3.autoProfileImage ||
                 step3.tootCurrencyLink || step3.transferFeature || step3.omakaseBot) && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
                   <p className="text-[15px] font-medium">
                     {[
                       step3.cocBot && 'CoC 봇',
+                      step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
                       step3.reservationToot && '예약 툿',
                       step3.autoProfileImage && '자동 스진',
                       step3.tootCurrencyLink && '툿-재화 연동',
@@ -327,6 +329,12 @@ export default function Step4Review() {
                     <span>{PRICING_CONFIG.server.addons.characterLimit.toLocaleString()}원</span>
                   </div>
                 )}
+                {step2.searchOption && (
+                  <div className="flex justify-between">
+                    <span>검색 옵션</span>
+                    <span>{PRICING_CONFIG.server.addons.search.toLocaleString()}원</span>
+                  </div>
+                )}
                 {step2.fastDeadline && step2.fastDeadlineOption && (
                   <div className="flex justify-between">
                     <span>
@@ -375,6 +383,12 @@ export default function Step4Review() {
                   <div className="flex justify-between">
                     <span>CoC 봇</span>
                     <span>{PRICING_CONFIG.bot.addons.cocBot.toLocaleString()}원</span>
+                  </div>
+                )}
+                {step3.customCommandUpgrade && (
+                  <div className="flex justify-between">
+                    <span>커스텀 명령어 업그레이드</span>
+                    <span>{PRICING_CONFIG.bot.addons.customCommandUpgrade.toLocaleString()}원</span>
                   </div>
                 )}
                 {step3.reservationToot && (

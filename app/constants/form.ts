@@ -49,6 +49,7 @@ export const PRICING_CONFIG = {
     addons: {
       notionGuide: 5000,
       characterLimit: 5000,
+      search: 30000,
     },
   },
 
@@ -64,6 +65,7 @@ export const PRICING_CONFIG = {
       autoProfileImage: 5000,
       tootCurrencyLink: 7000,
       transferFeature: 10000,
+      customCommandUpgrade: 5000,
     },
     operationPerWeek: 5000,
   },
