@@ -347,6 +347,9 @@ export function calculateServerPrice(data: OrderFormData['step2']): number {
     total += server.addons.characterLimit;
   }
 
+  // 검색 옵션
+  if (data.searchOption) total += server.addons.search;
+
   return total;
 }
 
@@ -371,6 +374,7 @@ export function calculateBotPrice(
 
   // 추가 옵션
   if (data.cocBot) botCost += bot.addons.cocBot;
+  if (data.customCommandUpgrade) botCost += bot.addons.customCommandUpgrade;
   if (data.reservationToot) botCost += bot.addons.reservationToot;
   if (data.autoProfileImage) botCost += bot.addons.autoProfileImage;
   if (data.tootCurrencyLink) botCost += bot.addons.tootCurrencyLink;
@@ -455,6 +459,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate): 
     if (step2.changeCharacterLimit && step2.characterLimitValue > 0) {
       text += `+ 글자수 변경 (${step2.characterLimitValue}자)\n`;
     }
+    if (step2.searchOption) {
+      text += '+ 검색 옵션\n';
+    }
     if (step2.fastDeadline && step2.fastDeadlineOption) {
       const fastNames: Record<string, string> = {
         basic24h: '빠른 마감 (24시간/기본)',
@@ -489,6 +496,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate): 
     }
     
     if (step3.cocBot) text += '+ CoC 봇\n';
+    if (step3.customCommandUpgrade) text += '+ 커스텀 명령어 업그레이드\n';
     if (step3.reservationToot) text += '+ 예약 툿\n';
     if (step3.autoProfileImage) text += '+ 자동 스진\n';
     if (step3.tootCurrencyLink) text += '+ 툿-재화 연동\n';
@@ -545,6 +553,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate): 
     if (step2.changeCharacterLimit && step2.characterLimitValue > 0) {
       text += `글자수 변경 ${server.addons.characterLimit.toLocaleString()}\n`;
     }
+    if (step2.searchOption) {
+      text += `검색 옵션 ${server.addons.search.toLocaleString()}\n`;
+    }
     if (step2.fastDeadline && step2.fastDeadlineOption) {
       const fastPrices: Record<string, number> = {
         basic24h: 10000,
@@ -576,6 +587,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate): 
     }
     if (step3.cocBot) {
       text += `CoC 봇 ${bot.addons.cocBot.toLocaleString()}\n`;
+    }
+    if (step3.customCommandUpgrade) {
+      text += `커스텀 명령어 업그레이드 ${bot.addons.customCommandUpgrade.toLocaleString()}\n`;
     }
     if (step3.reservationToot) {
       text += `예약 툿 ${bot.addons.reservationToot.toLocaleString()}\n`;

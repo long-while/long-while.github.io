@@ -30,6 +30,7 @@ export default function Step3Bot() {
   const basicShopStatBotFromCart = isFromCart('기본&상점&스탯 타입');
   // 추가 기능이 견적에서 선택되었는지
   const cocBotFromCart = isFromCart('CoC');
+  const customCommandUpgradeFromCart = isFromCart('커스텀 명령어');
   const reservationFromCart = isFromCart('예약 툿');
   const autoProfileFromCart = isFromCart('스토리 자동 진행');
   const tootCurrencyFromCart = isFromCart('툿수 자동 재화 반영');
@@ -63,6 +64,7 @@ export default function Step3Bot() {
         mainBot: null,
         cocBot: false,
         omakaseBot: false,
+        customCommandUpgrade: false,
         reservationToot: false,
         autoProfileImage: false,
         tootCurrencyLink: false,
@@ -315,10 +317,31 @@ export default function Step3Bot() {
               </div>
             </label>
 
+            {/* 커스텀 명령어 업그레이드 */}
+            <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
+              step3.customCommandUpgrade
+                ? 'border-[#ff7b00] bg-[#fff5eb]'
+                : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+            }`}>
+              <input
+                type="checkbox"
+                checked={step3.customCommandUpgrade}
+                onChange={(e) => updateStep3({ customCommandUpgrade: e.target.checked })}
+                className="mt-1 w-4 h-4 accent-[#ff7b00]"
+              />
+              <div className="flex-1">
+                <div className="font-medium text-[14px]">
+                  커스텀 명령어 업그레이드
+                  {customCommandUpgradeFromCart && step3.customCommandUpgrade && <FromCartBadge />}
+                </div>
+                <div className="text-[13px] text-gray-600 mt-1">+5,000원 — 유저 이름/은는맞춤/문구 내 다이스 기능 추가</div>
+              </div>
+            </label>
+
             {/* 예약 툿 */}
             <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 ${
-              step3.reservationToot 
-                ? 'border-[#ff7b00] bg-[#fff5eb]' 
+              step3.reservationToot
+                ? 'border-[#ff7b00] bg-[#fff5eb]'
                 : 'border-gray-300 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
             }`}>
               <input
@@ -522,7 +545,7 @@ export default function Step3Bot() {
                   </label>
                   <div className="text-[13px] text-gray-600 space-y-2">
                     <p>
-                      원하시는 기능을 정리한 <span className="font-medium">외부 문서 링크</span>를 전달해 주세요.<br />
+                      구현을 원하는 시스템을 정리한 <span className="font-medium">외부 문서 링크</span>를 전달해 주세요.<br />
                       (시스템 문서와는 별도의 문서여야 합니다)
                     </p>
                   </div>
@@ -544,9 +567,21 @@ export default function Step3Bot() {
                         <p>→ "사과를 사용했습니다! 체력이 +10 되었습니다." 라고 답변해 주세요.</p>
                       </div>
                     </div>
-                    <p className="text-[12px] text-amber-600">
-                      내용이 불충분한 경우 신청이 거절될 수 있습니다.
-                    </p>
+                    <div className="pt-3 border-t border-gray-200">
+                      <a
+                        href="https://stellar-ground-601.notion.site/310d06ebad99807a99d1fbf4e8fc9ace"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[12px] text-[#ff7b00] hover:underline font-medium"
+                      >
+                        예시 오마카세 신청서 보기 →
+                      </a>
+                    </div>
+                    <div className="pt-3 border-t border-gray-200 text-[12px] text-gray-600 space-y-1">
+                      <p>군더더기 없이 깔끔한 언어로 작성해 주세요. 불필요한 부사와 형용사는 사용하지 않습니다.</p>
+                      <p>구현을 원하는 시스템만 작성해 주세요.</p>
+                      <p className="text-amber-600 font-medium">오마카세 신청서를 한번에 이해하기 어려울 시, 신청이 거절될 수 있습니다.</p>
+                    </div>
                   </div>
                   <textarea
                     id="omakaseDetails"
