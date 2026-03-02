@@ -50,6 +50,11 @@ export const PRICING_CONFIG = {
       notionGuide: 5000,
       characterLimit: 5000,
       search: 30000,
+      fastDeadline: {
+        basic24h: 10000,
+        logo48h: 15000,
+        theme48h: 20000,
+      },
     },
   },
 

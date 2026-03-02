@@ -20,7 +20,7 @@ export default function Step3Bot() {
 
   // 견적에서 동기화된 항목인지 확인
   const isFromCart = (itemName: string) => {
-    return cartSyncState?.syncedItems?.some(name => 
+    return cartSyncState?.syncedItems?.some(name =>
       name.includes(itemName) || itemName.includes(name)
     ) ?? false;
   };
@@ -86,7 +86,7 @@ export default function Step3Bot() {
   // 메인 봇 변경 시 양도 기능 관련 필드 초기화
   const handleMainBotChange = (bot: typeof step3.mainBot) => {
     updateStep3({ mainBot: bot });
-    
+
     // 기본 봇 선택 시 양도 기능 초기화
     if (bot === 'basic') {
       updateStep3({ transferFeature: false, transferOption: null });
@@ -194,20 +194,20 @@ export default function Step3Bot() {
               {/* 가동 비용 표시 - 눈에 띄게 */}
               {((step3.operationWeeksOption === 'manual' && step3.manualWeeks > 0) ||
                 (step3.operationWeeksOption === 'same' && step1.operationWeeks > 0)) && (
-                <div className="mt-3 p-3 bg-[var(--brand-bg)] border border-[var(--brand-primary)] rounded-md">
-                  <p className="text-[14px] text-[var(--brand-primary)] font-medium">
-                    가동 비용: {(
-                      step3.operationWeeksOption === 'manual' 
-                        ? step3.manualWeeks * 5000 
-                        : step1.operationWeeks * 5000
-                    ).toLocaleString()}원 ({
-                      step3.operationWeeksOption === 'manual' 
-                        ? step3.manualWeeks 
-                        : step1.operationWeeks
-                    }주)
-                  </p>
-                </div>
-              )}
+                  <div className="mt-3 p-3 bg-[var(--brand-bg)] border border-[var(--brand-primary)] rounded-md">
+                    <p className="text-[14px] text-[var(--brand-primary)] font-medium">
+                      가동 비용: {(
+                        step3.operationWeeksOption === 'manual'
+                          ? step3.manualWeeks * 5000
+                          : step1.operationWeeks * 5000
+                      ).toLocaleString()}원 ({
+                        step3.operationWeeksOption === 'manual'
+                          ? step3.manualWeeks
+                          : step1.operationWeeks
+                      }주)
+                    </p>
+                  </div>
+                )}
             </div>
           </div>
 
@@ -221,11 +221,10 @@ export default function Step3Bot() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* 기본 */}
               <label
-                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
-                  step3.mainBot === 'basic'
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.mainBot === 'basic'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
-                }`}
+                  }`}
               >
                 <input
                   type="radio"
@@ -245,11 +244,10 @@ export default function Step3Bot() {
 
               {/* 기본+상점 */}
               <label
-                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
-                  step3.mainBot === 'basicShop'
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.mainBot === 'basicShop'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
-                }`}
+                  }`}
               >
                 <input
                   type="radio"
@@ -269,11 +267,10 @@ export default function Step3Bot() {
 
               {/* 기본+상점+스탯 */}
               <label
-                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
-                  step3.mainBot === 'basicShopStat'
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.mainBot === 'basicShopStat'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
-                }`}
+                  }`}
               >
                 <input
                   type="radio"
@@ -298,11 +295,10 @@ export default function Step3Bot() {
             <h3 className="text-[18px] font-semibold">4) 추가 기능 선택</h3>
 
             {/* CoC 봇 */}
-            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
-              step3.cocBot
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.cocBot
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-            }`}>
+              }`}>
               <input
                 type="checkbox"
                 checked={step3.cocBot}
@@ -319,11 +315,10 @@ export default function Step3Bot() {
             </label>
 
             {/* 커스텀 명령어 업그레이드 */}
-            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
-              step3.customCommandUpgrade
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.customCommandUpgrade
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-            }`}>
+              }`}>
               <input
                 type="checkbox"
                 checked={step3.customCommandUpgrade}
@@ -340,11 +335,10 @@ export default function Step3Bot() {
             </label>
 
             {/* 예약 툿 */}
-            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
-              step3.reservationToot
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.reservationToot
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-            }`}>
+              }`}>
               <input
                 type="checkbox"
                 checked={step3.reservationToot}
@@ -361,11 +355,10 @@ export default function Step3Bot() {
             </label>
 
             {/* 자동 스진 */}
-            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
-              step3.autoProfileImage
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.autoProfileImage
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-            }`}>
+              }`}>
               <input
                 type="checkbox"
                 checked={step3.autoProfileImage}
@@ -417,11 +410,10 @@ export default function Step3Bot() {
 
             {/* 툿-재화 연동 */}
             <div className="space-y-3">
-              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
-                step3.tootCurrencyLink
+              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.tootCurrencyLink
                   ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                   : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-              }`}>
+                }`}>
                 <input
                   type="checkbox"
                   checked={step3.tootCurrencyLink}
@@ -457,11 +449,10 @@ export default function Step3Bot() {
             {/* 양도 기능 (조건부) */}
             {showTransferFeature && (
               <div className="space-y-3">
-                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
-                  step3.transferFeature
+                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.transferFeature
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                }`}>
+                  }`}>
                   <input
                     type="checkbox"
                     checked={step3.transferFeature}
@@ -519,11 +510,10 @@ export default function Step3Bot() {
 
             {/* 오마카세 봇 */}
             <div className="space-y-3">
-              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
-                step3.omakaseBot
+              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.omakaseBot
                   ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                   : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-              }`}>
+                }`}>
                 <input
                   type="checkbox"
                   checked={step3.omakaseBot}
@@ -683,7 +673,7 @@ export default function Step3Bot() {
                   placeholder="MM/DD (예: 03/15)"
                   className="w-full md:w-64 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                 />
-                <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요.</p>
+                <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요. 오마카세 자동봇 기능 등의 테스트가 필요한 경우, 테스트 기간까지 고려해서 작성합니다.</p>
               </div>
             </div>
           </div>

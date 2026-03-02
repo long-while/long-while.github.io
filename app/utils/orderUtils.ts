@@ -350,6 +350,11 @@ export function calculateServerPrice(data: OrderFormData['step2']): number {
   // 검색 옵션
   if (data.searchOption) total += server.addons.search;
 
+  // 빠른 마감
+  if (data.fastDeadline && data.fastDeadlineOption) {
+    total += server.addons.fastDeadline[data.fastDeadlineOption as keyof typeof server.addons.fastDeadline];
+  }
+
   return total;
 }
 
@@ -395,7 +400,6 @@ export function calculateTotalEstimate(data: OrderFormData): PriceEstimate {
   const { botCost, operationCost } = calculateBotPrice(data.step3, data.step1.operationWeeks);
 
   const variableItems: string[] = [];
-  if (data.step2.fastDeadline) variableItems.push('빠른 마감');
   if (data.step3.omakaseBot) variableItems.push('오마카세');
 
   return {
@@ -557,17 +561,12 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate): 
       text += `검색 옵션 ${server.addons.search.toLocaleString()}\n`;
     }
     if (step2.fastDeadline && step2.fastDeadlineOption) {
-      const fastPrices: Record<string, number> = {
-        basic24h: 10000,
-        logo48h: 15000,
-        theme48h: 20000,
-      };
       const fastNames: Record<string, string> = {
         basic24h: '24H 빠른마감',
         logo48h: '48H 빠른마감',
         theme48h: '48H 빠른마감',
       };
-      text += `${fastNames[step2.fastDeadlineOption]} ${fastPrices[step2.fastDeadlineOption].toLocaleString()}\n`;
+      text += `${fastNames[step2.fastDeadlineOption]} ${server.addons.fastDeadline[step2.fastDeadlineOption as keyof typeof server.addons.fastDeadline].toLocaleString()}\n`;
     }
     text += '\n';
   }

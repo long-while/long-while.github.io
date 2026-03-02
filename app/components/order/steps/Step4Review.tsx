@@ -346,9 +346,7 @@ export default function Step4Review() {
                       )
                     </span>
                     <span>
-                      {step2.fastDeadlineOption === 'basic24h' && '10,000원'}
-                      {step2.fastDeadlineOption === 'logo48h' && '15,000원'}
-                      {step2.fastDeadlineOption === 'theme48h' && '20,000원'}
+                      {PRICING_CONFIG.server.addons.fastDeadline[step2.fastDeadlineOption as keyof typeof PRICING_CONFIG.server.addons.fastDeadline].toLocaleString()}원
                     </span>
                   </div>
                 )}
