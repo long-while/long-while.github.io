@@ -31,8 +31,9 @@ export type EstimateMappingKey =
   | 'operationWeeks'     // → step3.manualWeeks (특별 처리 필요)
   | 'customCommandUpgrade' // → 커스텀 명령어 업그레이드 (추가 옵션)
   | 'autoInvestigation'  // → 자동조사 타입
-  | 'investigationLimit' // → 조사 횟수 제한
-  | 'investigationSheet'; // → 조사 목록 시트 연동
+  | 'dmNotification' // → 특정 상황 DM 전송
+  | 'botFastDeadline48h' // → 빠른 마감 (48시간 내)
+  | 'botFastDeadline1w'; // → 빠른 마감 (1주일 내)
 
 // 견적 항목 이름과 매핑 키 매칭 테이블
 export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = {
@@ -62,24 +63,23 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   '자동조사 타입': 'autoInvestigation',
   
   // 봇 추가 옵션
-  '예약 툿 기능': 'reservationToot',
+  '예약 툿': 'reservationToot',
   '스토리 자동 진행': 'autoProfileImage',
   '커스텀 명령어 업그레이드': 'customCommandUpgrade',
   '양도 기능': 'transferFeature',
-  '툿수 자동 재화 반영': 'tootCurrencyLink',
-  '조사 횟수 제한': 'investigationLimit',
-  '조사 목록 시트 연동': 'investigationSheet',
+  '툿수-재화 자동반영': 'tootCurrencyLink',
+  '특정 상황 DM 전송': 'dmNotification',
+  '빠른 마감 (48시간 내)': 'botFastDeadline48h',
+  '빠른 마감 (1주일 내)': 'botFastDeadline1w',
 
   // 타입별 추가 옵션 (레거시 - 하단 추가 옵션으로 통합)
   '기본 타입 - 커스텀 명령어 업그레이드': 'customCommandUpgrade',
   '기본&상점 타입 - 양도 기능': 'transferFeature',
-  '기본&상점 타입 - 툿수 자동 재화 반영': 'tootCurrencyLink',
+  '기본&상점 타입 - 툿수-재화 자동반영': 'tootCurrencyLink',
   '기본&상점 타입 - 커스텀 명령어 업그레이드': 'customCommandUpgrade',
   '기본&상점&스탯 타입 - 양도 기능': 'transferFeature',
-  '기본&상점&스탯 타입 - 툿수 자동 재화 반영': 'tootCurrencyLink',
+  '기본&상점&스탯 타입 - 툿수-재화 자동반영': 'tootCurrencyLink',
   '기본&상점&스탯 타입 - 커스텀 명령어 업그레이드': 'customCommandUpgrade',
-  '자동조사 타입 - 조사 횟수 제한': 'investigationLimit',
-  '자동조사 타입 - 조사 목록 시트 연동': 'investigationSheet',
 };
 
 // 매핑 키 → 신청서 필드 매핑 정의
@@ -157,8 +157,9 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
     { step: 3, field: 'customCommandUpgrade', value: true }
   ],
   autoInvestigation: [],
-  investigationLimit: [],
-  investigationSheet: [],
+  dmNotification: [{ step: 3, field: 'dmNotification', value: true }],
+  botFastDeadline48h: [],
+  botFastDeadline1w: [],
 };
 
 // localStorage 키 - 동기화 상태 플래그

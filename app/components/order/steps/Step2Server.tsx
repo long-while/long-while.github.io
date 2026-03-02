@@ -79,7 +79,7 @@ export default function Step2Server() {
     <div className="space-y-8">
       {/* 헤더 */}
       <div className="pb-6 border-b border-border animate-fadeInDown">
-        <h2 className="text-[28px] font-medium mb-2 bg-gradient-to-r from-[#ff7b00] to-[#ff9933] bg-clip-text text-transparent">
+        <h2 className="text-[25px] font-semibold mb-2 bg-gradient-to-r from-[#ff7b00] to-[#ff9933] bg-clip-text text-transparent">
           Step 2. 서버 설치 옵션
         </h2>
         <p className="text-[14px] text-gray-600">
@@ -90,7 +90,7 @@ export default function Step2Server() {
       {/* 1) 서버 설치 신청 여부 */}
       <div className="space-y-3">
         <label className="block">
-          <span className="text-[18px] font-medium">
+          <span className="text-[18px] font-semibold">
             1) 서버 설치를 신청하시나요? <span className="text-red-500">*</span>
             {serverFromCart && step2.applyServerInstall === 'yes' && <FromCartBadge />}
           </span>
@@ -128,7 +128,7 @@ export default function Step2Server() {
           {/* 2) 커스텀 옵션 선택 */}
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-medium mb-1">
+              <h3 className="text-[18px] font-semibold mb-1">
                 2) 커스텀 옵션 선택
                 {themeFromCart && step2.additionalOption && <FromCartBadge />}
               </h3>
@@ -140,7 +140,7 @@ export default function Step2Server() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 로고 변경 */}
               <label
-                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
                   step2.additionalOption === 'logo'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
@@ -151,7 +151,7 @@ export default function Step2Server() {
                   name="additionalOption"
                   checked={step2.additionalOption === 'logo'}
                   onChange={() => handleAdditionalOptionChange('logo')}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">로고 변경</div>
@@ -161,7 +161,7 @@ export default function Step2Server() {
 
               {/* 낮 테마 */}
               <label
-                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
                   step2.additionalOption === 'dayTheme'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
@@ -172,7 +172,7 @@ export default function Step2Server() {
                   name="additionalOption"
                   checked={step2.additionalOption === 'dayTheme'}
                   onChange={() => handleAdditionalOptionChange('dayTheme')}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">낮 테마</div>
@@ -182,7 +182,7 @@ export default function Step2Server() {
 
               {/* 밤 테마 */}
               <label
-                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
                   step2.additionalOption === 'nightTheme'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
@@ -193,7 +193,7 @@ export default function Step2Server() {
                   name="additionalOption"
                   checked={step2.additionalOption === 'nightTheme'}
                   onChange={() => handleAdditionalOptionChange('nightTheme')}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">밤 테마</div>
@@ -203,7 +203,7 @@ export default function Step2Server() {
 
               {/* 테마 2종 */}
               <label
-                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
                   step2.additionalOption === 'bothTheme'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
@@ -214,7 +214,7 @@ export default function Step2Server() {
                   name="additionalOption"
                   checked={step2.additionalOption === 'bothTheme'}
                   onChange={() => handleAdditionalOptionChange('bothTheme')}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">커스텀 테마 2종</div>
@@ -226,10 +226,10 @@ export default function Step2Server() {
 
           {/* 3) 기타 옵션 선택 */}
           <div className="space-y-4">
-            <h3 className="text-[18px] font-medium">3) 기타 옵션 선택</h3>
+            <h3 className="text-[18px] font-semibold">3) 기타 옵션 선택</h3>
 
             {/* 노션 가이드 */}
-            <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
               step2.notionGuide
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -238,7 +238,7 @@ export default function Step2Server() {
                 type="checkbox"
                 checked={step2.notionGuide}
                 onChange={(e) => updateStep2({ notionGuide: e.target.checked })}
-                className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
               />
               <div className="flex-1">
                 <div className="font-medium text-[14px]">
@@ -253,7 +253,7 @@ export default function Step2Server() {
 
             {/* 글자수 제한 변경 */}
             <div className="space-y-3">
-              <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
                 step2.changeCharacterLimit
                   ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                   : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -268,7 +268,7 @@ export default function Step2Server() {
                       setCharacterLimitError(null);
                     }
                   }}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
@@ -313,7 +313,7 @@ export default function Step2Server() {
 
             {/* 검색 옵션 */}
             <div className="space-y-3">
-              <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
                 step2.searchOption
                   ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                   : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -322,7 +322,7 @@ export default function Step2Server() {
                   type="checkbox"
                   checked={step2.searchOption}
                   onChange={(e) => updateStep2({ searchOption: e.target.checked })}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
@@ -336,7 +336,7 @@ export default function Step2Server() {
               </label>
 
               {step2.searchOption && (
-                <div className="ml-7 p-4 bg-amber-50 border border-amber-400 rounded-lg animate-slideDown">
+                <div className="ml-7 p-4 bg-[#fff1e3] border border-amber-400 rounded-lg animate-slideDown">
                   <p className="text-[13px] text-amber-800 leading-[1.8]">
                     검색 기능을 활성화하기 위해서는 서버비가 월 $40 정도 소모됩니다. 마스토돈 서버에 서버비 50달러, 검색 기능에 서버비 40달러가 발생하므로 한달 서버비는 약 90달러 (약 13만원) 정도입니다. GCP는 월 300달러의 무료 크레딧을 제공하므로 3개월까진 무리 없이 사용할 수 있습니다. 다만, 3개월 이상 서버를 유지할 계획이 있으시다면 검색 기능은 설치하지 않는 것을 추천드립니다.
                   </p>
@@ -346,7 +346,7 @@ export default function Step2Server() {
 
             {/* 빠른 마감 */}
             <div className="space-y-3">
-              <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
                 step2.fastDeadline
                   ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                   : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -360,7 +360,7 @@ export default function Step2Server() {
                       updateStep2({ fastDeadlineOption: null });
                     }
                   }}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
@@ -377,7 +377,7 @@ export default function Step2Server() {
 
                   {/* 24시간 내 기본 서버 */}
                   <label
-                    className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${
+                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${
                       step2.fastDeadlineOption === 'basic24h'
                         ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                         : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -388,7 +388,7 @@ export default function Step2Server() {
                       name="fastDeadlineOption"
                       checked={step2.fastDeadlineOption === 'basic24h'}
                       onChange={() => updateStep2({ fastDeadlineOption: 'basic24h' })}
-                      className="mt-0.5 w-4 h-4 accent-[#ff7b00]"
+                      className="w-4 h-4 accent-[#ff7b00]"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">24시간 내 기본 서버 설치 마감 (+10,000원)</div>
@@ -397,7 +397,7 @@ export default function Step2Server() {
 
                   {/* 48시간 내 로고 변경 */}
                   <label
-                    className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${
+                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${
                       step2.fastDeadlineOption === 'logo48h'
                         ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                         : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -408,7 +408,7 @@ export default function Step2Server() {
                       name="fastDeadlineOption"
                       checked={step2.fastDeadlineOption === 'logo48h'}
                       onChange={() => updateStep2({ fastDeadlineOption: 'logo48h' })}
-                      className="mt-0.5 w-4 h-4 accent-[#ff7b00]"
+                      className="w-4 h-4 accent-[#ff7b00]"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">48시간 내 로고 변경된 서버 설치 마감 (+15,000원)</div>
@@ -417,7 +417,7 @@ export default function Step2Server() {
 
                   {/* 48시간 내 테마 커스텀 */}
                   <label
-                    className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${
+                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${
                       step2.fastDeadlineOption === 'theme48h'
                         ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                         : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -428,7 +428,7 @@ export default function Step2Server() {
                       name="fastDeadlineOption"
                       checked={step2.fastDeadlineOption === 'theme48h'}
                       onChange={() => updateStep2({ fastDeadlineOption: 'theme48h' })}
-                      className="mt-0.5 w-4 h-4 accent-[#ff7b00]"
+                      className="w-4 h-4 accent-[#ff7b00]"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">48시간 내 테마 커스텀된 서버 설치 마감 (+20,000원)</div>
@@ -441,7 +441,7 @@ export default function Step2Server() {
 
           {/* 4) 기타 정보 */}
           <div className="pt-6 border-t border-gray-200">
-            <h3 className="text-[18px] font-medium mb-4">4) 기타 정보</h3>
+            <h3 className="text-[18px] font-semibold mb-4">4) 기타 정보</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="desiredDeadline" className="block text-[14px] font-medium">

@@ -5,27 +5,27 @@ export default function Footer({ onNavigate }: FooterProps) {
   const footerLinkClass = "text-[14px] text-foreground/70 hover:text-[var(--brand-primary)] transition-colors py-1 min-h-[44px] flex items-center focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2";
   
   return (
-    <footer className="mt-12 bg-black/[0.02] border-t border-border">
-      <div className="max-w-[1200px] mx-auto px-8 py-12">
+    <footer className="mt-8 bg-black/[0.02] border-t border-border">
+      <div className="max-w-[1060px] mx-auto px-8 py-8">
         {/* 브랜드 섹션 */}
-        <div className="mb-10">
+        <div className="mb-6">
           <button
             onClick={() => onNavigate('home')}
-            className="text-[24px] font-bold tracking-[-0.01em] hover:text-[var(--brand-primary)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2"
+            className="text-[20px] font-bold tracking-[-0.01em] hover:text-[var(--brand-primary)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2"
           >
             한참 커미션
           </button>
-          <p className="text-[14px] text-foreground/70 mt-2 max-w-[400px]">
+          <p className="text-[13px] text-foreground/70 mt-1.5 max-w-[400px]">
             마스토돈 자캐커뮤를 위한 코딩 커미션.<br />
             서버 설치부터 자동봇까지 한번에.
           </p>
         </div>
 
         {/* 구분선 */}
-        <div className="h-px bg-black/10 mb-10" />
+        <div className="h-px bg-black/10 mb-6" />
 
         {/* 2컬럼 레이아웃 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* 서비스 & 고객 지원 */}
           <div className="grid grid-cols-2 gap-8">
             {/* 서비스 */}
@@ -88,10 +88,10 @@ export default function Footer({ onNavigate }: FooterProps) {
         </div>
 
         {/* 구분선 */}
-        <div className="h-px bg-black/10 mb-6" />
+        <div className="h-px bg-black/10 mb-4" />
 
         {/* 저작권 */}
-        <div className="text-[13px] text-foreground/60 text-center">
+        <div className="text-[12px] text-foreground/50 text-center">
           <p>© {new Date().getFullYear()} 한참 커미션. All rights reserved.</p>
         </div>
       </div>

@@ -5,6 +5,7 @@ import Footer from '@/app/components/Footer';
 import OrderForm from './OrderForm';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
 import { loadSyncState } from '@/app/utils/cartOrderSync';
+import { LightbulbOn, FileText, ShoppingBasket } from 'griddy-icons';
 
 interface OrderContentProps {
   onNavigate: (page: string) => void;
@@ -87,13 +88,13 @@ function OrderContent({ onNavigate }: OrderContentProps) {
           <div className="absolute bottom-0 right-0 w-40 h-40 bg-[var(--brand-primary)] opacity-5 rounded-full translate-x-1/2 translate-y-1/2"></div>
 
           <div className="max-w-[700px] mx-auto px-4 relative z-10">
-            <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-center">
+            <h1 className="text-[25px] md:text-[29px] font-bold mb-6 text-center">
               커미션 신청서 작성
             </h1>
             
             {/* 단계별 안내 - 온보딩 모달 스타일 */}
             <div className="space-y-3 mb-6">
-              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-border">
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-border">
                 <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
                   1
                 </div>
@@ -105,7 +106,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-border">
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-border">
                 <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
                   2
                 </div>
@@ -117,7 +118,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-border">
+              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-border">
                 <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
                   3
                 </div>
@@ -133,7 +134,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
             {/* 안내 배지 */}
             <div className="flex justify-center">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 text-[12px] rounded-full border border-green-200">
-                <span>💡</span>
+                <LightbulbOn size={14} color="currentColor" />
                 <span>작성 중인 내용은 자동으로 저장됩니다</span>
               </div>
             </div>
@@ -143,14 +144,14 @@ function OrderContent({ onNavigate }: OrderContentProps) {
         {/* 복원 다이얼로그 */}
         {showRestoreDialog && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn"
             role="dialog"
             aria-labelledby="restore-dialog-title"
             aria-modal="true"
           >
             <div className="bg-white border border-border rounded-lg p-6 mx-4 max-w-md shadow-xl animate-bounceIn">
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-[24px]" aria-hidden="true">📝</span>
+                <FileText size={24} color="var(--brand-primary)" aria-hidden="true" />
                 <h2 id="restore-dialog-title" className="text-[20px] font-bold">
                   작성 중인 내용 발견
                 </h2>
@@ -179,14 +180,14 @@ function OrderContent({ onNavigate }: OrderContentProps) {
         {/* 장바구니 동기화 다이얼로그 */}
         {showSyncDialog && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn"
             role="dialog"
             aria-labelledby="sync-dialog-title"
             aria-modal="true"
           >
             <div className="bg-white border border-border rounded-lg p-6 mx-4 max-w-md shadow-xl animate-bounceIn">
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-[24px]" aria-hidden="true">🛒</span>
+                <ShoppingBasket size={24} color="var(--brand-primary)" aria-hidden="true" />
                 <h2 id="sync-dialog-title" className="text-[20px] font-bold">
                   견적 데이터 반영
                 </h2>

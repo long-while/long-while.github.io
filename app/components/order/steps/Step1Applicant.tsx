@@ -30,7 +30,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
     <div className="space-y-8">
       {/* 헤더 */}
       <div className="pb-6 border-b border-border animate-fadeInDown">
-        <h2 className="text-[28px] font-medium mb-2 text-gradient-brand">
+        <h2 className="text-[25px] font-semibold mb-2 text-gradient-brand">
           Step 1. 신청자 및 커뮤니티 정보
         </h2>
         <p className="text-[14px] text-gray-600">
@@ -40,7 +40,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
 
       {/* 1) 약관 동의 */}
       <fieldset className="space-y-3">
-        <legend className="text-[18px] font-medium">
+        <legend className="text-[18px] font-semibold">
           1) 약관 동의 <span className="text-red-500" aria-hidden="true">*</span>
           <span className="sr-only">(필수)</span>
         </legend>
@@ -79,7 +79,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
 
       {/* 2) 신청자 닉네임 */}
       <div className="pt-6 border-t border-gray-200">
-        <h3 className="text-[18px] font-medium mb-4">2) 신청자 닉네임</h3>
+        <h3 className="text-[18px] font-semibold mb-4">2) 신청자 닉네임</h3>
         <div className="space-y-2">
           <label htmlFor="applicantNickname" className="block text-[14px] font-medium">
             신청자의 크레페 닉네임 <span className="text-red-500" aria-hidden="true">*</span>
@@ -99,7 +99,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
 
       {/* 3) 커뮤니티 정보 */}
       <div className="pt-6 border-t border-gray-200">
-        <h3 className="text-[18px] font-medium mb-4">3) 커뮤니티 정보</h3>
+        <h3 className="text-[18px] font-semibold mb-4">3) 커뮤니티 정보</h3>
         <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="communityShortName" className="block text-[14px] font-medium">
@@ -162,7 +162,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
 
       {/* 4) 커뮤니티 일정 */}
       <div className="pt-6 border-t border-gray-200">
-        <h3 className="text-[18px] font-medium mb-4">4) 커뮤니티 일정</h3>
+        <h3 className="text-[18px] font-semibold mb-4">4) 커뮤니티 일정</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <label htmlFor="resultAnnouncementDate" className="block text-[14px] font-medium">
@@ -219,10 +219,10 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
 
       {/* 5) 커뮤니티 구글 계정 */}
       <div className="pt-6 border-t border-gray-200">
-        <h3 className="text-[18px] font-medium mb-2">5) 커뮤니티 구글 계정</h3>
+        <h3 className="text-[18px] font-semibold mb-2">5) 커뮤니티 구글 계정</h3>
         <p className="text-[13px] text-gray-600 mb-4">
           서버 설치와 자동봇 운영을 위해 커뮤니티의 구글 계정이 필요합니다.<br />
-          구글 이메일 주소(example@gmail.com)와 비밀번호(대소문자 확인 바랍니다)를 적어 주세요.<br />
+          구글 이메일 주소와 비밀번호를 적어 주세요.<br />
           개인 구글계정을 사용하셔도 상관은 없으나, 개인정보 보호를 위해 새로운 계정을 개설하시는 걸 추천드립니다.
         </p>
         <div className="space-y-4">
@@ -245,7 +245,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
             <label htmlFor="googlePassword" className="block text-[14px] font-medium">
               구글 비밀번호 <span className="text-red-500" aria-hidden="true">*</span>
             </label>
-            <p className="text-[12px] text-amber-600 bg-amber-50 p-2 rounded-md mb-2">
+            <p className="text-[12px] text-amber-600 bg-[#fff1e3] p-2 rounded-md mb-2">
               비밀번호는 브라우저에 저장되지 않으며, 페이지를 떠나면 입력 내용이 삭제됩니다.
             </p>
             <input

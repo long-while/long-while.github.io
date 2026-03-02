@@ -3,6 +3,7 @@ import { useOrder } from '@/app/contexts/OrderContext';
 import { calculateTotalEstimate, generateCopyText } from '@/app/utils/orderUtils';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { PRICING_CONFIG } from '@/app/constants/form';
+import { CheckCircle as CheckCircleIcon } from 'griddy-icons';
 
 const CREPE_URL = 'https://crepe.cm/@longwhile/lw5w0ofg';
 
@@ -109,7 +110,7 @@ export default function Step4Review() {
     <div className="space-y-8">
       {/* 헤더 */}
       <div className="pb-6 border-b border-border animate-fadeInDown">
-        <h2 className="text-[28px] font-medium mb-2 bg-gradient-to-r from-[#ff7b00] to-[#ff9933] bg-clip-text text-transparent">
+        <h2 className="text-[25px] font-semibold mb-2 bg-gradient-to-r from-[#ff7b00] to-[#ff9933] bg-clip-text text-transparent">
           Step 4. 최종 확인 및 견적
         </h2>
         <p className="text-[14px] text-gray-600">
@@ -124,7 +125,7 @@ export default function Step4Review() {
           role="alert"
           aria-live="polite"
         >
-          <span className="text-[24px]" aria-hidden="true">✓</span>
+          <CheckCircleIcon size={24} color="currentColor" aria-hidden="true" />
           <div>
             <p className="font-bold text-[15px]">복사 완료!</p>
             <p className="text-[13px] text-green-100">신청서가 클립보드에 복사되었습니다</p>
@@ -135,7 +136,7 @@ export default function Step4Review() {
       {/* Step 1 요약 */}
       <div className="border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
         <div className="bg-gray-50 px-6 py-4 border-b border-border flex items-center justify-between">
-          <h3 className="text-[18px] font-medium">신청자 닉네임</h3>
+          <h3 className="text-[18px] font-semibold">신청자 닉네임</h3>
           <button
             onClick={() => handleEdit(1)}
             className="text-[14px] text-[#ff7b00] hover:text-[#e66d00] font-medium transition-all duration-300 hover:underline"
@@ -146,21 +147,21 @@ export default function Step4Review() {
         <div className="p-6 space-y-4">
           <div>
             <p className="text-[13px] text-gray-500 mb-1">신청자 닉네임</p>
-            <p className="text-[15px] font-medium">{step1.applicantNickname || '-'}</p>
+            <p className="text-[15px]">{step1.applicantNickname || '-'}</p>
           </div>
           <div>
             <p className="text-[13px] text-gray-500 mb-1">구글 이메일</p>
-            <p className="text-[15px] font-medium">{step1.googleEmail || '-'}</p>
+            <p className="text-[15px]">{step1.googleEmail || '-'}</p>
           </div>
           <div>
             <p className="text-[13px] text-gray-500 mb-1">커뮤니티</p>
-            <p className="text-[15px] font-medium">
+            <p className="text-[15px]">
               {step1.communityKoreanName} / {step1.communityEnglishName} (약칭 '{step1.communityShortName}')
             </p>
           </div>
           <div>
             <p className="text-[13px] text-gray-500 mb-1">운영 일정</p>
-            <p className="text-[15px] font-medium">
+            <p className="text-[15px]">
               {step1.openingDate} ~ {step1.closingDate} ({step1.operationWeeks}주)
             </p>
           </div>
@@ -170,7 +171,7 @@ export default function Step4Review() {
       {/* Step 2 요약 */}
       <div className="border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
         <div className="bg-gray-50 px-6 py-4 border-b border-border flex items-center justify-between">
-          <h3 className="text-[18px] font-medium">서버 설치 옵션</h3>
+          <h3 className="text-[18px] font-semibold">서버 설치 옵션</h3>
           <button
             onClick={() => handleEdit(2)}
             className="text-[14px] text-[#ff7b00] hover:text-[#e66d00] font-medium transition-all duration-300 hover:underline"
@@ -181,7 +182,7 @@ export default function Step4Review() {
         <div className="p-6 space-y-4">
           <div>
             <p className="text-[13px] text-gray-500 mb-1">신청 여부</p>
-            <p className="text-[15px] font-medium">
+            <p className="text-[15px]">
               {step2.applyServerInstall === 'yes' ? '예' : '아니오'}
             </p>
           </div>
@@ -190,7 +191,7 @@ export default function Step4Review() {
               {step2.additionalOption && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">커스텀 옵션</p>
-                  <p className="text-[15px] font-medium">
+                  <p className="text-[15px]">
                     {step2.additionalOption === 'logo' && '로고 변경'}
                     {step2.additionalOption === 'dayTheme' && '낮 테마'}
                     {step2.additionalOption === 'nightTheme' && '밤 테마'}
@@ -201,7 +202,7 @@ export default function Step4Review() {
               {(step2.notionGuide || step2.changeCharacterLimit || step2.searchOption || step2.fastDeadline) && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
-                  <p className="text-[15px] font-medium">
+                  <p className="text-[15px]">
                     {[
                       step2.notionGuide && '노션 가이드',
                       step2.changeCharacterLimit && `글자수 ${step2.characterLimitValue}자`,
@@ -214,7 +215,7 @@ export default function Step4Review() {
               {step2.adminAccountId && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">총괄 계정</p>
-                  <p className="text-[15px] font-medium">{step2.adminAccountId}</p>
+                  <p className="text-[15px]">{step2.adminAccountId}</p>
                 </div>
               )}
             </>
@@ -225,7 +226,7 @@ export default function Step4Review() {
       {/* Step 3 요약 */}
       <div className="border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
         <div className="bg-gray-50 px-6 py-4 border-b border-border flex items-center justify-between">
-          <h3 className="text-[18px] font-medium">자동봇 커미션</h3>
+          <h3 className="text-[18px] font-semibold">자동봇 커미션</h3>
           <button
             onClick={() => handleEdit(3)}
             className="text-[14px] text-[#ff7b00] hover:text-[#e66d00] font-medium transition-all duration-300 hover:underline"
@@ -236,7 +237,7 @@ export default function Step4Review() {
         <div className="p-6 space-y-4">
           <div>
             <p className="text-[13px] text-gray-500 mb-1">신청 여부</p>
-            <p className="text-[15px] font-medium">
+            <p className="text-[15px]">
               {step3.applyBot === 'yes' ? '예' : '아니오'}
             </p>
           </div>
@@ -244,8 +245,8 @@ export default function Step4Review() {
             <>
               <div>
                 <p className="text-[13px] text-gray-500 mb-1">운영 기간</p>
-                <p className="text-[15px] font-medium">
-                  {step3.operationWeeksOption === 'same' 
+                <p className="text-[15px]">
+                  {step3.operationWeeksOption === 'same'
                     ? `커뮤니티 기간과 동일 (${step1.operationWeeks}주)`
                     : `${step3.manualWeeks}주`}
                 </p>
@@ -253,7 +254,7 @@ export default function Step4Review() {
               {step3.mainBot && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">메인 봇</p>
-                  <p className="text-[15px] font-medium">
+                  <p className="text-[15px]">
                     {step3.mainBot === 'basic' && '기본'}
                     {step3.mainBot === 'basicShop' && '기본+상점'}
                     {step3.mainBot === 'basicShopStat' && '기본+상점+스탯'}
@@ -264,7 +265,7 @@ export default function Step4Review() {
                 step3.tootCurrencyLink || step3.transferFeature || step3.omakaseBot) && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
-                  <p className="text-[15px] font-medium">
+                  <p className="text-[15px]">
                     {[
                       step3.cocBot && 'CoC 봇',
                       step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
@@ -283,7 +284,7 @@ export default function Step4Review() {
               {step3.botAccountId && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">봇 계정</p>
-                  <p className="text-[15px] font-medium">{step3.botAccountId}</p>
+                  <p className="text-[15px]">{step3.botAccountId}</p>
                 </div>
               )}
             </>
@@ -294,7 +295,7 @@ export default function Step4Review() {
       {/* 최종 견적 */}
       <div className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-[#fff5eb] to-white">
         <div className="bg-[#ff7b00] px-6 py-4 border-b border-border">
-          <h3 className="text-[18px] font-medium text-white">최종 견적</h3>
+          <h3 className="text-[18px] font-semibold text-white">최종 견적</h3>
         </div>
         <div className="p-6 space-y-6">
           {/* 서버 관련 */}
@@ -433,8 +434,8 @@ export default function Step4Review() {
           {/* 총 합계 */}
           <div className="pt-4 border-t border-border">
             <div className="flex justify-between items-center">
-              <p className="text-[18px] font-bold">총 합계</p>
-              <p className="text-[24px] font-bold text-[#ff7b00]">
+              <p className="text-[18px] font-semibold">총 합계</p>
+              <p className="text-[24px] font-semibold text-[#ff7b00]">
                 {estimate.grandTotal.toLocaleString()}원
               </p>
             </div>
@@ -449,7 +450,7 @@ export default function Step4Review() {
 
       {/* 질문 정책 안내 */}
       <div className="border border-border rounded-lg p-6 bg-gray-50">
-        <h3 className="text-[16px] font-medium mb-4">질문 정책 안내</h3>
+        <h3 className="text-[16px] font-semibold mb-4">질문 정책 안내</h3>
         
         <div className="space-y-4 text-[14px] text-gray-700">
           {/* 무료 질문 횟수 */}
@@ -479,7 +480,7 @@ export default function Step4Review() {
           </div>
 
           {/* 답변 시간 안내 */}
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="p-3 bg-[#fff1e3] border border-amber-200 rounded-md">
             <p className="text-[13px] text-amber-800">
               해외 거주 중이어서 바로 답변해드리기 어렵습니다. <strong>중요한 질문만 모아서</strong> 전달해 주세요.
             </p>
@@ -487,12 +488,12 @@ export default function Step4Review() {
         </div>
         
         <div className="mt-6 pt-4 border-t border-gray-200">
-          <label className="flex items-start gap-3 cursor-pointer group">
+          <label className="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={policyConfirmed}
               onChange={(e) => setPolicyConfirmed(e.target.checked)}
-              className="mt-1 w-5 h-5 min-w-[20px] min-h-[20px] accent-[#ff7b00] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+              className="w-5 h-5 min-w-[20px] min-h-[20px] shrink-0 accent-[#ff7b00] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
             />
             <span className="text-[15px] text-gray-700 group-hover:text-gray-900 transition-colors">
               위 질문 정책 안내를 읽고 이해했습니다. <span className="text-red-500">*</span>
