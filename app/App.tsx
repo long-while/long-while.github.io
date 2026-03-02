@@ -1,20 +1,22 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { EstimateProvider } from "@/app/contexts/EstimateContext";
 import Navigation from "@/app/components/Navigation";
 import Header from "@/app/components/Header";
 import ServiceCards from "@/app/components/ServiceCards";
 import Features from "@/app/components/Features";
-import ServerCommission from "@/app/components/ServerCommission";
-import BotCommission from "@/app/components/BotCommission";
-import EstimatePage from "@/app/components/EstimatePage";
 import Process from "@/app/components/Process";
 import FAQ from "@/app/components/FAQ";
 import Terms from "@/app/components/Terms";
 import Footer from "@/app/components/Footer";
-import OrderApp from "@/app/components/order/OrderApp";
 import FloatingEstimateButton from "@/app/components/FloatingEstimateButton";
 import WelcomeModal from "@/app/components/WelcomeModal";
 import type { PageType } from "@/app/types/navigation";
+
+// 메인 페이지에서 안 보이는 무거운 컴포넌트는 lazy loading
+const ServerCommission = lazy(() => import("@/app/components/ServerCommission"));
+const BotCommission = lazy(() => import("@/app/components/BotCommission"));
+const EstimatePage = lazy(() => import("@/app/components/EstimatePage"));
+const OrderApp = lazy(() => import("@/app/components/order/OrderApp"));
 
 // 초기 hash 값에 따라 초기 페이지 상태 결정
 const getInitialPage = (): PageType => {
@@ -140,7 +142,9 @@ function AppContent() {
       <>
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="pt-16">
-          <ServerCommission onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
+          <Suspense fallback={<div className="min-h-screen" />}>
+            <ServerCommission onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
+          </Suspense>
           <Footer onNavigate={handleNavigate} />
         </div>
         <FloatingEstimateButton onNavigate={handleNavigate} currentPage={currentPage} />
@@ -153,7 +157,9 @@ function AppContent() {
       <>
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="pt-16">
-          <BotCommission onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
+          <Suspense fallback={<div className="min-h-screen" />}>
+            <BotCommission onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
+          </Suspense>
           <Footer onNavigate={handleNavigate} />
         </div>
         <FloatingEstimateButton onNavigate={handleNavigate} currentPage={currentPage} />
@@ -166,7 +172,9 @@ function AppContent() {
       <>
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="pt-16">
-          <EstimatePage onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
+          <Suspense fallback={<div className="min-h-screen" />}>
+            <EstimatePage onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
+          </Suspense>
           <Footer onNavigate={handleNavigate} />
         </div>
       </>
@@ -174,7 +182,11 @@ function AppContent() {
   }
 
   if (currentPage === 'order') {
-    return <OrderApp onNavigate={handleNavigate} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen" />}>
+        <OrderApp onNavigate={handleNavigate} />
+      </Suspense>
+    );
   }
 
   return (

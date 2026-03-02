@@ -17,16 +17,16 @@ export default function Header() {
       {/* 히어로 섹션 - 완전히 full width */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* 그라데이션 배경 */}
-        <div 
+        <div
           className="absolute inset-0"
           style={{
             background: 'var(--hero-gradient)'
           }}
         />
-        
-        {/* 블러 효과를 위한 추가 레이어 */}
-        <div className="absolute inset-0 backdrop-blur-[80px]" style={{ 
-          background: 'radial-gradient(circle at 25% 50%, rgba(220, 227, 232, 0.3) 0%, transparent 50%), radial-gradient(circle at 75% 50%, rgba(255, 119, 34, 0.3) 0%, transparent 50%)'
+
+        {/* 소프트 오버레이 (backdrop-blur 제거 → 성능 개선) */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(circle at 25% 50%, rgba(220, 227, 232, 0.25) 0%, transparent 50%), radial-gradient(circle at 75% 50%, rgba(255, 119, 34, 0.25) 0%, transparent 50%)'
         }} />
 
         {/* 컨텐츠 */}
