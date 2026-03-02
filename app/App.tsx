@@ -198,35 +198,35 @@ function AppContent() {
         
         {/* 섹션 1: 서비스 카드 (뭘 파는지 명확히) */}
         <div id="services-section" className="bg-white">
-          <div className="max-w-[1200px] mx-auto px-8 py-16">
+          <div className="max-w-[1060px] mx-auto px-8 py-16">
             <ServiceCards onNavigate={handleNavigate} />
           </div>
         </div>
         
         {/* 섹션 2: 특징 하이라이트 (왜 우리를 선택해야 하는지) - 배경색 다변화 */}
         <div className="bg-gray-50">
-          <div className="max-w-[1200px] mx-auto px-8">
+          <div className="max-w-[1060px] mx-auto px-8">
             <Features />
           </div>
         </div>
         
         {/* 섹션 3: 진행 순서 */}
         <div className="bg-white">
-          <div className="max-w-[1200px] mx-auto px-8 py-16">
+          <div className="max-w-[1060px] mx-auto px-8 py-16">
             <Process />
           </div>
         </div>
         
         {/* 섹션 4: FAQ - 배경색 다변화 */}
         <div className="bg-gray-50">
-          <div className="max-w-[1200px] mx-auto px-8 py-16" ref={faqRef}>
+          <div className="max-w-[1060px] mx-auto px-8 py-16" ref={faqRef}>
             <FAQ />
           </div>
         </div>
         
         {/* 섹션 5: 약관 */}
         <div className="bg-white">
-          <div className="max-w-[1200px] mx-auto px-8 py-16" ref={termsRef}>
+          <div className="max-w-[1060px] mx-auto px-8 py-16" ref={termsRef}>
             <Terms />
           </div>
         </div>

@@ -1,28 +1,30 @@
 import { useState } from 'react';
 import { ArrowRightIcon, ChevronDownIcon } from '@/app/components/icons';
+import { ClipboardList, ChatBubbleText, Rocket } from 'griddy-icons';
+import type { ReactNode } from 'react';
 
 export default function Process() {
   const [showDetailedSteps, setShowDetailedSteps] = useState(false);
 
   // 간소화된 3단계 요약
-  const simpleSteps = [
-    { 
-      number: "01", 
-      title: "서비스 선택 & 신청서 작성", 
+  const simpleSteps: { number: string; title: string; description: string; icon: ReactNode }[] = [
+    {
+      number: "01",
+      title: "서비스 선택 & 신청서 작성",
       description: "원하는 옵션을 견적에 담고, 온라인 신청서를 작성해주세요.",
-      icon: "📝"
+      icon: <ClipboardList size={28} color="var(--brand-primary)" />
     },
-    { 
-      number: "02", 
-      title: "조율 & 견적서 확인", 
+    {
+      number: "02",
+      title: "조율 & 견적서 확인",
       description: "마감일, 추가 요청사항을 조율하고 최종 견적서를 확인합니다.",
-      icon: "💬"
+      icon: <ChatBubbleText size={28} color="var(--brand-primary)" />
     },
-    { 
-      number: "03", 
-      title: "결제 & 작업 진행", 
+    {
+      number: "03",
+      title: "결제 & 작업 진행",
       description: "작업 일자가 가까워지면 결제 요청을 보내드리고, 완료 후 전달드립니다.",
-      icon: "🚀"
+      icon: <Rocket size={28} color="var(--brand-primary)" />
     },
   ];
 
@@ -78,7 +80,7 @@ export default function Process() {
   return (
     <section className="py-15">
       <div className="mb-16 border-b border-border pb-4">
-        <h2 className="text-[32px] tracking-[-0.01em] font-semibold">
+        <h2 className="text-[29px] tracking-[-0.01em] font-semibold">
           커미션 진행 순서
         </h2>
       </div>
@@ -90,12 +92,7 @@ export default function Process() {
             key={index} 
             className="relative p-6 border border-border bg-white shadow-sm"
           >
-            {/* 연결선 (마지막 아이템 제외, 데스크톱에서만) */}
-            {index < simpleSteps.length - 1 && (
-              <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-0.5 bg-black/20" />
-            )}
-            
-            <div className="text-[32px] mb-4">{step.icon}</div>
+            <div className="mb-4">{step.icon}</div>
             <div className="text-[12px] font-mono text-[var(--brand-primary)] mb-2">
               STEP {step.number}
             </div>
@@ -137,12 +134,12 @@ export default function Process() {
         >
           <div className="px-6 py-6 space-y-6">
             {detailedSteps.map((step, index) => (
-              <div key={index} className="flex gap-6">
-                <div className="text-[12px] font-mono text-[var(--brand-primary)] shrink-0 mt-1">
+              <div key={index} className="flex items-baseline gap-6">
+                <div className="text-[12px] font-mono leading-normal text-[var(--brand-primary)] shrink-0">
                   {step.number}
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-medium mb-2">{step.title}</h3>
+                  <h3 className="text-[17px] font-semibold mb-2">{step.title}</h3>
                   {step.details && (
                     <ul className="space-y-2">
                       {step.details.map((detail, i) => (

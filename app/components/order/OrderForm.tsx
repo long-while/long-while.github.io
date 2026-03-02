@@ -6,6 +6,7 @@ import Step2Server from './steps/Step2Server';
 import Step3Bot from './steps/Step3Bot';
 import Step4Review from './steps/Step4Review';
 import { CheckCircle, X } from 'lucide-react';
+import { AlertTriangle } from 'griddy-icons';
 
 interface OrderFormProps {
   onNavigate?: (page: string) => void;
@@ -211,9 +212,9 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
 
       {/* 장바구니 동기화 알림 */}
       {showSyncNotice && cartSyncState && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-500 rounded-md animate-fadeIn flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+        <div className="mb-6 p-4 bg-green-50 border border-green-500 rounded-md animate-fadeIn flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
             <div>
               <h3 className="text-[15px] font-medium text-green-800 mb-1">
                 견적 항목이 자동으로 반영되었습니다
@@ -243,7 +244,7 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
           }}
         >
           <h3 className="text-[16px] font-medium text-red-700 mb-2 flex items-center gap-2">
-            <span>⚠️</span>
+            <AlertTriangle size={18} color="currentColor" />
             입력 내용을 확인해 주세요
           </h3>
           <ul className="list-disc list-inside space-y-1">

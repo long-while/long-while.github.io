@@ -46,7 +46,7 @@ export default function WelcomeModal({ onNavigate }: WelcomeModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* 백드롭 - 클릭해도 닫히지 않음 */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50" />
       
       {/* 모달 */}
       <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-fadeIn">
@@ -64,7 +64,7 @@ export default function WelcomeModal({ onNavigate }: WelcomeModalProps) {
         <div className="p-5">
           {/* 진행 단계 */}
           <div className="space-y-3 mb-5">
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <div className="w-8 h-8 bg-[#ff7b00] rounded-full flex items-center justify-center text-white font-bold text-[13px] shrink-0">
                 1
               </div>
@@ -79,7 +79,7 @@ export default function WelcomeModal({ onNavigate }: WelcomeModalProps) {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <div className="w-8 h-8 bg-[#ff7b00] rounded-full flex items-center justify-center text-white font-bold text-[13px] shrink-0">
                 2
               </div>
@@ -94,7 +94,7 @@ export default function WelcomeModal({ onNavigate }: WelcomeModalProps) {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <div className="w-8 h-8 bg-[#ff7b00] rounded-full flex items-center justify-center text-white font-bold text-[13px] shrink-0">
                 3
               </div>

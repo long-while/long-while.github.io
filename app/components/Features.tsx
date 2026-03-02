@@ -31,7 +31,7 @@ export default function Features() {
   return (
     <section className="py-16">
       <div className="mb-10 border-b border-border pb-4">
-        <h2 className="text-[32px] tracking-[-0.01em] font-semibold">한참 마스토돈만의 특징</h2>
+        <h2 className="text-[29px] tracking-[-0.01em] font-semibold">한참 마스토돈만의 특징</h2>
       </div>
 
       {/* 핵심 특징 4개 - 카드 형태 */}
@@ -41,8 +41,8 @@ export default function Features() {
             key={index} 
             className="p-6 border border-border shadow-sm hover:border-[var(--brand-primary)] hover:shadow-md transition-all bg-white"
           >
-            <div className="flex items-start gap-4">
-              <div className="text-[24px] font-mono text-[var(--brand-primary)] shrink-0">
+            <div className="flex items-baseline gap-6">
+              <div className="text-[12px] font-mono leading-normal text-[var(--brand-primary)] shrink-0">
                 {String(index + 1).padStart(2, '0')}
               </div>
               <div>
@@ -75,12 +75,12 @@ export default function Features() {
         >
           <div className="px-6 py-6 space-y-6">
             {moreFeatures.map((feature, index) => (
-              <div key={index} className="flex gap-6">
-                <div className="text-[12px] font-mono text-[var(--brand-primary)] shrink-0 mt-1">
+              <div key={index} className="flex items-baseline gap-6">
+                <div className="text-[12px] font-mono leading-normal text-[var(--brand-primary)] shrink-0">
                   {String(index + 5).padStart(2, '0')}
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-medium mb-1">{feature.title}</h3>
+                  <h3 className="text-[17px] font-semibold mb-1">{feature.title}</h3>
                   <p className="text-[15px] leading-[1.7] text-foreground/70">
                     {feature.description}
                   </p>
@@ -92,9 +92,9 @@ export default function Features() {
       </div>
 
       {/* 주의사항 */}
-      <div className="p-6 border border-amber-500/50 bg-amber-50">
-        <div className="flex items-start gap-4">
-          <WarningIcon className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+      <div className="p-6 border border-amber-500/50 bg-[#fff1e3]">
+        <div className="flex items-center gap-4">
+          <WarningIcon className="w-6 h-6 text-amber-600 shrink-0" />
           <div>
             <h3 className="text-[17px] font-semibold mb-2 text-amber-800">{warning.title}</h3>
             <p className="text-[15px] leading-[1.7] text-amber-700">

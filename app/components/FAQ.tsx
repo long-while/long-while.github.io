@@ -86,7 +86,7 @@ export default function FAQ() {
   return (
     <section>
       <div className="mb-10 border-b border-border pb-4">
-        <h2 className="text-[32px] tracking-[-0.01em] font-semibold">
+        <h2 className="text-[29px] tracking-[-0.01em] font-semibold">
           자주 묻는 질문
         </h2>
       </div>
@@ -100,7 +100,7 @@ export default function FAQ() {
             placeholder="질문 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-10 py-3 border border-input rounded-lg text-[15px] placeholder:text-gray-400 focus:outline-none focus:border-[#ff7b00] focus:ring-2 focus:ring-[#ff7b00]/20 transition-colors"
+            className="w-full pl-12 pr-10 py-3 border border-gray-300 rounded-lg text-[15px] placeholder:text-gray-400 focus:outline-none focus:border-[#ff7b00] focus:ring-2 focus:ring-[#ff7b00]/20 transition-colors"
           />
           {searchQuery && (
             <button
@@ -124,18 +124,18 @@ export default function FAQ() {
         <div className="space-y-6">
           {filteredFaqs.map((faq, index) => (
             <div key={index} className="pb-6 border-b border-border last:border-0 last:pb-0">
-              <div className="max-w-4xl">
-                <div className="flex gap-6 mb-2">
-                  <div className="text-[12px] font-mono text-[#ff7b00] shrink-0">
-                    {String(faqs.indexOf(faq) + 1).padStart(2, '0')}
-                  </div>
-                  <h3 className="text-[18px]">
+              <div className="max-w-4xl flex items-baseline gap-6">
+                <div className="text-[12px] font-mono leading-normal text-[#ff7b00] shrink-0">
+                  {String(faqs.indexOf(faq) + 1).padStart(2, '0')}
+                </div>
+                <div>
+                  <h3 className="text-[18px] mb-2">
                     {highlightText(faq.question, searchQuery)}
                   </h3>
+                  <p className="text-[16px] leading-[1.8] text-foreground/70">
+                    {highlightText(faq.answer, searchQuery)}
+                  </p>
                 </div>
-                <p className="text-[16px] leading-[1.8] text-foreground/70 pl-[calc(12px+1.5rem)]">
-                  {highlightText(faq.answer, searchQuery)}
-                </p>
               </div>
             </div>
           ))}

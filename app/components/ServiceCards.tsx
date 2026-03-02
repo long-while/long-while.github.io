@@ -6,7 +6,7 @@ export default function ServiceCards({ onNavigate }: ServiceCardsProps) {
   return (
     <section className="py-15">
       <div className="mb-16 border-b border-border pb-4">
-        <h2 className="text-[32px] tracking-[-0.01em] font-semibold">
+        <h2 className="text-[29px] tracking-[-0.01em] font-semibold">
           커미션 서비스
         </h2>
       </div>
@@ -17,11 +17,11 @@ export default function ServiceCards({ onNavigate }: ServiceCardsProps) {
           className="p-12 border border-border hover:bg-[var(--brand-bg)] hover:border-[var(--brand-primary)] shadow-sm hover:shadow-md active:scale-[0.98] transition-all text-left group"
         >
           <div className="text-[12px] font-mono text-[var(--brand-primary)] mb-6">01</div>
-          <h3 className="text-[32px] mb-4 tracking-[-0.01em]">
-            서버 설치 &<br/>테마 커스터마이징
+          <h3 className="text-[22px] md:text-[29px] mb-4 tracking-[-0.01em]">
+            서버 설치 &<br />테마 커스텀
           </h3>
           <p className="text-[16px] leading-[1.8] text-foreground/60 mb-8">
-            구글 클라우드 플랫폼을 이용한 마스토돈 서버 설치 및 테마 커스터마이징 서비스
+            구글 클라우드 플랫폼을 이용한 마스토돈 서버 설치 및 커스텀 테마 제작
           </p>
           <div className="flex items-center gap-3 text-[14px] text-[var(--brand-primary)] group-hover:gap-4 transition-all">
             <span>자세히 보기</span>
@@ -34,11 +34,11 @@ export default function ServiceCards({ onNavigate }: ServiceCardsProps) {
           className="p-12 border border-border hover:bg-[var(--brand-bg)] hover:border-[var(--brand-primary)] shadow-sm hover:shadow-md active:scale-[0.98] transition-all text-left group"
         >
           <div className="text-[12px] font-mono text-[var(--brand-primary)] mb-6">02</div>
-          <h3 className="text-[32px] mb-4 tracking-[-0.01em]">
-            자동봇<br/>커미션
+          <h3 className="text-[22px] md:text-[29px] mb-4 tracking-[-0.01em]">
+            자동봇<br />커미션
           </h3>
           <p className="text-[16px] leading-[1.8] text-foreground/60 mb-8">
-            커뮤니티 운영을 돕는 다양한 타입의 자동봇 제작 서비스
+            커뮤니티 운영을 돕는 다양한 타입의 자동봇 제작
           </p>
           <div className="flex items-center gap-3 text-[14px] text-[var(--brand-primary)] group-hover:gap-4 transition-all">
             <span>자세히 보기</span>

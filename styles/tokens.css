@@ -1,97 +1,104 @@
 /**
- * Design Tokens - 브랜드 컬러 시스템
- * =====================================
- * 
- * 모든 컬러와 디자인 변수는 이 파일에서 관리합니다.
- * 컴포넌트에서 하드코딩된 컬러 값 대신 이 토큰을 사용하세요.
- * 
+ * Design Tokens - OKLCH 기반 브랜드 컬러 시스템
+ * =============================================
+ *
+ * 모든 컬러는 OKLCH 색공간으로 정의되어 있습니다.
+ * --brand-hue 값 하나만 변경하면 전체 브랜드 컬러가 일관되게 변경됩니다.
+ *
+ * OKLCH(L C H) = Lightness(밝기) Chroma(채도) Hue(색상)
+ *
  * 사용 예시:
  * - CSS: color: var(--brand-primary);
- * - Tailwind: className="text-brand" (tailwind.config.js 설정 후)
- * 
- * @author Longwhile Commission
- * @version 1.0.0
+ * - Tailwind: className="text-[var(--brand-primary)]"
  */
 
 :root {
   /* ========================================
+   * Brand Hue - 이 값만 바꾸면 전체 테마 변경
+   * ========================================
+   */
+  --brand-hue: 51;
+
+  /* ========================================
    * Brand Colors - Primary (Orange)
    * ========================================
-   * 
-   * 주요 브랜드 컬러입니다.
-   * 버튼, 링크, 강조 텍스트 등에 사용합니다.
+   *
+   * L(밝기): 60 → 99  /  C(채도): 0.19 → 0.01
+   * 밝을수록 L↑ C↓, 어두울수록 L↓ C↑
    */
-  --brand-primary: #ff7b00;
-  --brand-primary-hover: #e66d00;
-  --brand-primary-active: #cc5f00;
-  --brand-primary-light: #ffa640;
-  --brand-primary-lighter: #ffb85c;
-  
+  --brand-primary: oklch(72% 0.19 var(--brand-hue));
+  --brand-primary-hover: oklch(67% 0.18 var(--brand-hue));
+  --brand-primary-active: oklch(61% 0.16 var(--brand-hue));
+  --brand-primary-light: oklch(80% 0.15 var(--brand-hue));
+  --brand-primary-lighter: oklch(83% 0.14 var(--brand-hue));
+
   /* 브랜드 배경색 */
-  --brand-bg: #fff5eb;
-  --brand-bg-hover: #ffecdb;
-  --brand-bg-subtle: #fffaf5;
-  
+  --brand-bg: oklch(97.5% 0.02 var(--brand-hue));
+  --brand-bg-hover: oklch(95.5% 0.03 var(--brand-hue));
+  --brand-bg-subtle: oklch(99% 0.01 var(--brand-hue));
+
   /* 브랜드 그라디언트 */
-  --brand-gradient-start: #ff7b00;
-  --brand-gradient-mid: #ff9933;
-  --brand-gradient-end: #ffb85c;
+  --brand-gradient-start: var(--brand-primary);
+  --brand-gradient-mid: oklch(77% 0.16 var(--brand-hue));
+  --brand-gradient-end: var(--brand-primary-lighter);
   --brand-gradient: linear-gradient(to right, var(--brand-gradient-start), var(--brand-gradient-mid));
   --brand-gradient-vibrant: linear-gradient(to right, var(--brand-gradient-start), var(--brand-gradient-end));
-  
+
   /* 히어로 섹션 그라디언트 */
-  --hero-gradient: linear-gradient(135deg, #dce3e8 0%, #ffe0b3 25%, #ffc875 45%, #ffb85c 65%, #ff8833 85%, #ff7722 100%);
+  --hero-gradient: linear-gradient(
+    135deg,
+    oklch(91% 0.01 240) 0%,
+    oklch(92% 0.07 77) 25%,
+    oklch(86% 0.12 76) 45%,
+    oklch(83% 0.14 var(--brand-hue)) 65%,
+    oklch(75% 0.17 var(--brand-hue)) 85%,
+    oklch(72% 0.19 var(--brand-hue)) 100%
+  );
 
   /* ========================================
    * Semantic Colors
    * ========================================
-   * 
-   * 상태를 나타내는 의미적 컬러입니다.
    */
-  --color-success: #22c55e;
-  --color-success-bg: #f0fdf4;
-  --color-success-border: #86efac;
-  
-  --color-warning: #f59e0b;
-  --color-warning-bg: #fffbeb;
-  --color-warning-border: #fcd34d;
-  
-  --color-error: #ef4444;
-  --color-error-bg: #fef2f2;
-  --color-error-border: #fca5a5;
-  
-  --color-info: #3b82f6;
-  --color-info-bg: #eff6ff;
-  --color-info-border: #93c5fd;
+  --color-success: oklch(72% 0.19 150);
+  --color-success-bg: oklch(98% 0.02 155);
+  --color-success-border: oklch(87% 0.14 154);
 
-  --color-amber-50: #fffbeb;
+  --color-warning: oklch(77% 0.16 70);
+  --color-warning-bg: oklch(99% 0.02 95);
+  --color-warning-border: oklch(88% 0.15 92);
+
+  --color-error: oklch(64% 0.21 25);
+  --color-error-bg: oklch(97% 0.01 17);
+  --color-error-border: oklch(81% 0.10 20);
+
+  --color-info: oklch(62% 0.19 260);
+  --color-info-bg: oklch(97% 0.01 255);
+  --color-info-border: oklch(81% 0.10 252);
+
+  --color-amber-50: oklch(99% 0.02 95);
 
   /* ========================================
    * Neutral Colors (Gray Scale)
    * ========================================
-   * 
-   * 텍스트, 배경, 테두리 등에 사용되는 중립 컬러입니다.
    */
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
-  
+  --gray-50: oklch(98.00% 0.003 265);
+  --gray-100: oklch(96.70% 0.004 265);
+  --gray-200: oklch(93.00% 0.005 265);
+  --gray-300: oklch(87.20% 0.008 265);
+  --gray-400: oklch(71.40% 0.014 265);
+  --gray-500: oklch(55.10% 0.015 265);
+  --gray-600: oklch(44.60% 0.016 265);
+  --gray-700: oklch(37.30% 0.014 265);
+  --gray-800: oklch(28.90% 0.013 265);
+  --gray-900: oklch(21.00% 0.012 265);
+
   /* 흑백 */
-  --color-white: #ffffff;
-  --color-black: #000000;
+  --color-white: oklch(100% 0 0);
+  --color-black: oklch(0% 0 0);
 
   /* ========================================
    * Typography Scale
    * ========================================
-   * 
-   * 일관된 폰트 크기 시스템입니다.
    */
   --font-size-2xs: 10px;
   --font-size-xs: 11px;
@@ -127,24 +134,24 @@
    * Component-Specific Tokens
    * ========================================
    */
-  
+
   /* Form Elements */
   --form-border: var(--gray-300);
   --form-border-hover: var(--gray-400);
   --form-border-focus: var(--brand-primary);
-  --form-focus-ring: rgba(255, 123, 0, 0.1);
-  --form-focus-ring-color: rgba(255, 123, 0, 0.3);
+  --form-focus-ring: oklch(72.45% 0.189 var(--brand-hue) / 0.1);
+  --form-focus-ring-color: oklch(72.45% 0.189 var(--brand-hue) / 0.3);
   --form-bg: var(--color-white);
   --form-bg-disabled: var(--gray-100);
-  
+
   /* Navigation */
   --nav-text: var(--gray-900);
   --nav-text-hover: var(--brand-primary);
   --nav-text-active: var(--brand-primary);
   --nav-bg: var(--color-white);
   --nav-border: var(--gray-200);
-  --nav-mobile-overlay: rgba(0, 0, 0, 0.5);
-  
+  --nav-mobile-overlay: oklch(0% 0 0 / 0.5);
+
   /* Button - Primary */
   --btn-primary-bg: var(--brand-primary);
   --btn-primary-bg-hover: var(--brand-primary-hover);
@@ -156,21 +163,21 @@
   --btn-secondary-bg-hover: var(--gray-50);
   --btn-secondary-text: var(--gray-900);
   --btn-secondary-border: var(--gray-200);
-  
+
   /* Card */
   --card-bg: var(--color-white);
   --card-border: var(--gray-200);
   --card-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --card-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  
+
   /* Badge */
   --badge-bg: var(--brand-primary);
   --badge-text: var(--color-white);
   --badge-size: 20px;
-  
+
   /* Dialog */
-  --dialog-overlay: rgba(0, 0, 0, 0.5);
+  --dialog-overlay: oklch(0% 0 0 / 0.5);
   --dialog-bg: var(--color-white);
   --dialog-border: var(--gray-200);
   --dialog-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
@@ -183,7 +190,7 @@
   --duration-normal: 200ms;
   --duration-slow: 300ms;
   --duration-slower: 500ms;
-  
+
   /* ========================================
    * Border Radius
    * ========================================
@@ -193,7 +200,7 @@
   --radius-lg: 8px;
   --radius-xl: 12px;
   --radius-full: 9999px;
-  
+
   /* ========================================
    * Z-Index Scale
    * ========================================
@@ -208,10 +215,8 @@
 }
 
 /* ========================================
- * Utility Classes (CSS Variables 기반)
+ * Utility Classes
  * ========================================
- * 
- * Tailwind 설정 전 임시로 사용할 수 있는 유틸리티 클래스
  */
 
 /* Text Colors */
@@ -265,7 +270,6 @@
  * ========================================
  */
 
-/* 기본 폼 인풋 */
 .form-input {
   width: 100%;
   padding: 12px 16px;
@@ -291,10 +295,9 @@
   cursor: not-allowed;
 }
 
-/* 폼 라디오/체크박스 컨테이너 */
 .form-option {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   padding: 16px;
   border: 1px solid var(--form-border);
@@ -312,10 +315,9 @@
 .form-option.selected {
   border-color: var(--brand-primary);
   background-color: var(--brand-bg);
-  box-shadow: 0 0 0 2px rgba(255, 123, 0, 0.2);
+  box-shadow: 0 0 0 2px oklch(72.45% 0.189 var(--brand-hue) / 0.2);
 }
 
-/* 라디오/체크박스 accent 색상 */
 .form-checkbox,
 .form-radio {
   accent-color: var(--brand-primary);
@@ -335,7 +337,6 @@
  * ========================================
  */
 
-/* 기본 버튼 베이스 */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -350,7 +351,6 @@
   transition: all var(--duration-normal);
 }
 
-/* Primary 버튼 - 하이브리드 스타일 */
 .btn-primary {
   background-color: var(--btn-primary-bg);
   color: var(--btn-primary-text);
@@ -374,7 +374,6 @@
   box-shadow: none;
 }
 
-/* Secondary 버튼 */
 .btn-secondary {
   background-color: var(--btn-secondary-bg);
   color: var(--btn-secondary-text);
@@ -392,7 +391,6 @@
   transform: scale(0.98);
 }
 
-/* 링크 스타일 버튼 */
 .btn-link {
   color: var(--brand-primary);
   background: none;
@@ -434,7 +432,6 @@
   border-bottom: 1px solid var(--gray-200);
 }
 
-/* Card Shadow */
 .shadow-card {
   box-shadow: var(--card-shadow);
 }

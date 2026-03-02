@@ -43,7 +43,7 @@ export default function Terms() {
   return (
     <section className="py-15">
       <div className="mb-16 border-b border-border pb-4">
-        <h2 className="text-[32px] tracking-[-0.01em] font-semibold">
+        <h2 className="text-[29px] tracking-[-0.01em] font-semibold">
           약관 및 기타 안내
         </h2>
       </div>
@@ -51,22 +51,21 @@ export default function Terms() {
       <div className="space-y-6">
         {sections.map((section, index) => (
           <div key={index} className="pb-6 border-b border-border last:border-0 last:pb-0">
-            <div className="max-w-4xl">
-              <div className="flex gap-6 mb-2">
-                <div className="text-[12px] font-mono text-[#ff7b00] shrink-0">
-                  {String(index + 1).padStart(2, '0')}
-                </div>
-                <h3 className="text-[20px]">
+            <div className="max-w-4xl flex items-baseline gap-6">
+              <div className="text-[12px] font-mono leading-normal text-[#ff7b00] shrink-0">
+                {String(index + 1).padStart(2, '0')}
+              </div>
+              <div>
+                <h3 className="text-[20px] mb-2">
                   {section.title}
                 </h3>
-              </div>
-              <p className="text-[15px] leading-[1.9] text-foreground/70 pl-[calc(12px+1.5rem)]">
-                {section.content}
-              </p>
-              
-              {/* 빠른마감 섹션에만 예시 추가 */}
-              {section.hasExamples && (
-                <div className="mt-8 pl-[calc(12px+1.5rem)]">
+                <p className="text-[15px] leading-[1.9] text-foreground/70">
+                  {section.content}
+                </p>
+
+                {/* 빠른마감 섹션에만 예시 추가 */}
+                {section.hasExamples && (
+                  <div className="mt-8">
                   <h4 className="text-[16px] mb-4 text-foreground/80">빠른마감 적용 예시</h4>
                   <div className="space-y-3">
                     {examples.map((example, exampleIndex) => (
@@ -88,8 +87,9 @@ export default function Terms() {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}

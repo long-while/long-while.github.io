@@ -106,32 +106,30 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-[1200px] mx-auto px-8 py-16">
+      <div className="max-w-[1060px] mx-auto px-8 py-16">
         {/* 뒤로가기 버튼 */}
         <button
           onClick={onBack}
-          className="mb-16 flex items-center gap-3 text-[14px] min-h-[44px] hover:text-[#ff7b00] transition-colors text-foreground/70 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 rounded"
+          className="mb-10 flex items-center gap-3 text-[14px] min-h-[44px] hover:text-[#ff7b00] transition-colors text-foreground/70 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 rounded"
         >
           <span className="text-[18px]">←</span>
           메인으로 돌아가기
         </button>
 
         {/* 타이틀 */}
-        <div className="mb-10">
-          <div className="pb-2 mb-8">
-            <h1 className="text-[48px] leading-[0.95] tracking-[-0.03em] font-bold text-[#ff7b00]">
-              서버 설치 & 테마 커미션
-            </h1>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-[40px] leading-[0.95] tracking-[-0.03em] font-bold text-[#ff7b00]">
+            서버 설치 & 테마 커미션
+          </h1>
         </div>
 
         {/* 공지 */}
-        <section className="py-13">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">공지</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">공지</h2>
           </div>
           
-          <div className="max-w-4xl space-y-6 text-[17px] leading-[1.8]">
+          <div className="max-w-4xl space-y-6 text-[15px] leading-[1.8]">
             <p>
               <span className="font-medium">기본 마감일:</span> 서버 개장 3~5일 전
             </p>
@@ -152,22 +150,22 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
         </section>
 
         {/* 기본 옵션 */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">기본 옵션</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">기본 옵션</h2>
           </div>
           
           <div className="space-y-3">
             <div className={`border p-5 transition-all ${isItemInEstimate('마스토돈 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
-                  <h3 className="text-[17px] text-black font-semibold">마스토돈 서버 설치</h3>
+                  <h3 className="text-[15px] text-black font-semibold">마스토돈 서버 설치</h3>
                   <span className="text-[14px] leading-[1.6] text-foreground/60">
                     자캐 커뮤에 특화된 한참 인스턴스를 설치합니다.
                   </span>
                 </div>
                 <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
-                  <span className="text-[17px] font-mono text-[#ff7b00]">₩20,000</span>
+                  <span className="text-[15px] font-mono leading-normal text-[#ff7b00]">₩20,000</span>
                   <button
                     onClick={() => handleToggleEstimate('마스토돈 서버 설치', 20000, '자캐 커뮤에 특화된 한참 인스턴스를 설치합니다.')}
                     className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
@@ -201,14 +199,14 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
         </section>
 
         {/* 테마 선택 (택1) */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">테마 선택</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">테마 선택</h2>
           </div>
           
           {/* 택1 안내 */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 shrink-0" />
             <div>
               <p className="text-[14px] text-blue-800 font-medium">택1 옵션</p>
               <p className="text-[13px] text-blue-700">아래 옵션 중 하나만 선택할 수 있습니다. 커스텀 없이 기본 트위터 테마를 원하시면 선택하지 않으셔도 됩니다.</p>
@@ -241,14 +239,14 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                         )}
                       </div>
                       <div>
-                        <h3 className="text-[17px] text-black font-semibold">{option.name}</h3>
+                        <h3 className="text-[15px] text-black font-semibold">{option.name}</h3>
                         <span className="text-[14px] leading-[1.6] text-foreground/60">
                           {option.description}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 shrink-0 pl-10 md:pl-0">
-                      <span className="text-[17px] font-mono text-[#ff7b00]">₩{option.price.toLocaleString()}</span>
+                      <span className="text-[15px] font-mono leading-normal text-[#ff7b00]">₩{option.price.toLocaleString()}</span>
                     </div>
                   </div>
                 </button>
@@ -258,9 +256,9 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
         </section>
 
         {/* 추가 옵션 */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">추가 옵션</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">추가 옵션</h2>
           </div>
           
           <div className="space-y-3">
@@ -290,13 +288,13 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                         {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
                       </div>
                       <div>
-                        <h3 className="text-[17px] text-black font-semibold">{option.name}</h3>
+                        <h3 className="text-[15px] text-black font-semibold">{option.name}</h3>
                         <span className="text-[14px] leading-[1.6] text-foreground/60">
                           {option.description}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
+                    <span className="text-[15px] font-mono leading-normal text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
                   </div>
                 </button>
               );
@@ -305,9 +303,9 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
         </section>
 
         {/* 빠른마감 옵션 */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">빠른마감 옵션</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">빠른마감 옵션</h2>
           </div>
           
           <div className="space-y-3">
@@ -337,11 +335,11 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                         {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
                       </div>
                       <div>
-                        <h3 className="text-[17px] text-black font-semibold">{option.displayName}</h3>
+                        <h3 className="text-[15px] text-black font-semibold">{option.displayName}</h3>
                         <span className="text-[14px] leading-[1.6] text-foreground/60">{option.description}</span>
                       </div>
                     </div>
-                    <span className="text-[17px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
+                    <span className="text-[15px] font-mono leading-normal text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
                   </div>
                 </button>
               );

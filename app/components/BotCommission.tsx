@@ -133,9 +133,9 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         "[가방] 인벤토리, 재화 확인"
       ],
       options: [
-        { name: "양도 기능", price: 10000, description: "[양도/아이템명/캐릭터명] 캐릭터 간의 아이템, 재화 양도" },
-        { name: "툿수 자동 재화 반영", price: 7000, description: "툿수에 따른 자동 재화 반영" },
-        { name: "커스텀 명령어 업그레이드", price: 5000, description: "유저 이름/은는맞춤/문구 내 다이스 기능 추가" }
+        { name: "양도 기능", price: 10000 },
+        { name: "툿수-재화 자동반영", price: 10000 },
+        { name: "커스텀 명령어 업그레이드", price: 5000 }
       ]
     },
     {
@@ -148,9 +148,9 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         "[사용/아이템명] 아이템 소모 후 캐릭터 스탯 변화. 운영진이 시트로 아이템 편집 가능"
       ],
       options: [
-        { name: "양도 기능", price: 10000, description: "[양도/아이템명/캐릭터명] 캐릭터 간의 아이템, 재화 양도" },
-        { name: "툿수 자동 재화 반영", price: 7000, description: "툿수에 따른 자동 재화 반영" },
-        { name: "커스텀 명령어 업그레이드", price: 5000, description: "유저 이름/은는맞춤/문구 내 다이스 기능 추가" }
+        { name: "양도 기능", price: 10000 },
+        { name: "툿수-재화 자동반영", price: 10000 },
+        { name: "커스텀 명령어 업그레이드", price: 5000 }
       ]
     },
     {
@@ -172,10 +172,6 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         "[조사/장소], [조사/물건] 등의 키워드를 받고 조사 내용 출력",
         "캐릭터 재화 및 스탯과 연동 (특정 이벤트 발생 시 5코인 획득 / 체력 -5 등)",
         "특정 장소는 비밀번호나 요구조건 설정 가능"
-      ],
-      options: [
-        { name: "조사 횟수 제한", price: 5000, description: "장소별 혹은 캐릭터별 조사 횟수 제한 가능" },
-        { name: "조사 목록 시트 연동", price: 10000, description: "러너 공개용 조사 목록 시트 연동, 조사된 장소 표시 등의 부가기능 추가" }
       ]
     },
     {
@@ -191,46 +187,43 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
     }
   ];
 
-  const additionalOptions = [
-    { name: "커스텀 명령어 업그레이드", price: 5000, description: "유저 이름/은는맞춤/문구 내 다이스 기능이 추가됩니다!", aliases: ["기본 타입 - 커스텀 명령어 업그레이드", "기본&상점 타입 - 커스텀 명령어 업그레이드", "기본&상점&스탯 타입 - 커스텀 명령어 업그레이드"] },
-    { name: "양도 기능", price: 10000, description: "[양도/아이템명/캐릭터명] 캐릭터 간의 아이템, 재화 양도", aliases: ["기본&상점 타입 - 양도 기능", "기본&상점&스탯 타입 - 양도 기능"] },
-    { name: "툿수 자동 재화 반영", price: 7000, description: "툿수에 따른 자동 재화 반영", aliases: ["기본&상점 타입 - 툿수 자동 재화 반영", "기본&상점&스탯 타입 - 툿수 자동 재화 반영"] },
-    { name: "예약 툿 기능", price: 5000 },
-    { name: "스토리 자동 진행", price: 5000, note: "정말 추천합니다!! 써보니까 운영의 질이 달라져요!" },
-    { name: "조사 횟수 제한", price: 5000, description: "장소별 혹은 캐릭터별 조사 횟수 제한 가능", aliases: ["자동조사 타입 - 조사 횟수 제한"] },
-    { name: "조사 목록 시트 연동", price: 10000, description: "러너 공개용 조사 목록 시트 연동, 조사된 장소 표시 등의 부가기능 추가", aliases: ["자동조사 타입 - 조사 목록 시트 연동"] },
-    { name: "특정 상황 DM 전송", price: 0, description: "특정 상황에서 봇이 DM 전송 (ex. 체력이 50 이하로 떨어짐)" },
-    { name: "시스템/봇 가이드 문서", price: 0, description: "해당 커뮤니티 서버 캡처본으로 제작합니다" }
+  const additionalOptions: { name: string; price: number; description?: string; aliases?: string[]; priceLabel?: string }[] = [
+    { name: "커스텀 명령어 업그레이드", price: 5000, aliases: ["기본 타입 - 커스텀 명령어 업그레이드", "기본&상점 타입 - 커스텀 명령어 업그레이드", "기본&상점&스탯 타입 - 커스텀 명령어 업그레이드"] },
+    { name: "양도 기능", price: 10000, aliases: ["기본&상점 타입 - 양도 기능", "기본&상점&스탯 타입 - 양도 기능"] },
+    { name: "툿수-재화 자동반영", price: 10000, aliases: ["기본&상점 타입 - 툿수-재화 자동반영", "기본&상점&스탯 타입 - 툿수-재화 자동반영"] },
+    { name: "예약 툿", price: 5000 },
+    { name: "스토리 자동 진행", price: 5000 },
+    { name: "특정 상황 DM 전송", price: 20000, description: "특정 상황에서 봇이 DM 전송 (ex. 체력이 50 이하로 떨어짐)" },
+    { name: "빠른 마감 (48시간 내)", price: 0, priceLabel: "+200%", description: "총 금액의 200% 추가" },
+    { name: "빠른 마감 (1주일 내)", price: 0, priceLabel: "+100%", description: "총 금액의 100% 추가" },
   ];
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-[1200px] mx-auto px-8 py-16">
+      <div className="max-w-[1060px] mx-auto px-8 py-16">
         {/* 뒤로가기 버튼 */}
         <button
           onClick={onBack}
-          className="mb-16 flex items-center gap-3 text-[14px] min-h-[44px] hover:text-[#ff7b00] transition-colors text-foreground/70 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 rounded"
+          className="mb-10 flex items-center gap-3 text-[14px] min-h-[44px] hover:text-[#ff7b00] transition-colors text-foreground/70 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 rounded"
         >
           <span className="text-[18px]">←</span>
           메인으로 돌아가기
         </button>
 
         {/* 타이틀 */}
-        <div className="mb-10">
-          <div className="pb-2 mb-8">
-            <h1 className="text-[48px] leading-[0.95] tracking-[-0.03em] font-bold text-[#ff7b00]">
-              자동봇 커미션
-            </h1>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-[40px] leading-[0.95] tracking-[-0.03em] font-bold text-[#ff7b00]">
+            자동봇 커미션
+          </h1>
         </div>
 
         {/* 기본 안내 */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">기본 안내</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">기본 안내</h2>
           </div>
           
-          <div className="max-w-4xl space-y-6 text-[17px] leading-[1.8]">
+          <div className="max-w-4xl space-y-6 text-[15px] leading-[1.8]">
             <p>
               마스토돈 자동봇 커미션입니다. 타입에 따라 가격이 달라집니다.<br />
               타입 내에 기재되지 않은 기능도 대부분 구현할 수 있습니다.
@@ -260,9 +253,9 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         </section>
 
         {/* 자동봇 시트 미리보기 */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">자동봇 시트 미리보기</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">자동봇 시트 미리보기</h2>
           </div>
 
           <div className="space-y-4">
@@ -312,9 +305,9 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         </section>
 
         {/* 기본 가동료 */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">가동 기간</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">가동 기간</h2>
           </div>
 
           <div className="border border-border p-8 bg-black/[0.01]">
@@ -346,16 +339,16 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                 </button>
               </div>
               <div className="text-right">
-                <span className="text-[22px] font-mono text-[#ff7b00]">₩{(operationWeeks * 5000).toLocaleString()}</span>
+                <span className="text-[22px] font-mono leading-normal text-[#ff7b00]">₩{(operationWeeks * 5000).toLocaleString()}</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* 봇 타입 비교 테이블 */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">봇 타입 비교</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">봇 타입 비교</h2>
           </div>
           
           <div className="overflow-x-auto mb-8">
@@ -483,15 +476,15 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         </section>
 
         {/* 봇 타입들 */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">봇 타입 상세</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">봇 타입 상세</h2>
           </div>
           
           {/* 중복 선택 경고 */}
           {getDuplicateWarnings.length > 0 && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-400 rounded-lg flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="mb-6 p-4 bg-[#fff1e3] border border-amber-400 rounded-lg flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
               <div>
                 <p className="text-[14px] text-amber-800 font-medium">중복 선택 안내</p>
                 <ul className="mt-1 space-y-1">
@@ -507,8 +500,8 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
             {botTypes.map((type, index) => {
               const typeSelected = isItemInEstimate(type.name);
               const headerContent = (
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                  <div className="flex items-center gap-4 flex-1">
+                <div className="flex items-center justify-between gap-4 w-full">
+                  <div className="flex items-center gap-3 min-w-0">
                     {type.price > 0 && (
                       <div
                         className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${
@@ -519,11 +512,9 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                         {typeSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
                       </div>
                     )}
-                    <div>
-                      <h3 className="text-[18px] font-semibold text-black">{type.name}</h3>
-                    </div>
+                    <h3 className="text-[16px] font-semibold text-black">{type.name}</h3>
                   </div>
-                  <span className="text-[16px] font-mono text-[#ff7b00] shrink-0 md:pl-0 text-right md:text-right">
+                  <span className="text-[15px] font-mono leading-normal text-[#ff7b00] shrink-0">
                     {type.price ? `₩${type.price.toLocaleString()}` : '협의'}
                   </span>
                 </div>
@@ -534,22 +525,22 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   <button
                     type="button"
                     onClick={() => handleToggleEstimate(type.name, type.price, type.features.join(', '))}
-                    className="w-full flex justify-between items-center p-8 bg-black/[0.01] border-b border-border text-left hover:bg-[#fff5eb]/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                    className="w-full flex justify-between items-center p-6 bg-black/[0.01] border-b border-border text-left hover:bg-[#fff5eb]/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
                     aria-pressed={typeSelected}
                     aria-label={typeSelected ? `${type.name} 견적에서 제거` : `${type.name} 견적에 추가`}
                   >
                     {headerContent}
                   </button>
                 ) : (
-                  <div className="flex justify-between items-center p-8 bg-black/[0.01] border-b border-border">
+                  <div className="flex justify-between items-center p-6 bg-black/[0.01] border-b border-border">
                     {headerContent}
                   </div>
                 )}
                 
-                <div className="p-8 space-y-6">
+                <div className="p-6 space-y-6">
                   <ul className="space-y-3">
                     {type.features.map((feature, i) => (
-                      <li key={i} className="text-[16px] leading-[1.7] flex gap-3">
+                      <li key={i} className="text-[14px] leading-[1.7] flex gap-3">
                         <span className="text-[#ff7b00] shrink-0">—</span>
                         <span>{feature}</span>
                       </li>
@@ -568,50 +559,78 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                         <ChevronDown className={`w-5 h-5 text-foreground/60 transition-transform duration-300 ${omakaseDetailOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {omakaseDetailOpen && (
-                        <div className="border border-t-0 border-border p-6 space-y-4 animate-slideDown">
+                        <div className="border border-t-0 border-border p-6 space-y-6 animate-slideDown">
+                          {/* 안내 */}
                           <p className="text-[15px] leading-[1.8] text-foreground/80">
                             구현을 원하는 시스템을 정리한 <span className="font-medium text-[#ff7b00]">외부 문서 링크</span>를 전달해 주세요.<br />
                             (시스템 문서와는 별도의 문서여야 합니다)
                           </p>
-                          <div className="bg-white border border-border p-5 space-y-3 text-[14px]">
-                            <p className="font-semibold text-[15px]">문서에 포함되어야 할 내용:</p>
-                            <ul className="list-disc list-inside space-y-1 text-foreground/70">
-                              <li>러너가 입력할 명령어 (예: [사용/사과])</li>
-                              <li>명령어 입력 후 봇이 처리할 내용</li>
-                              <li>러너에게 보여줄 결과 메시지</li>
+
+                          <hr className="border-border" />
+
+                          {/* 문서에 포함되어야 할 내용 */}
+                          <div>
+                            <h4 className="text-[14px] font-semibold mb-3">문서에 포함되어야 할 내용</h4>
+                            <ul className="space-y-1.5 text-[14px] text-foreground/70">
+                              <li className="flex gap-2"><span className="text-[#ff7b00] shrink-0">—</span>러너가 입력할 명령어 (예: [사용/사과])</li>
+                              <li className="flex gap-2"><span className="text-[#ff7b00] shrink-0">—</span>명령어 입력 후 봇이 처리할 내용</li>
+                              <li className="flex gap-2"><span className="text-[#ff7b00] shrink-0">—</span>러너에게 보여줄 결과 메시지</li>
                             </ul>
                           </div>
-                          <div className="bg-white border border-border p-5 space-y-3 text-[14px]">
-                            <p className="font-semibold text-[15px]">작성 예시:</p>
-                            <div className="bg-gray-50 p-4 rounded text-[13px] space-y-2 leading-[1.8]">
-                              <p className="font-medium">"[사용/아이템명] 명령어를 추가하고 싶어요!"</p>
-                              <p>→ 러너가 [사용/사과]를 입력하면</p>
-                              <p>→ 봇이 러너의 소지품에서 사과를 삭제하고, 체력을 +10 해준 뒤</p>
-                              <p>→ "사과를 사용했습니다! 체력이 +10 되었습니다." 라고 답변해 주세요.</p>
+
+                          <hr className="border-border" />
+
+                          {/* 작성 예시 */}
+                          <div>
+                            <h4 className="text-[14px] font-semibold mb-3">작성 예시</h4>
+                            <div className="bg-gray-900 text-gray-100 p-4 rounded-md text-[13px] font-mono space-y-1.5 leading-[1.8]">
+                              <p className="text-green-400">"[사용/아이템명] 명령어를 추가하고 싶어요!"</p>
+                              <p className="text-gray-400">→ 러너가 [사용/사과]를 입력하면</p>
+                              <p className="text-gray-400">→ 봇이 러너의 소지품에서 사과를 삭제하고, 체력을 +10 해준 뒤</p>
+                              <p className="text-gray-400">→ "사과를 사용했습니다! 체력이 +10 되었습니다." 라고 답변해 주세요.</p>
                             </div>
                           </div>
+
+                          {/* 예시 신청서 버튼 */}
                           <a
                             href="https://stellar-ground-601.notion.site/310d06ebad99807a99d1fbf4e8fc9ace"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block border border-border p-4 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#ff7b00] text-white rounded-md font-medium text-[14px] hover:bg-[#e66d00] transition-colors"
                           >
-                            <div className="flex items-center justify-between">
-                              <span className="text-[14px] font-medium">예시 오마카세 신청서 보기</span>
-                              <span className="text-[#ff7b00] group-hover:translate-x-1 transition-transform">→</span>
-                            </div>
+                            예시 오마카세 신청서 보기
+                            <span>→</span>
                           </a>
-                          <div className="text-[13px] text-foreground/60 space-y-1">
+
+                          <hr className="border-border" />
+
+                          {/* 작성 가이드 */}
+                          <div className="space-y-1.5 text-[13px] text-foreground/60">
                             <p>군더더기 없이 깔끔한 언어로 작성해 주세요. 불필요한 부사와 형용사는 사용하지 않습니다.</p>
                             <p>구현을 원하는 시스템만 작성해 주세요.</p>
-                            <p className="text-amber-600 font-medium">오마카세 신청서를 한번에 이해하기 어려울 시, 신청이 거절될 수 있습니다.</p>
                           </div>
+
+                          {/* 경고 알럿 */}
+                          <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-md">
+                            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+                            <p className="text-[13px] text-red-700 font-medium">
+                              오마카세 신청서를 한번에 이해하기 어려울 시, 신청이 거절될 수 있습니다.
+                            </p>
+                          </div>
+
+                          {/* 진행 불가 안내 */}
+                          {type.note && (
+                            <div className="text-[13px] text-foreground/50 pt-2 border-t border-border">
+                              {type.note}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
                   )}
 
-                  {type.note && (
+                  {/* 오마카세가 아닌 타입의 note */}
+                  {type.note && type.name !== '오마카세 타입' && (
                     <div className="bg-black/[0.02] border border-border p-6 mt-6">
                       <p className="text-[15px] leading-[1.7] text-foreground/70">
                         {type.note}
@@ -626,16 +645,16 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         </section>
 
         {/* 추가 옵션 */}
-        <section className="py-15">
-          <div className="mb-16 border-b border-border pb-4">
-            <h2 className="text-[32px] tracking-[-0.01em] font-semibold">추가 옵션</h2>
+        <section className="py-10">
+          <div className="mb-10 border-b border-border pb-4">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">추가 옵션</h2>
           </div>
           
           <div className="space-y-3">
             {additionalOptions.map((option, index) => {
               const optionNames = option.aliases ? [option.name, ...option.aliases] : [option.name];
               const isSelected = items.some(item => optionNames.includes(item.name));
-              const desc = option.note ?? option.description;
+              const desc = option.description;
               const handleClick = () => {
                 if (isSelected) {
                   const existing = items.find(item => optionNames.includes(item.name));
@@ -670,14 +689,11 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                         {desc && <span className="text-[14px] leading-[1.6] text-foreground/60">{desc}</span>}
                       </div>
                     </div>
-                    <span className="text-[14px] font-mono text-[#ff7b00] shrink-0 pl-10 md:pl-0 text-right">{option.price === 0 ? '협의' : `₩${option.price.toLocaleString()}`}</span>
+                    <span className="text-[14px] font-mono leading-normal text-[#ff7b00] shrink-0 pl-10 md:pl-0 text-right">{option.priceLabel ?? (option.price === 0 ? '협의' : `₩${option.price.toLocaleString()}`)}</span>
                   </div>
                 </button>
               );
             })}
-            <div className="border border-[#ff7b00] p-5 bg-[#ff7b00] text-white">
-              <span className="text-[16px]">빠른 마감: 48시간 내 +200%, 일주일 내 +100%</span>
-            </div>
           </div>
         </section>
 

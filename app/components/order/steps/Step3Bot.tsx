@@ -1,6 +1,7 @@
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEffect } from 'react';
 import { ShoppingCart } from 'lucide-react';
+import { AlertTriangle } from 'griddy-icons';
 
 // 견적에서 선택됨 배지 컴포넌트
 function FromCartBadge() {
@@ -33,7 +34,7 @@ export default function Step3Bot() {
   const customCommandUpgradeFromCart = isFromCart('커스텀 명령어');
   const reservationFromCart = isFromCart('예약 툿');
   const autoProfileFromCart = isFromCart('스토리 자동 진행');
-  const tootCurrencyFromCart = isFromCart('툿수 자동 재화 반영');
+  const tootCurrencyFromCart = isFromCart('툿수-재화 자동반영');
   const transferFromCart = isFromCart('양도 기능');
   const omakaseFromCart = isFromCart('오마카세');
 
@@ -96,7 +97,7 @@ export default function Step3Bot() {
     <div className="space-y-8">
       {/* 헤더 */}
       <div className="pb-6 border-b border-border animate-fadeInDown">
-        <h2 className="text-[28px] font-medium mb-2 bg-gradient-to-r from-[#ff7b00] to-[#ff9933] bg-clip-text text-transparent">
+        <h2 className="text-[25px] font-semibold mb-2 bg-gradient-to-r from-[#ff7b00] to-[#ff9933] bg-clip-text text-transparent">
           Step 3. 자동봇 커미션
         </h2>
         <p className="text-[14px] text-gray-600">
@@ -107,7 +108,7 @@ export default function Step3Bot() {
       {/* 1) 자동봇 신청 여부 */}
       <div className="space-y-3">
         <label className="block">
-          <span className="text-[18px] font-medium">
+          <span className="text-[18px] font-semibold">
             1) 자동봇을 신청하시나요? <span className="text-red-500">*</span>
             {step3.applyBot === 'yes' && (basicBotFromCart || basicShopBotFromCart || basicShopStatBotFromCart || cocBotFromCart || omakaseFromCart) && <FromCartBadge />}
           </span>
@@ -142,7 +143,7 @@ export default function Step3Bot() {
           {/* 2) 운영 기간 설정 */}
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-medium mb-1">2) 운영 기간 설정</h3>
+              <h3 className="text-[18px] font-semibold mb-1">2) 운영 기간 설정</h3>
               <p className="text-[13px] text-gray-600">
                 가동 비용은 주당 5,000원입니다.
               </p>
@@ -213,14 +214,14 @@ export default function Step3Bot() {
           {/* 3) 메인 봇 종류 */}
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-medium mb-1">3) 메인 봇 종류 <span className="text-red-500">*</span></h3>
+              <h3 className="text-[18px] font-semibold mb-1">3) 메인 봇 종류 <span className="text-red-500">*</span></h3>
               <p className="text-[13px] text-gray-600">하나를 선택해 주세요.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* 기본 */}
               <label
-                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
                   step3.mainBot === 'basic'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
@@ -231,7 +232,7 @@ export default function Step3Bot() {
                   name="mainBot"
                   checked={step3.mainBot === 'basic'}
                   onChange={() => handleMainBotChange('basic')}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
@@ -244,7 +245,7 @@ export default function Step3Bot() {
 
               {/* 기본+상점 */}
               <label
-                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
                   step3.mainBot === 'basicShop'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
@@ -255,7 +256,7 @@ export default function Step3Bot() {
                   name="mainBot"
                   checked={step3.mainBot === 'basicShop'}
                   onChange={() => handleMainBotChange('basicShop')}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
@@ -268,7 +269,7 @@ export default function Step3Bot() {
 
               {/* 기본+상점+스탯 */}
               <label
-                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
                   step3.mainBot === 'basicShopStat'
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
@@ -279,7 +280,7 @@ export default function Step3Bot() {
                   name="mainBot"
                   checked={step3.mainBot === 'basicShopStat'}
                   onChange={() => handleMainBotChange('basicShopStat')}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
@@ -294,10 +295,10 @@ export default function Step3Bot() {
 
           {/* 4) 추가 기능 선택 */}
           <div className="space-y-4">
-            <h3 className="text-[18px] font-medium">4) 추가 기능 선택</h3>
+            <h3 className="text-[18px] font-semibold">4) 추가 기능 선택</h3>
 
             {/* CoC 봇 */}
-            <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
               step3.cocBot
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -306,7 +307,7 @@ export default function Step3Bot() {
                 type="checkbox"
                 checked={step3.cocBot}
                 onChange={(e) => updateStep3({ cocBot: e.target.checked })}
-                className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
               />
               <div className="flex-1">
                 <div className="font-medium text-[14px]">
@@ -318,7 +319,7 @@ export default function Step3Bot() {
             </label>
 
             {/* 커스텀 명령어 업그레이드 */}
-            <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
               step3.customCommandUpgrade
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -327,7 +328,7 @@ export default function Step3Bot() {
                 type="checkbox"
                 checked={step3.customCommandUpgrade}
                 onChange={(e) => updateStep3({ customCommandUpgrade: e.target.checked })}
-                className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
               />
               <div className="flex-1">
                 <div className="font-medium text-[14px]">
@@ -339,7 +340,7 @@ export default function Step3Bot() {
             </label>
 
             {/* 예약 툿 */}
-            <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
               step3.reservationToot
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -348,7 +349,7 @@ export default function Step3Bot() {
                 type="checkbox"
                 checked={step3.reservationToot}
                 onChange={(e) => updateStep3({ reservationToot: e.target.checked })}
-                className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
               />
               <div className="flex-1">
                 <div className="font-medium text-[14px]">
@@ -360,7 +361,7 @@ export default function Step3Bot() {
             </label>
 
             {/* 자동 스진 */}
-            <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
               step3.autoProfileImage
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -369,7 +370,7 @@ export default function Step3Bot() {
                 type="checkbox"
                 checked={step3.autoProfileImage}
                 onChange={(e) => updateStep3({ autoProfileImage: e.target.checked })}
-                className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
               />
               <div className="flex-1">
                 <div className="font-medium text-[14px]">
@@ -416,7 +417,7 @@ export default function Step3Bot() {
 
             {/* 툿-재화 연동 */}
             <div className="space-y-3">
-              <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
                 step3.tootCurrencyLink
                   ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                   : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -425,14 +426,14 @@ export default function Step3Bot() {
                   type="checkbox"
                   checked={step3.tootCurrencyLink}
                   onChange={(e) => updateStep3({ tootCurrencyLink: e.target.checked })}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
                     툿-재화 연동
                     {tootCurrencyFromCart && step3.tootCurrencyLink && <FromCartBadge />}
                   </div>
-                  <div className="text-[13px] text-gray-600 mt-1">+7,000원</div>
+                  <div className="text-[13px] text-gray-600 mt-1">+10,000원</div>
                 </div>
               </label>
 
@@ -456,7 +457,7 @@ export default function Step3Bot() {
             {/* 양도 기능 (조건부) */}
             {showTransferFeature && (
               <div className="space-y-3">
-                <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
                   step3.transferFeature
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -465,7 +466,7 @@ export default function Step3Bot() {
                     type="checkbox"
                     checked={step3.transferFeature}
                     onChange={(e) => updateStep3({ transferFeature: e.target.checked })}
-                    className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                    className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                   />
                   <div className="flex-1">
                     <div className="font-medium text-[14px]">
@@ -518,7 +519,7 @@ export default function Step3Bot() {
 
             {/* 오마카세 봇 */}
             <div className="space-y-3">
-              <label className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
+              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${
                 step3.omakaseBot
                   ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                   : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
@@ -527,14 +528,14 @@ export default function Step3Bot() {
                   type="checkbox"
                   checked={step3.omakaseBot}
                   onChange={(e) => updateStep3({ omakaseBot: e.target.checked })}
-                  className="mt-1 w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
                     오마카세 봇
                     {omakaseFromCart && step3.omakaseBot && <FromCartBadge />}
                   </div>
-                  <div className="text-[13px] text-gray-600 mt-1">⚠️ 가격 상이 (별도 협의)</div>
+                  <div className="text-[13px] text-gray-600 mt-1 flex items-center gap-1"><AlertTriangle size={13} color="currentColor" /> 가격 상이 (별도 협의)</div>
                 </div>
               </label>
 
@@ -599,7 +600,7 @@ export default function Step3Bot() {
           {/* 5) 봇 설정 정보 (조건부) */}
           {(showCurrencyUnit || showStatList) && (
             <div className="pt-6 border-t border-gray-200">
-              <h3 className="text-[18px] font-medium mb-4">5) 봇 설정 정보</h3>
+              <h3 className="text-[18px] font-semibold mb-4">5) 봇 설정 정보</h3>
               <div className="space-y-4">
                 {showCurrencyUnit && (
                   <div className="space-y-2">
@@ -638,7 +639,7 @@ export default function Step3Bot() {
 
           {/* 6) 기타 정보 */}
           <div className="pt-6 border-t border-gray-200">
-            <h3 className="text-[18px] font-medium mb-4">{(showCurrencyUnit || showStatList) ? '6)' : '5)'} 기타 정보</h3>
+            <h3 className="text-[18px] font-semibold mb-4">{(showCurrencyUnit || showStatList) ? '6)' : '5)'} 기타 정보</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
