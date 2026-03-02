@@ -2,10 +2,10 @@ import type { FooterProps } from '@/app/types/navigation';
 import { ExternalLinkIcon } from '@/app/components/icons';
 
 export default function Footer({ onNavigate }: FooterProps) {
-  const footerLinkClass = "text-[14px] text-foreground/70 hover:text-[var(--brand-primary)] transition-colors block py-1 min-h-[44px] flex items-center focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2";
+  const footerLinkClass = "text-[14px] text-foreground/70 hover:text-[var(--brand-primary)] transition-colors py-1 min-h-[44px] flex items-center focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2";
   
   return (
-    <footer className="mt-12 bg-black/[0.02] border-t-2 border-black">
+    <footer className="mt-12 bg-black/[0.02] border-t border-border">
       <div className="max-w-[1200px] mx-auto px-8 py-12">
         {/* 브랜드 섹션 */}
         <div className="mb-10">
@@ -64,7 +64,7 @@ export default function Footer({ onNavigate }: FooterProps) {
           </div>
 
           {/* 문의하기 */}
-          <div className="md:pl-8 md:border-l border-black/10">
+          <div className="md:pl-8 md:border-l border-border">
             <h3 className="text-[14px] font-semibold mb-4 text-foreground/90">문의하기</h3>
             <div className="space-y-4">
               <a

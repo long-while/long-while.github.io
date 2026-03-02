@@ -30,7 +30,7 @@ export default function Features() {
 
   return (
     <section className="py-16">
-      <div className="mb-10 border-b-2 border-black pb-4">
+      <div className="mb-10 border-b border-border pb-4">
         <h2 className="text-[32px] tracking-[-0.01em] font-semibold">한참 마스토돈만의 특징</h2>
       </div>
 
@@ -39,7 +39,7 @@ export default function Features() {
         {highlightFeatures.map((feature, index) => (
           <div 
             key={index} 
-            className="p-6 border-2 border-black/10 hover:border-[var(--brand-primary)] transition-colors bg-white"
+            className="p-6 border border-border shadow-sm hover:border-[var(--brand-primary)] hover:shadow-md transition-all bg-white"
           >
             <div className="flex items-start gap-4">
               <div className="text-[24px] font-mono text-[var(--brand-primary)] shrink-0">
@@ -57,7 +57,7 @@ export default function Features() {
       </div>
 
       {/* 더 많은 특징 (접이식) */}
-      <div className="border-2 border-black/10 mb-10 overflow-hidden bg-white">
+      <div className="border border-border mb-10 overflow-hidden bg-white">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors min-h-[44px]"
@@ -69,7 +69,7 @@ export default function Features() {
         </button>
         
         <div 
-          className={`border-t border-black/10 transition-all duration-300 ease-in-out ${
+          className={`border-t border-border transition-all duration-300 ease-in-out ${
             isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 border-t-0'
           }`}
         >
@@ -92,7 +92,7 @@ export default function Features() {
       </div>
 
       {/* 주의사항 */}
-      <div className="p-6 border-2 border-amber-500/50 bg-amber-50">
+      <div className="p-6 border border-amber-500/50 bg-amber-50">
         <div className="flex items-start gap-4">
           <WarningIcon className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
           <div>
