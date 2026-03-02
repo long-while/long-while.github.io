@@ -108,7 +108,7 @@ export default function Step4Review() {
   return (
     <div className="space-y-8">
       {/* 헤더 */}
-      <div className="pb-6 border-b-2 border-black animate-fadeInDown">
+      <div className="pb-6 border-b border-border animate-fadeInDown">
         <h2 className="text-[28px] font-medium mb-2 bg-gradient-to-r from-[#ff7b00] to-[#ff9933] bg-clip-text text-transparent">
           Step 4. 최종 확인 및 견적
         </h2>
@@ -120,7 +120,7 @@ export default function Step4Review() {
       {/* 토스트 알림 */}
       {showToast && (
         <div
-          className="fixed top-24 right-4 z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black flex items-center gap-3 max-w-sm animate-slideInRight"
+          className="fixed top-24 right-4 z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-xl border border-border flex items-center gap-3 max-w-sm animate-slideInRight"
           role="alert"
           aria-live="polite"
         >
@@ -133,8 +133,8 @@ export default function Step4Review() {
       )}
 
       {/* Step 1 요약 */}
-      <div className="border-2 border-gray-300 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg">
-        <div className="bg-gray-50 px-6 py-4 border-b-2 border-gray-300 flex items-center justify-between">
+      <div className="border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
+        <div className="bg-gray-50 px-6 py-4 border-b border-border flex items-center justify-between">
           <h3 className="text-[18px] font-medium">신청자 닉네임</h3>
           <button
             onClick={() => handleEdit(1)}
@@ -168,8 +168,8 @@ export default function Step4Review() {
       </div>
 
       {/* Step 2 요약 */}
-      <div className="border-2 border-gray-300 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg">
-        <div className="bg-gray-50 px-6 py-4 border-b-2 border-gray-300 flex items-center justify-between">
+      <div className="border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
+        <div className="bg-gray-50 px-6 py-4 border-b border-border flex items-center justify-between">
           <h3 className="text-[18px] font-medium">서버 설치 옵션</h3>
           <button
             onClick={() => handleEdit(2)}
@@ -223,8 +223,8 @@ export default function Step4Review() {
       </div>
 
       {/* Step 3 요약 */}
-      <div className="border-2 border-gray-300 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg">
-        <div className="bg-gray-50 px-6 py-4 border-b-2 border-gray-300 flex items-center justify-between">
+      <div className="border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
+        <div className="bg-gray-50 px-6 py-4 border-b border-border flex items-center justify-between">
           <h3 className="text-[18px] font-medium">자동봇 커미션</h3>
           <button
             onClick={() => handleEdit(3)}
@@ -292,8 +292,8 @@ export default function Step4Review() {
       </div>
 
       {/* 최종 견적 */}
-      <div className="border-2 border-black rounded-lg overflow-hidden bg-gradient-to-br from-[#fff5eb] to-white">
-        <div className="bg-[#ff7b00] px-6 py-4 border-b-2 border-black">
+      <div className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-[#fff5eb] to-white">
+        <div className="bg-[#ff7b00] px-6 py-4 border-b border-border">
           <h3 className="text-[18px] font-medium text-white">최종 견적</h3>
         </div>
         <div className="p-6 space-y-6">
@@ -431,7 +431,7 @@ export default function Step4Review() {
           )}
 
           {/* 총 합계 */}
-          <div className="pt-4 border-t-2 border-black">
+          <div className="pt-4 border-t border-border">
             <div className="flex justify-between items-center">
               <p className="text-[18px] font-bold">총 합계</p>
               <p className="text-[24px] font-bold text-[#ff7b00]">
@@ -448,7 +448,7 @@ export default function Step4Review() {
       </div>
 
       {/* 질문 정책 안내 */}
-      <div className="border-2 border-gray-300 rounded-lg p-6 bg-gray-50">
+      <div className="border border-border rounded-lg p-6 bg-gray-50">
         <h3 className="text-[16px] font-medium mb-4">질문 정책 안내</h3>
         
         <div className="space-y-4 text-[14px] text-gray-700">
@@ -503,27 +503,27 @@ export default function Step4Review() {
 
       {/* 에러 메시지 */}
       {error && (
-        <div className="p-4 bg-red-50 border-2 border-red-500 rounded-lg animate-bounceIn">
+        <div className="p-4 bg-red-50 border border-red-500 rounded-lg animate-bounceIn">
           <p className="text-[14px] text-red-700 text-center">{error}</p>
         </div>
       )}
 
       {/* 복사 버튼 */}
-      <div className="pt-6 border-t-2 border-gray-300">
+      <div className="pt-6 border-t border-border">
         <button
           onClick={handleCopy}
           disabled={!isCopyEnabled}
           className={`w-full py-4 rounded-lg font-medium text-[16px] transition-all duration-300 ${
             isCopyEnabled
-              ? 'bg-[#ff7b00] hover:bg-[#e66d00] text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[2px] hover:-translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px]'
-              : 'bg-gray-200 text-gray-500 border-2 border-gray-300 cursor-not-allowed'
+              ? 'bg-[#ff7b00] hover:bg-[#e66d00] text-white border border-transparent shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]'
+              : 'bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed'
           }`}
         >
           {isCopying ? '복사 중...' : isCopyEnabled ? '신청서 복사하기' : '정책 동의 후 복사 가능'}
         </button>
 
         {copySuccess && redirectCountdown !== null && (
-          <div className="mt-4 p-4 bg-green-50 border-2 border-green-500 rounded-lg animate-bounceIn">
+          <div className="mt-4 p-4 bg-green-50 border border-green-500 rounded-lg animate-bounceIn">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <p className="text-[14px] text-green-700 font-medium">
                 복사 완료! {redirectCountdown}초 후 크레페로 이동합니다...
@@ -547,7 +547,7 @@ export default function Step4Review() {
         )}
 
         {copySuccess && redirectCountdown === null && (
-          <div className="mt-4 p-4 bg-[#fff5eb] border-2 border-[#ff7b00] rounded-lg">
+          <div className="mt-4 p-4 bg-[#fff5eb] border border-[#ff7b00] rounded-lg">
             <p className="text-[14px] text-[#ff7b00] font-medium">
               복사에 성공했습니다! <button onClick={goToCrepe} className="underline font-medium hover:text-[#e66d00] transition-colors">크레페</button>로 이동해서 신청서에 내용을 붙여넣습니다.
             </p>
@@ -555,7 +555,7 @@ export default function Step4Review() {
         )}
 
         {isCopyEnabled && !copySuccess && (
-          <div className="mt-4 p-4 bg-[#fff5eb] border-2 border-[#ff7b00] rounded-lg animate-fadeIn">
+          <div className="mt-4 p-4 bg-[#fff5eb] border border-[#ff7b00] rounded-lg animate-fadeIn">
             <p className="text-[14px] text-[#ff7b00]">
               <strong>다음 단계:</strong> 복사하기 버튼을 통해 신청서를 복사한 후, 크레페로 이동해서 신청서에 내용을 붙여넣습니다.
             </p>

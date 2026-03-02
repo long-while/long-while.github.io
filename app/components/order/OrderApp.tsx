@@ -81,7 +81,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
 
       <div className="pt-16 pb-16">
         {/* 헤더 섹션 */}
-        <div className="bg-gradient-to-br from-[var(--brand-bg)] via-[var(--brand-bg-subtle)] to-white border-b-2 border-black py-12 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[var(--brand-bg)] via-[var(--brand-bg-subtle)] to-white border-b border-border py-12 relative overflow-hidden">
           {/* 장식 요소 */}
           <div className="absolute top-0 left-0 w-32 h-32 bg-[var(--brand-primary)] opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-40 h-40 bg-[var(--brand-primary)] opacity-5 rounded-full translate-x-1/2 translate-y-1/2"></div>
@@ -93,7 +93,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
             
             {/* 단계별 안내 - 온보딩 모달 스타일 */}
             <div className="space-y-3 mb-6">
-              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-black/10">
+              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-border">
                 <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
                   1
                 </div>
@@ -105,7 +105,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-black/10">
+              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-border">
                 <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
                   2
                 </div>
@@ -117,7 +117,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-black/10">
+              <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-border">
                 <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
                   3
                 </div>
@@ -148,7 +148,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
             aria-labelledby="restore-dialog-title"
             aria-modal="true"
           >
-            <div className="bg-white border-2 border-black rounded-lg p-6 mx-4 max-w-md shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-bounceIn">
+            <div className="bg-white border border-border rounded-lg p-6 mx-4 max-w-md shadow-xl animate-bounceIn">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-[24px]" aria-hidden="true">📝</span>
                 <h2 id="restore-dialog-title" className="text-[20px] font-bold">
@@ -161,13 +161,13 @@ function OrderContent({ onNavigate }: OrderContentProps) {
               <div className="flex gap-3">
                 <button
                   onClick={handleRestore}
-                  className="flex-1 px-4 py-3 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white border-2 border-black rounded-md font-medium transition-all duration-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[2px] hover:-translate-y-[2px] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                  className="flex-1 px-4 py-3 bg-[var(--brand-primary)] text-white border border-transparent rounded-md font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
                 >
                   이어서 작성
                 </button>
                 <button
                   onClick={handleStartNew}
-                  className="flex-1 px-4 py-3 bg-white hover:bg-gray-50 border-2 border-black rounded-md font-medium transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:translate-y-[1px]"
+                  className="flex-1 px-4 py-3 bg-white hover:bg-gray-50 border border-border rounded-md font-medium transition-all duration-300 hover:shadow-sm active:scale-[0.98]"
                 >
                   새로 작성
                 </button>
@@ -184,7 +184,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
             aria-labelledby="sync-dialog-title"
             aria-modal="true"
           >
-            <div className="bg-white border-2 border-black rounded-lg p-6 mx-4 max-w-md shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-bounceIn">
+            <div className="bg-white border border-border rounded-lg p-6 mx-4 max-w-md shadow-xl animate-bounceIn">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-[24px]" aria-hidden="true">🛒</span>
                 <h2 id="sync-dialog-title" className="text-[20px] font-bold">
@@ -200,13 +200,13 @@ function OrderContent({ onNavigate }: OrderContentProps) {
               <div className="flex gap-3">
                 <button
                   onClick={handleSyncOverwrite}
-                  className="flex-1 px-4 py-3 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white border-2 border-black rounded-md font-medium transition-all duration-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[2px] hover:-translate-y-[2px] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                  className="flex-1 px-4 py-3 bg-[var(--brand-primary)] text-white border border-transparent rounded-md font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
                 >
                   견적으로 새로 작성
                 </button>
                 <button
                   onClick={handleKeepExisting}
-                  className="flex-1 px-4 py-3 bg-white hover:bg-gray-50 border-2 border-black rounded-md font-medium transition-all duration-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:translate-y-[1px]"
+                  className="flex-1 px-4 py-3 bg-white hover:bg-gray-50 border border-border rounded-md font-medium transition-all duration-300 hover:shadow-sm active:scale-[0.98]"
                 >
                   기존 신청서 유지
                 </button>

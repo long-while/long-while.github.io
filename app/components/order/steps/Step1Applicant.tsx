@@ -29,7 +29,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
   return (
     <div className="space-y-8">
       {/* 헤더 */}
-      <div className="pb-6 border-b-2 border-black animate-fadeInDown">
+      <div className="pb-6 border-b border-border animate-fadeInDown">
         <h2 className="text-[28px] font-medium mb-2 text-gradient-brand">
           Step 1. 신청자 및 커뮤니티 정보
         </h2>
