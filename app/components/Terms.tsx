@@ -42,7 +42,7 @@ export default function Terms() {
 
   return (
     <section className="py-15">
-      <div className="mb-16 border-b-2 border-black pb-4">
+      <div className="mb-16 border-b border-border pb-4">
         <h2 className="text-[32px] tracking-[-0.01em] font-semibold">
           약관 및 기타 안내
         </h2>
@@ -50,7 +50,7 @@ export default function Terms() {
 
       <div className="space-y-6">
         {sections.map((section, index) => (
-          <div key={index} className="pb-6 border-b border-black/10 last:border-0 last:pb-0">
+          <div key={index} className="pb-6 border-b border-border last:border-0 last:pb-0">
             <div className="max-w-4xl">
               <div className="flex gap-6 mb-2">
                 <div className="text-[12px] font-mono text-[#ff7b00] shrink-0">
@@ -72,9 +72,9 @@ export default function Terms() {
                     {examples.map((example, exampleIndex) => (
                       <div
                         key={exampleIndex}
-                        className={`border-2 p-5 ${
+                        className={`border p-5 ${
                           example.isPositive
-                            ? 'border-black/10'
+                            ? 'border-border'
                             : 'border-[#ff7b00]/30 bg-[#fff5eb]'
                         }`}
                       >

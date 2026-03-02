@@ -32,7 +32,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
   return (
     <>
       {/* 데스크톱 네비게이션 */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b-2 border-black">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-border">
         <div className="max-w-[1400px] mx-auto px-8">
           <div className="flex items-center justify-between h-16">
             {/* 로고 */}
@@ -70,7 +70,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                   onClick={() => handleMenuClick(item)}
                   className={`px-4 py-2 text-[14px] transition-all relative focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 ${
                     item.isPrimary 
-                      ? 'bg-[var(--brand-primary)] text-white rounded-full hover:bg-[var(--brand-primary-hover)] ml-2' 
+                      ? 'bg-[var(--brand-primary)] text-white rounded-full hover:brightness-95 active:scale-[0.98] shadow-sm hover:shadow-md ml-2'
                       : currentPage === item.id 
                         ? 'text-[var(--brand-primary)] font-medium' 
                         : 'text-foreground hover:text-[var(--brand-primary)]'
@@ -129,7 +129,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
 
         {/* 슬라이딩 메뉴 - 오른쪽에서 */}
         <div
-          className={`absolute right-0 top-0 bottom-0 w-[280px] bg-white border-l-2 border-black transition-transform duration-300 overflow-y-auto ${
+          className={`absolute right-0 top-0 bottom-0 w-[280px] bg-white border-l border-border transition-transform duration-300 overflow-y-auto ${
             isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
@@ -174,7 +174,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                   onClick={() => handleMenuClick(item)}
                   className={`w-full text-left px-4 py-3 min-h-[44px] text-[16px] transition-colors rounded flex items-center justify-between focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 ${
                     item.isPrimary 
-                      ? 'bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-hover)]' 
+                      ? 'bg-[var(--brand-primary)] text-white hover:brightness-95 active:scale-[0.98]'
                       : currentPage === item.id 
                         ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)] font-medium' 
                         : 'text-foreground hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)]'

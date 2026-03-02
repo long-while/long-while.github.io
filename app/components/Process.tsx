@@ -77,7 +77,7 @@ export default function Process() {
 
   return (
     <section className="py-15">
-      <div className="mb-16 border-b-2 border-black pb-4">
+      <div className="mb-16 border-b border-border pb-4">
         <h2 className="text-[32px] tracking-[-0.01em] font-semibold">
           커미션 진행 순서
         </h2>
@@ -88,7 +88,7 @@ export default function Process() {
         {simpleSteps.map((step, index) => (
           <div 
             key={index} 
-            className="relative p-6 border-2 border-black bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)]"
+            className="relative p-6 border border-border bg-white shadow-sm"
           >
             {/* 연결선 (마지막 아이템 제외, 데스크톱에서만) */}
             {index < simpleSteps.length - 1 && (
@@ -111,7 +111,7 @@ export default function Process() {
       <div className="text-center mb-10">
         <a 
           href="#order"
-          className="inline-flex items-center gap-2 px-8 py-4 bg-[var(--brand-primary)] text-white rounded-full font-semibold text-[16px] shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all"
+          className="inline-flex items-center gap-2 px-8 py-4 bg-[var(--brand-primary)] text-white rounded-full font-semibold text-[16px] shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98] transition-all"
         >
           신청서 작성하기
           <ArrowRightIcon className="w-5 h-5" />
@@ -119,7 +119,7 @@ export default function Process() {
       </div>
 
       {/* 상세 진행 과정 토글 */}
-      <div className="border-2 border-black/10 overflow-hidden">
+      <div className="border border-border overflow-hidden">
         <button
           onClick={() => setShowDetailedSteps(!showDetailedSteps)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
@@ -131,7 +131,7 @@ export default function Process() {
         </button>
         
         <div 
-          className={`border-t border-black/10 transition-all duration-300 ease-in-out ${
+          className={`border-t border-border transition-all duration-300 ease-in-out ${
             showDetailedSteps ? 'max-h-[1500px] opacity-100' : 'max-h-0 opacity-0 border-t-0'
           }`}
         >

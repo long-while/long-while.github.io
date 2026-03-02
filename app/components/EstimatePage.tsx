@@ -87,14 +87,14 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => onNavigate('server')}
-                className="min-h-[60px] px-8 py-4 border-2 border-black/20 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all text-[16px] rounded-lg flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                className="min-h-[60px] px-8 py-4 border border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all text-[16px] rounded-lg flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
               >
                 <Server className="w-5 h-5" />
                 서버 설치 커미션
               </button>
               <button
                 onClick={() => onNavigate('bot')}
-                className="min-h-[60px] px-8 py-4 border-2 border-black/20 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all text-[16px] rounded-lg flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                className="min-h-[60px] px-8 py-4 border border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all text-[16px] rounded-lg flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
               >
                 <Bot className="w-5 h-5" />
                 자동봇 커미션
@@ -105,7 +105,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
           <>
             {/* 항목 리스트 - 카테고리별 그룹핑 */}
             <section className="mb-16">
-              <div className="mb-12 border-b-2 border-black pb-4">
+              <div className="mb-12 border-b border-border pb-4">
                 <h2 className="text-[32px] tracking-[-0.01em]">선택한 항목</h2>
               </div>
 
@@ -116,8 +116,8 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                   <div className="space-y-8">
                     {/* 서버 설치 옵션 */}
                     {serverItems.length > 0 && (
-                      <div className="border-2 border-black/10 rounded-lg overflow-hidden">
-                        <div className="bg-black/[0.02] px-5 py-4 border-b border-black/10 flex items-center justify-between">
+                      <div className="border border-border rounded-lg overflow-hidden">
+                        <div className="bg-black/[0.02] px-5 py-4 border-b border-border flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <Server className="w-5 h-5 text-[#ff7b00]" />
                             <h3 className="text-[18px] font-semibold">서버 설치</h3>
@@ -166,8 +166,8 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
 
                     {/* 자동봇 옵션 */}
                     {botItems.length > 0 && (
-                      <div className="border-2 border-black/10 rounded-lg overflow-hidden">
-                        <div className="bg-black/[0.02] px-5 py-4 border-b border-black/10 flex items-center justify-between">
+                      <div className="border border-border rounded-lg overflow-hidden">
+                        <div className="bg-black/[0.02] px-5 py-4 border-b border-border flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <Bot className="w-5 h-5 text-[#ff7b00]" />
                             <h3 className="text-[18px] font-semibold">자동봇</h3>
@@ -216,8 +216,8 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
 
                     {/* 기타 항목 */}
                     {otherItems.length > 0 && (
-                      <div className="border-2 border-black/10 rounded-lg overflow-hidden">
-                        <div className="bg-black/[0.02] px-5 py-4 border-b border-black/10 flex items-center justify-between">
+                      <div className="border border-border rounded-lg overflow-hidden">
+                        <div className="bg-black/[0.02] px-5 py-4 border-b border-border flex items-center justify-between">
                           <h3 className="text-[18px] font-semibold">기타</h3>
                           <span className="text-[15px] font-mono text-foreground/60">
                             소계: ₩{calculateSubtotal(otherItems).toLocaleString()}
@@ -267,7 +267,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
 
             {/* 총액 */}
             <section className="mb-16">
-              <div className="border-2 border-[#ff7b00] bg-[#fff5eb] p-10">
+              <div className="border border-[#ff7b00] bg-[#fff5eb] p-10 rounded-lg">
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-[24px]">총 견적 금액</span>
                   <span className="text-[36px] font-mono text-[#ff7b00]">
@@ -283,7 +283,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
 
             {/* 안내사항 */}
             <section className="mb-16">
-              <div className="bg-black/[0.02] border-2 border-black/10 p-8">
+              <div className="bg-black/[0.02] border border-border p-8 rounded-lg">
                 <h3 className="text-[18px] mb-4">
                   안내사항
                 </h3>
@@ -308,7 +308,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                 </p>
                 <button
                   onClick={handleProceedToOrder}
-                  className="inline-flex items-center gap-3 bg-[var(--brand-primary)] text-white px-10 py-5 rounded-full font-semibold text-[18px] shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
+                  className="inline-flex items-center gap-3 bg-[var(--brand-primary)] text-white px-10 py-5 rounded-full font-semibold text-[18px] shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98] transition-all duration-200"
                 >
                   신청서 작성하기
                   <ArrowRightIcon className="w-5 h-5" />
