@@ -116,7 +116,7 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
       <div className="mb-8">
         {/* 모바일: 현재 스텝만 표시 */}
         <div className="md:hidden">
-          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4 border border-gray-200">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[var(--brand-primary)] text-white flex items-center justify-center font-medium text-[14px] shadow-md">
                 {currentStep}
@@ -171,9 +171,9 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-[14px] border-2 transition-all duration-300 ${
                       currentStep >= step.num
-                        ? 'bg-[var(--brand-primary)] text-white border-[var(--brand-primary)] scale-110 shadow-lg'
+                        ? 'bg-[var(--brand-primary)] text-white border-[var(--brand-primary)] shadow-md'
                         : isAccessible
-                          ? 'bg-white text-gray-400 border-gray-300 group-hover:border-[var(--brand-primary)] group-hover:text-[var(--brand-primary)] group-hover:scale-105'
+                          ? 'bg-white text-gray-400 border-gray-300 group-hover:border-[var(--brand-primary)] group-hover:text-[var(--brand-primary)]'
                           : 'bg-gray-100 text-gray-300 border-gray-200'
                     }`}
                   >
@@ -211,7 +211,7 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
 
       {/* 장바구니 동기화 알림 */}
       {showSyncNotice && cartSyncState && (
-        <div className="mb-6 p-4 bg-green-50 border-2 border-green-500 rounded-md animate-fadeIn flex items-start justify-between gap-4">
+        <div className="mb-6 p-4 bg-green-50 border border-green-500 rounded-md animate-fadeIn flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
             <div>
@@ -237,7 +237,7 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
       {/* 검증 에러 표시 - 애니메이션 추가 */}
       {validationErrors.length > 0 && (
         <div 
-          className="mb-6 p-4 bg-red-50 border-2 border-red-500 rounded-md animate-shake"
+          className="mb-6 p-4 bg-red-50 border border-red-500 rounded-md animate-shake"
           style={{
             animation: 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both'
           }}
@@ -264,7 +264,7 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
 
       {/* Step 컨텐츠 카드 - 트랜지션 효과 추가 */}
       <div 
-        className={`bg-white border-2 border-black rounded-lg p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-8 transition-all duration-300 ${
+        className={`bg-white border border-border rounded-lg p-8 shadow-sm mb-8 transition-all duration-300 ${
           isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
         }`}
       >
@@ -280,14 +280,14 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
           <button
             onClick={handlePrevious}
             disabled={currentStep === 1}
-            className="px-6 py-3 border-2 border-black bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+            className="px-6 py-3 border border-border bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-sm active:scale-[0.98]"
           >
             ← 이전
           </button>
 
           <button
             onClick={handleNext}
-            className="px-6 py-3 border-2 border-black bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white transition-all duration-300 text-[14px] font-medium rounded-md shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[2px] hover:-translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+            className="px-6 py-3 border border-transparent bg-[var(--brand-primary)] text-white transition-all duration-200 text-[14px] font-medium rounded-md shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
           >
             다음 →
           </button>
@@ -299,7 +299,7 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
         <div className="flex justify-start">
           <button
             onClick={handlePrevious}
-            className="px-6 py-3 border-2 border-black bg-white hover:bg-gray-50 transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+            className="px-6 py-3 border border-border bg-white hover:bg-gray-50 transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-sm active:scale-[0.98]"
           >
             ← 이전
           </button>

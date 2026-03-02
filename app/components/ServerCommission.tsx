@@ -127,7 +127,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
 
         {/* 공지 */}
         <section className="py-13">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">공지</h2>
           </div>
           
@@ -153,12 +153,12 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
 
         {/* 기본 옵션 */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">기본 옵션</h2>
           </div>
           
           <div className="space-y-3">
-            <div className={`border-2 p-5 transition-all ${isItemInEstimate('마스토돈 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
+            <div className={`border p-5 transition-all ${isItemInEstimate('마스토돈 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
                   <h3 className="text-[17px] text-black font-semibold">마스토돈 서버 설치</h3>
@@ -170,7 +170,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   <span className="text-[17px] font-mono text-[#ff7b00]">₩20,000</span>
                   <button
                     onClick={() => handleToggleEstimate('마스토돈 서버 설치', 20000, '자캐 커뮤에 특화된 한참 인스턴스를 설치합니다.')}
-                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
+                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
                       isItemInEstimate('마스토돈 서버 설치') 
                         ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
                         : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
@@ -202,12 +202,12 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
 
         {/* 테마 선택 (택1) */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">테마 선택</h2>
           </div>
           
           {/* 택1 안내 */}
-          <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <div>
               <p className="text-[14px] text-blue-800 font-medium">택1 옵션</p>
@@ -222,10 +222,10 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                 <button
                   key={option.name}
                   onClick={() => handleThemeOptionSelect(option.name, option.price, option.description)}
-                  className={`w-full border-2 p-5 transition-all text-left ${
-                    isSelected 
-                      ? 'border-[#ff7b00] bg-[#fff5eb]' 
-                      : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  className={`w-full border p-5 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
+                    isSelected
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   }`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
@@ -259,7 +259,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
 
         {/* 추가 옵션 */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">추가 옵션</h2>
           </div>
           
@@ -271,10 +271,10 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   key={option.name}
                   type="button"
                   onClick={() => handleToggleEstimate(option.name, option.price, option.description)}
-                  className={`w-full border-2 p-5 transition-all text-left ${
+                  className={`w-full border p-5 transition-all text-left ${
                     isSelected
-                      ? 'border-[#ff7b00] bg-[#fff5eb]'
-                      : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
                   aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
@@ -306,7 +306,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
 
         {/* 빠른마감 옵션 */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">빠른마감 옵션</h2>
           </div>
           
@@ -318,10 +318,10 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   key={option.estimateName}
                   type="button"
                   onClick={() => handleToggleEstimate(option.estimateName, option.price)}
-                  className={`w-full border-2 p-5 transition-all text-left ${
+                  className={`w-full border p-5 transition-all text-left ${
                     isSelected
-                      ? 'border-[#ff7b00] bg-[#fff5eb]'
-                      : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
                   aria-label={isSelected ? `${option.displayName} 견적에서 제거` : `${option.displayName} 견적에 추가`}

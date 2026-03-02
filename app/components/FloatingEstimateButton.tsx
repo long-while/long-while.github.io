@@ -25,7 +25,7 @@ export default function FloatingEstimateButton({ onNavigate, currentPage }: Floa
       {/* 모바일: 아이콘 버튼 */}
       <button
         onClick={() => onNavigate('estimate')}
-        className="fixed z-40 w-14 h-14 min-w-[44px] min-h-[44px] rounded-full bg-[var(--brand-primary)] shadow-[4px_4px_0_0_rgba(0,0,0,1)] flex items-center justify-center hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all active:shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2 md:hidden"
+        className="fixed z-40 w-14 h-14 min-w-[44px] min-h-[44px] rounded-full bg-[var(--brand-primary)] shadow-lg flex items-center justify-center hover:shadow-xl hover:brightness-95 transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2 md:hidden"
         style={{ bottom: 'calc(24px + env(safe-area-inset-bottom))', right: '24px' }}
         aria-label={`견적 보기 - ${items.length}개 항목, 총 ${getTotalPrice().toLocaleString()}원`}
       >
@@ -42,7 +42,7 @@ export default function FloatingEstimateButton({ onNavigate, currentPage }: Floa
       {/* 데스크톱: 텍스트 포함 버튼 */}
       <button
         onClick={() => onNavigate('estimate')}
-        className="hidden md:flex fixed z-40 items-center gap-3 bg-[var(--brand-primary)] text-white px-6 py-4 rounded-full shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all active:shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
+        className="hidden md:flex fixed z-40 items-center gap-3 bg-[var(--brand-primary)] text-white px-6 py-4 rounded-full shadow-lg hover:shadow-xl hover:brightness-95 transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
         style={{ bottom: '32px', right: '32px' }}
         aria-label={`견적 확인하기 - ${items.length}개 항목`}
       >

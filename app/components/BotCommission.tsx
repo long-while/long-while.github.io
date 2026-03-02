@@ -226,7 +226,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
         {/* 기본 안내 */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">기본 안내</h2>
           </div>
           
@@ -261,7 +261,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
         {/* 자동봇 시트 미리보기 */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">자동봇 시트 미리보기</h2>
           </div>
 
@@ -270,7 +270,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
               href="https://docs.google.com/spreadsheets/d/1iTqRwJChqTCpfpMaleLEt2i1h2MTroyWAbNktZF8KjA/edit?usp=sharing"
               target="_blank"
               rel="noopener noreferrer"
-              className="block border-2 border-black/10 p-5 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
+              className="block border border-border p-5 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
             >
               <div className="flex items-center justify-between gap-6">
                 <div className="flex items-baseline gap-6">
@@ -284,7 +284,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
               href="https://docs.google.com/spreadsheets/d/1ui6iVgG-nDLF2RDVd50bz2jVeBU9JRp3f5oCx3a4eQE/edit?usp=sharing"
               target="_blank"
               rel="noopener noreferrer"
-              className="block border-2 border-black/10 p-5 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
+              className="block border border-border p-5 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
             >
               <div className="flex items-center justify-between gap-6">
                 <div className="flex items-baseline gap-6">
@@ -298,7 +298,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
               href="https://docs.google.com/spreadsheets/d/1K0mXU2NOQ71HF9Mo6Zs_cFHlpDPeRFm_N8v7Pts58cY/edit?usp=sharing"
               target="_blank"
               rel="noopener noreferrer"
-              className="block border-2 border-black/10 p-5 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
+              className="block border border-border p-5 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
             >
               <div className="flex items-center justify-between gap-6">
                 <div className="flex items-baseline gap-6">
@@ -313,11 +313,11 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
         {/* 기본 가동료 */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">가동 기간</h2>
           </div>
-          
-          <div className="border-2 border-black/10 p-8 bg-black/[0.01]">
+
+          <div className="border border-border p-8 bg-black/[0.01]">
             <div className="mb-6">
               <p className="text-[19px] leading-[1.8] font-semibold text-black">
                 1주에 5천원
@@ -354,7 +354,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
         {/* 봇 타입 비교 테이블 */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">봇 타입 비교</h2>
           </div>
           
@@ -362,66 +362,66 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
             <table className="w-full border-collapse text-[14px] table-fixed">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border-2 border-black/10 p-3 text-left font-semibold w-[52%]">기능</th>
-                  <th className="border-2 border-black/10 p-3 text-center font-semibold w-[16%]">기본</th>
-                  <th className="border-2 border-black/10 p-3 text-center font-semibold w-[16%]">기본&상점</th>
-                  <th className="border-2 border-black/10 p-3 text-center font-semibold w-[16%]">기본&상점&스탯</th>
+                  <th className="border border-border p-3 text-left font-semibold w-[52%]">기능</th>
+                  <th className="border border-border p-3 text-center font-semibold w-[16%]">기본</th>
+                  <th className="border border-border p-3 text-center font-semibold w-[16%]">기본&상점</th>
+                  <th className="border border-border p-3 text-center font-semibold w-[16%]">기본&상점&스탯</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td className="border-2 border-black/10 p-3">구글 시트 연동</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3">구글 시트 연동</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr className="bg-gray-50/50">
-                  <td className="border-2 border-black/10 p-3">[nDm]</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3">[nDm]</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr>
-                  <td className="border-2 border-black/10 p-3">[운세]</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3">[운세]</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr className="bg-gray-50/50">
-                  <td className="border-2 border-black/10 p-3">커스텀 명령어 [홀짝] [가위바위보] 등</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3">커스텀 명령어 [홀짝] [가위바위보] 등</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr className="bg-gray-50/50">
-                  <td className="border-2 border-black/10 p-3">재화 시스템</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3">재화 시스템</td>
+                  <td className="border border-border p-3 text-center text-gray-300">-</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr>
-                  <td className="border-2 border-black/10 p-3">상점 & 인벤토리</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3">상점 & 인벤토리</td>
+                  <td className="border border-border p-3 text-center text-gray-300">-</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr className="bg-gray-50/50">
-                  <td className="border-2 border-black/10 p-3">스탯 시스템</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3">스탯 시스템</td>
+                  <td className="border border-border p-3 text-center text-gray-300">-</td>
+                  <td className="border border-border p-3 text-center text-gray-300">-</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr>
-                  <td className="border-2 border-black/10 p-3">[사용/아이템명]</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-gray-300">-</td>
-                  <td className="border-2 border-black/10 p-3 text-center text-[#ff7b00]">✓</td>
+                  <td className="border border-border p-3">[사용/아이템명]</td>
+                  <td className="border border-border p-3 text-center text-gray-300">-</td>
+                  <td className="border border-border p-3 text-center text-gray-300">-</td>
+                  <td className="border border-border p-3 text-center text-[#ff7b00]">✓</td>
                 </tr>
                 <tr className="bg-[#fff5eb]">
-                  <td className="border-2 border-black/10 p-3 font-semibold">가격</td>
-                  <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩15,000</td>
-                  <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩35,000</td>
-                  <td className="border-2 border-black/10 p-3 text-center font-mono text-[#ff7b00]">₩45,000</td>
+                  <td className="border border-border p-3 font-semibold">가격</td>
+                  <td className="border border-border p-3 text-center font-mono text-[#ff7b00]">₩15,000</td>
+                  <td className="border border-border p-3 text-center font-mono text-[#ff7b00]">₩35,000</td>
+                  <td className="border border-border p-3 text-center font-mono text-[#ff7b00]">₩45,000</td>
                 </tr>
               </tbody>
             </table>
@@ -432,7 +432,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           </p>
 
           {/* 커스텀 명령어 업그레이드 설명 */}
-          <div className="mt-12 pt-10 border-t-2 border-black/10">
+          <div className="mt-12 pt-10 border-t border-border">
             <h3 className="text-[20px] font-semibold mb-2">커스텀 명령어 업그레이드란?</h3>
             <p className="text-[15px] leading-[1.7] text-foreground/80 mb-4">
               아래 <span className="font-bold text-[#ff7b00]">{'{중괄호}'}</span> 항목이 모두 업그레이드로 추가되었습니다.
@@ -447,34 +447,34 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
               <table className="w-full border-collapse text-[14px]">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="border-2 border-black/10 p-3 text-left font-semibold w-[120px]">명령어</th>
-                    <th className="border-2 border-black/10 p-3 text-left font-semibold">예시 문구 (업그레이드 시 사용 가능)</th>
+                    <th className="border border-border p-3 text-left font-semibold w-[120px]">명령어</th>
+                    <th className="border border-border p-3 text-left font-semibold">예시 문구 (업그레이드 시 사용 가능)</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border-2 border-black/10 p-3 align-top">패션</td>
-                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">오늘의 패션 점수는 <span className="font-bold text-[#ff7b00]">{'{1d100}'}</span>점입니다.</td>
+                    <td className="border border-border p-3 align-top">패션</td>
+                    <td className="border border-border p-3 font-mono text-[13px]">오늘의 패션 점수는 <span className="font-bold text-[#ff7b00]">{'{1d100}'}</span>점입니다.</td>
                   </tr>
                   <tr className="bg-gray-50/50">
-                    <td className="border-2 border-black/10 p-3 align-top">능력치</td>
-                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">능력치는 민첩: <span className="font-bold text-[#ff7b00]">{'{3d6}'}</span> / 힘: <span className="font-bold text-[#ff7b00]">{'{3d10+5}'}</span> / 운: <span className="font-bold text-[#ff7b00]">{'{1d100}'}</span> 입니다.</td>
+                    <td className="border border-border p-3 align-top">능력치</td>
+                    <td className="border border-border p-3 font-mono text-[13px]">능력치는 민첩: <span className="font-bold text-[#ff7b00]">{'{3d6}'}</span> / 힘: <span className="font-bold text-[#ff7b00]">{'{3d10+5}'}</span> / 운: <span className="font-bold text-[#ff7b00]">{'{1d100}'}</span> 입니다.</td>
                   </tr>
                   <tr>
-                    <td className="border-2 border-black/10 p-3 align-top">허기</td>
-                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]"><span className="font-bold text-[#ff7b00]">{'{시전자}'}</span><span className="font-bold text-[#ff7b00]">{'{은는}'}</span> 배가 고픕니다.</td>
+                    <td className="border border-border p-3 align-top">허기</td>
+                    <td className="border border-border p-3 font-mono text-[13px]"><span className="font-bold text-[#ff7b00]">{'{시전자}'}</span><span className="font-bold text-[#ff7b00]">{'{은는}'}</span> 배가 고픕니다.</td>
                   </tr>
                   <tr className="bg-gray-50/50">
-                    <td className="border-2 border-black/10 p-3 align-top">허기</td>
-                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">배가 고픈 나머지 <span className="font-bold text-[#ff7b00]">{'{시전자}'}</span><span className="font-bold text-[#ff7b00]">{'{이가}'}</span> 옆에 있던 친구를 잡아먹었습니다.</td>
+                    <td className="border border-border p-3 align-top">허기</td>
+                    <td className="border border-border p-3 font-mono text-[13px]">배가 고픈 나머지 <span className="font-bold text-[#ff7b00]">{'{시전자}'}</span><span className="font-bold text-[#ff7b00]">{'{이가}'}</span> 옆에 있던 친구를 잡아먹었습니다.</td>
                   </tr>
                   <tr>
-                    <td className="border-2 border-black/10 p-3 align-top">허기</td>
-                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">여러분, <span className="font-bold text-[#ff7b00]">{'{시전자}'}</span><span className="font-bold text-[#ff7b00]">{'{을를}'}</span> 굶기지 마세요.</td>
+                    <td className="border border-border p-3 align-top">허기</td>
+                    <td className="border border-border p-3 font-mono text-[13px]">여러분, <span className="font-bold text-[#ff7b00]">{'{시전자}'}</span><span className="font-bold text-[#ff7b00]">{'{을를}'}</span> 굶기지 마세요.</td>
                   </tr>
                   <tr className="bg-gray-50/50">
-                    <td className="border-2 border-black/10 p-3 align-top">즐거운 발견</td>
-                    <td className="border-2 border-black/10 p-3 font-mono text-[13px]">당신은 <span className="font-bold text-[#ff7b00]">{'{랜덤: 숟가락, 젓가락, 밥그릇, 깨진 유리}'}</span><span className="font-bold text-[#ff7b00]">{'{을를}'}</span> 찾아냈습니다!</td>
+                    <td className="border border-border p-3 align-top">즐거운 발견</td>
+                    <td className="border border-border p-3 font-mono text-[13px]">당신은 <span className="font-bold text-[#ff7b00]">{'{랜덤: 숟가락, 젓가락, 밥그릇, 깨진 유리}'}</span><span className="font-bold text-[#ff7b00]">{'{을를}'}</span> 찾아냈습니다!</td>
                   </tr>
                 </tbody>
               </table>
@@ -484,13 +484,13 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
         {/* 봇 타입들 */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">봇 타입 상세</h2>
           </div>
           
           {/* 중복 선택 경고 */}
           {getDuplicateWarnings.length > 0 && (
-            <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-400 rounded-lg flex items-start gap-3">
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-400 rounded-lg flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-[14px] text-amber-800 font-medium">중복 선택 안내</p>
@@ -529,19 +529,19 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                 </div>
               );
               return (
-              <div key={index} className={`border-2 transition-colors ${typeSelected ? 'border-[#ff7b00] bg-[#fff5eb]/30' : 'border-black/10 hover:border-[#ff7b00]/30'}`}>
+              <div key={index} className={`border transition-colors ${typeSelected ? 'border-[#ff7b00] bg-[#fff5eb]/30 ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00]/30'}`}>
                 {type.price > 0 ? (
                   <button
                     type="button"
                     onClick={() => handleToggleEstimate(type.name, type.price, type.features.join(', '))}
-                    className="w-full flex justify-between items-center p-8 bg-black/[0.01] border-b-2 border-black/10 text-left hover:bg-[#fff5eb]/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                    className="w-full flex justify-between items-center p-8 bg-black/[0.01] border-b border-border text-left hover:bg-[#fff5eb]/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
                     aria-pressed={typeSelected}
                     aria-label={typeSelected ? `${type.name} 견적에서 제거` : `${type.name} 견적에 추가`}
                   >
                     {headerContent}
                   </button>
                 ) : (
-                  <div className="flex justify-between items-center p-8 bg-black/[0.01] border-b-2 border-black/10">
+                  <div className="flex justify-between items-center p-8 bg-black/[0.01] border-b border-border">
                     {headerContent}
                   </div>
                 )}
@@ -562,18 +562,18 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                       <button
                         type="button"
                         onClick={() => setOmakaseDetailOpen(!omakaseDetailOpen)}
-                        className="w-full flex items-center justify-between p-4 bg-black/[0.02] border-2 border-black/10 hover:border-[#ff7b00]/30 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                        className="w-full flex items-center justify-between p-4 bg-black/[0.02] border border-border hover:border-[#ff7b00]/30 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
                       >
                         <span className="text-[15px] font-semibold">오마카세 기능 상세 설명</span>
                         <ChevronDown className={`w-5 h-5 text-foreground/60 transition-transform duration-300 ${omakaseDetailOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {omakaseDetailOpen && (
-                        <div className="border-2 border-t-0 border-black/10 p-6 space-y-4 animate-slideDown">
+                        <div className="border border-t-0 border-border p-6 space-y-4 animate-slideDown">
                           <p className="text-[15px] leading-[1.8] text-foreground/80">
                             구현을 원하는 시스템을 정리한 <span className="font-medium text-[#ff7b00]">외부 문서 링크</span>를 전달해 주세요.<br />
                             (시스템 문서와는 별도의 문서여야 합니다)
                           </p>
-                          <div className="bg-white border-2 border-black/10 p-5 space-y-3 text-[14px]">
+                          <div className="bg-white border border-border p-5 space-y-3 text-[14px]">
                             <p className="font-semibold text-[15px]">문서에 포함되어야 할 내용:</p>
                             <ul className="list-disc list-inside space-y-1 text-foreground/70">
                               <li>러너가 입력할 명령어 (예: [사용/사과])</li>
@@ -581,7 +581,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                               <li>러너에게 보여줄 결과 메시지</li>
                             </ul>
                           </div>
-                          <div className="bg-white border-2 border-black/10 p-5 space-y-3 text-[14px]">
+                          <div className="bg-white border border-border p-5 space-y-3 text-[14px]">
                             <p className="font-semibold text-[15px]">작성 예시:</p>
                             <div className="bg-gray-50 p-4 rounded text-[13px] space-y-2 leading-[1.8]">
                               <p className="font-medium">"[사용/아이템명] 명령어를 추가하고 싶어요!"</p>
@@ -594,7 +594,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                             href="https://stellar-ground-601.notion.site/310d06ebad99807a99d1fbf4e8fc9ace"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block border-2 border-black/10 p-4 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
+                            className="block border border-border p-4 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
                           >
                             <div className="flex items-center justify-between">
                               <span className="text-[14px] font-medium">예시 오마카세 신청서 보기</span>
@@ -612,7 +612,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   )}
 
                   {type.note && (
-                    <div className="bg-black/[0.02] border-2 border-black/10 p-6 mt-6">
+                    <div className="bg-black/[0.02] border border-border p-6 mt-6">
                       <p className="text-[15px] leading-[1.7] text-foreground/70">
                         {type.note}
                       </p>
@@ -627,7 +627,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
         {/* 추가 옵션 */}
         <section className="py-15">
-          <div className="mb-16 border-b-2 border-black pb-4">
+          <div className="mb-16 border-b border-border pb-4">
             <h2 className="text-[32px] tracking-[-0.01em] font-semibold">추가 옵션</h2>
           </div>
           
@@ -654,8 +654,8 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   key={index}
                   type="button"
                   onClick={handleClick}
-                  className={`w-full border-2 p-5 transition-all text-left ${
-                    isSelected ? 'border-[#ff7b00] bg-[#fff5eb]' : 'border-black/10 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  className={`w-full border p-5 transition-all text-left ${
+                    isSelected ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
                   aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
@@ -675,7 +675,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                 </button>
               );
             })}
-            <div className="border-2 border-[#ff7b00] p-5 bg-[#ff7b00] text-white">
+            <div className="border border-[#ff7b00] p-5 bg-[#ff7b00] text-white">
               <span className="text-[16px]">빠른 마감: 48시간 내 +200%, 일주일 내 +100%</span>
             </div>
           </div>
