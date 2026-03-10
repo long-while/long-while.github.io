@@ -55,7 +55,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
     {
       name: '마스토돈 가이드',
       price: 5000,
-      description: '테마 추가 시 해당 커뮤니티 서버 캡처본으로 작업, 노션 페이지로 제공. 타 플랫폼은 쓰지 않습니다.'
+      description: '테마 추가 시 서버 캡처본으로 작업, 노션 페이지로 제공. 타 플랫폼은 쓰지 않습니다. 한달 후 링크가 삭제됩니다.'
     }
   ];
 
@@ -91,7 +91,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
   // 추가 옵션 토글 (중복 선택 가능)
   const handleToggleEstimate = (name: string, price: number, description?: string) => {
     const existingItem = items.find(item => item.name === name);
-    
+
     if (existingItem) {
       removeItem(existingItem.id);
     } else {
@@ -128,7 +128,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">공지</h2>
           </div>
-          
+
           <div className="max-w-4xl space-y-6 text-[15px] leading-[1.8]">
             <p>
               <span className="font-medium">기본 마감일:</span> 서버 개장 3~5일 전
@@ -154,7 +154,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">기본 옵션</h2>
           </div>
-          
+
           <div className="space-y-3">
             <div className={`border p-5 transition-all ${isItemInEstimate('마스토돈 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
@@ -168,11 +168,10 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   <span className="text-[15px] font-mono leading-normal text-[#ff7b00]">₩20,000</span>
                   <button
                     onClick={() => handleToggleEstimate('마스토돈 서버 설치', 20000, '자캐 커뮤에 특화된 한참 인스턴스를 설치합니다.')}
-                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                      isItemInEstimate('마스토돈 서버 설치') 
-                        ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]' 
-                        : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
-                    }`}
+                    className={`w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${isItemInEstimate('마스토돈 서버 설치')
+                      ? 'border-[#ff7b00] bg-[#ff7b00] text-white hover:bg-[#e66d00]'
+                      : 'border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white'
+                      }`}
                     aria-label={isItemInEstimate('마스토돈 서버 설치') ? '견적에서 제거' : '견적에 추가'}
                   >
                     {isItemInEstimate('마스토돈 서버 설치') ? (
@@ -184,10 +183,10 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                 </div>
               </div>
             </div>
-            
+
             <p className="text-[14px] text-foreground/60 mt-4">
               자동봇도 함께 필요하시다면{' '}
-              <button 
+              <button
                 onClick={() => onNavigate?.('bot')}
                 className="text-[#ff7b00] hover:underline"
               >
@@ -203,7 +202,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">테마 선택</h2>
           </div>
-          
+
           {/* 택1 안내 */}
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-blue-600 shrink-0" />
@@ -212,7 +211,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
               <p className="text-[13px] text-blue-700">아래 옵션 중 하나만 선택할 수 있습니다. 커스텀 없이 기본 트위터 테마를 원하시면 선택하지 않으셔도 됩니다.</p>
             </div>
           </div>
-          
+
           <div className="space-y-3">
             {themeOptions.map((option) => {
               const isSelected = isItemInEstimate(option.name);
@@ -220,20 +219,18 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                 <button
                   key={option.name}
                   onClick={() => handleThemeOptionSelect(option.name, option.price, option.description)}
-                  className={`w-full border p-5 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${
-                    isSelected
-                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                  }`}
+                  className={`w-full border p-5 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${isSelected
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                    }`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-4 flex-1">
                       {/* 라디오 버튼 스타일 */}
-                      <div className={`w-6 h-6 min-w-[24px] rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
-                        isSelected 
-                          ? 'border-[#ff7b00] bg-[#ff7b00]' 
-                          : 'border-gray-300'
-                      }`}>
+                      <div className={`w-6 h-6 min-w-[24px] rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${isSelected
+                        ? 'border-[#ff7b00] bg-[#ff7b00]'
+                        : 'border-gray-300'
+                        }`}>
                         {isSelected && (
                           <div className="w-2 h-2 rounded-full bg-white" />
                         )}
@@ -260,7 +257,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">추가 옵션</h2>
           </div>
-          
+
           <div className="space-y-3">
             {additionalOptions.map((option) => {
               const isSelected = isItemInEstimate(option.name);
@@ -269,20 +266,18 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   key={option.name}
                   type="button"
                   onClick={() => handleToggleEstimate(option.name, option.price, option.description)}
-                  className={`w-full border p-5 transition-all text-left ${
-                    isSelected
-                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                  } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                  className={`w-full border p-5 transition-all text-left ${isSelected
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                    } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
                   aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-4 flex-1">
                       <div
-                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${
-                          isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
-                        }`}
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
+                          }`}
                         aria-hidden
                       >
                         {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
@@ -307,7 +302,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">빠른마감 옵션</h2>
           </div>
-          
+
           <div className="space-y-3">
             {rushOptions.map((option) => {
               const isSelected = isItemInEstimate(option.estimateName);
@@ -316,20 +311,18 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   key={option.estimateName}
                   type="button"
                   onClick={() => handleToggleEstimate(option.estimateName, option.price)}
-                  className={`w-full border p-5 transition-all text-left ${
-                    isSelected
-                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                  } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                  className={`w-full border p-5 transition-all text-left ${isSelected
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                    } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
                   aria-label={isSelected ? `${option.displayName} 견적에서 제거` : `${option.displayName} 견적에 추가`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-4 flex-1">
                       <div
-                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${
-                          isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
-                        }`}
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
+                          }`}
                         aria-hidden
                       >
                         {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
