@@ -1,4 +1,4 @@
-import{c as v,u as D,j as e}from"./index.js";import{M as j}from"./MastodonServerCalculator-DU9byX1j.js";import{T as S}from"./trash-2-CF98HHud.js";import{P as E}from"./plus-kqlUO7lq.js";import{C as b}from"./chevron-down-D1co7JVQ.js";/**
+import{c as v,u as D,j as e}from"./index.js";import{M as j}from"./MastodonServerCalculator-DPOTvAX7.js";import{T as S}from"./trash-2-CF98HHud.js";import{P as E}from"./plus-kqlUO7lq.js";import{C as b}from"./chevron-down-D1co7JVQ.js";/**
  * @license lucide-react v0.487.0 - ISC
  *
  * This source code is licensed under the ISC license.
