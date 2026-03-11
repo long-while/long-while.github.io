@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { MONTH_OPTIONS, USERS_OPTIONS, getServerCalcResult } from '@/app/lib/mastodonServerConfig';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
-
-function scrollToServerInstall() {
-  const el = document.getElementById('server-install-section');
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/select';
 
 export default function MastodonServerCalculator() {
   const { serverCalcResult, setServerCalcResult } = useEstimate();
@@ -26,19 +28,17 @@ export default function MastodonServerCalculator() {
     ? getServerCalcResult(Number(months), usersKey, search!)
     : null;
 
-  // 선택값 변경 시 context에 동기화
   useEffect(() => {
     setServerCalcResult(result);
   }, [months, usersKey, search, setServerCalcResult]);
 
   const handleSetSearchNo = () => setSearch('no');
 
-  // GCP 배지 라벨: 브랜드명보다 유저에게 의미 있는 정보 우선
   function getHostingLabel(r: ServerCalcResult & { type: 'gcp' | 'vultr' }) {
     if (r.type === 'gcp') {
       return r.paidMonths === 0 ? '처음 3개월 무료' : '무료 크레딧 3개월';
     }
-    return '서울 리전 서버';
+    return 'Vultr 서울';
   }
 
   function getHostingBadgeClass(r: ServerCalcResult & { type: 'gcp' | 'vultr' }) {
@@ -53,11 +53,15 @@ export default function MastodonServerCalculator() {
         <h2 className="text-[29px] tracking-[-0.01em] font-semibold">서버비 미리보기</h2>
         <p className="text-[14px] text-foreground/60 mt-2 leading-[1.7]">
           서버 설치를 신청하기 전, 예상 서버비와 설치 사양을 먼저 확인해보세요.<br />
-          서버비는 커미션 비용과 별개로, 호스팅 업체에 직접 납부하는 금액입니다.
+          마스토돈 서버 설치 및 테마 커미션 = 인테리어 비용,
+          서버비 = 집주인에게 납부하는 월세라고 생각해주시면 됩니다.
+          커뮤니티 운영 기간과 규모에 따라 지출하시는 서버비가 달라집니다.
         </p>
       </div>
 
-      <div className="space-y-6">
+      {/* 선택 폼 + 결과: 왼쪽 정렬, 가로폭 제한 */}
+      <div className="max-w-md space-y-5">
+
         {/* 1. 서버 운영 기간 */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-[14px] font-medium text-foreground/70">
@@ -66,22 +70,21 @@ export default function MastodonServerCalculator() {
             </span>
             서버 운영 기간
           </label>
-          <select
-            value={months}
-            onChange={(e) => setMonths(e.target.value)}
-            className={`w-full px-4 py-3 border text-[14px] focus:outline-none transition-colors appearance-none cursor-pointer bg-white
-              ${months ? 'border-[#ff7b00] text-foreground' : 'border-border text-foreground/40'}`}
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 14px center',
-            }}
-          >
-            <option value="">선택해주세요</option>
-            {MONTH_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
+          <Select value={months} onValueChange={setMonths}>
+            <SelectTrigger
+              className={`h-[46px] text-[14px] rounded-none w-full
+                ${months ? 'border-[#ff7b00]' : ''}`}
+            >
+              <SelectValue placeholder="선택해주세요" />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTH_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={String(o.value)}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 2. 러닝 인원 */}
@@ -92,22 +95,21 @@ export default function MastodonServerCalculator() {
             </span>
             러닝 인원
           </label>
-          <select
-            value={usersKey}
-            onChange={(e) => setUsersKey(e.target.value)}
-            className={`w-full px-4 py-3 border text-[14px] focus:outline-none transition-colors appearance-none cursor-pointer bg-white
-              ${usersKey ? 'border-[#ff7b00] text-foreground' : 'border-border text-foreground/40'}`}
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 14px center',
-            }}
-          >
-            <option value="">선택해주세요</option>
-            {USERS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
+          <Select value={usersKey} onValueChange={setUsersKey}>
+            <SelectTrigger
+              className={`h-[46px] text-[14px] rounded-none w-full
+                ${usersKey ? 'border-[#ff7b00]' : ''}`}
+            >
+              <SelectValue placeholder="선택해주세요" />
+            </SelectTrigger>
+            <SelectContent>
+              {USERS_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 3. 검색 기능 */}
@@ -117,7 +119,7 @@ export default function MastodonServerCalculator() {
               3
             </span>
             검색 기능 추가 여부
-            <span className="text-[12px] text-foreground/40 font-normal">(+30,000원)</span>
+            <span className="text-[12px] text-foreground/40 font-normal">(세팅비용 +30,000원)</span>
           </label>
           <div className="flex gap-3">
             {(['yes', 'no'] as const).map((val) => (
@@ -170,8 +172,8 @@ export default function MastodonServerCalculator() {
                 </button>
               </div>
             ) : (
-              /* 결과 카드 (GCP / Vultr) */
-              <div className="border border-[#ff7b00] bg-[#fff5eb]">
+              /* 결과 카드 */
+              <div className="border border-[#ff7b00] bg-white">
                 {/* 헤더: 총비용 */}
                 <div className="px-5 py-5 border-b border-[#ff7b00]/20 space-y-3">
                   {/* 배지 */}
@@ -184,10 +186,10 @@ export default function MastodonServerCalculator() {
 
                   {/* 총 서버비 레이블 + 금액 */}
                   <div>
-                    <p className="text-[11px] font-mono font-semibold uppercase tracking-widest text-foreground/40 mb-1">
+                    <p className="text-[17px] font-bold text-foreground mb-0.5">
                       {result.monthsLabel} 총 서버비
                     </p>
-                    <span className={`text-[36px] font-bold tracking-tight leading-none
+                    <span className={`text-[26px] font-bold tracking-tight leading-none
                       ${result.totalKrw === '무료' ? 'text-green-600' : 'text-[#ff7b00]'}`}>
                       {result.totalKrw}
                     </span>
@@ -198,33 +200,33 @@ export default function MastodonServerCalculator() {
                     <div className="flex items-center gap-2 text-[13px] text-green-700 font-medium">
                       <span>처음 {result.freeMonths}개월 전액 무료</span>
                       <span className="text-foreground/30">—</span>
-                      <span className="text-foreground/50 font-normal">GCP 무료 크레딧 적용</span>
+                      <span className="text-foreground/60 font-normal">GCP 무료 크레딧 적용</span>
                     </div>
                   )}
                   {result.type === 'gcp' && result.paidMonths > 0 && (
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white border border-[#ff7b00]/20 px-3 py-2">
-                        <p className="text-[10px] font-mono text-foreground/40 uppercase tracking-wider mb-0.5">처음 {result.freeMonths}개월</p>
-                        <p className="text-[16px] font-bold text-green-600">무료</p>
-                        <p className="text-[11px] text-foreground/40">GCP 크레딧 적용</p>
+                      <div className="bg-gray-50 border border-gray-200 px-3 py-2.5">
+                        <p className="text-[11px] font-semibold text-foreground mb-0.5">처음 {result.freeMonths}개월</p>
+                        <p className="text-[17px] font-bold text-green-600">무료</p>
+                        <p className="text-[11px] text-foreground/60">GCP 크레딧 적용</p>
                       </div>
-                      <div className="bg-white border border-[#ff7b00]/20 px-3 py-2">
-                        <p className="text-[10px] font-mono text-foreground/40 uppercase tracking-wider mb-0.5">이후 {result.paidMonths}개월</p>
-                        <p className="text-[16px] font-bold text-[#ff7b00]">월 {result.monthlyKrw}</p>
-                        <p className="text-[11px] text-foreground/40">결제수단 자동 청구</p>
+                      <div className="bg-gray-50 border border-gray-200 px-3 py-2.5">
+                        <p className="text-[11px] font-semibold text-foreground mb-0.5">이후 {result.paidMonths}개월</p>
+                        <p className="text-[17px] font-bold text-[#ff7b00]">월 {result.monthlyKrw}</p>
+                        <p className="text-[11px] text-foreground/60">등록한 결제수단에서 자동 청구</p>
                       </div>
                     </div>
                   )}
                   {result.type === 'vultr' && (
                     <div className="inline-flex items-baseline gap-1.5">
-                      <span className="text-[13px] text-foreground/50">월</span>
+                      <span className="text-[13px] text-foreground/60">월</span>
                       <span className="text-[18px] font-bold text-[#ff7b00]">{result.monthlyKrw}</span>
-                      <span className="text-[13px] text-foreground/50">× {result.months}개월</span>
+                      <span className="text-[13px] text-foreground/60">× {result.months}개월</span>
                     </div>
                   )}
                 </div>
 
-                {/* 서버 사양 */}
+                {/* 서버 사양 + 안내 */}
                 <div className="px-5 py-4 space-y-3">
                   <p className="text-[11px] font-mono font-semibold uppercase tracking-widest text-foreground/40">
                     서버 사양
@@ -248,33 +250,27 @@ export default function MastodonServerCalculator() {
                     </div>
                   </div>
 
-                  {/* 비용 안내 */}
-                  {result.type === 'gcp' && (
-                    <p className="text-[12px] text-foreground/50 pt-2 border-t border-[#ff7b00]/10">
-                      {result.paidMonths === 0
-                        ? 'GCP 무료 크레딧으로 전액 커버됩니다. 서버비가 발생하지 않습니다.'
-                        : `처음 ${result.freeMonths}개월은 무료, 이후 서버 유지 시 월 약 ${result.monthlyKrw} 지출.`
-                      }
+                  {/* 비용 안내 문구 */}
+                  {result.type === 'gcp' && result.paidMonths > 0 && (
+                    <p className="text-[13px] text-foreground/60 pt-2 border-t border-gray-100 leading-[1.7]">
+                      첫 3개월은 구글에서 제공하는 무료 크레딧을 소모하며, 이후 매달 약 {result.monthlyKrw}이 지출됩니다.<br />
+                      서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.
+                    </p>
+                  )}
+                  {result.type === 'gcp' && result.paidMonths === 0 && (
+                    <p className="text-[13px] text-foreground/60 pt-2 border-t border-gray-100 leading-[1.7]">
+                      서버 설치 후 3개월간은 구글에서 제공하는 무료 크레딧을 소모하여 서버비 없이 사용하실 수 있습니다.
+                      애프터 등을 위해 서버를 3개월 이상 유지하실 경우, 사양을 낮추고 월 3만원 정도의 금액으로 서버를 유지해 드립니다.<br /><br />
+                      무료 체험이 끝나도 자동 결제가 진행되지 않습니다. 만약 유료 플랜으로 전환하여 3개월 이상 서버를 사용하실 경우, 서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.
                     </p>
                   )}
                   {result.type === 'vultr' && (
-                    <p className="text-[12px] text-foreground/50 pt-2 border-t border-[#ff7b00]/10">
-                      서울 리전 서버로 한국에서 빠르게 접속됩니다.
+                    <p className="text-[13px] text-foreground/60 pt-2 border-t border-gray-100 leading-[1.7]">
+                      장기/소규모 서버의 경우 서버비 절약을 위해 구글이 아닌 Vultr라는 호스팅 업체를 통해 서버 컴퓨터를 대여하게 됩니다.
+                      3개월 무료 크레딧을 지급하지 않는 대신, 월 서버비가 더 적습니다.<br /><br />
+                      이때 발생하는 서버 비용은 커미션주가 아닌, 호스팅 업체에 가입 시 등록하시는 결제수단으로 월초에 자동 결제됩니다.
                     </p>
                   )}
-
-                  <p className="text-[11px] text-foreground/40">
-                    ※ 서버비는 커미션 비용과 별개로 호스팅 업체에 직접 납부합니다.
-                  </p>
-
-                  {/* CTA: 기본 옵션으로 이동 */}
-                  <button
-                    type="button"
-                    onClick={scrollToServerInstall}
-                    className="mt-1 w-full py-2.5 border border-[#ff7b00] text-[#ff7b00] text-[13px] font-medium hover:bg-[#ff7b00] hover:text-white transition-all min-h-[44px]"
-                  >
-                    서버 설치 커미션 신청하기 ↓
-                  </button>
                 </div>
               </div>
             )}
