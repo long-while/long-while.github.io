@@ -45,35 +45,43 @@ function totalKrwStr(totalUsd: number): string {
   return formatKrw(toKrw(totalUsd));
 }
 
-// ===== GCP 서울 구성 =====
+// ===== GCP us-central1 구성 =====
+// 서울보다 약 20~30% 저렴한 us-central1 기준 가격 (USD/month)
+// toKrw(usd) = round((usd*1400+5000)/1000)*1000
 
 const GCP_CONFIGS: Record<string, {
   noSearch: { monthly: number; mastodon: string; elastic: string | null };
   search: { monthly: number; mastodon: string; elastic: string | null };
 }> = {
   u10: {
-    noSearch: { monthly: 32, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
-    search: { monthly: 46, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    // noSearch: $18 → 3만원 / search: $32 → 5만원
+    noSearch: { monthly: 18, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: null },
+    search: { monthly: 32, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: 'e2-micro (2 vCPU, 1GB RAM)' },
   },
   u15: {
-    noSearch: { monthly: 32, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
-    search: { monthly: 46, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    // noSearch: $18 → 3만원 / search: $32 → 5만원
+    noSearch: { monthly: 18, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: null },
+    search: { monthly: 32, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: 'e2-micro (2 vCPU, 1GB RAM)' },
   },
   u20: {
-    noSearch: { monthly: 32, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
-    search: { monthly: 49, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
+    // noSearch: $25 → 4만원 / search: $39 → 6만원
+    noSearch: { monthly: 25, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
+    search: { monthly: 39, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u30: {
-    noSearch: { monthly: 57, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
-    search: { monthly: 71, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    // noSearch: $32 → 5만원 / search: $47 → 7.1만원
+    noSearch: { monthly: 32, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
+    search: { monthly: 47, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u40: {
-    noSearch: { monthly: 86, mastodon: 'e2-highcpu-4 (4 vCPU, 4GB RAM)', elastic: null },
-    search: { monthly: 103, mastodon: 'e2-highcpu-4 (4 vCPU, 4GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
+    // noSearch: $54 → 8.1만원 / search: $68 → 10만원
+    noSearch: { monthly: 54, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
+    search: { monthly: 68, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u40p: {
-    noSearch: { monthly: 118, mastodon: 'e2-standard-4 (4 vCPU, 16GB RAM)', elastic: null },
-    search: { monthly: 150, mastodon: 'e2-standard-4 (4 vCPU, 16GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
+    // noSearch: $82 → 12만원 / search: $111 → 16만원
+    noSearch: { monthly: 82, mastodon: 'e2-standard-4 (4 vCPU, 16GB RAM)', elastic: null },
+    search: { monthly: 111, mastodon: 'e2-standard-4 (4 vCPU, 16GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
   },
 };
 
@@ -203,7 +211,7 @@ export function getServerCalcResult(
     return {
       type: 'gcp',
       months, monthsLabel, usersKey, usersLabel, search,
-      hosting: 'GCP (서울)',
+      hosting: 'GCP (us-central1)',
       mastodon: gcpCfg.mastodon,
       elastic: gcpCfg.elastic,
       monthlyKrw: monthlyKrwStr(gcpUsdMonthly),
