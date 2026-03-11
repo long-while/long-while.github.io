@@ -3,6 +3,7 @@ import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState, useEffect } from 'react';
 import { validateCharacterLimit } from '@/app/utils/orderUtils';
 import { ShoppingCart } from 'lucide-react';
+import MastodonServerCalculator from '@/app/components/MastodonServerCalculator';
 
 // 견적에서 선택됨 배지 컴포넌트
 function FromCartBadge() {
@@ -39,6 +40,13 @@ export default function Step2Server() {
   const searchFromCart = isFromCart('검색');
   // 빠른 마감이 견적에서 선택되었는지
   const fastDeadlineFromCart = isFromCart('빠른마감');
+
+  // 계산기에서 검색='예'면 searchOption 강제 체크
+  useEffect(() => {
+    if (serverCalcResult?.search === 'yes' && !step2.searchOption) {
+      updateStep2({ searchOption: true });
+    }
+  }, [serverCalcResult?.search]);
 
   // 글자수 값 검증
   useEffect(() => {
@@ -128,50 +136,8 @@ export default function Step2Server() {
       {step2.applyServerInstall === 'yes' && (
         <div className="space-y-8 pt-6 border-t border-gray-200 animate-slideDown">
 
-          {/* 서버 사양 정보 (계산기 결과) */}
-          {serverCalcResult && serverCalcResult.type !== 'warn' && (
-            <div className="border border-[#ff7b00]/40 bg-[#fff5eb] rounded-lg p-4 space-y-2">
-              <p className="text-[12px] font-mono font-semibold uppercase tracking-widest text-[#ff7b00]/70">
-                서버 사양 (계산기 기준)
-              </p>
-              <div className="space-y-1">
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-[13px] text-foreground/60 shrink-0">선택 사양</span>
-                  <span className="text-[12px] font-mono text-foreground/80 text-right">
-                    {serverCalcResult.monthsLabel} / {serverCalcResult.usersLabel} / 검색 {serverCalcResult.search === 'yes' ? 'O' : 'X'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-[13px] text-foreground/60 shrink-0">호스팅</span>
-                  <span className="text-[12px] font-mono text-foreground/80 text-right">{serverCalcResult.hosting}</span>
-                </div>
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-[13px] text-foreground/60 shrink-0">마스토돈 서버</span>
-                  <span className="text-[12px] font-mono text-foreground/80 text-right">{serverCalcResult.mastodon}</span>
-                </div>
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-[13px] text-foreground/60 shrink-0">검색 서버</span>
-                  <span className="text-[12px] font-mono text-foreground/80 text-right">
-                    {serverCalcResult.elastic ?? '없음'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-[13px] text-foreground/60 shrink-0">월 서버비</span>
-                  <span className="text-[12px] font-mono text-[#ff7b00] text-right">
-                    약 {serverCalcResult.monthlyKrw}
-                    {serverCalcResult.type === 'gcp' && serverCalcResult.freeMonths > 0 &&
-                      ` (처음 ${serverCalcResult.freeMonths}개월 무료)`
-                    }
-                  </span>
-                </div>
-              </div>
-              <p className="text-[13px] text-foreground/60 pt-2 border-t border-[#ff7b00]/10 leading-[1.6]">
-                서버비는 커미션 비용과 별개로 호스팅 업체에 납부합니다.
-                사양을 변경하려면 서버 설치 커미션 페이지의 계산기에서 수정 후 다시 신청서를 작성해 주세요.
-                이전 페이지로 이동해도 입력 내용은 유지됩니다.
-              </p>
-            </div>
-          )}
+          {/* 서버 사양 계산기 */}
+          <MastodonServerCalculator compact />
 
           {/* 2) 커스텀 옵션 선택 */}
           <div className="space-y-4">
@@ -354,20 +320,29 @@ export default function Step2Server() {
 
             {/* 검색 옵션 */}
             <div className="space-y-3">
-              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.searchOption
+              <label className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 hover:shadow-sm ${step2.searchOption
                   ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                   : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                }`}>
+                } ${serverCalcResult?.search === 'yes' ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
                   checked={step2.searchOption}
-                  onChange={(e) => updateStep2({ searchOption: e.target.checked })}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  onChange={(e) => {
+                    if (serverCalcResult?.search === 'yes') return;
+                    updateStep2({ searchOption: e.target.checked });
+                  }}
+                  disabled={serverCalcResult?.search === 'yes'}
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00] disabled:cursor-not-allowed"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
                     검색 옵션 (+30,000원)
                     {searchFromCart && step2.searchOption && <FromCartBadge />}
+                    {serverCalcResult?.search === 'yes' && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-medium rounded-full ml-2">
+                        계산기에서 선택됨
+                      </span>
+                    )}
                   </div>
                   <div className="text-[13px] text-gray-600 mt-1">
                     서버에 검색 기능을 추가합니다.
