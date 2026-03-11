@@ -188,26 +188,36 @@ export default function MastodonServerCalculator() {
                     <span className="text-[11px] text-foreground/40 font-mono">{result.hosting}</span>
                   </div>
 
-                  {/* 총 서버비 레이블 + 금액 */}
-                  <div>
-                    <p className="text-[17px] font-bold text-foreground mb-0.5">
-                      {result.monthsLabel} 총 서버비
-                    </p>
-                    <span className={`text-[26px] font-bold tracking-tight leading-none
-                      ${result.totalKrw === '무료' ? 'text-green-600' : 'text-[#ff7b00]'}`}>
-                      {result.totalKrw}
-                    </span>
-                  </div>
+                  {/* 12개월 이상: 월 서버비 크게 */}
+                  {result.months >= 12 ? (
+                    <div>
+                      <p className="text-[17px] font-bold text-foreground mb-0.5">월별 서버비</p>
+                      <span className="text-[26px] font-bold tracking-tight leading-none text-[#ff7b00]">
+                        {result.monthlyKrw}
+                      </span>
+                    </div>
+                  ) : (
+                    /* 12개월 미만: 총 서버비 */
+                    <div>
+                      <p className="text-[17px] font-bold text-foreground mb-0.5">
+                        {result.monthsLabel} 총 서버비
+                      </p>
+                      <span className={`text-[26px] font-bold tracking-tight leading-none
+                        ${result.totalKrw === '무료' ? 'text-green-600' : 'text-[#ff7b00]'}`}>
+                        {result.totalKrw}
+                      </span>
+                    </div>
+                  )}
 
-                  {/* 기간 breakdown */}
-                  {result.type === 'gcp' && result.paidMonths === 0 && (
+                  {/* 기간 breakdown (12개월 미만만) */}
+                  {result.months < 12 && result.type === 'gcp' && result.paidMonths === 0 && (
                     <div className="flex items-center gap-2 text-[13px] text-green-700 font-medium">
                       <span>처음 {result.freeMonths}개월 전액 무료</span>
                       <span className="text-foreground/30">—</span>
                       <span className="text-foreground/60 font-normal">GCP 무료 크레딧 적용</span>
                     </div>
                   )}
-                  {result.type === 'gcp' && result.paidMonths > 0 && (
+                  {result.months < 12 && result.type === 'gcp' && result.paidMonths > 0 && (
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-gray-50 border border-gray-200 px-3 py-2.5">
                         <p className="text-[11px] font-semibold text-foreground mb-0.5">처음 {result.freeMonths}개월</p>
@@ -221,7 +231,7 @@ export default function MastodonServerCalculator() {
                       </div>
                     </div>
                   )}
-                  {result.type === 'vultr' && (
+                  {result.months < 12 && result.type === 'vultr' && (
                     <div className="inline-flex items-baseline gap-1.5">
                       <span className="text-[13px] text-foreground/60">월</span>
                       <span className="text-[18px] font-bold text-[#ff7b00]">{result.monthlyKrw}</span>

@@ -1,7 +1,7 @@
 // ===== 선택 옵션 =====
 
 export const MONTH_OPTIONS = [
-  { value: 3, label: '3개월 미만' },
+  { value: 3, label: '3개월 이하' },
   { value: 4, label: '4개월' },
   { value: 5, label: '5개월' },
   { value: 6, label: '6개월' },
@@ -10,13 +10,13 @@ export const MONTH_OPTIONS = [
   { value: 9, label: '9개월' },
   { value: 10, label: '10개월' },
   { value: 11, label: '11개월' },
-  { value: 12, label: '12개월' },
+  { value: 12, label: '12개월 이상' },
 ];
 
 export const USERS_OPTIONS = [
-  { value: 'u5',   label: '5인 미만' },
-  { value: 'u10',  label: '5~10인' },
-  { value: 'u30',  label: '11~30인' },
+  { value: 'u5', label: '5인 미만' },
+  { value: 'u10', label: '5~10인' },
+  { value: 'u30', label: '11~30인' },
   { value: 'u30p', label: '30인 초과' },
 ];
 
@@ -54,15 +54,15 @@ const GCP_CONFIGS: Record<string, {
 }> = {
   u10: {
     noSearch: { monthly: 54, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
-    search:   { monthly: 72, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    search: { monthly: 72, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u30: {
     noSearch: { monthly: 25, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
-    search:   { monthly: 43, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    search: { monthly: 43, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u30p: {
     noSearch: { monthly: 54, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
-    search:   { monthly: 79, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
+    search: { monthly: 79, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
   },
 };
 
@@ -73,9 +73,9 @@ const GCP_CONFIGS: Record<string, {
 // u30p noSearch $39 → 6만원  / search $61 → 9만원   (vc2-2c-4gb 검색 +$18=3만원)
 
 const VULTR_PRICES: Record<string, { noSearch: number; search: number | null }> = {
-  u5:   { noSearch: 11, search: null },
-  u10:  { noSearch: 18, search: 29 },
-  u30:  { noSearch: 22, search: 43 },
+  u5: { noSearch: 11, search: null },
+  u10: { noSearch: 18, search: 29 },
+  u30: { noSearch: 22, search: 43 },
   u30p: { noSearch: 39, search: 61 },
 };
 
@@ -88,15 +88,15 @@ const VULTR_CONFIGS: Record<string, {
   },
   u10: {
     noSearch: { mastodon: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)', elastic: null },
-    search:   { mastodon: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)', elastic: 'vc2-1c-2gb (1 vCPU, 2GB RAM, 55GB SSD)' },
+    search: { mastodon: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)', elastic: 'vc2-1c-2gb (1 vCPU, 2GB RAM, 55GB SSD)' },
   },
   u30: {
     noSearch: { mastodon: 'vhp-2c-4gb (2 vCPU, 4GB RAM)', elastic: null },
-    search:   { mastodon: 'vhp-2c-4gb (2 vCPU, 4GB RAM)', elastic: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)' },
+    search: { mastodon: 'vhp-2c-4gb (2 vCPU, 4GB RAM)', elastic: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)' },
   },
   u30p: {
     noSearch: { mastodon: 'vc2-4c-8gb (4 vCPU, 8GB RAM, 160GB SSD)', elastic: null },
-    search:   { mastodon: 'vc2-4c-8gb (4 vCPU, 8GB RAM, 160GB SSD)', elastic: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)' },
+    search: { mastodon: 'vc2-4c-8gb (4 vCPU, 8GB RAM, 160GB SSD)', elastic: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)' },
   },
 };
 
