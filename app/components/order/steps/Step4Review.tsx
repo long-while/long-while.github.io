@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
+import { useEstimate } from '@/app/contexts/EstimateContext';
 import { calculateTotalEstimate, generateCopyText } from '@/app/utils/orderUtils';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { PRICING_CONFIG } from '@/app/constants/form';
@@ -9,6 +10,7 @@ const CREPE_URL = 'https://crepe.cm/@longwhile/lw5w0ofg';
 
 export default function Step4Review() {
   const { formData, setCurrentStep } = useOrder();
+  const { serverCalcResult } = useEstimate();
   const { step1, step2, step3 } = formData;
   const [policyConfirmed, setPolicyConfirmed] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -69,7 +71,7 @@ export default function Step4Review() {
     setIsCopying(true);
     setError(null);
 
-    const copyText = generateCopyText(formData, estimate);
+    const copyText = generateCopyText(formData, estimate, serverCalcResult);
     const result = await copyToClipboard(copyText);
 
     if (result.success) {
