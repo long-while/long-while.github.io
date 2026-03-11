@@ -20,63 +20,54 @@ export const USERS_OPTIONS = [
   { value: 'u30p', label: '30인 초과' },
 ];
 
-// ===== USD → KRW 변환 =====
-
-// x1400 + 5000 버퍼, 천원 단위 반올림
-function toKrw(usd: number): number {
-  return Math.round((usd * 1400 + 5000) / 1000) * 1000;
-}
+// ===== KRW 포맷 =====
 
 function formatKrw(krw: number): string {
+  if (krw === 0) return '무료';
   const man = krw / 10000;
   if (Number.isInteger(man)) return `${man}만원`;
   return `${man.toFixed(1)}만원`;
 }
 
-function monthlyKrwStr(usd: number): string {
-  return formatKrw(toKrw(usd));
-}
-
-function totalKrwStr(totalUsd: number): string {
-  if (totalUsd === 0) return '무료';
-  return formatKrw(toKrw(totalUsd));
-}
-
-// ===== GCP us-central1 구성 =====
-// toKrw(usd) = round((usd*1400+5000)/1000)*1000
-// u10  noSearch $54 → 8.1만원 / search $72 → 10.6만원 (e2-small 검색 +$18)
-// u30  noSearch $25 → 4만원   / search $43 → 6.5만원  (e2-small 검색 +$18)
-// u30p noSearch $54 → 8.1만원 / search $79 → 11.6만원 (e2-medium 검색 +$25)
+// ===== GCP us-central1 구성 (monthly: KRW) =====
+// u5   noSearch 3만원  (e2-small)
+// u10  noSearch 3만원  (e2-small)   / search 6만원  (e2-small + e2-small 검색)
+// u30  noSearch 4만원  (e2-medium)  / search 7만원  (e2-medium + e2-small 검색)
+// u30p noSearch 8만원  (e2-standard-2) / search 12만원 (e2-standard-2 + e2-medium 검색)
 
 const GCP_CONFIGS: Record<string, {
   noSearch: { monthly: number; mastodon: string; elastic: string | null };
-  search: { monthly: number; mastodon: string; elastic: string | null };
+  search: { monthly: number; mastodon: string; elastic: string | null } | null;
 }> = {
+  u5: {
+    noSearch: { monthly: 30000, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: null },
+    search: null,
+  },
   u10: {
-    noSearch: { monthly: 54, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
-    search: { monthly: 72, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    noSearch: { monthly: 30000, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: null },
+    search: { monthly: 60000, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u30: {
-    noSearch: { monthly: 25, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
-    search: { monthly: 43, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    noSearch: { monthly: 40000, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
+    search: { monthly: 70000, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u30p: {
-    noSearch: { monthly: 54, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
-    search: { monthly: 79, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
+    noSearch: { monthly: 80000, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
+    search: { monthly: 120000, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
   },
 };
 
-// ===== Vultr 서울 구성 =====
-// u5   noSearch $11 → 2만원
-// u10  noSearch $18 → 3만원  / search $29 → 4.6만원 (vc2-1c-2gb 검색 +$7=1.5만원)
-// u30  noSearch $22 → 3.6만원 / search $43 → 6.5만원 (vc2-2c-4gb 검색 +$18=3만원)
-// u30p noSearch $39 → 6만원  / search $61 → 9만원   (vc2-2c-4gb 검색 +$18=3만원)
+// ===== Vultr 서울 구성 (monthly: KRW) =====
+// u5   noSearch 2만원  (vhf-1c-2gb)
+// u10  noSearch 3만원  (vc2-2c-4gb)  / search 4.5만원 (vc2-2c-4gb + vc2-1c-2gb 검색 1.5만원)
+// u30  noSearch 3.5만원 (vhp-2c-4gb) / search 6.5만원  (vhp-2c-4gb + vc2-2c-4gb 검색 3만원)
+// u30p noSearch 6만원  (vc2-4c-8gb)  / search 9만원    (vc2-4c-8gb + vc2-2c-4gb 검색 3만원)
 
 const VULTR_PRICES: Record<string, { noSearch: number; search: number | null }> = {
-  u5: { noSearch: 11, search: null },
-  u10: { noSearch: 18, search: 29 },
-  u30: { noSearch: 22, search: 43 },
-  u30p: { noSearch: 39, search: 61 },
+  u5:   { noSearch: 20000, search: null },
+  u10:  { noSearch: 30000, search: 45000 },
+  u30:  { noSearch: 35000, search: 65000 },
+  u30p: { noSearch: 60000, search: 90000 },
 };
 
 const VULTR_CONFIGS: Record<string, {
@@ -84,19 +75,19 @@ const VULTR_CONFIGS: Record<string, {
   search?: { mastodon: string; elastic: string | null };
 }> = {
   u5: {
-    noSearch: { mastodon: 'vc2-1c-2gb (1 vCPU, 2GB RAM, 55GB SSD)', elastic: null },
+    noSearch: { mastodon: 'vhf-1c-2gb (1 vCPU, 2GB RAM)', elastic: null },
   },
   u10: {
     noSearch: { mastodon: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)', elastic: null },
-    search: { mastodon: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)', elastic: 'vc2-1c-2gb (1 vCPU, 2GB RAM, 55GB SSD)' },
+    search:   { mastodon: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)', elastic: 'vc2-1c-2gb (1 vCPU, 2GB RAM, 55GB SSD)' },
   },
   u30: {
     noSearch: { mastodon: 'vhp-2c-4gb (2 vCPU, 4GB RAM)', elastic: null },
-    search: { mastodon: 'vhp-2c-4gb (2 vCPU, 4GB RAM)', elastic: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)' },
+    search:   { mastodon: 'vhp-2c-4gb (2 vCPU, 4GB RAM)', elastic: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)' },
   },
   u30p: {
     noSearch: { mastodon: 'vc2-4c-8gb (4 vCPU, 8GB RAM, 160GB SSD)', elastic: null },
-    search: { mastodon: 'vc2-4c-8gb (4 vCPU, 8GB RAM, 160GB SSD)', elastic: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)' },
+    search:   { mastodon: 'vc2-4c-8gb (4 vCPU, 8GB RAM, 160GB SSD)', elastic: 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)' },
   },
 };
 
@@ -146,24 +137,7 @@ export function getServerCalcResult(
     };
   }
 
-  // 5인 미만: Vultr만
-  if (usersKey === 'u5') {
-    const usdMonthly = VULTR_PRICES.u5.noSearch;
-    const cfg = VULTR_CONFIGS.u5.noSearch;
-    return {
-      type: 'vultr',
-      months, monthsLabel, usersKey, usersLabel, search,
-      hosting: 'Vultr (서울)',
-      mastodon: cfg.mastodon,
-      elastic: null,
-      monthlyKrw: monthlyKrwStr(usdMonthly),
-      totalKrw: totalKrwStr(usdMonthly * months),
-      freeMonths: 0, paidMonths: months,
-      warnNotes: [],
-    };
-  }
-
-  const vultrUsdMonthly = hasSearch ? VULTR_PRICES[usersKey].search! : VULTR_PRICES[usersKey].noSearch;
+  const vultrMonthlyKrw = hasSearch ? VULTR_PRICES[usersKey].search! : VULTR_PRICES[usersKey].noSearch;
   const vultrCfg = hasSearch
     ? (VULTR_CONFIGS[usersKey].search ?? VULTR_CONFIGS[usersKey].noSearch)
     : VULTR_CONFIGS[usersKey].noSearch;
@@ -176,30 +150,47 @@ export function getServerCalcResult(
       hosting: 'Vultr (서울)',
       mastodon: vultrCfg.mastodon,
       elastic: vultrCfg.elastic,
-      monthlyKrw: monthlyKrwStr(vultrUsdMonthly),
-      totalKrw: totalKrwStr(vultrUsdMonthly * months),
+      monthlyKrw: formatKrw(vultrMonthlyKrw),
+      totalKrw: formatKrw(vultrMonthlyKrw * months),
       freeMonths: 0, paidMonths: months,
       warnNotes: [],
     };
   }
 
-  // 나머지: GCP vs Vultr 비교
-  const gcpCfg = hasSearch ? GCP_CONFIGS[usersKey].search : GCP_CONFIGS[usersKey].noSearch;
-  const gcpUsdMonthly = gcpCfg.monthly;
+  // GCP vs Vultr 비교
+  const gcpEntry = GCP_CONFIGS[usersKey];
+  const gcpCfg = hasSearch ? gcpEntry.search : gcpEntry.noSearch;
+
+  // GCP 설정이 없는 경우 Vultr 강제 (u5+search는 위에서 처리됨)
+  if (!gcpCfg) {
+    return {
+      type: 'vultr',
+      months, monthsLabel, usersKey, usersLabel, search,
+      hosting: 'Vultr (서울)',
+      mastodon: vultrCfg.mastodon,
+      elastic: vultrCfg.elastic,
+      monthlyKrw: formatKrw(vultrMonthlyKrw),
+      totalKrw: formatKrw(vultrMonthlyKrw * months),
+      freeMonths: 0, paidMonths: months,
+      warnNotes: [],
+    };
+  }
+
+  const gcpMonthlyKrw = gcpCfg.monthly;
   const paidMonths = Math.max(0, months - 3);
-  const gcpUsdTotal = paidMonths * gcpUsdMonthly;
-  const vultrUsdTotal = months * vultrUsdMonthly;
+  const gcpKrwTotal = paidMonths * gcpMonthlyKrw;
+  const vultrKrwTotal = months * vultrMonthlyKrw;
 
   // GCP가 유리한 경우
-  if (vultrUsdTotal >= gcpUsdTotal) {
+  if (vultrKrwTotal >= gcpKrwTotal) {
     return {
       type: 'gcp',
       months, monthsLabel, usersKey, usersLabel, search,
       hosting: 'GCP (us-central1)',
       mastodon: gcpCfg.mastodon,
       elastic: gcpCfg.elastic,
-      monthlyKrw: monthlyKrwStr(gcpUsdMonthly),
-      totalKrw: totalKrwStr(gcpUsdTotal),
+      monthlyKrw: formatKrw(gcpMonthlyKrw),
+      totalKrw: formatKrw(gcpKrwTotal),
       freeMonths: Math.min(months, 3),
       paidMonths,
       warnNotes: [],
@@ -213,8 +204,8 @@ export function getServerCalcResult(
     hosting: 'Vultr (서울)',
     mastodon: vultrCfg.mastodon,
     elastic: vultrCfg.elastic,
-    monthlyKrw: monthlyKrwStr(vultrUsdMonthly),
-    totalKrw: totalKrwStr(vultrUsdTotal),
+    monthlyKrw: formatKrw(vultrMonthlyKrw),
+    totalKrw: formatKrw(vultrKrwTotal),
     freeMonths: 0,
     paidMonths: months,
     warnNotes: [],

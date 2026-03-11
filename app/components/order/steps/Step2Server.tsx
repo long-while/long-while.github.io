@@ -350,13 +350,6 @@ export default function Step2Server() {
                 </div>
               </label>
 
-              {step2.searchOption && (
-                <div className="ml-7 p-4 bg-[#fff1e3] border border-amber-400 rounded-lg animate-slideDown">
-                  <p className="text-[13px] text-amber-800 leading-[1.8]">
-                    검색 기능을 활성화하기 위해서는 서버비가 월 $40 정도 소모됩니다. 마스토돈 서버에 서버비 50달러, 검색 기능에 서버비 40달러가 발생하므로 한달 서버비는 약 90달러 (약 13만원) 정도입니다. GCP는 월 300달러의 무료 크레딧을 제공하므로 3개월까진 무리 없이 사용할 수 있습니다. 다만, 3개월 이상 서버를 유지할 계획이 있으시다면 검색 기능은 설치하지 않는 것을 추천드립니다.
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* 빠른 마감 */}
