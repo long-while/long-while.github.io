@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from '@/app/components/ui/select';
 
-export default function MastodonServerCalculator() {
+export default function MastodonServerCalculator({ compact = false }: { compact?: boolean }) {
   const { serverCalcResult, setServerCalcResult } = useEstimate();
 
   const [months, setMonths] = useState<string>(
@@ -45,16 +45,18 @@ export default function MastodonServerCalculator() {
   }
 
   return (
-    <section className="py-10">
-      <div className="mb-10 border-b border-border pb-4">
-        <h2 className="text-[29px] tracking-[-0.01em] font-semibold">서버비 미리보기</h2>
-        <p className="text-[14px] text-foreground/60 mt-2 leading-[1.7]">
-          서버 설치를 신청하기 전, 예상 서버비와 설치 사양을 먼저 확인해보세요.<br />
-          마스토돈 서버 설치 및 테마 커미션 = 인테리어 비용,<br />
-          서버비 = 집주인에게 납부하는 월세라고 생각해주시면 됩니다.<br />
-          커뮤니티 운영 기간과 규모에 따라 지출하시는 서버비가 달라집니다.
-        </p>
-      </div>
+    <section className={compact ? '' : 'py-10'}>
+      {!compact && (
+        <div className="mb-10 border-b border-border pb-4">
+          <h2 className="text-[29px] tracking-[-0.01em] font-semibold">서버비 미리보기</h2>
+          <p className="text-[14px] text-foreground/60 mt-2 leading-[1.7]">
+            서버 설치를 신청하기 전, 예상 서버비와 설치 사양을 먼저 확인해보세요.<br />
+            마스토돈 서버 설치 및 테마 커미션 = 인테리어 비용,<br />
+            서버비 = 집주인에게 납부하는 월세라고 생각해주시면 됩니다.<br />
+            커뮤니티 운영 기간과 규모에 따라 지출하시는 서버비가 달라집니다.
+          </p>
+        </div>
+      )}
 
       {/* 선택 폼: 가로폭 제한 */}
       <div className="max-w-md space-y-5">
@@ -267,7 +269,7 @@ export default function MastodonServerCalculator() {
         )}
 
         {/* 서버비 지불 방식 */}
-        {isAllSelected && result && result.type !== 'warn' && (
+        {!compact && isAllSelected && result && result.type !== 'warn' && (
           <div className="border border-border bg-gray-50/50 px-4 py-4 space-y-1.5">
             <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">서버비 지불 방식</p>
             <p className="text-[13px] text-foreground/60 leading-[1.75]">
@@ -290,16 +292,18 @@ export default function MastodonServerCalculator() {
         )}
 
         {/* 규모와 예산 */}
-        <div className="border border-border bg-gray-50/50 px-4 py-4 space-y-1.5">
-          <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">규모와 예산</p>
-          <p className="text-[13px] text-foreground/60 leading-[1.75]">
-            사양과 서버비는 계단처럼 증가하기 때문에, 11인 규모와 30인 규모가 동일한 사양의 서버를 사용하게 될 수도 있습니다.
-            이 경우, 11인 서버는 널널하지만 30인 서버는 다소 렉이 발생할 수 있습니다.
-            좁은 공간에 많은 사람이 들어와 있으니까요.
-            이때, 서버비 증가를 감안하시고 더 넓은 서버를 선택하시거나,
-            렉을 감안하고 예산에 맞추어 사양이 낮은 서버를 설치할 수도 있습니다.
-          </p>
-        </div>
+        {!compact && (
+          <div className="border border-border bg-gray-50/50 px-4 py-4 space-y-1.5">
+            <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">규모와 예산</p>
+            <p className="text-[13px] text-foreground/60 leading-[1.75]">
+              사양과 서버비는 계단처럼 증가하기 때문에, 11인 규모와 30인 규모가 동일한 사양의 서버를 사용하게 될 수도 있습니다.
+              이 경우, 11인 서버는 널널하지만 30인 서버는 다소 렉이 발생할 수 있습니다.
+              좁은 공간에 많은 사람이 들어와 있으니까요.
+              이때, 서버비 증가를 감안하시고 더 넓은 서버를 선택하시거나,
+              렉을 감안하고 예산에 맞추어 사양이 낮은 서버를 설치할 수도 있습니다.
+            </p>
+          </div>
+        )}
 
       </div>
     </section>
