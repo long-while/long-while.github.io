@@ -1,6 +1,7 @@
 import type { OrderFormData, PriceEstimate, ValidationError, Step2Data, Step3Data } from '@/app/types/order';
 import { DATE_FORMAT_REGEX, GMAIL_REGEX, INPUT_LIMITS } from '@/app/types/order';
 import { PRICING_CONFIG, FORM_CONFIG } from '@/app/constants/form';
+import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 /**
  * 입력값 정제 (XSS 방지, 길이 제한)
@@ -423,7 +424,7 @@ function formatDateForDisplay(date: string): string {
 /**
  * 최종 복사용 텍스트 생성
  */
-export function generateCopyText(data: OrderFormData, estimate: PriceEstimate): string {
+export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, serverCalcResult?: ServerCalcResult | null): string {
   const { step1, step2, step3 } = data;
   const { server, bot } = PRICING_CONFIG;
   const divider = '==================\n\n';
@@ -447,7 +448,27 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate): 
   // 서버 설치 옵션
   if (step2.applyServerInstall === 'yes') {
     text += '서버 설치\n';
-    
+
+    // 서버 사양 (계산기 결과)
+    if (serverCalcResult && serverCalcResult.type !== 'warn') {
+      text += '\n서버 사양\n\n';
+      text += `${serverCalcResult.monthsLabel} / ${serverCalcResult.usersLabel} / 검색 ${serverCalcResult.search === 'yes' ? 'O' : 'X'}\n\n`;
+      // 마스토돈 사양: 괄호 앞 모델명만 추출 (e.g. "e2-medium (2 vCPU, 4GB RAM)" → "e2-medium")
+      const mastodonModel = serverCalcResult.mastodon?.split(' (')[0] ?? serverCalcResult.mastodon ?? '';
+      text += `마스토돈: ${mastodonModel}\n`;
+      const elasticModel = serverCalcResult.elastic
+        ? serverCalcResult.elastic.split(' (')[0]
+        : '없음';
+      text += `검색: ${elasticModel}\n\n`;
+      if (serverCalcResult.type === 'gcp' && serverCalcResult.paidMonths === 0) {
+        text += `${serverCalcResult.freeMonths}개월까지 무료, 서버비 발생 없음\n\n`;
+      } else if (serverCalcResult.type === 'gcp' && serverCalcResult.paidMonths > 0) {
+        text += `처음 ${serverCalcResult.freeMonths}개월 무료,\n이후에도 서버 유지 시 월 약 ${serverCalcResult.monthlyKrw} 지출\n\n`;
+      } else {
+        text += `월 약 ${serverCalcResult.monthlyKrw} 지출\n\n`;
+      }
+    }
+
     if (step2.additionalOption) {
       const optionNames: Record<string, string> = {
         logo: '로고 변경',

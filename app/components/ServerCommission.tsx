@@ -1,6 +1,7 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { Plus, Trash2, AlertCircle, Check } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
+import MastodonServerCalculator from '@/app/components/MastodonServerCalculator';
 
 interface ServerCommissionProps {
   onBack: () => void;
@@ -123,6 +124,9 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           </h1>
         </div>
 
+        {/* 서버비 계산기 */}
+        <MastodonServerCalculator />
+
         {/* 공지 */}
         <section className="py-10">
           <div className="mb-10 border-b border-border pb-4">
@@ -150,7 +154,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
         </section>
 
         {/* 기본 옵션 */}
-        <section className="py-10">
+        <section id="server-install-section" className="py-10">
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">기본 옵션</h2>
           </div>

@@ -1,4 +1,5 @@
 import { useOrder } from '@/app/contexts/OrderContext';
+import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState, useEffect } from 'react';
 import { validateCharacterLimit } from '@/app/utils/orderUtils';
 import { ShoppingCart } from 'lucide-react';
@@ -15,6 +16,7 @@ function FromCartBadge() {
 
 export default function Step2Server() {
   const { formData, updateStep2, cartSyncState } = useOrder();
+  const { serverCalcResult } = useEstimate();
   const step2 = formData.step2;
   const [characterLimitError, setCharacterLimitError] = useState<string | null>(null);
 
@@ -125,6 +127,52 @@ export default function Step2Server() {
       {/* 서버 설치 "예" 선택 시에만 표시되는 옵션들 */}
       {step2.applyServerInstall === 'yes' && (
         <div className="space-y-8 pt-6 border-t border-gray-200 animate-slideDown">
+
+          {/* 서버 사양 정보 (계산기 결과) */}
+          {serverCalcResult && serverCalcResult.type !== 'warn' && (
+            <div className="border border-[#ff7b00]/40 bg-[#fff5eb] rounded-lg p-4 space-y-2">
+              <p className="text-[12px] font-mono font-semibold uppercase tracking-widest text-[#ff7b00]/70">
+                서버 사양 (계산기 기준)
+              </p>
+              <div className="space-y-1">
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-[13px] text-foreground/60 shrink-0">선택 사양</span>
+                  <span className="text-[12px] font-mono text-foreground/80 text-right">
+                    {serverCalcResult.monthsLabel} / {serverCalcResult.usersLabel} / 검색 {serverCalcResult.search === 'yes' ? 'O' : 'X'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-[13px] text-foreground/60 shrink-0">호스팅</span>
+                  <span className="text-[12px] font-mono text-foreground/80 text-right">{serverCalcResult.hosting}</span>
+                </div>
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-[13px] text-foreground/60 shrink-0">마스토돈 서버</span>
+                  <span className="text-[12px] font-mono text-foreground/80 text-right">{serverCalcResult.mastodon}</span>
+                </div>
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-[13px] text-foreground/60 shrink-0">검색 서버</span>
+                  <span className="text-[12px] font-mono text-foreground/80 text-right">
+                    {serverCalcResult.elastic ?? '없음'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-[13px] text-foreground/60 shrink-0">월 서버비</span>
+                  <span className="text-[12px] font-mono text-[#ff7b00] text-right">
+                    약 {serverCalcResult.monthlyKrw}
+                    {serverCalcResult.type === 'gcp' && serverCalcResult.freeMonths > 0 &&
+                      ` (처음 ${serverCalcResult.freeMonths}개월 무료)`
+                    }
+                  </span>
+                </div>
+              </div>
+              <p className="text-[13px] text-foreground/60 pt-2 border-t border-[#ff7b00]/10 leading-[1.6]">
+                서버비는 커미션 비용과 별개로 호스팅 업체에 납부합니다.
+                사양을 변경하려면 서버 설치 커미션 페이지의 계산기에서 수정 후 다시 신청서를 작성해 주세요.
+                이전 페이지로 이동해도 입력 내용은 유지됩니다.
+              </p>
+            </div>
+          )}
+
           {/* 2) 커스텀 옵션 선택 */}
           <div className="space-y-4">
             <div>

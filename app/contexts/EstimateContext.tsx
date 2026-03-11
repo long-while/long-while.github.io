@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { EstimateMappingKey } from '@/app/types/estimate-mapping';
 import { ESTIMATE_NAME_TO_MAPPING_KEY } from '@/app/types/estimate-mapping';
 import { saveSyncState, clearSyncState } from '@/app/utils/cartOrderSync';
+import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 export interface EstimateItem {
   id: string;
@@ -19,11 +20,14 @@ interface EstimateContextType {
   clearItems: () => void;
   getTotalPrice: () => number;
   proceedToOrder: () => void;
+  serverCalcResult: ServerCalcResult | null;
+  setServerCalcResult: (result: ServerCalcResult | null) => void;
 }
 
 const EstimateContext = createContext<EstimateContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'mas_commission_estimate';
+const SERVER_CALC_KEY = 'mas_commission_server_calc';
 
 // localStorage에서 견적 데이터 불러오기
 function loadEstimateFromStorage(): EstimateItem[] {
@@ -47,8 +51,53 @@ function saveEstimateToStorage(items: EstimateItem[]): void {
   }
 }
 
+function isValidServerCalcResult(obj: unknown): obj is ServerCalcResult {
+  if (!obj || typeof obj !== 'object') return false;
+  const r = obj as Record<string, unknown>;
+  return (
+    typeof r.type === 'string' &&
+    ['gcp', 'vultr', 'warn'].includes(r.type) &&
+    typeof r.months === 'number' &&
+    typeof r.usersKey === 'string' &&
+    typeof r.search === 'string'
+  );
+}
+
+function loadServerCalcFromStorage(): ServerCalcResult | null {
+  try {
+    const stored = localStorage.getItem(SERVER_CALC_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (isValidServerCalcResult(parsed)) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function saveServerCalcToStorage(result: ServerCalcResult | null): void {
+  try {
+    if (result) {
+      localStorage.setItem(SERVER_CALC_KEY, JSON.stringify(result));
+    } else {
+      localStorage.removeItem(SERVER_CALC_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function EstimateProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<EstimateItem[]>(() => loadEstimateFromStorage());
+  const [serverCalcResult, setServerCalcResultState] = useState<ServerCalcResult | null>(
+    () => loadServerCalcFromStorage()
+  );
+
+  const setServerCalcResult = useCallback((result: ServerCalcResult | null) => {
+    setServerCalcResultState(result);
+    saveServerCalcToStorage(result);
+  }, []);
 
   const addItem = (item: Omit<EstimateItem, 'id'>) => {
     // mappingKey가 없으면 이름으로 자동 매핑
@@ -92,7 +141,7 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
 
   return (
     <EstimateContext.Provider
-      value={{ items, addItem, removeItem, clearItems, getTotalPrice, proceedToOrder }}
+      value={{ items, addItem, removeItem, clearItems, getTotalPrice, proceedToOrder, serverCalcResult, setServerCalcResult }}
     >
       {children}
     </EstimateContext.Provider>
