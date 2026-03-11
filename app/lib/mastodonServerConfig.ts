@@ -15,9 +15,9 @@ export const MONTH_OPTIONS = [
 
 export const USERS_OPTIONS = [
   { value: 'u5',   label: '5인 미만' },
-  { value: 'u10',  label: '6~10인 (월 8만원~)' },
-  { value: 'u30',  label: '11~30인 (월 4만원~)' },
-  { value: 'u30p', label: '30인 초과 (월 8만원~)' },
+  { value: 'u10',  label: '5~10인' },
+  { value: 'u30',  label: '11~30인' },
+  { value: 'u30p', label: '30인 초과' },
 ];
 
 // ===== USD → KRW 변환 =====
