@@ -35,10 +35,7 @@ export default function MastodonServerCalculator() {
   const handleSetSearchNo = () => setSearch('no');
 
   function getHostingLabel(r: ServerCalcResult & { type: 'gcp' | 'vultr' }) {
-    if (r.type === 'gcp') {
-      return r.paidMonths === 0 ? '처음 3개월 무료' : '무료 크레딧 3개월';
-    }
-    return 'Vultr 서울';
+    return r.type === 'gcp' ? '구글 클라우드 플랫폼' : 'Vultr';
   }
 
   function getHostingBadgeClass(r: ServerCalcResult & { type: 'gcp' | 'vultr' }) {
@@ -185,7 +182,6 @@ export default function MastodonServerCalculator() {
                     <span className={`text-[11px] font-bold font-mono px-2 py-0.5 ${getHostingBadgeClass(result as ServerCalcResult & { type: 'gcp' | 'vultr' })}`}>
                       {getHostingLabel(result as ServerCalcResult & { type: 'gcp' | 'vultr' })}
                     </span>
-                    <span className="text-[11px] text-foreground/40 font-mono">{result.hosting}</span>
                   </div>
 
                   {/* 12개월 이상: 월 서버비 크게 */}
@@ -264,36 +260,38 @@ export default function MastodonServerCalculator() {
                     </div>
                   </div>
 
-                  {/* 비용 안내 문구 */}
-                  {result.type === 'gcp' && result.paidMonths > 0 && (
-                    <p className="text-[13px] text-foreground/60 pt-2 border-t border-gray-100 leading-[1.7]">
-                      첫 3개월은 구글에서 제공하는 무료 크레딧을 소모하며, 이후 매달 약 {result.monthlyKrw}이 지출됩니다.<br />
-                      서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.
-                    </p>
-                  )}
-                  {result.type === 'gcp' && result.paidMonths === 0 && (
-                    <p className="text-[13px] text-foreground/60 pt-2 border-t border-gray-100 leading-[1.7]">
-                      서버 설치 후 3개월간은 구글에서 제공하는 무료 크레딧을 소모하여 서버비 없이 사용하실 수 있습니다.
-                      애프터 등을 위해 서버를 3개월 이상 유지하실 경우, 사양을 낮추고 월 3만원 정도의 금액으로 서버를 유지해 드립니다.<br /><br />
-                      무료 체험이 끝나도 자동 결제가 진행되지 않습니다. 만약 유료 플랜으로 전환하여 3개월 이상 서버를 사용하실 경우, 서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.
-                    </p>
-                  )}
-                  {result.type === 'vultr' && (
-                    <p className="text-[13px] text-foreground/60 pt-2 border-t border-gray-100 leading-[1.7]">
-                      장기/소규모 서버의 경우 서버비 절약을 위해 구글이 아닌 Vultr라는 호스팅 업체를 통해 서버 컴퓨터를 대여하게 됩니다.
-                      3개월 무료 크레딧을 지급하지 않는 대신, 월 서버비가 더 적습니다.<br /><br />
-                      이때 발생하는 서버 비용은 커미션주가 아닌, 호스팅 업체에 가입 시 등록하시는 결제수단으로 월초에 자동 결제됩니다.
-                    </p>
-                  )}
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* 사양 계단식 안내 */}
+        {/* 서버비 지불 방식 */}
+        {isAllSelected && result && result.type !== 'warn' && (
+          <div className="border border-border bg-gray-50/50 px-4 py-4 space-y-1.5">
+            <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">서버비 지불 방식</p>
+            <p className="text-[13px] text-foreground/60 leading-[1.75]">
+              {result.type === 'gcp' && result.paidMonths > 0 && (
+                <>첫 3개월은 구글에서 제공하는 무료 크레딧을 소모하며, 이후 매달 약 {result.monthlyKrw}이 지출됩니다.<br />
+                서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.</>
+              )}
+              {result.type === 'gcp' && result.paidMonths === 0 && (
+                <>서버 설치 후 3개월간은 구글에서 제공하는 무료 크레딧을 소모하여 서버비 없이 사용하실 수 있습니다.
+                애프터 등을 위해 서버를 3개월 이상 유지하실 경우, 사양을 낮추고 월 3만원 정도의 금액으로 서버를 유지해 드립니다.<br /><br />
+                무료 체험이 끝나도 자동 결제가 진행되지 않습니다. 만약 유료 플랜으로 전환하여 3개월 이상 서버를 사용하실 경우, 서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.</>
+              )}
+              {result.type === 'vultr' && (
+                <>장기/소규모 서버의 경우 서버비 절약을 위해 구글이 아닌 Vultr라는 호스팅 업체를 통해 서버 컴퓨터를 대여하게 됩니다.
+                3개월 무료 크레딧을 지급하지 않는 대신, 월 서버비가 더 적습니다.<br /><br />
+                이때 발생하는 서버 비용은 커미션주가 아닌, 호스팅 업체에 가입 시 등록하시는 결제수단으로 월초에 자동 결제됩니다.</>
+              )}
+            </p>
+          </div>
+        )}
+
+        {/* 규모와 예산 */}
         <div className="border border-border bg-gray-50/50 px-4 py-4 space-y-1.5">
-          <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">참고사항</p>
+          <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">규모와 예산</p>
           <p className="text-[13px] text-foreground/60 leading-[1.75]">
             사양과 서버비는 계단처럼 증가하기 때문에, 11인 규모와 30인 규모가 동일한 사양의 서버를 사용하게 될 수도 있습니다.
             이 경우, 11인 서버는 널널하지만 30인 서버는 다소 렉이 발생할 수 있습니다.
