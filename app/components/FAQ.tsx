@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import { Search, X } from 'lucide-react';
 
 export default function FAQ() {
@@ -27,7 +27,7 @@ export default function FAQ() {
     },
     {
       question: "장기 소규모 서버를 유지하고 싶어요. 서버비는 어떻게 되나요?",
-      answer: "규모에 따라 월 1~2만원 정도를 생각해 주세요. 마스토돈은 중국집입니다. 중국집을 운영하기 위해서는 건물주에게 자리를 임대해야 하죠. 손님을 받을 곳이 필요하니까요. 우리는 건물주(업체)에게 임대료(서버비)를 지불하고 24시간 사용 가능한 방(서버 컴퓨터)을 한 자리 빌릴 겁니다. 보통은 3개월 무료 방을 주는 GCP라는 건물주에게 방을 한 자리 빌리는데, 장기커는 무료 이벤트는 없어도 대신 매달 임대료가 싼 곳을 쓰는 거죠."
+      answer: "서버를 사용하는 인원수에 따라 달라지지만, 5인 미만의 장기 소규모 서버는 월 2만원 정도가 지출됩니다. 마스토돈은 중국집입니다. 중국집을 운영하기 위해서는 건물주에게 자리를 임대해야 하죠. 손님을 받을 곳이 필요하니까요. 우리는 건물주(업체)에게 임대료(서버비)를 지불하고 24시간 사용 가능한 방(서버 컴퓨터)을 한 자리 빌릴 겁니다. 보통은 3개월 무료 방을 주는 GCP라는 건물주에게 방을 한 자리 빌리는데, 장기커는 무료 이벤트는 없어도 대신 매달 임대료가 싼 곳을 쓰는 거죠."
     },
     {
       question: "중국집을 매달, 30일, 24시간 사용하지 않는데도 이만큼의 돈을 내야 해요?",
@@ -51,7 +51,16 @@ export default function FAQ() {
     },
     {
       question: "기본 세팅 서버 사양은 어떻게 되나요?",
-      answer: "GCP 설치 시, 기본 사양은 20~30인이 스토리 진행 시간대에 접속했을 때 진행이 가능한 정도로 세팅해드립니다. (서버비 월 8만원, 무료체험 진행 시 첫 3달 서버비 무료) 장기 서버를 위해 Vultr로 설치 시, 별도의 요청이 없었다면 5인이 스토리 진행 시간대에 접속했을 때 약간의 렉이 걸리더라도 진행 가능할 정도로 세팅해드립니다. (서버비 월 2~3만원)"
+      answer: "서버 사용 기간과 인원수에 따라 달라집니다. 서버비와 사양 확인을 위해서는 서버 커미션 페이지를 방문해 주세요.",
+      answerNode: (
+        <>
+          서버 사용 기간과 인원수에 따라 달라집니다. 서버비와 사양 확인을 위해서는{' '}
+          <a href="#server" className="text-[#ff7b00] font-semibold hover:underline">
+            서버 커미션 페이지
+          </a>
+          를 방문해 주세요.
+        </>
+      ),
     },
     {
       question: "렉이 걸리면 어떻게 해야 하나요?",
@@ -133,7 +142,7 @@ export default function FAQ() {
                     {highlightText(faq.question, searchQuery)}
                   </h3>
                   <p className="text-[16px] leading-[1.8] text-foreground/70">
-                    {highlightText(faq.answer, searchQuery)}
+                    {'answerNode' in faq ? faq.answerNode as ReactNode : highlightText(faq.answer, searchQuery)}
                   </p>
                 </div>
               </div>
