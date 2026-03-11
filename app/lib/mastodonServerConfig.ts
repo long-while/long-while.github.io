@@ -54,29 +54,29 @@ const GCP_CONFIGS: Record<string, {
   search: { monthly: number; mastodon: string; elastic: string | null };
 }> = {
   u10: {
-    // noSearch: $18 → 3만원 / search: $32 → 5만원
+    // noSearch: $18 → 3만원 / search: $36 → 5.5만원 (검색엔진 e2-small +$18)
     noSearch: { monthly: 18, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: null },
-    search: { monthly: 32, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: 'e2-micro (2 vCPU, 1GB RAM)' },
+    search: { monthly: 36, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u15: {
-    // noSearch: $18 → 3만원 / search: $32 → 5만원
-    noSearch: { monthly: 18, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: null },
-    search: { monthly: 32, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: 'e2-micro (2 vCPU, 1GB RAM)' },
+    // noSearch: $25 → 4만원 / search: $43 → 6.5만원 (검색엔진 e2-small +$18)
+    noSearch: { monthly: 25, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
+    search: { monthly: 43, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u20: {
-    // noSearch: $25 → 4만원 / search: $39 → 6만원
+    // noSearch: $25 → 4만원 / search: $43 → 6.5만원 (검색엔진 e2-small +$18)
     noSearch: { monthly: 25, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
-    search: { monthly: 39, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    search: { monthly: 43, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
   },
   u30: {
-    // noSearch: $32 → 5만원 / search: $47 → 7.1만원
-    noSearch: { monthly: 32, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
-    search: { monthly: 47, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    // noSearch: $54 → 8.1만원 / search: $79 → 11.6만원 (검색엔진 e2-medium +$25)
+    noSearch: { monthly: 54, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
+    search: { monthly: 79, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
   },
   u40: {
-    // noSearch: $54 → 8.1만원 / search: $68 → 10만원
-    noSearch: { monthly: 54, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
-    search: { monthly: 68, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+    // noSearch: $68 → 10만원 / search: $93 → 13.5만원 (검색엔진 e2-medium +$25)
+    noSearch: { monthly: 68, mastodon: 'e2-standard-4 (4 vCPU, 16GB RAM)', elastic: null },
+    search: { monthly: 93, mastodon: 'e2-standard-4 (4 vCPU, 16GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
   },
   u40p: {
     // noSearch: $82 → 12만원 / search: $111 → 16만원
