@@ -57,6 +57,34 @@ const GCP_CONFIGS: Record<string, {
   },
 };
 
+// ===== GCP 3개월 이하 전용 (크레딧만 소모하므로 사양 업그레이드) =====
+// u5   e2-small     (변경 없음)
+// u10  e2-medium    (e2-small → e2-medium)
+// u30  e2-standard-2 (e2-medium → e2-standard-2)
+// u30p e2-standard-4 (e2-standard-2 → e2-standard-4)
+
+const GCP_SHORT_CONFIGS: Record<string, {
+  noSearch: { monthly: number; mastodon: string; elastic: string | null };
+  search: { monthly: number; mastodon: string; elastic: string | null } | null;
+}> = {
+  u5: {
+    noSearch: { monthly: 30000, mastodon: 'e2-small (2 vCPU, 2GB RAM)', elastic: null },
+    search: null,
+  },
+  u10: {
+    noSearch: { monthly: 40000, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: null },
+    search: { monthly: 70000, mastodon: 'e2-medium (2 vCPU, 4GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+  },
+  u30: {
+    noSearch: { monthly: 80000, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: null },
+    search: { monthly: 110000, mastodon: 'e2-standard-2 (2 vCPU, 8GB RAM)', elastic: 'e2-small (2 vCPU, 2GB RAM)' },
+  },
+  u30p: {
+    noSearch: { monthly: 160000, mastodon: 'e2-standard-4 (4 vCPU, 16GB RAM)', elastic: null },
+    search: { monthly: 200000, mastodon: 'e2-standard-4 (4 vCPU, 16GB RAM)', elastic: 'e2-medium (2 vCPU, 4GB RAM)' },
+  },
+};
+
 // ===== Vultr 서울 구성 (monthly: KRW) =====
 // u5   noSearch 2만원  (vhf-1c-2gb)
 // u10  noSearch 3만원  (vc2-2c-4gb)  / search 4.5만원 (vc2-2c-4gb + vc2-1c-2gb 검색 1.5만원)
@@ -157,8 +185,8 @@ export function getServerCalcResult(
     };
   }
 
-  // GCP vs Vultr 비교
-  const gcpEntry = GCP_CONFIGS[usersKey];
+  // GCP vs Vultr 비교 (3개월 이하: 크레딧 전용 사양)
+  const gcpEntry = months <= 3 ? GCP_SHORT_CONFIGS[usersKey] : GCP_CONFIGS[usersKey];
   const gcpCfg = hasSearch ? gcpEntry.search : gcpEntry.noSearch;
 
   // GCP 설정이 없는 경우 Vultr 강제 (u5+search는 위에서 처리됨)
