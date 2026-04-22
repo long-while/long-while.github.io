@@ -272,6 +272,8 @@ export default function Step4Review() {
                     {[
                       step3.cocBot && 'CoC 봇',
                       step3.investigationBot && step3.mainBot === 'basic' && '조사 자동봇',
+                      step3.investigationDailyLimit && step3.investigationBot && step3.mainBot === 'basic' &&
+                        `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`,
                       step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
                       step3.reservationToot && '예약 툿',
                       step3.autoProfileImage && '자동 스진',
@@ -392,6 +394,14 @@ export default function Step4Review() {
                   <div className="flex justify-between">
                     <span>조사 자동봇</span>
                     <span>{PRICING_CONFIG.bot.addons.investigationBot.toLocaleString()}원</span>
+                  </div>
+                )}
+                {step3.investigationDailyLimit && step3.investigationBot && step3.mainBot === 'basic' && (
+                  <div className="flex justify-between">
+                    <span>
+                      일일 조사 횟수 제한{step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}
+                    </span>
+                    <span>{PRICING_CONFIG.bot.addons.investigationDailyLimit.toLocaleString()}원</span>
                   </div>
                 )}
                 {step3.customCommandUpgrade && (

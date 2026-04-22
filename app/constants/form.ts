@@ -72,6 +72,7 @@ export const PRICING_CONFIG = {
       transferFeature: 10000,
       customCommandUpgrade: 5000,
       investigationBot: 20000,
+      investigationDailyLimit: 5000,
     },
     operationPerWeek: 5000,
   },

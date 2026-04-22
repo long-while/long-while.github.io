@@ -187,12 +187,13 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
     }
   ];
 
-  const additionalOptions: { name: string; price: number; description?: string; aliases?: string[]; priceLabel?: string }[] = [
+  const additionalOptions: { name: string; price: number; description?: string; aliases?: string[]; priceLabel?: string; requires?: string }[] = [
     { name: "커스텀 명령어 업그레이드", price: 5000, aliases: ["기본 타입 - 커스텀 명령어 업그레이드", "기본&상점 타입 - 커스텀 명령어 업그레이드", "기본&상점&스탯 타입 - 커스텀 명령어 업그레이드"] },
     { name: "양도 기능", price: 10000, aliases: ["기본&상점 타입 - 양도 기능", "기본&상점&스탯 타입 - 양도 기능"] },
     { name: "툿수-재화 자동반영", price: 10000, aliases: ["기본&상점 타입 - 툿수-재화 자동반영", "기본&상점&스탯 타입 - 툿수-재화 자동반영"] },
     { name: "예약 툿", price: 5000 },
     { name: "스토리 자동 진행", price: 5000 },
+    { name: "일일 조사 횟수 제한", price: 5000, description: "[조사] 명령어 사용 시 1회 카운트", requires: "자동조사 타입" },
     { name: "특정 상황 DM 전송", price: 20000, description: "특정 상황에서 봇이 DM 전송 (ex. 체력이 50 이하로 떨어짐)" },
     { name: "빠른 마감 (48시간 내)", price: 0, priceLabel: "+200%", description: "총 금액의 200% 추가" },
     { name: "빠른 마감 (1주일 내)", price: 0, priceLabel: "+100%", description: "총 금액의 100% 추가" },
@@ -712,7 +713,10 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
               const optionNames = option.aliases ? [option.name, ...option.aliases] : [option.name];
               const isSelected = items.some(item => optionNames.includes(item.name));
               const desc = option.description;
+              const requiresMet = !option.requires || isItemInEstimate(option.requires);
+              const disabled = !requiresMet && !isSelected;
               const handleClick = () => {
+                if (disabled) return;
                 if (isSelected) {
                   const existing = items.find(item => optionNames.includes(item.name));
                   if (existing) removeItem(existing.id);
@@ -730,11 +734,17 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   key={index}
                   type="button"
                   onClick={handleClick}
+                  disabled={disabled}
                   className={`w-full border p-5 transition-all text-left ${
-                    isSelected ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                    disabled
+                      ? 'border-border bg-gray-50/60 opacity-50 cursor-not-allowed'
+                      : isSelected
+                        ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                        : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
-                  aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
+                  aria-disabled={disabled}
+                  aria-label={disabled ? `${option.name} — ${option.requires} 선택 필요` : isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-4 flex-1">
@@ -744,6 +754,9 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                       <div>
                         <h3 className="text-[15px] text-black font-semibold">{option.name}</h3>
                         {desc && <span className="text-[14px] leading-[1.6] text-foreground/60">{desc}</span>}
+                        {disabled && (
+                          <p className="text-[12px] text-foreground/50 mt-1">* '{option.requires}'을 먼저 선택해 주세요.</p>
+                        )}
                       </div>
                     </div>
                     <span className="text-[14px] font-mono leading-normal text-[#ff7b00] shrink-0 pl-10 md:pl-0 text-right">{option.priceLabel ?? (option.price === 0 ? '협의' : `₩${option.price.toLocaleString()}`)}</span>

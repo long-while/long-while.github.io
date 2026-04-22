@@ -59,6 +59,8 @@ export interface Step3Data {
   cocBot: boolean;
   omakaseBot: boolean;
   investigationBot: boolean;
+  investigationDailyLimit: boolean;
+  investigationDailyLimitCount: number;
   customCommandUpgrade: boolean;
   reservationToot: boolean;
   autoProfileImage: boolean;

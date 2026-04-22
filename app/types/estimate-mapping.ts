@@ -31,6 +31,7 @@ export type EstimateMappingKey =
   | 'operationWeeks'     // → step3.manualWeeks (특별 처리 필요)
   | 'customCommandUpgrade' // → 커스텀 명령어 업그레이드 (추가 옵션)
   | 'autoInvestigation'  // → 자동조사 타입
+  | 'investigationDailyLimit' // → 일일 조사 횟수 제한
   | 'dmNotification' // → 특정 상황 DM 전송
   | 'botFastDeadline48h' // → 빠른 마감 (48시간 내)
   | 'botFastDeadline1w'; // → 빠른 마감 (1주일 내)
@@ -61,13 +62,14 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   'CoC 타입': 'cocBot',
   '오마카세 타입': 'omakaseBot',
   '자동조사 타입': 'autoInvestigation',
-  
+
   // 봇 추가 옵션
   '예약 툿': 'reservationToot',
   '스토리 자동 진행': 'autoProfileImage',
   '커스텀 명령어 업그레이드': 'customCommandUpgrade',
   '양도 기능': 'transferFeature',
   '툿수-재화 자동반영': 'tootCurrencyLink',
+  '일일 조사 횟수 제한': 'investigationDailyLimit',
   '특정 상황 DM 전송': 'dmNotification',
   '빠른 마감 (48시간 내)': 'botFastDeadline48h',
   '빠른 마감 (1주일 내)': 'botFastDeadline1w',
@@ -159,6 +161,9 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   autoInvestigation: [
     { step: 3, field: 'applyBot', value: 'yes' },
     { step: 3, field: 'investigationBot', value: true },
+  ],
+  investigationDailyLimit: [
+    { step: 3, field: 'investigationDailyLimit', value: true },
   ],
   dmNotification: [{ step: 3, field: 'dmNotification', value: true }],
   botFastDeadline48h: [],
