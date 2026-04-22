@@ -71,6 +71,7 @@ export const PRICING_CONFIG = {
       tootCurrencyLink: 7000,
       transferFeature: 10000,
       customCommandUpgrade: 5000,
+      investigationBot: 20000,
     },
     operationPerWeek: 5000,
   },

@@ -264,12 +264,14 @@ export default function Step4Review() {
                 </div>
               )}
               {(step3.cocBot || step3.customCommandUpgrade || step3.reservationToot || step3.autoProfileImage ||
-                step3.tootCurrencyLink || step3.transferFeature || step3.omakaseBot) && (
+                step3.tootCurrencyLink || step3.transferFeature || step3.omakaseBot ||
+                (step3.investigationBot && step3.mainBot === 'basic')) && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
                   <p className="text-[15px]">
                     {[
                       step3.cocBot && 'CoC 봇',
+                      step3.investigationBot && step3.mainBot === 'basic' && '조사 자동봇',
                       step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
                       step3.reservationToot && '예약 툿',
                       step3.autoProfileImage && '자동 스진',
@@ -384,6 +386,12 @@ export default function Step4Review() {
                   <div className="flex justify-between">
                     <span>CoC 봇</span>
                     <span>{PRICING_CONFIG.bot.addons.cocBot.toLocaleString()}원</span>
+                  </div>
+                )}
+                {step3.investigationBot && step3.mainBot === 'basic' && (
+                  <div className="flex justify-between">
+                    <span>조사 자동봇</span>
+                    <span>{PRICING_CONFIG.bot.addons.investigationBot.toLocaleString()}원</span>
                   </div>
                 )}
                 {step3.customCommandUpgrade && (
