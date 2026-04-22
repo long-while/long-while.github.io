@@ -411,6 +411,9 @@ export function calculateBotPrice(
   if (data.tootCurrencyLink) botCost += bot.addons.tootCurrencyLink;
   if (data.transferFeature) botCost += bot.addons.transferFeature;
   if (data.investigationBot && data.mainBot === 'basic') botCost += bot.addons.investigationBot;
+  if (data.investigationDailyLimit && data.investigationBot && data.mainBot === 'basic') {
+    botCost += bot.addons.investigationDailyLimit;
+  }
 
   // 가동비: 확정 주수 × 운영비
   const finalWeeks = data.operationWeeksOption === 'same' ? operationWeeks : data.manualWeeks;
@@ -548,6 +551,12 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     
     if (step3.cocBot) text += '+ CoC 봇\n';
     if (step3.investigationBot && step3.mainBot === 'basic') text += '+ 조사 자동봇\n';
+    if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot === 'basic') {
+      const countLabel = step3.investigationDailyLimitCount > 0
+        ? ` (일일 ${step3.investigationDailyLimitCount}회)`
+        : '';
+      text += `+ 일일 조사 횟수 제한${countLabel}\n`;
+    }
     if (step3.customCommandUpgrade) text += '+ 커스텀 명령어 업그레이드\n';
     if (step3.reservationToot) text += '+ 예약 툿\n';
     if (step3.autoProfileImage) text += '+ 자동 스진\n';
@@ -637,6 +646,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     if (step3.investigationBot && step3.mainBot === 'basic') {
       text += `조사 자동봇 ${bot.addons.investigationBot.toLocaleString()}\n`;
+    }
+    if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot === 'basic') {
+      text += `일일 조사 횟수 제한 ${bot.addons.investigationDailyLimit.toLocaleString()}\n`;
     }
     if (step3.customCommandUpgrade) {
       text += `커스텀 명령어 업그레이드 ${bot.addons.customCommandUpgrade.toLocaleString()}\n`;

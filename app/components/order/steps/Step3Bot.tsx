@@ -67,6 +67,8 @@ export default function Step3Bot() {
         cocBot: false,
         omakaseBot: false,
         investigationBot: false,
+        investigationDailyLimit: false,
+        investigationDailyLimitCount: 0,
         customCommandUpgrade: false,
         reservationToot: false,
         autoProfileImage: false,
@@ -94,9 +96,24 @@ export default function Step3Bot() {
       updateStep3({ transferFeature: false, transferOption: null });
     }
 
-    // 기본 봇이 아니면 조사 자동봇 초기화
+    // 기본 봇이 아니면 조사 자동봇 및 하위 옵션 초기화
     if (bot !== 'basic') {
-      updateStep3({ investigationBot: false });
+      updateStep3({
+        investigationBot: false,
+        investigationDailyLimit: false,
+        investigationDailyLimitCount: 0,
+      });
+    }
+  };
+
+  // 조사 자동봇 해제 시 일일 횟수 제한 초기화
+  const handleInvestigationBotChange = (checked: boolean) => {
+    updateStep3({ investigationBot: checked });
+    if (!checked) {
+      updateStep3({
+        investigationDailyLimit: false,
+        investigationDailyLimitCount: 0,
+      });
     }
   };
 
@@ -323,24 +340,68 @@ export default function Step3Bot() {
 
             {/* 조사 자동봇 (기본 봇 선택 시에만) */}
             {step3.mainBot === 'basic' && (
-              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.investigationBot
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                }`}>
-                <input
-                  type="checkbox"
-                  checked={step3.investigationBot}
-                  onChange={(e) => updateStep3({ investigationBot: e.target.checked })}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
-                />
-                <div className="flex-1">
-                  <div className="font-medium text-[14px]">
-                    조사 자동봇
-                    {investigationFromCart && step3.investigationBot && <FromCartBadge />}
+              <div className="space-y-3">
+                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.investigationBot
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  }`}>
+                  <input
+                    type="checkbox"
+                    checked={step3.investigationBot}
+                    onChange={(e) => handleInvestigationBotChange(e.target.checked)}
+                    className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-[14px]">
+                      조사 자동봇
+                      {investigationFromCart && step3.investigationBot && <FromCartBadge />}
+                    </div>
+                    <div className="text-[13px] text-gray-600 mt-1">+20,000원 — 기본 자동봇 선택 시에만 추가 가능</div>
                   </div>
-                  <div className="text-[13px] text-gray-600 mt-1">+20,000원 — 기본 자동봇 선택 시에만 추가 가능</div>
-                </div>
-              </label>
+                </label>
+
+                {/* 일일 조사 횟수 제한 (조사 자동봇 선택 시에만) */}
+                {step3.investigationBot && (
+                  <div className="ml-7 space-y-3">
+                    <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.investigationDailyLimit
+                        ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                        : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      }`}>
+                      <input
+                        type="checkbox"
+                        checked={step3.investigationDailyLimit}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          updateStep3({ investigationDailyLimit: checked });
+                          if (!checked) updateStep3({ investigationDailyLimitCount: 0 });
+                        }}
+                        className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-[14px]">일일 조사 횟수 제한</div>
+                        <div className="text-[13px] text-gray-600 mt-1">+5,000원 — [조사] 명령어 사용 시 1회 카운트</div>
+                      </div>
+                    </label>
+
+                    {step3.investigationDailyLimit && (
+                      <div className="ml-7 space-y-2">
+                        <label htmlFor="investigationDailyLimitCount" className="block text-[14px] font-medium">
+                          일일 조사 횟수
+                        </label>
+                        <input
+                          id="investigationDailyLimitCount"
+                          type="number"
+                          min="1"
+                          value={step3.investigationDailyLimitCount || ''}
+                          onChange={(e) => updateStep3({ investigationDailyLimitCount: parseInt(e.target.value) || 0 })}
+                          placeholder="예: 3"
+                          className="w-full md:w-48 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* 커스텀 명령어 업그레이드 */}

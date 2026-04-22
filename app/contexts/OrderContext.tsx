@@ -56,6 +56,8 @@ const initialStep3Data: Step3Data = {
   cocBot: false,
   omakaseBot: false,
   investigationBot: false,
+  investigationDailyLimit: false,
+  investigationDailyLimitCount: 0,
   customCommandUpgrade: false,
   reservationToot: false,
   autoProfileImage: false,
