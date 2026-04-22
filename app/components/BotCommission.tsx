@@ -23,6 +23,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
   const [operationWeeks, setOperationWeeks] = useState(0);
   const [omakaseDetailOpen, setOmakaseDetailOpen] = useState(false);
+  const [investigationExampleOpen, setInvestigationExampleOpen] = useState(false);
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
@@ -169,9 +170,8 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
       name: "자동조사 타입",
       price: 20000,
       features: [
-        "[조사/장소], [조사/물건] 등의 키워드를 받고 조사 내용 출력",
-        "캐릭터 재화 및 스탯과 연동 (특정 이벤트 발생 시 5코인 획득 / 체력 -5 등)",
-        "특정 장소는 비밀번호나 요구조건 설정 가능"
+        "장소 목록과 각 장소에서 조사할 수 있는 포인트 관리",
+        "캐릭터 소지품 및 스탯과 연동 (특정 이벤트 발생 시 아이템 획득 / 체력 -5 등)"
       ]
     },
     {
@@ -297,6 +297,20 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                 <div className="flex items-baseline gap-6">
                   <span className="text-[12px] font-mono text-[#ff7b00]">03</span>
                   <span className="text-[17px]">스토리 자동진행 시트</span>
+                </div>
+                <span className="text-[#ff7b00] group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </a>
+            <a
+              href="https://docs.google.com/spreadsheets/d/1kccCpDwSaQyaNeUxmCfyIrUNM9taJDeyfQfXTMcBQ24/edit?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block border border-border p-5 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
+            >
+              <div className="flex items-center justify-between gap-6">
+                <div className="flex items-baseline gap-6">
+                  <span className="text-[12px] font-mono text-[#ff7b00]">04</span>
+                  <span className="text-[17px]">조사 자동봇 시트</span>
                 </div>
                 <span className="text-[#ff7b00] group-hover:translate-x-1 transition-transform">→</span>
               </div>
@@ -546,6 +560,49 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                       </li>
                     ))}
                   </ul>
+
+                  {/* 자동조사 타입 예시 드롭다운 */}
+                  {type.name === '자동조사 타입' && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setInvestigationExampleOpen(!investigationExampleOpen)}
+                        className="w-full flex items-center justify-between p-3 bg-black/[0.02] border border-border hover:border-[#ff7b00]/30 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                      >
+                        <span className="text-[13px] font-semibold">예시 조사 보기</span>
+                        <ChevronDown className={`w-4 h-4 text-foreground/60 transition-transform duration-300 ${investigationExampleOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {investigationExampleOpen && (
+                        <div className="border border-t-0 border-border p-4 space-y-3 animate-slideDown">
+                          {[
+                            { role: '캐릭터', label: '장소 목록 확인', message: '@BOT 오늘은 어디를 돌아다닐까? [장소 목록]' },
+                            { role: '자동봇', label: '장소 목록 출력', message: '@character\n현재 진입할 수 있는 장소는 다음과 같습니다.\n\n- 운동장\n- 교실\n- 음악실\n\n[진입/장소명]으로 조사를 시작할 수 있습니다.' },
+                            { role: '캐릭터', label: '장소 진입', message: '@BOT (운동장으로 이동한다.) [진입/운동장]' },
+                            { role: '자동봇', label: '진입 시 문구 출력', message: '@character 해가 길게 드리운 운동장이다. [철봉], [모래밭], [스탠드 구석]을 조사할 수 있다.' },
+                            { role: '캐릭터', label: '조사 포인트 선택', message: '@BOT (모래밭을 살핀다.) [조사/모래밭]' },
+                            { role: '자동봇', label: '조사 시 문구 출력', message: '@character\n[모래밭]\n\n당신은 모래를 파헤친다. 날카로운 유리 조각이 손끝을 스쳐도 아랑곳않고 모래밭을 뒤적인다. 기념주화 3개와 [접힌 쪽지]를 발견했다.\n\n➭ \'기념주화\' 3개 획득\n➭ 체력 -3' },
+                            { role: '캐릭터', label: '다음 조사 포인트 선택', message: '@BOT 응? 이게 뭐지? [조사/접힌 쪽지]' },
+                            { role: '자동봇', label: '조사 시 문구 출력', message: '@character\n[접힌 쪽지]\n\n쪽지 안에는 \'해가 지면 1학년 3반 교실로 찾아와. - 너의 친구\'라는 글이 적혀 있다. 오래된 것 같다.' },
+                          ].map((turn, i) => {
+                            const isCharacter = turn.role === '캐릭터';
+                            return (
+                              <div key={i}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={`text-[11px] font-semibold ${isCharacter ? 'text-blue-600' : 'text-[#ff7b00]'}`}>
+                                    {turn.role}
+                                  </span>
+                                  <span className="text-[11px] text-foreground/50">{turn.label}</span>
+                                </div>
+                                <pre className={`text-[11.5px] whitespace-pre-wrap font-sans leading-[1.6] p-2.5 rounded border ${isCharacter ? 'bg-blue-50/60 border-blue-100 text-gray-800' : 'bg-gray-50 border-gray-200 text-gray-800'}`}>
+                                  {turn.message}
+                                </pre>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* 오마카세 타입 추가 정보 드롭다운 */}
                   {type.name === '오마카세 타입' && (
