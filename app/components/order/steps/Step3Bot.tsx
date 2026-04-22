@@ -37,6 +37,7 @@ export default function Step3Bot() {
   const tootCurrencyFromCart = isFromCart('툿수-재화 자동반영');
   const transferFromCart = isFromCart('양도 기능');
   const omakaseFromCart = isFromCart('오마카세');
+  const investigationFromCart = isFromCart('자동조사');
 
   // 운영 주수 동기화
   useEffect(() => {
@@ -65,6 +66,7 @@ export default function Step3Bot() {
         mainBot: null,
         cocBot: false,
         omakaseBot: false,
+        investigationBot: false,
         customCommandUpgrade: false,
         reservationToot: false,
         autoProfileImage: false,
@@ -83,13 +85,18 @@ export default function Step3Bot() {
     }
   };
 
-  // 메인 봇 변경 시 양도 기능 관련 필드 초기화
+  // 메인 봇 변경 시 의존 필드 초기화
   const handleMainBotChange = (bot: typeof step3.mainBot) => {
     updateStep3({ mainBot: bot });
 
     // 기본 봇 선택 시 양도 기능 초기화
     if (bot === 'basic') {
       updateStep3({ transferFeature: false, transferOption: null });
+    }
+
+    // 기본 봇이 아니면 조사 자동봇 초기화
+    if (bot !== 'basic') {
+      updateStep3({ investigationBot: false });
     }
   };
 
@@ -110,7 +117,7 @@ export default function Step3Bot() {
         <label className="block">
           <span className="text-[18px] font-semibold">
             1) 자동봇을 신청하시나요? <span className="text-red-500">*</span>
-            {step3.applyBot === 'yes' && (basicBotFromCart || basicShopBotFromCart || basicShopStatBotFromCart || cocBotFromCart || omakaseFromCart) && <FromCartBadge />}
+            {step3.applyBot === 'yes' && (basicBotFromCart || basicShopBotFromCart || basicShopStatBotFromCart || cocBotFromCart || omakaseFromCart || investigationFromCart) && <FromCartBadge />}
           </span>
         </label>
         <div className="flex gap-4">
@@ -313,6 +320,28 @@ export default function Step3Bot() {
                 <div className="text-[13px] text-gray-600 mt-1">+30,000원</div>
               </div>
             </label>
+
+            {/* 조사 자동봇 (기본 봇 선택 시에만) */}
+            {step3.mainBot === 'basic' && (
+              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.investigationBot
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                }`}>
+                <input
+                  type="checkbox"
+                  checked={step3.investigationBot}
+                  onChange={(e) => updateStep3({ investigationBot: e.target.checked })}
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">
+                    조사 자동봇
+                    {investigationFromCart && step3.investigationBot && <FromCartBadge />}
+                  </div>
+                  <div className="text-[13px] text-gray-600 mt-1">+20,000원 — 기본 자동봇 선택 시에만 추가 가능</div>
+                </div>
+              </label>
+            )}
 
             {/* 커스텀 명령어 업그레이드 */}
             <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.customCommandUpgrade

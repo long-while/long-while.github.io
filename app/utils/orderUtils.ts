@@ -238,11 +238,36 @@ export function validateStep2(data: Step2Data): ValidationError[] {
     }
   }
 
+  // 서버 설치 "예" 선택 시 필수 필드 검증
+  if (data.applyServerInstall === 'yes') {
+    if (!data.desiredDeadline || data.desiredDeadline.trim() === '') {
+      errors.push({
+        field: 'desiredDeadline',
+        message: '희망 마감일을 입력해 주세요.',
+      });
+    }
+
+    if (!data.adminAccountId || data.adminAccountId.trim() === '') {
+      errors.push({
+        field: 'adminAccountId',
+        message: '총괄 계정 아이디를 입력해 주세요.',
+      });
+    }
+  }
+
   // 총괄 계정 길이 검증
   if (data.adminAccountId && data.adminAccountId.length > INPUT_LIMITS.adminAccountId) {
     errors.push({
       field: 'adminAccountId',
       message: `총괄 계정은 ${INPUT_LIMITS.adminAccountId}자 이하여야 합니다.`,
+    });
+  }
+
+  // 총괄 계정 복수 입력 검증
+  if (data.adminAccountId && /[,\/]/.test(data.adminAccountId)) {
+    errors.push({
+      field: 'adminAccountId',
+      message: '총괄 계정은 하나만 입력해 주세요.',
     });
   }
 
@@ -385,6 +410,7 @@ export function calculateBotPrice(
   if (data.autoProfileImage) botCost += bot.addons.autoProfileImage;
   if (data.tootCurrencyLink) botCost += bot.addons.tootCurrencyLink;
   if (data.transferFeature) botCost += bot.addons.transferFeature;
+  if (data.investigationBot && data.mainBot === 'basic') botCost += bot.addons.investigationBot;
 
   // 가동비: 확정 주수 × 운영비
   const finalWeeks = data.operationWeeksOption === 'same' ? operationWeeks : data.manualWeeks;
@@ -521,6 +547,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     
     if (step3.cocBot) text += '+ CoC 봇\n';
+    if (step3.investigationBot && step3.mainBot === 'basic') text += '+ 조사 자동봇\n';
     if (step3.customCommandUpgrade) text += '+ 커스텀 명령어 업그레이드\n';
     if (step3.reservationToot) text += '+ 예약 툿\n';
     if (step3.autoProfileImage) text += '+ 자동 스진\n';
@@ -607,6 +634,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     if (step3.cocBot) {
       text += `CoC 봇 ${bot.addons.cocBot.toLocaleString()}\n`;
+    }
+    if (step3.investigationBot && step3.mainBot === 'basic') {
+      text += `조사 자동봇 ${bot.addons.investigationBot.toLocaleString()}\n`;
     }
     if (step3.customCommandUpgrade) {
       text += `커스텀 명령어 업그레이드 ${bot.addons.customCommandUpgrade.toLocaleString()}\n`;

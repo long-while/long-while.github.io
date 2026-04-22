@@ -58,6 +58,7 @@ export interface Step3Data {
   mainBot: MainBotType;
   cocBot: boolean;
   omakaseBot: boolean;
+  investigationBot: boolean;
   customCommandUpgrade: boolean;
   reservationToot: boolean;
   autoProfileImage: boolean;

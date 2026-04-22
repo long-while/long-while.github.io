@@ -156,7 +156,10 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   customCommandUpgrade: [
     { step: 3, field: 'customCommandUpgrade', value: true }
   ],
-  autoInvestigation: [],
+  autoInvestigation: [
+    { step: 3, field: 'applyBot', value: 'yes' },
+    { step: 3, field: 'investigationBot', value: true },
+  ],
   dmNotification: [{ step: 3, field: 'dmNotification', value: true }],
   botFastDeadline48h: [],
   botFastDeadline1w: [],

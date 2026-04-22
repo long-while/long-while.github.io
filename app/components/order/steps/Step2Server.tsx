@@ -20,6 +20,7 @@ export default function Step2Server() {
   const { serverCalcResult } = useEstimate();
   const step2 = formData.step2;
   const [characterLimitError, setCharacterLimitError] = useState<string | null>(null);
+  const [adminAccountError, setAdminAccountError] = useState<string | null>(null);
 
   // 견적에서 동기화된 항목인지 확인
   const isFromCart = (itemName: string) => {
@@ -449,7 +450,7 @@ export default function Step2Server() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="desiredDeadline" className="block text-[14px] font-medium">
-                  희망 마감일
+                  희망 마감일 <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="desiredDeadline"
@@ -464,17 +465,34 @@ export default function Step2Server() {
 
               <div className="space-y-2">
                 <label htmlFor="adminAccountId" className="block text-[14px] font-medium">
-                  총괄 계정 아이디
+                  총괄 계정 아이디 <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="adminAccountId"
                   type="text"
                   value={step2.adminAccountId}
-                  onChange={(e) => updateStep2({ adminAccountId: e.target.value })}
-                  placeholder="@NOTICE, @ADMIN 등"
-                  className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    updateStep2({ adminAccountId: value });
+                    if (/[,\/]/.test(value)) {
+                      setAdminAccountError('총괄 계정은 하나만 입력해 주세요.');
+                    } else {
+                      setAdminAccountError(null);
+                    }
+                  }}
+                  placeholder="@NOTICE"
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${adminAccountError
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-input focus:border-[#ff7b00]'
+                  }`}
                 />
-                <p className="text-[12px] text-gray-600">대문자 권장</p>
+                {adminAccountError ? (
+                  <div className="p-3 bg-red-50 border border-red-500 rounded-md">
+                    <p className="text-[13px] text-red-600">{adminAccountError}</p>
+                  </div>
+                ) : (
+                  <p className="text-[12px] text-gray-600">대문자 권장</p>
+                )}
               </div>
             </div>
           </div>
