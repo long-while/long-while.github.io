@@ -373,6 +373,9 @@ export function calculateServerPrice(data: OrderFormData['step2']): number {
     total += server.addons.characterLimit;
   }
 
+  // 로컬 타임라인 설정 변경
+  if (data.changeLocalTimeline) total += server.addons.localTimeline;
+
   // 검색 옵션
   if (data.searchOption) total += server.addons.search;
 
@@ -513,6 +516,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (step2.changeCharacterLimit && step2.characterLimitValue > 0) {
       text += `+ 글자수 변경 (${step2.characterLimitValue}자)\n`;
     }
+    if (step2.changeLocalTimeline) {
+      text += '+ 로컬 타임라인 설정 변경\n';
+    }
     if (step2.searchOption) {
       text += '+ 검색 옵션\n';
     }
@@ -613,6 +619,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     if (step2.changeCharacterLimit && step2.characterLimitValue > 0) {
       text += `글자수 변경 ${server.addons.characterLimit.toLocaleString()}\n`;
+    }
+    if (step2.changeLocalTimeline) {
+      text += `로컬 타임라인 설정 변경 ${server.addons.localTimeline.toLocaleString()}\n`;
     }
     if (step2.searchOption) {
       text += `검색 옵션 ${server.addons.search.toLocaleString()}\n`;

@@ -14,6 +14,7 @@ export type EstimateMappingKey =
   | 'bothTheme'          // → step2.additionalOption = 'bothTheme'
   | 'notionGuide'        // → step2.notionGuide = true
   | 'characterLimit'     // → step2.changeCharacterLimit = true
+  | 'localTimeline'      // → step2.changeLocalTimeline = true
   | 'fastDeadline24h'    // → step2.fastDeadline = true, fastDeadlineOption = 'basic24h'
   | 'fastDeadline48hLogo'// → step2.fastDeadline = true, fastDeadlineOption = 'logo48h'
   | 'fastDeadline48hTheme' // → step2.fastDeadline = true, fastDeadlineOption = 'theme48h'
@@ -47,6 +48,7 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   '테마 1종 커스텀': 'dayTheme',  // 낮 또는 밤 1종
   '테마 전체 커스텀': 'bothTheme', // 낮/밤 2종
   '툿 글자수 제한 변경': 'characterLimit',
+  '로컬 타임라인 설정 변경': 'localTimeline',
   '검색 기능': 'search',
   '마스토돈 가이드': 'notionGuide',
   
@@ -106,6 +108,10 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   // 기타 서버 옵션
   notionGuide: [{ step: 2, field: 'notionGuide', value: true }],
   characterLimit: [{ step: 2, field: 'changeCharacterLimit', value: true }],
+  localTimeline: [
+    { step: 2, field: 'applyServerInstall', value: 'yes' },
+    { step: 2, field: 'changeLocalTimeline', value: true }
+  ],
   search: [
     { step: 2, field: 'applyServerInstall', value: 'yes' },
     { step: 2, field: 'searchOption', value: true }

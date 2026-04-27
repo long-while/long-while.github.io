@@ -41,6 +41,7 @@ const initialStep2Data: Step2Data = {
   notionGuide: false,
   changeCharacterLimit: false,
   characterLimitValue: 0,
+  changeLocalTimeline: false,
   searchOption: false,
   fastDeadline: false,
   fastDeadlineOption: null,

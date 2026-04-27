@@ -37,6 +37,8 @@ export default function Step2Server() {
   const notionFromCart = isFromCart('마스토돈 가이드');
   // 글자수 제한이 견적에서 선택되었는지
   const charLimitFromCart = isFromCart('글자수');
+  // 로컬 타임라인 설정 변경이 견적에서 선택되었는지
+  const localTimelineFromCart = isFromCart('로컬 타임라인');
   // 검색 옵션이 견적에서 선택되었는지
   const searchFromCart = isFromCart('검색');
   // 빠른 마감이 견적에서 선택되었는지
@@ -77,6 +79,7 @@ export default function Step2Server() {
         notionGuide: false,
         changeCharacterLimit: false,
         characterLimitValue: 0,
+        changeLocalTimeline: false,
         searchOption: false,
         fastDeadline: false,
         fastDeadlineOption: null,
@@ -318,6 +321,28 @@ export default function Step2Server() {
                 </div>
               )}
             </div>
+
+            {/* 로컬 타임라인 설정 변경 */}
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.changeLocalTimeline
+                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              }`}>
+              <input
+                type="checkbox"
+                checked={step2.changeLocalTimeline}
+                onChange={(e) => updateStep2({ changeLocalTimeline: e.target.checked })}
+                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+              />
+              <div className="flex-1">
+                <div className="font-medium text-[14px]">
+                  로컬 타임라인 설정 변경 (+10,000원)
+                  {localTimelineFromCart && step2.changeLocalTimeline && <FromCartBadge />}
+                </div>
+                <div className="text-[13px] text-gray-600 mt-1">
+                  트위터 비계 타임라인과 비슷한 환경을 조성합니다.
+                </div>
+              </div>
+            </label>
 
             {/* 검색 옵션 */}
             <div className="space-y-3">
