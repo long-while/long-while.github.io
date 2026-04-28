@@ -15,6 +15,7 @@ export type EstimateMappingKey =
   | 'notionGuide'        // → step2.notionGuide = true
   | 'characterLimit'     // → step2.changeCharacterLimit = true
   | 'localTimeline'      // → step2.changeLocalTimeline = true
+  | 'mastoHostMigration' // → step2.mastoHostMigration = true
   | 'fastDeadline24h'    // → step2.fastDeadline = true, fastDeadlineOption = 'basic24h'
   | 'fastDeadline48hLogo'// → step2.fastDeadline = true, fastDeadlineOption = 'logo48h'
   | 'fastDeadline48hTheme' // → step2.fastDeadline = true, fastDeadlineOption = 'theme48h'
@@ -34,6 +35,7 @@ export type EstimateMappingKey =
   | 'autoInvestigation'  // → 자동조사 타입
   | 'investigationDailyLimit' // → 일일 조사 횟수 제한
   | 'dmNotification' // → 특정 상황 DM 전송
+  | 'attendanceSystem' // → 출석 시스템
   | 'botFastDeadline48h' // → 빠른 마감 (48시간 내)
   | 'botFastDeadline1w'; // → 빠른 마감 (1주일 내)
 
@@ -51,6 +53,7 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   '로컬 타임라인 설정 변경': 'localTimeline',
   '검색 기능': 'search',
   '마스토돈 가이드': 'notionGuide',
+  'masto.host 에서 서버 데이터 이전': 'mastoHostMigration',
   
   // 빠른 마감 옵션
   '빠른마감: 24시간 내 기본 서버 설치': 'fastDeadline24h',
@@ -73,6 +76,7 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   '툿수-재화 자동반영': 'tootCurrencyLink',
   '일일 조사 횟수 제한': 'investigationDailyLimit',
   '특정 상황 DM 전송': 'dmNotification',
+  '출석 시스템': 'attendanceSystem',
   '빠른 마감 (48시간 내)': 'botFastDeadline48h',
   '빠른 마감 (1주일 내)': 'botFastDeadline1w',
 
@@ -111,6 +115,10 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   localTimeline: [
     { step: 2, field: 'applyServerInstall', value: 'yes' },
     { step: 2, field: 'changeLocalTimeline', value: true }
+  ],
+  mastoHostMigration: [
+    { step: 2, field: 'applyServerInstall', value: 'yes' },
+    { step: 2, field: 'mastoHostMigration', value: true }
   ],
   search: [
     { step: 2, field: 'applyServerInstall', value: 'yes' },
@@ -172,6 +180,10 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
     { step: 3, field: 'investigationDailyLimit', value: true },
   ],
   dmNotification: [{ step: 3, field: 'dmNotification', value: true }],
+  attendanceSystem: [
+    { step: 3, field: 'applyBot', value: 'yes' },
+    { step: 3, field: 'attendanceSystem', value: true },
+  ],
   botFastDeadline48h: [],
   botFastDeadline1w: [],
 };

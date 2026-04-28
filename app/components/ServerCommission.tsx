@@ -74,6 +74,11 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
       name: '마스토돈 가이드',
       price: 5000,
       description: '테마 추가 시 서버 캡처본으로 작업, 노션 페이지로 제공. 타 플랫폼은 쓰지 않습니다. 한달 후 링크가 삭제됩니다.'
+    },
+    {
+      name: 'masto.host 에서 서버 데이터 이전',
+      price: 20000,
+      description: '팔로우 관계, 텍스트 데이터, 이미지 등 모든 정보를 기존 서버에서 새로운 서버로 옮겨드립니다.'
     }
   ];
 

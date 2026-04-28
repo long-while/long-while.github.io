@@ -201,7 +201,7 @@ export default function Step4Review() {
                   </p>
                 </div>
               )}
-              {(step2.notionGuide || step2.changeCharacterLimit || step2.changeLocalTimeline || step2.searchOption || step2.fastDeadline) && (
+              {(step2.notionGuide || step2.changeCharacterLimit || step2.changeLocalTimeline || step2.searchOption || step2.mastoHostMigration || step2.fastDeadline) && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
                   <p className="text-[15px]">
@@ -210,6 +210,7 @@ export default function Step4Review() {
                       step2.changeCharacterLimit && `글자수 ${step2.characterLimitValue}자`,
                       step2.changeLocalTimeline && '로컬 타임라인 설정 변경',
                       step2.searchOption && '검색 옵션',
+                      step2.mastoHostMigration && 'masto.host 데이터 이전',
                       step2.fastDeadline && '빠른 마감',
                     ].filter(Boolean).join(', ') || '-'}
                   </p>
@@ -266,7 +267,8 @@ export default function Step4Review() {
               )}
               {(step3.cocBot || step3.customCommandUpgrade || step3.reservationToot || step3.autoProfileImage ||
                 step3.tootCurrencyLink || step3.transferFeature || step3.omakaseBot ||
-                (step3.investigationBot && step3.mainBot === 'basic')) && (
+                (step3.investigationBot && step3.mainBot === 'basic') ||
+                (step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat'))) && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
                   <p className="text-[15px]">
@@ -283,6 +285,8 @@ export default function Step4Review() {
                         step3.transferOption === 'itemOnly' ? '아이템만' :
                         step3.transferOption === 'currencyOnly' ? '재화만' : '모두'
                       })`,
+                      step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') &&
+                        `출석 시스템 (${step3.attendanceCommand || '[출석]'} / +${step3.attendanceCurrencyAmount || 0})`,
                       step3.omakaseBot && '오마카세',
                     ].filter(Boolean).join(', ')}
                   </p>
@@ -347,6 +351,12 @@ export default function Step4Review() {
                   <div className="flex justify-between">
                     <span>검색 옵션</span>
                     <span>{PRICING_CONFIG.server.addons.search.toLocaleString()}원</span>
+                  </div>
+                )}
+                {step2.mastoHostMigration && (
+                  <div className="flex justify-between">
+                    <span>masto.host 데이터 이전</span>
+                    <span>{PRICING_CONFIG.server.addons.mastoHostMigration.toLocaleString()}원</span>
                   </div>
                 )}
                 {step2.fastDeadline && step2.fastDeadlineOption && (
@@ -444,6 +454,14 @@ export default function Step4Review() {
                       })
                     </span>
                     <span>{PRICING_CONFIG.bot.addons.transferFeature.toLocaleString()}원</span>
+                  </div>
+                )}
+                {step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') && (
+                  <div className="flex justify-between">
+                    <span>
+                      출석 시스템 ({step3.attendanceCommand || '[출석]'} / +{step3.attendanceCurrencyAmount || 0})
+                    </span>
+                    <span>{PRICING_CONFIG.bot.addons.attendanceSystem.toLocaleString()}원</span>
                   </div>
                 )}
                 {step3.omakaseBot && (

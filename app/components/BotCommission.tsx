@@ -1,5 +1,5 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Minus, AlertTriangle, Check, ChevronDown } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
 
@@ -8,15 +8,9 @@ interface BotCommissionProps {
   onNavigate?: NavigateFunction;
 }
 
-// 봇 타입 계층 구조 정의
-const BOT_TYPE_HIERARCHY = {
-  '기본 타입': [],
-  '기본&상점 타입': ['기본 타입'],
-  '기본&상점&스탯 타입': ['기본 타입', '기본&상점 타입'],
-  'CoC 타입': ['기본 타입'],
-  '자동조사 타입': [],
-  '오마카세 타입': [],
-};
+// 메인 봇 타입 (서로 배타적: 기본 / 기본&상점 / 기본&상점&스탯 중 하나만 선택 가능)
+const MAIN_BOT_TYPES = ['기본 타입', '기본&상점 타입', '기본&상점&스탯 타입'] as const;
+const SHOP_BOT_TYPES = ['기본&상점 타입', '기본&상점&스탯 타입'] as const;
 
 export default function BotCommission({ onBack, onNavigate }: BotCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
@@ -24,32 +18,18 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
   const [operationWeeks, setOperationWeeks] = useState(0);
   const [omakaseDetailOpen, setOmakaseDetailOpen] = useState(false);
   const [investigationExampleOpen, setInvestigationExampleOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
   };
 
-  // 선택된 봇 타입들 확인
-  const selectedBotTypes = useMemo(() => {
-    const botTypeNames = Object.keys(BOT_TYPE_HIERARCHY);
-    return botTypeNames.filter(typeName => isItemInEstimate(typeName));
-  }, [items]);
-
-  // 중복 선택 경고 메시지 생성
-  const getDuplicateWarnings = useMemo(() => {
-    const warnings: string[] = [];
-    
-    selectedBotTypes.forEach(selectedType => {
-      const includedTypes = BOT_TYPE_HIERARCHY[selectedType as keyof typeof BOT_TYPE_HIERARCHY];
-      includedTypes.forEach(includedType => {
-        if (selectedBotTypes.includes(includedType)) {
-          warnings.push(`"${includedType}"은(는) "${selectedType}"에 이미 포함되어 있습니다. "${selectedType}"만 선택하시면 됩니다.`);
-        }
-      });
-    });
-    
-    return [...new Set(warnings)]; // 중복 제거
-  }, [selectedBotTypes]);
+  // 토스트 자동 사라짐
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   const handleOperationWeeksChange = (newWeeks: number) => {
     if (newWeeks < 0) return;
@@ -75,7 +55,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
   const handleToggleEstimate = (name: string, price: number, description?: string) => {
     const existingItem = items.find(item => item.name === name);
-    
+
     if (existingItem) {
       // 이미 있으면 제거
       removeItem(existingItem.id);
@@ -84,25 +64,35 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         newSet.delete(name);
         return newSet;
       });
-    } else {
-      // 없으면 추가
-      addItem({
-        name,
-        price,
-        category: 'bot',
-        description,
-      });
-      
-      // 추가됨 표시
-      setAddedItems(prev => new Set(prev).add(name));
-      setTimeout(() => {
-        setAddedItems(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(name);
-          return newSet;
-        });
-      }, 2000);
+      return;
     }
+
+    // 메인 봇 타입은 서로 배타적: 다른 메인 봇 타입이 이미 선택된 경우 막고 토스트
+    if ((MAIN_BOT_TYPES as readonly string[]).includes(name)) {
+      const conflict = MAIN_BOT_TYPES.find(t => t !== name && isItemInEstimate(t));
+      if (conflict) {
+        setToastMessage(`"${conflict}" 선택을 먼저 취소해 주세요. 메인 봇 타입은 하나만 선택할 수 있어요.`);
+        return;
+      }
+    }
+
+    // 없으면 추가
+    addItem({
+      name,
+      price,
+      category: 'bot',
+      description,
+    });
+
+    // 추가됨 표시
+    setAddedItems(prev => new Set(prev).add(name));
+    setTimeout(() => {
+      setAddedItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(name);
+        return newSet;
+      });
+    }, 2000);
   };
 
   const botTypes = [
@@ -187,12 +177,14 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
     }
   ];
 
-  const additionalOptions: { name: string; price: number; description?: string; aliases?: string[]; priceLabel?: string; requires?: string }[] = [
-    { name: "커스텀 명령어 업그레이드", price: 5000, aliases: ["기본 타입 - 커스텀 명령어 업그레이드", "기본&상점 타입 - 커스텀 명령어 업그레이드", "기본&상점&스탯 타입 - 커스텀 명령어 업그레이드"] },
-    { name: "양도 기능", price: 10000, aliases: ["기본&상점 타입 - 양도 기능", "기본&상점&스탯 타입 - 양도 기능"] },
-    { name: "툿수-재화 자동반영", price: 10000, aliases: ["기본&상점 타입 - 툿수-재화 자동반영", "기본&상점&스탯 타입 - 툿수-재화 자동반영"] },
-    { name: "예약 툿", price: 5000 },
-    { name: "스토리 자동 진행", price: 5000 },
+  // requires: 단일 항목명(string) 또는 "이 중 하나(any)" 배열(string[])
+  const additionalOptions: { name: string; price: number; description?: string; aliases?: string[]; priceLabel?: string; requires?: string | string[]; requiresLabel?: string }[] = [
+    { name: "커스텀 명령어 업그레이드", price: 5000, aliases: ["기본 타입 - 커스텀 명령어 업그레이드", "기본&상점 타입 - 커스텀 명령어 업그레이드", "기본&상점&스탯 타입 - 커스텀 명령어 업그레이드"], requires: [...MAIN_BOT_TYPES], requiresLabel: "기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나" },
+    { name: "양도 기능", price: 10000, aliases: ["기본&상점 타입 - 양도 기능", "기본&상점&스탯 타입 - 양도 기능"], requires: [...SHOP_BOT_TYPES], requiresLabel: "기본&상점 또는 기본&상점&스탯 타입" },
+    { name: "툿수-재화 자동반영", price: 10000, aliases: ["기본&상점 타입 - 툿수-재화 자동반영", "기본&상점&스탯 타입 - 툿수-재화 자동반영"], requires: [...SHOP_BOT_TYPES], requiresLabel: "기본&상점 또는 기본&상점&스탯 타입" },
+    { name: "출석 시스템", price: 10000, description: "매일 [출석] 혹은 지정한 명령어를 사용하여 1회 출석 후 운영진이 지정한 재화 획득", requires: [...SHOP_BOT_TYPES], requiresLabel: "기본&상점 또는 기본&상점&스탯 타입" },
+    { name: "예약 툿", price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: "기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나" },
+    { name: "스토리 자동 진행", price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: "기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나" },
     { name: "일일 조사 횟수 제한", price: 5000, description: "[조사] 명령어 사용 시 1회 카운트", requires: "자동조사 타입" },
     { name: "특정 상황 DM 전송", price: 20000, description: "특정 상황에서 봇이 DM 전송 (ex. 체력이 50 이하로 떨어짐)" },
     { name: "빠른 마감 (48시간 내)", price: 0, priceLabel: "+200%", description: "총 금액의 200% 추가" },
@@ -201,6 +193,29 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
   return (
     <div className="min-h-screen bg-white">
+      {/* 토스트 알림 (메인 봇 타입 충돌, 추가옵션 prerequisite 안내) */}
+      {toastMessage && (
+        <div
+          className="fixed top-24 right-4 z-50 bg-amber-500 text-white px-5 py-4 rounded-lg shadow-xl flex items-start gap-3 max-w-sm animate-slideInRight"
+          role="alert"
+          aria-live="polite"
+        >
+          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-bold text-[14px]">선택할 수 없는 옵션이에요</p>
+            <p className="text-[13px] mt-0.5 leading-[1.5]">{toastMessage}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setToastMessage(null)}
+            className="text-white/80 hover:text-white text-[18px] leading-none shrink-0"
+            aria-label="알림 닫기"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div className="max-w-[1060px] mx-auto px-8 py-16">
         {/* 뒤로가기 버튼 */}
         <button
@@ -496,21 +511,11 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">봇 타입 상세</h2>
           </div>
           
-          {/* 중복 선택 경고 */}
-          {getDuplicateWarnings.length > 0 && (
-            <div className="mb-6 p-4 bg-[#fff1e3] border border-amber-400 rounded-lg flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-              <div>
-                <p className="text-[14px] text-amber-800 font-medium">중복 선택 안내</p>
-                <ul className="mt-1 space-y-1">
-                  {getDuplicateWarnings.map((warning, idx) => (
-                    <li key={idx} className="text-[13px] text-amber-700">• {warning}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-          
+          {/* 메인 봇 타입 선택 안내 */}
+          <p className="mb-6 text-[13px] text-foreground/60">
+            * 기본 / 기본&상점 / 기본&상점&스탯 타입은 서로 포함 관계이므로 <span className="font-semibold text-foreground/80">하나만</span> 선택할 수 있어요.
+          </p>
+
           <div className="space-y-8">
             {botTypes.map((type, index) => {
               const typeSelected = isItemInEstimate(type.name);
@@ -713,10 +718,19 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
               const optionNames = option.aliases ? [option.name, ...option.aliases] : [option.name];
               const isSelected = items.some(item => optionNames.includes(item.name));
               const desc = option.description;
-              const requiresMet = !option.requires || isItemInEstimate(option.requires);
+              const requiresList = option.requires
+                ? Array.isArray(option.requires)
+                  ? option.requires
+                  : [option.requires]
+                : [];
+              const requiresMet = requiresList.length === 0 || requiresList.some(r => isItemInEstimate(r));
               const disabled = !requiresMet && !isSelected;
+              const requiresLabel = option.requiresLabel ?? (requiresList.length > 0 ? requiresList.join(' 또는 ') : '');
               const handleClick = () => {
-                if (disabled) return;
+                if (disabled) {
+                  setToastMessage(`'${option.name}'은(는) ${requiresLabel}을(를) 먼저 선택해 주세요.`);
+                  return;
+                }
                 if (isSelected) {
                   const existing = items.find(item => optionNames.includes(item.name));
                   if (existing) removeItem(existing.id);
@@ -734,17 +748,16 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   key={index}
                   type="button"
                   onClick={handleClick}
-                  disabled={disabled}
                   className={`w-full border p-5 transition-all text-left ${
                     disabled
-                      ? 'border-border bg-gray-50/60 opacity-50 cursor-not-allowed'
+                      ? 'border-border bg-gray-50/60 opacity-60 cursor-not-allowed'
                       : isSelected
                         ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                         : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
                   aria-disabled={disabled}
-                  aria-label={disabled ? `${option.name} — ${option.requires} 선택 필요` : isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
+                  aria-label={disabled ? `${option.name} — ${requiresLabel} 선택 필요` : isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-4 flex-1">
@@ -755,7 +768,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                         <h3 className="text-[15px] text-black font-semibold">{option.name}</h3>
                         {desc && <span className="text-[14px] leading-[1.6] text-foreground/60">{desc}</span>}
                         {disabled && (
-                          <p className="text-[12px] text-foreground/50 mt-1">* '{option.requires}'을 먼저 선택해 주세요.</p>
+                          <p className="text-[12px] text-foreground/50 mt-1">* {requiresLabel}을(를) 먼저 선택해 주세요.</p>
                         )}
                       </div>
                     </div>

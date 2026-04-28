@@ -36,6 +36,7 @@ export default function Step3Bot() {
   const autoProfileFromCart = isFromCart('스토리 자동 진행');
   const tootCurrencyFromCart = isFromCart('툿수-재화 자동반영');
   const transferFromCart = isFromCart('양도 기능');
+  const attendanceFromCart = isFromCart('출석 시스템');
   const omakaseFromCart = isFromCart('오마카세');
   const investigationFromCart = isFromCart('자동조사');
 
@@ -49,6 +50,9 @@ export default function Step3Bot() {
   // 양도 기능 노출 조건: 상점 또는 스탯 선택 시
   const showTransferFeature =
     step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat';
+
+  // 출석 시스템 노출 조건: 상점 또는 스탯 선택 시
+  const showAttendanceSystem = showTransferFeature;
 
   // 재화 단위 필드 노출 조건: 상점 또는 스탯
   const showCurrencyUnit = showTransferFeature;
@@ -75,6 +79,9 @@ export default function Step3Bot() {
         tootCurrencyLink: false,
         transferFeature: false,
         transferOption: null,
+        attendanceSystem: false,
+        attendanceCurrencyAmount: 10,
+        attendanceCommand: '[출석]',
         currencyUnit: '',
         statList: '',
         accountList: '',
@@ -91,9 +98,15 @@ export default function Step3Bot() {
   const handleMainBotChange = (bot: typeof step3.mainBot) => {
     updateStep3({ mainBot: bot });
 
-    // 기본 봇 선택 시 양도 기능 초기화
+    // 기본 봇 선택 시 상점/스탯 의존 옵션 초기화
     if (bot === 'basic') {
-      updateStep3({ transferFeature: false, transferOption: null });
+      updateStep3({
+        transferFeature: false,
+        transferOption: null,
+        attendanceSystem: false,
+        tootCurrencyLink: false,
+        tootPerCurrency: '',
+      });
     }
 
     // 기본 봇이 아니면 조사 자동봇 및 하위 옵션 초기화
@@ -102,6 +115,17 @@ export default function Step3Bot() {
         investigationBot: false,
         investigationDailyLimit: false,
         investigationDailyLimitCount: 0,
+      });
+    }
+
+    // 메인 봇 미선택 시 상점/스탯 의존 옵션 초기화
+    if (bot === null) {
+      updateStep3({
+        attendanceSystem: false,
+        transferFeature: false,
+        transferOption: null,
+        tootCurrencyLink: false,
+        tootPerCurrency: '',
       });
     }
   };
@@ -498,43 +522,128 @@ export default function Step3Bot() {
               </div>
             )}
 
-            {/* 툿-재화 연동 */}
-            <div className="space-y-3">
-              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.tootCurrencyLink
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                }`}>
-                <input
-                  type="checkbox"
-                  checked={step3.tootCurrencyLink}
-                  onChange={(e) => updateStep3({ tootCurrencyLink: e.target.checked })}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
-                />
-                <div className="flex-1">
-                  <div className="font-medium text-[14px]">
-                    툿-재화 연동
-                    {tootCurrencyFromCart && step3.tootCurrencyLink && <FromCartBadge />}
-                  </div>
-                  <div className="text-[13px] text-gray-600 mt-1">+10,000원</div>
-                </div>
-              </label>
-
-              {step3.tootCurrencyLink && (
-                <div className="ml-7 space-y-2">
-                  <label htmlFor="tootPerCurrency" className="block text-[14px] font-medium">
-                    몇 툿당 소지금에 얼마가 추가되어야 하나요?
-                  </label>
+            {/* 툿-재화 연동 (조건부 - 상점/스탯) */}
+            {showTransferFeature && (
+              <div className="space-y-3">
+                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.tootCurrencyLink
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  }`}>
                   <input
-                    id="tootPerCurrency"
-                    type="text"
-                    value={step3.tootPerCurrency}
-                    onChange={(e) => updateStep3({ tootPerCurrency: e.target.value })}
-                    placeholder="예: 50툿당 1갈레온"
-                    className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                    type="checkbox"
+                    checked={step3.tootCurrencyLink}
+                    onChange={(e) => updateStep3({ tootCurrencyLink: e.target.checked })}
+                    className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                   />
-                </div>
-              )}
-            </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-[14px]">
+                      툿-재화 연동
+                      {tootCurrencyFromCart && step3.tootCurrencyLink && <FromCartBadge />}
+                    </div>
+                    <div className="text-[13px] text-gray-600 mt-1">+10,000원</div>
+                  </div>
+                </label>
+
+                {step3.tootCurrencyLink && (
+                  <div className="ml-7 space-y-2">
+                    <label htmlFor="tootPerCurrency" className="block text-[14px] font-medium">
+                      몇 툿당 소지금에 얼마가 추가되어야 하나요?
+                    </label>
+                    <input
+                      id="tootPerCurrency"
+                      type="text"
+                      value={step3.tootPerCurrency}
+                      onChange={(e) => updateStep3({ tootPerCurrency: e.target.value })}
+                      placeholder="예: 50툿당 1갈레온"
+                      className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 출석 시스템 (조건부 - 상점/스탯) */}
+            {showAttendanceSystem && (
+              <div className="space-y-3">
+                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.attendanceSystem
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  }`}>
+                  <input
+                    type="checkbox"
+                    checked={step3.attendanceSystem}
+                    onChange={(e) => updateStep3({ attendanceSystem: e.target.checked })}
+                    className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-[14px]">
+                      출석 시스템
+                      {attendanceFromCart && step3.attendanceSystem && <FromCartBadge />}
+                    </div>
+                    <div className="text-[13px] text-gray-600 mt-1">
+                      +10,000원 — 매일 [출석] 혹은 지정한 명령어 사용 시 1회 출석, 운영진이 지정한 재화 획득
+                    </div>
+                  </div>
+                </label>
+
+                {step3.attendanceSystem && (
+                  <div className="ml-7 space-y-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="space-y-2">
+                      <label htmlFor="attendanceCurrencyAmount" className="block text-[14px] font-medium">
+                        출석 시 받을 재화의 수
+                      </label>
+                      <input
+                        id="attendanceCurrencyAmount"
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={step3.attendanceCurrencyAmount || ''}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (raw === '') {
+                            updateStep3({ attendanceCurrencyAmount: 0 });
+                            return;
+                          }
+                          const parsed = parseInt(raw, 10);
+                          if (Number.isFinite(parsed) && parsed >= 0) {
+                            updateStep3({ attendanceCurrencyAmount: parsed });
+                          }
+                        }}
+                        placeholder="예: 10"
+                        className="w-full md:w-48 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                      />
+                      <p className="text-[12px] text-gray-500">정수만 입력해 주세요. 기본값은 10입니다.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="attendanceCommand" className="block text-[14px] font-medium">
+                        출석 기능으로 사용할 명령어
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[16px] font-mono text-gray-700 px-2 py-2 bg-white border border-input border-r-0 rounded-l-md">[</span>
+                        <input
+                          id="attendanceCommand"
+                          type="text"
+                          value={(step3.attendanceCommand || '[출석]').replace(/^\[|\]$/g, '')}
+                          onChange={(e) => {
+                            const inner = e.target.value.replace(/[\[\]]/g, '').trim();
+                            updateStep3({ attendanceCommand: `[${inner}]` });
+                          }}
+                          onBlur={() => {
+                            const inner = (step3.attendanceCommand || '').replace(/[\[\]]/g, '').trim();
+                            updateStep3({ attendanceCommand: `[${inner || '출석'}]` });
+                          }}
+                          placeholder="출석"
+                          className="flex-1 md:max-w-[200px] px-3 py-2 border border-input border-x-0 focus:border-[#ff7b00] focus:outline-none text-[14px] font-mono"
+                        />
+                        <span className="text-[16px] font-mono text-gray-700 px-2 py-2 bg-white border border-input border-l-0 rounded-r-md">]</span>
+                      </div>
+                      <p className="text-[12px] text-gray-500">예: 출석, 보고, 기상 — 항상 대괄호로 감싸 사용됩니다.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* 양도 기능 (조건부) */}
             {showTransferFeature && (

@@ -45,6 +45,7 @@ export interface Step2Data {
   characterLimitValue: number;
   changeLocalTimeline: boolean;
   searchOption: boolean;
+  mastoHostMigration: boolean;
   fastDeadline: boolean;
   fastDeadlineOption: FastDeadlineOption;
   desiredDeadline: string; // MM/DD
@@ -68,6 +69,9 @@ export interface Step3Data {
   tootCurrencyLink: boolean;
   transferFeature: boolean;
   transferOption: TransferOption;
+  attendanceSystem: boolean;
+  attendanceCurrencyAmount: number; // 출석 시 받을 재화의 수 (정수)
+  attendanceCommand: string; // 출석 명령어 (항상 [..] 형식)
   currencyUnit: string;
   statList: string;
   accountList: string;
