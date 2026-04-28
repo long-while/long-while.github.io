@@ -43,7 +43,6 @@ export interface Step2Data {
   notionGuide: boolean;
   changeCharacterLimit: boolean;
   characterLimitValue: number;
-  changeLocalTimeline: boolean;
   searchOption: boolean;
   mastoHostMigration: boolean;
   fastDeadline: boolean;

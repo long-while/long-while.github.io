@@ -201,14 +201,13 @@ export default function Step4Review() {
                   </p>
                 </div>
               )}
-              {(step2.notionGuide || step2.changeCharacterLimit || step2.changeLocalTimeline || step2.searchOption || step2.mastoHostMigration || step2.fastDeadline) && (
+              {(step2.notionGuide || step2.changeCharacterLimit || step2.searchOption || step2.mastoHostMigration || step2.fastDeadline) && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
                   <p className="text-[15px]">
                     {[
                       step2.notionGuide && '노션 가이드',
                       step2.changeCharacterLimit && `글자수 ${step2.characterLimitValue}자`,
-                      step2.changeLocalTimeline && '로컬 타임라인 설정 변경',
                       step2.searchOption && '검색 옵션',
                       step2.mastoHostMigration && 'masto.host 데이터 이전',
                       step2.fastDeadline && '빠른 마감',
@@ -339,12 +338,6 @@ export default function Step4Review() {
                   <div className="flex justify-between">
                     <span>글자수 변경 ({step2.characterLimitValue}자)</span>
                     <span>{PRICING_CONFIG.server.addons.characterLimit.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step2.changeLocalTimeline && (
-                  <div className="flex justify-between">
-                    <span>로컬 타임라인 설정 변경</span>
-                    <span>{PRICING_CONFIG.server.addons.localTimeline.toLocaleString()}원</span>
                   </div>
                 )}
                 {step2.searchOption && (
