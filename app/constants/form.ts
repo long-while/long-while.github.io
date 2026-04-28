@@ -51,6 +51,7 @@ export const PRICING_CONFIG = {
       characterLimit: 5000,
       localTimeline: 10000,
       search: 30000,
+      mastoHostMigration: 20000,
       fastDeadline: {
         basic24h: 10000,
         logo48h: 15000,
@@ -74,6 +75,7 @@ export const PRICING_CONFIG = {
       customCommandUpgrade: 5000,
       investigationBot: 20000,
       investigationDailyLimit: 5000,
+      attendanceSystem: 10000,
     },
     operationPerWeek: 5000,
   },

@@ -344,6 +344,31 @@ export function validateStep3(data: Step3Data): ValidationError[] {
         message: `오마카세 상세는 ${INPUT_LIMITS.omakaseDetails}자 이하여야 합니다.`,
       });
     }
+
+    // 출석 시스템 검증
+    if (
+      data.attendanceSystem &&
+      (data.mainBot === 'basicShop' || data.mainBot === 'basicShopStat')
+    ) {
+      if (!Number.isInteger(data.attendanceCurrencyAmount) || data.attendanceCurrencyAmount < 1) {
+        errors.push({
+          field: 'attendanceCurrencyAmount',
+          message: '출석 시 받을 재화의 수를 1 이상의 정수로 입력해 주세요.',
+        });
+      }
+      const cmd = data.attendanceCommand?.trim() ?? '';
+      if (!cmd) {
+        errors.push({
+          field: 'attendanceCommand',
+          message: '출석 명령어를 입력해 주세요.',
+        });
+      } else if (!/^\[.+\]$/.test(cmd)) {
+        errors.push({
+          field: 'attendanceCommand',
+          message: '출석 명령어는 [출석] 처럼 대괄호로 감싸야 합니다.',
+        });
+      }
+    }
   }
 
   return errors;
@@ -378,6 +403,9 @@ export function calculateServerPrice(data: OrderFormData['step2']): number {
 
   // 검색 옵션
   if (data.searchOption) total += server.addons.search;
+
+  // masto.host 데이터 이전
+  if (data.mastoHostMigration) total += server.addons.mastoHostMigration;
 
   // 빠른 마감
   if (data.fastDeadline && data.fastDeadlineOption) {
@@ -416,6 +444,9 @@ export function calculateBotPrice(
   if (data.investigationBot && data.mainBot === 'basic') botCost += bot.addons.investigationBot;
   if (data.investigationDailyLimit && data.investigationBot && data.mainBot === 'basic') {
     botCost += bot.addons.investigationDailyLimit;
+  }
+  if (data.attendanceSystem && (data.mainBot === 'basicShop' || data.mainBot === 'basicShopStat')) {
+    botCost += bot.addons.attendanceSystem;
   }
 
   // 가동비: 확정 주수 × 운영비
@@ -522,6 +553,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (step2.searchOption) {
       text += '+ 검색 옵션\n';
     }
+    if (step2.mastoHostMigration) {
+      text += '+ masto.host 데이터 이전\n';
+    }
     if (step2.fastDeadline && step2.fastDeadlineOption) {
       const fastNames: Record<string, string> = {
         basic24h: '빠른 마감 (24시간/기본)',
@@ -575,15 +609,24 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       };
       text += `+ ${step3.transferOption ? transferNames[step3.transferOption] : '양도 기능'}\n`;
     }
+    const attendanceEnabled =
+      step3.attendanceSystem &&
+      (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat');
+    if (attendanceEnabled) {
+      text += `+ 출석 시스템 (${step3.attendanceCommand || '[출석]'} / ${step3.attendanceCurrencyAmount || 0})\n`;
+    }
     if (step3.omakaseBot) text += '+ 오마카세\n';
-    
+
     text += '\n';
-    
+
     // 기타 정보 (각각 별도 줄)
     if (step3.currencyUnit) text += `재화 단위 : ${step3.currencyUnit}\n`;
     if (step3.statList) text += `스탯 : ${step3.statList}\n`;
     if (step3.tootPerCurrency) text += `${step3.tootPerCurrency}\n`;
     if (step3.accountList) text += `계정 목록 : ${step3.accountList}\n`;
+    if (attendanceEnabled) {
+      text += `출석 명령어 : ${step3.attendanceCommand || '[출석]'} / 재화 +${step3.attendanceCurrencyAmount || 0}\n`;
+    }
     
     text += '\n';
     
@@ -625,6 +668,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     if (step2.searchOption) {
       text += `검색 옵션 ${server.addons.search.toLocaleString()}\n`;
+    }
+    if (step2.mastoHostMigration) {
+      text += `masto.host 데이터 이전 ${server.addons.mastoHostMigration.toLocaleString()}\n`;
     }
     if (step2.fastDeadline && step2.fastDeadlineOption) {
       const fastNames: Record<string, string> = {
@@ -678,6 +724,12 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
         all: '양도 (모두)',
       };
       text += `${step3.transferOption ? transferNames[step3.transferOption] : '양도 기능'} ${bot.addons.transferFeature.toLocaleString()}\n`;
+    }
+    if (
+      step3.attendanceSystem &&
+      (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat')
+    ) {
+      text += `출석 시스템 ${bot.addons.attendanceSystem.toLocaleString()}\n`;
     }
     if (step3.omakaseBot) {
       text += '오마카세 별도 협의\n';

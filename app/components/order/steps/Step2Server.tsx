@@ -41,6 +41,8 @@ export default function Step2Server() {
   const localTimelineFromCart = isFromCart('로컬 타임라인');
   // 검색 옵션이 견적에서 선택되었는지
   const searchFromCart = isFromCart('검색');
+  // masto.host 데이터 이전이 견적에서 선택되었는지
+  const mastoHostFromCart = isFromCart('masto.host');
   // 빠른 마감이 견적에서 선택되었는지
   const fastDeadlineFromCart = isFromCart('빠른마감');
 
@@ -81,6 +83,7 @@ export default function Step2Server() {
         characterLimitValue: 0,
         changeLocalTimeline: false,
         searchOption: false,
+        mastoHostMigration: false,
         fastDeadline: false,
         fastDeadlineOption: null,
         desiredDeadline: '',
@@ -377,6 +380,28 @@ export default function Step2Server() {
               </label>
 
             </div>
+
+            {/* masto.host 데이터 이전 */}
+            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.mastoHostMigration
+                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              }`}>
+              <input
+                type="checkbox"
+                checked={step2.mastoHostMigration}
+                onChange={(e) => updateStep2({ mastoHostMigration: e.target.checked })}
+                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+              />
+              <div className="flex-1">
+                <div className="font-medium text-[14px]">
+                  masto.host 에서 서버 데이터 이전 (+20,000원)
+                  {mastoHostFromCart && step2.mastoHostMigration && <FromCartBadge />}
+                </div>
+                <div className="text-[13px] text-gray-600 mt-1">
+                  팔로우 관계, 텍스트 데이터, 이미지 등 모든 정보를 기존 서버에서 새로운 서버로 옮겨드립니다.
+                </div>
+              </div>
+            </label>
 
             {/* 빠른 마감 */}
             <div className="space-y-3">
