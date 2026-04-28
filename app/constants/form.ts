@@ -49,7 +49,6 @@ export const PRICING_CONFIG = {
     addons: {
       notionGuide: 5000,
       characterLimit: 5000,
-      localTimeline: 10000,
       search: 30000,
       mastoHostMigration: 20000,
       fastDeadline: {

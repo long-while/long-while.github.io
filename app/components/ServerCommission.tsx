@@ -1,6 +1,5 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { useState } from 'react';
-import { Plus, Trash2, AlertCircle, Check, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, Check } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
 import MastodonServerCalculator from '@/app/components/MastodonServerCalculator';
 
@@ -11,7 +10,6 @@ interface ServerCommissionProps {
 
 export default function ServerCommission({ onBack, onNavigate }: ServerCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
-  const [localTimelineDetailOpen, setLocalTimelineDetailOpen] = useState(false);
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
@@ -48,22 +46,11 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
     name: string;
     price: number;
     description: string;
-    detailedDescription?: string[];
   }[] = [
     {
       name: '툿 글자수 제한 변경',
       price: 5000,
       description: '기본 공백포함 1000자.'
-    },
-    {
-      name: '로컬 타임라인 설정 변경',
-      price: 10000,
-      description: '트위터 비계 타임라인과 비슷한 환경을 조성합니다.',
-      detailedDescription: [
-        "기본적으로 로컬 타임라인(퍼블툿만 모아보는 타임라인)에는 팔로우중인 유저의 '로컬' 범위 퍼블툿이 노출됩니다.",
-        "이 옵션을 선택하시면, 로컬 타임라인에 팔로우 중인 유저의 '로컬' 범위 뿐만 아니라 '팔로워 전용' 범위 퍼블툿이 보이게 됩니다. 따라서 계정의 툿이 팔로워에게만 노출되어야 하는데(=비계 설정), 여전히 퍼블릭 툿만 모아보는 로컬 타임라인을 사용하고 싶은 경우 선택하시는 옵션입니다.",
-        '여러 커뮤를 하나의 서버에서 운영하시거나, 자관 혹은 TRPG 역극을 진행하실 때 추천드립니다.',
-      ],
     },
     {
       name: '검색 기능',
@@ -287,63 +274,37 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           <div className="space-y-3">
             {additionalOptions.map((option) => {
               const isSelected = isItemInEstimate(option.name);
-              const isLocalTimeline = option.name === '로컬 타임라인 설정 변경';
-              const detailOpen = isLocalTimeline && localTimelineDetailOpen;
               return (
-                <div key={option.name}>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleEstimate(option.name, option.price, option.description)}
-                    className={`w-full border p-5 transition-all text-left ${isSelected
-                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                      } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
-                    aria-pressed={isSelected}
-                    aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
-                  >
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div
-                          className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
-                            }`}
-                          aria-hidden
-                        >
-                          {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
-                        </div>
-                        <div>
-                          <h3 className="text-[15px] text-black font-semibold">{option.name}</h3>
-                          <span className="text-[14px] leading-[1.6] text-foreground/60">
-                            {option.description}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-[15px] font-mono leading-normal text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
-                    </div>
-                  </button>
-
-                  {option.detailedDescription && isLocalTimeline && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setLocalTimelineDetailOpen(!localTimelineDetailOpen)}
-                        aria-expanded={detailOpen}
-                        className="w-full mt-1.5 flex items-center justify-between p-3 bg-black/[0.02] border border-border hover:border-[#ff7b00]/30 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                <button
+                  key={option.name}
+                  type="button"
+                  onClick={() => handleToggleEstimate(option.name, option.price, option.description)}
+                  className={`w-full border p-5 transition-all text-left ${isSelected
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                    } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                  aria-pressed={isSelected}
+                  aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
+                >
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
+                          }`}
+                        aria-hidden
                       >
-                        <span className="text-[13px] font-semibold">자세히 보기</span>
-                        <ChevronDown className={`w-4 h-4 text-foreground/60 transition-transform duration-300 ${detailOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      {detailOpen && (
-                        <div className="border border-t-0 border-border p-4 space-y-3 animate-slideDown">
-                          {option.detailedDescription.map((paragraph, i) => (
-                            <p key={i} className="text-[13px] leading-[1.7] text-foreground/70">
-                              {paragraph}
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                      </div>
+                      <div>
+                        <h3 className="text-[15px] text-black font-semibold">{option.name}</h3>
+                        <span className="text-[14px] leading-[1.6] text-foreground/60">
+                          {option.description}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[15px] font-mono leading-normal text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
+                  </div>
+                </button>
               );
             })}
           </div>
