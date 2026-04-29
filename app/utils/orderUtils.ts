@@ -321,6 +321,88 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       });
     }
 
+    // CoC 봇 계정 길이 검증
+    if (data.cocBotAccountId && data.cocBotAccountId.length > INPUT_LIMITS.cocBotAccountId) {
+      errors.push({
+        field: 'cocBotAccountId',
+        message: `CoC 봇 계정은 ${INPUT_LIMITS.cocBotAccountId}자 이하여야 합니다.`,
+      });
+    }
+
+    // 조사 자동봇 계정 길이 검증
+    if (
+      data.investigationBotAccountId &&
+      data.investigationBotAccountId.length > INPUT_LIMITS.investigationBotAccountId
+    ) {
+      errors.push({
+        field: 'investigationBotAccountId',
+        message: `조사 자동봇 계정은 ${INPUT_LIMITS.investigationBotAccountId}자 이하여야 합니다.`,
+      });
+    }
+
+    // CoC 봇이 메인 봇과 함께 신청된 경우 분리된 계정 입력 필수
+    if (
+      data.cocBot &&
+      data.mainBot &&
+      data.botAccountId.trim() !== '' &&
+      data.cocBotAccountId.trim() === ''
+    ) {
+      errors.push({
+        field: 'cocBotAccountId',
+        message: 'CoC 봇은 별도 계정으로 운영되므로 CoC 봇 전용 계정 ID를 입력해 주세요.',
+      });
+    }
+    if (
+      data.cocBot &&
+      data.mainBot &&
+      data.botAccountId.trim() !== '' &&
+      data.cocBotAccountId.trim() !== '' &&
+      data.botAccountId.trim() === data.cocBotAccountId.trim()
+    ) {
+      errors.push({
+        field: 'cocBotAccountId',
+        message: '기본 자동봇과 CoC 봇은 서로 다른 계정 ID를 사용해야 합니다.',
+      });
+    }
+
+    // 조사 자동봇이 기본 봇과 함께 신청된 경우 분리된 계정 입력 필수
+    if (
+      data.investigationBot &&
+      data.mainBot === 'basic' &&
+      data.botAccountId.trim() !== '' &&
+      data.investigationBotAccountId.trim() === ''
+    ) {
+      errors.push({
+        field: 'investigationBotAccountId',
+        message: '조사 자동봇은 별도 계정으로 운영되므로 조사 자동봇 전용 계정 ID를 입력해 주세요.',
+      });
+    }
+    if (
+      data.investigationBot &&
+      data.mainBot === 'basic' &&
+      data.botAccountId.trim() !== '' &&
+      data.investigationBotAccountId.trim() !== '' &&
+      data.botAccountId.trim() === data.investigationBotAccountId.trim()
+    ) {
+      errors.push({
+        field: 'investigationBotAccountId',
+        message: '기본 자동봇과 조사 자동봇은 서로 다른 계정 ID를 사용해야 합니다.',
+      });
+    }
+    if (
+      data.cocBot &&
+      data.investigationBot &&
+      data.mainBot === 'basic' &&
+      data.cocBotAccountId.trim() !== '' &&
+      data.investigationBotAccountId.trim() !== '' &&
+      data.cocBotAccountId.trim() === data.investigationBotAccountId.trim()
+    ) {
+      errors.push({
+        field: 'investigationBotAccountId',
+        message: 'CoC 봇과 조사 자동봇은 서로 다른 계정 ID를 사용해야 합니다.',
+      });
+    }
+
     // 재화 단위 길이 검증
     if (data.currencyUnit && data.currencyUnit.length > INPUT_LIMITS.currencyUnit) {
       errors.push({
@@ -624,7 +706,31 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     
     text += '\n';
     
-    if (step3.botAccountId) text += `봇 계정 : ${step3.botAccountId}\n\n`;
+    const cocAccountActive = step3.cocBot && step3.mainBot !== null;
+    const investigationAccountActive =
+      step3.investigationBot && step3.mainBot === 'basic';
+    const hasSeparateBotAccounts = cocAccountActive || investigationAccountActive;
+
+    if (hasSeparateBotAccounts) {
+      if (step3.botAccountId) {
+        text += `기본 자동봇 계정 : ${step3.botAccountId}\n`;
+      }
+      if (cocAccountActive && step3.cocBotAccountId) {
+        text += `CoC 봇 계정 : ${step3.cocBotAccountId}\n`;
+      }
+      if (investigationAccountActive && step3.investigationBotAccountId) {
+        text += `조사 자동봇 계정 : ${step3.investigationBotAccountId}\n`;
+      }
+      if (
+        step3.botAccountId ||
+        (cocAccountActive && step3.cocBotAccountId) ||
+        (investigationAccountActive && step3.investigationBotAccountId)
+      ) {
+        text += '\n';
+      }
+    } else if (step3.botAccountId) {
+      text += `봇 계정 : ${step3.botAccountId}\n\n`;
+    }
     if (step3.botSymbol && step3.botSymbol !== '✶') text += `봇 기호 : ${step3.botSymbol}\n\n`;
     if (step3.setupDeadline) text += `희망 마감일 : ${step3.setupDeadline}\n\n`;
     

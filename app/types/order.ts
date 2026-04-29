@@ -79,6 +79,8 @@ export interface Step3Data {
   setupDeadline: string; // MM/DD
   botSymbol: string;
   botAccountId: string;
+  cocBotAccountId: string;
+  investigationBotAccountId: string;
 }
 
 // Step 4: 최종 확인 및 견적
@@ -140,6 +142,8 @@ export const INPUT_LIMITS = {
   botSymbol: 5,
   adminAccountId: 100,
   botAccountId: 100,
+  cocBotAccountId: 100,
+  investigationBotAccountId: 100,
   currencyUnit: 20,
   statList: 500,
   accountList: 500,
