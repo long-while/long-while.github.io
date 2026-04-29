@@ -33,15 +33,15 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
   const handleOperationWeeksChange = (newWeeks: number) => {
     if (newWeeks < 0) return;
-    
+
     setOperationWeeks(newWeeks);
-    
+
     // 기존 가동료 항목 제거
     const existingItem = items.find(item => item.name.startsWith('기본 가동료'));
     if (existingItem) {
       removeItem(existingItem.id);
     }
-    
+
     // 새로운 가동료 추가 (0주가 아닐 때만)
     if (newWeeks > 0) {
       addItem({
@@ -149,10 +149,14 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
       price: 30000,
       features: [
         "숫자만 변경하면 되는 탐사자 시트 제공",
+        "편집 가능한 커스텀 시트와 랜덤 표 시트 제공",
         "[nDm±k]",
-        "[판정/능력치명] 예: [판정/근력]",
+        "기본 판정 [근력] [설득]",
+        "보너스/패널티 다이스 [근력+1] [관찰력-2]",
+        "판정, 피해 정산, 치명타가 모두 적용되는 무기 공격",
         "[▨▨ 변화/수치] 예: [이성 변화/-3]",
-        "[선택/옵션, 옵션, 옵션] 여러 개의 옵션 중 하나를 랜덤 선택",
+        "[랜덤/옵션, 옵션, 옵션] 여러 개의 옵션 중 하나를 랜덤 선택",
+        "[장기적 광기] [일시적 광기] 표 굴림",
         "[시트 업데이트] 탐사자 시트를 수동으로 업데이트한 후 자동봇에 반영"
       ]
     },
@@ -238,26 +242,26 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">기본 안내</h2>
           </div>
-          
+
           <div className="max-w-4xl space-y-6 text-[15px] leading-[1.8]">
             <p>
               마스토돈 자동봇 커미션입니다. 타입에 따라 가격이 달라집니다.<br />
               타입 내에 기재되지 않은 기능도 대부분 구현할 수 있습니다.
             </p>
-            
+
             <p className="text-foreground/70">
               기본 개발 기간은 한달이며, 원하시는 일정과 구현 난이도에 따라 빠르게 마감할 수 있습니다.<br />
               <span className="font-medium text-[#ff7b00]">48시간 내 마감 +200%, 일주일 내 마감 +100%</span> 추가금을 받습니다.
             </p>
-            
+
             <p className="text-foreground/70">
               개발 중에 요청 기능이 늘어나거나 구현 방식이 변경될 경우 추가금이 발생하거나 마감일이 변경될 수 있습니다.<br />
               봇 가동 중 사전에 발견하지 못한 오류가 발생할 경우 무료로 유지보수를 진행합니다.
             </p>
-            
+
             <p className="text-foreground/70">
               서버 설치도 함께 필요하시다면{' '}
-              <button 
+              <button
                 onClick={() => onNavigate?.('server')}
                 className="text-[#ff7b00] hover:underline"
               >
@@ -380,7 +384,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">봇 타입 비교</h2>
           </div>
-          
+
           <div className="overflow-x-auto mb-8">
             <table className="w-full border-collapse text-[14px] table-fixed">
               <thead>
@@ -449,7 +453,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
               </tbody>
             </table>
           </div>
-          
+
           <p className="text-[13px] text-foreground/60">
             * 자동조사 타입(₩20,000)과 오마카세 타입(협의)은 특수 목적 봇으로 아래에서 별도 확인해주세요.
           </p>
@@ -510,7 +514,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">봇 타입 상세</h2>
           </div>
-          
+
           {/* 메인 봇 타입 선택 안내 */}
           <p className="mb-6 text-[13px] text-foreground/60">
             * 기본 / 기본&상점 / 기본&상점&스탯 타입은 서로 포함 관계이므로 <span className="font-semibold text-foreground/80">하나만</span> 선택할 수 있어요.
@@ -524,9 +528,8 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   <div className="flex items-center gap-3 min-w-0">
                     {type.price > 0 && (
                       <div
-                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${
-                          typeSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
-                        }`}
+                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${typeSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
+                          }`}
                         aria-hidden
                       >
                         {typeSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
@@ -540,170 +543,170 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                 </div>
               );
               return (
-              <div key={index} className={`border transition-colors ${typeSelected ? 'border-[#ff7b00] bg-[#fff5eb]/30 ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00]/30'}`}>
-                {type.price > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => handleToggleEstimate(type.name, type.price, type.features.join(', '))}
-                    className="w-full flex justify-between items-center p-6 bg-black/[0.01] border-b border-border text-left hover:bg-[#fff5eb]/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
-                    aria-pressed={typeSelected}
-                    aria-label={typeSelected ? `${type.name} 견적에서 제거` : `${type.name} 견적에 추가`}
-                  >
-                    {headerContent}
-                  </button>
-                ) : (
-                  <div className="flex justify-between items-center p-6 bg-black/[0.01] border-b border-border">
-                    {headerContent}
-                  </div>
-                )}
-                
-                <div className="p-6 space-y-6">
-                  <ul className="space-y-3">
-                    {type.features.map((feature, i) => (
-                      <li key={i} className="text-[14px] leading-[1.7] flex gap-3">
-                        <span className="text-[#ff7b00] shrink-0">—</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div key={index} className={`border transition-colors ${typeSelected ? 'border-[#ff7b00] bg-[#fff5eb]/30 ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00]/30'}`}>
+                  {type.price > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleEstimate(type.name, type.price, type.features.join(', '))}
+                      className="w-full flex justify-between items-center p-6 bg-black/[0.01] border-b border-border text-left hover:bg-[#fff5eb]/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                      aria-pressed={typeSelected}
+                      aria-label={typeSelected ? `${type.name} 견적에서 제거` : `${type.name} 견적에 추가`}
+                    >
+                      {headerContent}
+                    </button>
+                  ) : (
+                    <div className="flex justify-between items-center p-6 bg-black/[0.01] border-b border-border">
+                      {headerContent}
+                    </div>
+                  )}
 
-                  {/* 자동조사 타입 예시 드롭다운 */}
-                  {type.name === '자동조사 타입' && (
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setInvestigationExampleOpen(!investigationExampleOpen)}
-                        className="w-full flex items-center justify-between p-3 bg-black/[0.02] border border-border hover:border-[#ff7b00]/30 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
-                      >
-                        <span className="text-[13px] font-semibold">예시 조사 보기</span>
-                        <ChevronDown className={`w-4 h-4 text-foreground/60 transition-transform duration-300 ${investigationExampleOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      {investigationExampleOpen && (
-                        <div className="border border-t-0 border-border p-4 space-y-3 animate-slideDown">
-                          {[
-                            { role: '캐릭터', label: '장소 목록 확인', message: '@BOT 오늘은 어디를 돌아다닐까? [장소 목록]' },
-                            { role: '자동봇', label: '장소 목록 출력', message: '@character\n현재 진입할 수 있는 장소는 다음과 같습니다.\n\n- 운동장\n- 교실\n- 음악실\n\n[진입/장소명]으로 조사를 시작할 수 있습니다.' },
-                            { role: '캐릭터', label: '장소 진입', message: '@BOT (운동장으로 이동한다.) [진입/운동장]' },
-                            { role: '자동봇', label: '진입 시 문구 출력', message: '@character 해가 길게 드리운 운동장이다. [철봉], [모래밭], [스탠드 구석]을 조사할 수 있다.' },
-                            { role: '캐릭터', label: '조사 포인트 선택', message: '@BOT (모래밭을 살핀다.) [조사/모래밭]' },
-                            { role: '자동봇', label: '조사 시 문구 출력', message: '@character\n[모래밭]\n\n당신은 모래를 파헤친다. 날카로운 유리 조각이 손끝을 스쳐도 아랑곳않고 모래밭을 뒤적인다. 기념주화 3개와 [접힌 쪽지]를 발견했다.\n\n➭ \'기념주화\' 3개 획득\n➭ 체력 -3' },
-                            { role: '캐릭터', label: '다음 조사 포인트 선택', message: '@BOT 응? 이게 뭐지? [조사/접힌 쪽지]' },
-                            { role: '자동봇', label: '조사 시 문구 출력', message: '@character\n[접힌 쪽지]\n\n쪽지 안에는 \'해가 지면 1학년 3반 교실로 찾아와. - 너의 친구\'라는 글이 적혀 있다. 오래된 것 같다.' },
-                          ].map((turn, i) => {
-                            const isCharacter = turn.role === '캐릭터';
-                            return (
-                              <div key={i}>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className={`text-[11px] font-semibold ${isCharacter ? 'text-blue-600' : 'text-[#ff7b00]'}`}>
-                                    {turn.role}
-                                  </span>
-                                  <span className="text-[11px] text-foreground/50">{turn.label}</span>
+                  <div className="p-6 space-y-6">
+                    <ul className="space-y-3">
+                      {type.features.map((feature, i) => (
+                        <li key={i} className="text-[14px] leading-[1.7] flex gap-3">
+                          <span className="text-[#ff7b00] shrink-0">—</span>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* 자동조사 타입 예시 드롭다운 */}
+                    {type.name === '자동조사 타입' && (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setInvestigationExampleOpen(!investigationExampleOpen)}
+                          className="w-full flex items-center justify-between p-3 bg-black/[0.02] border border-border hover:border-[#ff7b00]/30 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                        >
+                          <span className="text-[13px] font-semibold">예시 조사 보기</span>
+                          <ChevronDown className={`w-4 h-4 text-foreground/60 transition-transform duration-300 ${investigationExampleOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {investigationExampleOpen && (
+                          <div className="border border-t-0 border-border p-4 space-y-3 animate-slideDown">
+                            {[
+                              { role: '캐릭터', label: '장소 목록 확인', message: '@BOT 오늘은 어디를 돌아다닐까? [장소 목록]' },
+                              { role: '자동봇', label: '장소 목록 출력', message: '@character\n현재 진입할 수 있는 장소는 다음과 같습니다.\n\n- 운동장\n- 교실\n- 음악실\n\n[진입/장소명]으로 조사를 시작할 수 있습니다.' },
+                              { role: '캐릭터', label: '장소 진입', message: '@BOT (운동장으로 이동한다.) [진입/운동장]' },
+                              { role: '자동봇', label: '진입 시 문구 출력', message: '@character 해가 길게 드리운 운동장이다. [철봉], [모래밭], [스탠드 구석]을 조사할 수 있다.' },
+                              { role: '캐릭터', label: '조사 포인트 선택', message: '@BOT (모래밭을 살핀다.) [조사/모래밭]' },
+                              { role: '자동봇', label: '조사 시 문구 출력', message: '@character\n[모래밭]\n\n당신은 모래를 파헤친다. 날카로운 유리 조각이 손끝을 스쳐도 아랑곳않고 모래밭을 뒤적인다. 기념주화 3개와 [접힌 쪽지]를 발견했다.\n\n➭ \'기념주화\' 3개 획득\n➭ 체력 -3' },
+                              { role: '캐릭터', label: '다음 조사 포인트 선택', message: '@BOT 응? 이게 뭐지? [조사/접힌 쪽지]' },
+                              { role: '자동봇', label: '조사 시 문구 출력', message: '@character\n[접힌 쪽지]\n\n쪽지 안에는 \'해가 지면 1학년 3반 교실로 찾아와. - 너의 친구\'라는 글이 적혀 있다. 오래된 것 같다.' },
+                            ].map((turn, i) => {
+                              const isCharacter = turn.role === '캐릭터';
+                              return (
+                                <div key={i}>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className={`text-[11px] font-semibold ${isCharacter ? 'text-blue-600' : 'text-[#ff7b00]'}`}>
+                                      {turn.role}
+                                    </span>
+                                    <span className="text-[11px] text-foreground/50">{turn.label}</span>
+                                  </div>
+                                  <pre className={`text-[11.5px] whitespace-pre-wrap font-sans leading-[1.6] p-2.5 rounded border ${isCharacter ? 'bg-blue-50/60 border-blue-100 text-gray-800' : 'bg-gray-50 border-gray-200 text-gray-800'}`}>
+                                    {turn.message}
+                                  </pre>
                                 </div>
-                                <pre className={`text-[11.5px] whitespace-pre-wrap font-sans leading-[1.6] p-2.5 rounded border ${isCharacter ? 'bg-blue-50/60 border-blue-100 text-gray-800' : 'bg-gray-50 border-gray-200 text-gray-800'}`}>
-                                  {turn.message}
-                                </pre>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 오마카세 타입 추가 정보 드롭다운 */}
-                  {type.name === '오마카세 타입' && (
-                    <div className="mt-6">
-                      <button
-                        type="button"
-                        onClick={() => setOmakaseDetailOpen(!omakaseDetailOpen)}
-                        className="w-full flex items-center justify-between p-4 bg-black/[0.02] border border-border hover:border-[#ff7b00]/30 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
-                      >
-                        <span className="text-[15px] font-semibold">오마카세 기능 상세 설명</span>
-                        <ChevronDown className={`w-5 h-5 text-foreground/60 transition-transform duration-300 ${omakaseDetailOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      {omakaseDetailOpen && (
-                        <div className="border border-t-0 border-border p-6 space-y-6 animate-slideDown">
-                          {/* 안내 */}
-                          <p className="text-[15px] leading-[1.8] text-foreground/80">
-                            구현을 원하는 시스템을 정리한 <span className="font-medium text-[#ff7b00]">외부 문서 링크</span>를 전달해 주세요.<br />
-                            (시스템 문서와는 별도의 문서여야 합니다)
-                          </p>
-
-                          <hr className="border-border" />
-
-                          {/* 문서에 포함되어야 할 내용 */}
-                          <div>
-                            <h4 className="text-[14px] font-semibold mb-3">문서에 포함되어야 할 내용</h4>
-                            <ul className="space-y-1.5 text-[14px] text-foreground/70">
-                              <li className="flex gap-2"><span className="text-[#ff7b00] shrink-0">—</span>러너가 입력할 명령어 (예: [사용/사과])</li>
-                              <li className="flex gap-2"><span className="text-[#ff7b00] shrink-0">—</span>명령어 입력 후 봇이 처리할 내용</li>
-                              <li className="flex gap-2"><span className="text-[#ff7b00] shrink-0">—</span>러너에게 보여줄 결과 메시지</li>
-                            </ul>
+                              );
+                            })}
                           </div>
+                        )}
+                      </div>
+                    )}
 
-                          <hr className="border-border" />
-
-                          {/* 작성 예시 */}
-                          <div>
-                            <h4 className="text-[14px] font-semibold mb-3">작성 예시</h4>
-                            <div className="bg-gray-900 text-gray-100 p-4 rounded-md text-[13px] font-mono space-y-1.5 leading-[1.8]">
-                              <p className="text-green-400">"[사용/아이템명] 명령어를 추가하고 싶어요!"</p>
-                              <p className="text-gray-400">→ 러너가 [사용/사과]를 입력하면</p>
-                              <p className="text-gray-400">→ 봇이 러너의 소지품에서 사과를 삭제하고, 체력을 +10 해준 뒤</p>
-                              <p className="text-gray-400">→ "사과를 사용했습니다! 체력이 +10 되었습니다." 라고 답변해 주세요.</p>
-                            </div>
-                          </div>
-
-                          {/* 예시 신청서 버튼 */}
-                          <a
-                            href="https://stellar-ground-601.notion.site/310d06ebad99807a99d1fbf4e8fc9ace"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#ff7b00] text-white rounded-md font-medium text-[14px] hover:bg-[#e66d00] transition-colors"
-                          >
-                            예시 오마카세 신청서 보기
-                            <span>→</span>
-                          </a>
-
-                          <hr className="border-border" />
-
-                          {/* 작성 가이드 */}
-                          <div className="space-y-1.5 text-[13px] text-foreground/60">
-                            <p>군더더기 없이 깔끔한 언어로 작성해 주세요. 불필요한 부사와 형용사는 사용하지 않습니다.</p>
-                            <p>구현을 원하는 시스템만 작성해 주세요.</p>
-                          </div>
-
-                          {/* 경고 알럿 */}
-                          <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-md">
-                            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-                            <p className="text-[13px] text-red-700 font-medium">
-                              오마카세 신청서를 한번에 이해하기 어려울 시, 신청이 거절될 수 있습니다.
+                    {/* 오마카세 타입 추가 정보 드롭다운 */}
+                    {type.name === '오마카세 타입' && (
+                      <div className="mt-6">
+                        <button
+                          type="button"
+                          onClick={() => setOmakaseDetailOpen(!omakaseDetailOpen)}
+                          className="w-full flex items-center justify-between p-4 bg-black/[0.02] border border-border hover:border-[#ff7b00]/30 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                        >
+                          <span className="text-[15px] font-semibold">오마카세 기능 상세 설명</span>
+                          <ChevronDown className={`w-5 h-5 text-foreground/60 transition-transform duration-300 ${omakaseDetailOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {omakaseDetailOpen && (
+                          <div className="border border-t-0 border-border p-6 space-y-6 animate-slideDown">
+                            {/* 안내 */}
+                            <p className="text-[15px] leading-[1.8] text-foreground/80">
+                              구현을 원하는 시스템을 정리한 <span className="font-medium text-[#ff7b00]">외부 문서 링크</span>를 전달해 주세요.<br />
+                              (시스템 문서와는 별도의 문서여야 합니다)
                             </p>
-                          </div>
 
-                          {/* 진행 불가 안내 */}
-                          {type.note && (
-                            <div className="text-[13px] text-foreground/50 pt-2 border-t border-border">
-                              {type.note}
+                            <hr className="border-border" />
+
+                            {/* 문서에 포함되어야 할 내용 */}
+                            <div>
+                              <h4 className="text-[14px] font-semibold mb-3">문서에 포함되어야 할 내용</h4>
+                              <ul className="space-y-1.5 text-[14px] text-foreground/70">
+                                <li className="flex gap-2"><span className="text-[#ff7b00] shrink-0">—</span>러너가 입력할 명령어 (예: [사용/사과])</li>
+                                <li className="flex gap-2"><span className="text-[#ff7b00] shrink-0">—</span>명령어 입력 후 봇이 처리할 내용</li>
+                                <li className="flex gap-2"><span className="text-[#ff7b00] shrink-0">—</span>러너에게 보여줄 결과 메시지</li>
+                              </ul>
                             </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
 
-                  {/* 오마카세가 아닌 타입의 note */}
-                  {type.note && type.name !== '오마카세 타입' && (
-                    <div className="bg-black/[0.02] border border-border p-6 mt-6">
-                      <p className="text-[15px] leading-[1.7] text-foreground/70">
-                        {type.note}
-                      </p>
-                    </div>
-                  )}
+                            <hr className="border-border" />
+
+                            {/* 작성 예시 */}
+                            <div>
+                              <h4 className="text-[14px] font-semibold mb-3">작성 예시</h4>
+                              <div className="bg-gray-900 text-gray-100 p-4 rounded-md text-[13px] font-mono space-y-1.5 leading-[1.8]">
+                                <p className="text-green-400">"[사용/아이템명] 명령어를 추가하고 싶어요!"</p>
+                                <p className="text-gray-400">→ 러너가 [사용/사과]를 입력하면</p>
+                                <p className="text-gray-400">→ 봇이 러너의 소지품에서 사과를 삭제하고, 체력을 +10 해준 뒤</p>
+                                <p className="text-gray-400">→ "사과를 사용했습니다! 체력이 +10 되었습니다." 라고 답변해 주세요.</p>
+                              </div>
+                            </div>
+
+                            {/* 예시 신청서 버튼 */}
+                            <a
+                              href="https://stellar-ground-601.notion.site/310d06ebad99807a99d1fbf4e8fc9ace"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#ff7b00] text-white rounded-md font-medium text-[14px] hover:bg-[#e66d00] transition-colors"
+                            >
+                              예시 오마카세 신청서 보기
+                              <span>→</span>
+                            </a>
+
+                            <hr className="border-border" />
+
+                            {/* 작성 가이드 */}
+                            <div className="space-y-1.5 text-[13px] text-foreground/60">
+                              <p>군더더기 없이 깔끔한 언어로 작성해 주세요. 불필요한 부사와 형용사는 사용하지 않습니다.</p>
+                              <p>구현을 원하는 시스템만 작성해 주세요.</p>
+                            </div>
+
+                            {/* 경고 알럿 */}
+                            <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-md">
+                              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+                              <p className="text-[13px] text-red-700 font-medium">
+                                오마카세 신청서를 한번에 이해하기 어려울 시, 신청이 거절될 수 있습니다.
+                              </p>
+                            </div>
+
+                            {/* 진행 불가 안내 */}
+                            {type.note && (
+                              <div className="text-[13px] text-foreground/50 pt-2 border-t border-border">
+                                {type.note}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 오마카세가 아닌 타입의 note */}
+                    {type.note && type.name !== '오마카세 타입' && (
+                      <div className="bg-black/[0.02] border border-border p-6 mt-6">
+                        <p className="text-[15px] leading-[1.7] text-foreground/70">
+                          {type.note}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
           </div>
         </section>
 
@@ -712,7 +715,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
           <div className="mb-10 border-b border-border pb-4">
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">추가 옵션</h2>
           </div>
-          
+
           <div className="space-y-3">
             {additionalOptions.map((option, index) => {
               const optionNames = option.aliases ? [option.name, ...option.aliases] : [option.name];
@@ -748,13 +751,12 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   key={index}
                   type="button"
                   onClick={handleClick}
-                  className={`w-full border p-5 transition-all text-left ${
-                    disabled
-                      ? 'border-border bg-gray-50/60 opacity-60 cursor-not-allowed'
-                      : isSelected
-                        ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                        : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                  } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                  className={`w-full border p-5 transition-all text-left ${disabled
+                    ? 'border-border bg-gray-50/60 opacity-60 cursor-not-allowed'
+                    : isSelected
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                    } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
                   aria-disabled={disabled}
                   aria-label={disabled ? `${option.name} — ${requiresLabel} 선택 필요` : isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
