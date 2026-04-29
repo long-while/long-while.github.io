@@ -133,7 +133,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
 
             {/* 안내 배지 */}
             <div className="flex justify-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 text-[12px] rounded-full border border-green-200">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#fff5eb] text-[#ff7b00] text-[12px] rounded-full border border-[#ff7b00]">
                 <LightbulbOn size={14} color="currentColor" />
                 <span>작성 중인 내용은 자동으로 저장됩니다</span>
               </div>

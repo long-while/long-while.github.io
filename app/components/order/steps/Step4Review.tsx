@@ -78,7 +78,7 @@ export default function Step4Review() {
       setCopySuccess(true);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-      
+
       // 3초 카운트다운 시작
       setRedirectCountdown(3);
       countdownRef.current = setInterval(() => {
@@ -164,7 +164,9 @@ export default function Step4Review() {
           <div>
             <p className="text-[13px] text-gray-500 mb-1">운영 일정</p>
             <p className="text-[15px]">
-              {step1.openingDate} ~ {step1.closingDate} ({step1.operationWeeks}주)
+              {step1.isLongTermCommunity
+                ? '장기 소규모 서버'
+                : `${step1.openingDate} ~ ${step1.closingDate} (${step1.operationWeeks}주)`}
             </p>
           </div>
         </div>
@@ -247,11 +249,13 @@ export default function Step4Review() {
           {step3.applyBot === 'yes' && (
             <>
               <div>
-                <p className="text-[13px] text-gray-500 mb-1">운영 기간</p>
+                <p className="text-[13px] text-gray-500 mb-1">가동 일정</p>
                 <p className="text-[15px]">
-                  {step3.operationWeeksOption === 'same'
-                    ? `커뮤니티 기간과 동일 (${step1.operationWeeks}주)`
-                    : `${step3.manualWeeks}주`}
+                  {step3.operationWeeksOption === 'longterm'
+                    ? '6개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
+                    : step3.botStartDate && step3.botEndDate
+                      ? `${step3.botStartDate} ~ ${step3.botEndDate} (${step3.manualWeeks}주)`
+                      : `${step3.manualWeeks}주`}
                 </p>
               </div>
               {step3.mainBot && (
@@ -266,35 +270,34 @@ export default function Step4Review() {
               )}
               {(step3.cocBot || step3.customCommandUpgrade || step3.reservationToot || step3.autoProfileImage ||
                 step3.tootCurrencyLink || step3.transferFeature || step3.omakaseBot ||
-                (step3.investigationBot && step3.mainBot === 'basic') ||
+                (step3.investigationBot && step3.mainBot !== null) ||
                 (step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat'))) && (
-                <div>
-                  <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
-                  <p className="text-[15px]">
-                    {[
-                      step3.cocBot && 'CoC 봇',
-                      step3.investigationBot && step3.mainBot === 'basic' && '조사 자동봇',
-                      step3.investigationDailyLimit && step3.investigationBot && step3.mainBot === 'basic' &&
+                  <div>
+                    <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
+                    <p className="text-[15px]">
+                      {[
+                        step3.cocBot && 'CoC 봇',
+                        step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
+                        step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null &&
                         `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`,
-                      step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
-                      step3.reservationToot && '예약 툿',
-                      step3.autoProfileImage && '자동 스진',
-                      step3.tootCurrencyLink && '툿-재화 연동',
-                      step3.transferFeature && `양도 기능 (${
-                        step3.transferOption === 'itemOnly' ? '아이템만' :
-                        step3.transferOption === 'currencyOnly' ? '재화만' : '모두'
-                      })`,
-                      step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') &&
+                        step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
+                        step3.reservationToot && '예약 툿',
+                        step3.autoProfileImage && '자동 스진',
+                        step3.tootCurrencyLink && '툿-재화 연동',
+                        step3.transferFeature && `양도 기능 (${step3.transferOption === 'itemOnly' ? '아이템만' :
+                          step3.transferOption === 'currencyOnly' ? '재화만' : '모두'
+                        })`,
+                        step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') &&
                         `출석 시스템 (${step3.attendanceCommand || '[출석]'} / +${step3.attendanceCurrencyAmount || 0})`,
-                      step3.omakaseBot && '오마카세',
-                    ].filter(Boolean).join(', ')}
-                  </p>
-                </div>
-              )}
+                        step3.omakaseBot && '오마카세',
+                      ].filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                )}
               {(() => {
                 const cocAccountActive = step3.cocBot && step3.mainBot !== null;
                 const investigationAccountActive =
-                  step3.investigationBot && step3.mainBot === 'basic';
+                  step3.investigationBot && step3.mainBot !== null;
                 const hasSeparate = cocAccountActive || investigationAccountActive;
 
                 if (!step3.botAccountId && !step3.cocBotAccountId && !step3.investigationBotAccountId) {
@@ -315,7 +318,7 @@ export default function Step4Review() {
                     <p className="text-[13px] text-gray-500 mb-1">봇 계정 (분리)</p>
                     <div className="text-[15px] space-y-1">
                       {step3.botAccountId && (
-                        <p>기본 자동봇: {step3.botAccountId}</p>
+                        <p>메인 봇: {step3.botAccountId}</p>
                       )}
                       {cocAccountActive && step3.cocBotAccountId && (
                         <p>CoC 봇: {step3.cocBotAccountId}</p>
@@ -327,6 +330,29 @@ export default function Step4Review() {
                   </div>
                 );
               })()}
+              {step3.botSymbol && (
+                <div>
+                  <p className="text-[13px] text-gray-500 mb-1">봇 기호</p>
+                  <p className="text-[15px] font-mono">{step3.botSymbol}</p>
+                </div>
+              )}
+              {step3.setupDeadline && (
+                <div>
+                  <p className="text-[13px] text-gray-500 mb-1">세팅 마감일</p>
+                  <p className="text-[15px]">{step3.setupDeadline}</p>
+                </div>
+              )}
+              {(step3.currencyUnit || step3.statList || step3.tootPerCurrency || step3.accountList) && (
+                <div>
+                  <p className="text-[13px] text-gray-500 mb-1">기타 설정</p>
+                  <div className="text-[15px] space-y-1">
+                    {step3.currencyUnit && <p>재화 단위: {step3.currencyUnit}</p>}
+                    {step3.statList && <p>스탯: {step3.statList}</p>}
+                    {step3.tootPerCurrency && <p>툿-재화 비율: {step3.tootPerCurrency}</p>}
+                    {step3.accountList && <p>계정 목록: {step3.accountList}</p>}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -405,10 +431,12 @@ export default function Step4Review() {
             <div className="space-y-2">
               <p className="text-[15px] font-medium text-gray-700 border-b border-gray-200 pb-1">자동봇 관련</p>
               <div className="space-y-1 text-[14px]">
-                {/* 가동 비용 */}
+                {/* 가동 비용 / 장기 세팅비 */}
                 <div className="flex justify-between">
                   <span>
-                    가동 비용 ({step3.operationWeeksOption === 'same' ? step1.operationWeeks : step3.manualWeeks}주)
+                    {step3.operationWeeksOption === 'longterm'
+                      ? '장기 자동봇 세팅비'
+                      : `가동 비용 (${step3.manualWeeks}주)`}
                   </span>
                   <span>{estimate.operationCost.toLocaleString()}원</span>
                 </div>
@@ -430,13 +458,13 @@ export default function Step4Review() {
                     <span>{PRICING_CONFIG.bot.addons.cocBot.toLocaleString()}원</span>
                   </div>
                 )}
-                {step3.investigationBot && step3.mainBot === 'basic' && (
+                {step3.investigationBot && step3.mainBot !== null && (
                   <div className="flex justify-between">
                     <span>조사 자동봇</span>
                     <span>{PRICING_CONFIG.bot.addons.investigationBot.toLocaleString()}원</span>
                   </div>
                 )}
-                {step3.investigationDailyLimit && step3.investigationBot && step3.mainBot === 'basic' && (
+                {step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null && (
                   <div className="flex justify-between">
                     <span>
                       일일 조사 횟수 제한{step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}
@@ -473,7 +501,7 @@ export default function Step4Review() {
                     <span>
                       양도 기능 ({
                         step3.transferOption === 'itemOnly' ? '아이템만' :
-                        step3.transferOption === 'currencyOnly' ? '재화만' : '모두'
+                          step3.transferOption === 'currencyOnly' ? '재화만' : '모두'
                       })
                     </span>
                     <span>{PRICING_CONFIG.bot.addons.transferFeature.toLocaleString()}원</span>
@@ -517,7 +545,7 @@ export default function Step4Review() {
       {/* 질문 정책 안내 */}
       <div className="border border-border rounded-lg p-6 bg-gray-50">
         <h3 className="text-[16px] font-semibold mb-4">질문 정책 안내</h3>
-        
+
         <div className="space-y-4 text-[14px] text-gray-700">
           {/* 무료 질문 횟수 */}
           <div className="space-y-1">
@@ -552,7 +580,7 @@ export default function Step4Review() {
             </p>
           </div>
         </div>
-        
+
         <div className="mt-6 pt-4 border-t border-gray-200">
           <label className="flex items-center gap-3 cursor-pointer group">
             <input
@@ -580,11 +608,10 @@ export default function Step4Review() {
         <button
           onClick={handleCopy}
           disabled={!isCopyEnabled}
-          className={`w-full py-4 rounded-lg font-medium text-[16px] transition-all duration-300 ${
-            isCopyEnabled
+          className={`w-full py-4 rounded-lg font-medium text-[16px] transition-all duration-300 ${isCopyEnabled
               ? 'bg-[#ff7b00] hover:bg-[#e66d00] text-white border border-transparent shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]'
               : 'bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed'
-          }`}
+            }`}
         >
           {isCopying ? '복사 중...' : isCopyEnabled ? '신청서 복사하기' : '정책 동의 후 복사 가능'}
         </button>

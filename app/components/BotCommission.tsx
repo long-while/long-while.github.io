@@ -336,45 +336,66 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                 <span className="text-[#ff7b00] group-hover:translate-x-1 transition-transform">→</span>
               </div>
             </a>
+            <a
+              href="https://docs.google.com/spreadsheets/d/1F4mhGtNT3cgkgze5PlZvMMG9XKMNOzeJNaCPH0KhGrs/edit?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block border border-border p-5 hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all group"
+            >
+              <div className="flex items-center justify-between gap-6">
+                <div className="flex items-baseline gap-6">
+                  <span className="text-[12px] font-mono text-[#ff7b00]">05</span>
+                  <span className="text-[17px]">CoC 자동봇 시트</span>
+                </div>
+                <span className="text-[#ff7b00] group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </a>
           </div>
         </section>
 
         {/* 기본 가동료 */}
         <section className="py-10">
           <div className="mb-10 border-b border-border pb-4">
-            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">가동 기간</h2>
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold">가동 기간에 따른 금액</h2>
           </div>
 
-          <div className="border border-border p-8 bg-black/[0.01]">
-            <div className="mb-6">
-              <p className="text-[19px] leading-[1.8] font-semibold text-black">
-                1주에 5천원
+          <div className="border border-border p-5">
+            <div className="space-y-3 text-[14px] leading-[1.8] text-foreground/80">
+              <p>봇 가동 비용은 1주에 5천원입니다.</p>
+              <p>커뮤니티 용도의 자동봇이라면 운영 주수만큼 숫자를 올려주세요.</p>
+              <p>
+                만약 6개월 이상의 장기 소규모 서버를 위한 자동봇을 신청하시는 경우, 아래 항목을 2주(1만원)으로 세팅해주시면 됩니다.<br />
+                장기 소규모 서버는 가동 주수에 따른 비용을 받지 않는 대신, 초기 세팅 비용이 1만원 청구됩니다.
               </p>
-              <p className="text-[15px] leading-[1.8] text-foreground/70 mt-2">
-                봇 가동 비용은 1주일 5000원입니다. 유지보수는 무료로 진행합니다.
+              <p>
+                종류 불문, 자동봇 유지보수는 무기한 진행하며, 작업 종료 후 전달드리는 오픈채팅에서 진행합니다.<br />며칠 전에도 작년 신청자님의 자동봇을 업데이트 해드렸습니다.
               </p>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => handleOperationWeeksChange(Math.max(0, operationWeeks - 1))}
-                  className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white transition-all text-[20px] flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
-                  disabled={operationWeeks === 0}
-                  aria-label="1주 감소"
-                >
-                  <Minus className="w-5 h-5" />
-                </button>
-                <span className="text-[20px] font-mono min-w-[80px] text-center">{operationWeeks} 주</span>
-                <button
-                  onClick={() => handleOperationWeeksChange(operationWeeks + 1)}
-                  className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border-2 border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white transition-all text-[20px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
-                  aria-label="1주 추가"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="text-right">
-                <span className="text-[22px] font-mono leading-normal text-[#ff7b00]">₩{(operationWeeks * 5000).toLocaleString()}</span>
+
+            <div className="mt-5 pt-5 border-t border-border flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+              <h3 className="text-[15px] text-black font-semibold">가동 주수</h3>
+              <div className="flex items-center justify-between md:justify-start gap-4 shrink-0">
+                <span className="text-[15px] font-mono leading-normal text-[#ff7b00] min-w-[72px] md:text-right">
+                  ₩{(operationWeeks * 5000).toLocaleString()}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleOperationWeeksChange(Math.max(0, operationWeeks - 1))}
+                    className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white transition-all flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                    disabled={operationWeeks === 0}
+                    aria-label="1주 감소"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="text-[14px] font-mono min-w-[48px] text-center">{operationWeeks}주</span>
+                  <button
+                    onClick={() => handleOperationWeeksChange(operationWeeks + 1)}
+                    className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-full border border-[#ff7b00] text-[#ff7b00] hover:bg-[#ff7b00] hover:text-white transition-all flex items-center justify-center focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                    aria-label="1주 추가"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

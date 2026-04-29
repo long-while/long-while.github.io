@@ -1,7 +1,53 @@
 import { useOrder } from '@/app/contexts/OrderContext';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { AlertTriangle } from 'griddy-icons';
+
+// yyyy-mm-dd → MM/DD
+function ymdToMonthDay(date: string): string {
+  if (!date) return '';
+  const parts = date.split('-');
+  if (parts.length !== 3) return '';
+  const m = (parts[1] || '').padStart(2, '0');
+  const d = (parts[2] || '').padStart(2, '0');
+  if (!m || !d || m === '00' || d === '00') return '';
+  return `${m}/${d}`;
+}
+
+// MM/DD 입력값을 4자리 안으로 정규화 (자동 슬래시 삽입)
+function normalizeMonthDayInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
+// 원 단위 금액을 "n.n만원" 형태로 표시 (정수면 소수점 생략)
+function formatManwon(won: number): string {
+  if (!won || won <= 0) return '0원';
+  const man = won / 10000;
+  if (Number.isInteger(man)) return `${man}만원`;
+  return `${man.toFixed(1)}만원`;
+}
+
+// MM/DD ~ MM/DD 사이 주수 계산 (종료일이 시작일보다 이르면 다음 해로 가정)
+function calculateWeeksFromMonthDay(start: string, end: string, baseYear: number): number {
+  const startMatch = start.match(/^(\d{1,2})\/(\d{1,2})$/);
+  const endMatch = end.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (!startMatch || !endMatch) return 0;
+  const sm = parseInt(startMatch[1], 10);
+  const sd = parseInt(startMatch[2], 10);
+  const em = parseInt(endMatch[1], 10);
+  const ed = parseInt(endMatch[2], 10);
+  if (sm < 1 || sm > 12 || em < 1 || em > 12 || sd < 1 || sd > 31 || ed < 1 || ed > 31) return 0;
+  const startDate = new Date(baseYear, sm - 1, sd);
+  let endDate = new Date(baseYear, em - 1, ed);
+  if (endDate.getTime() < startDate.getTime()) {
+    endDate = new Date(baseYear + 1, em - 1, ed);
+  }
+  const diffMs = endDate.getTime() - startDate.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+  return Math.max(0, Math.round(diffDays / 7));
+}
 
 // 견적에서 선택됨 배지 컴포넌트
 function FromCartBadge() {
@@ -40,12 +86,44 @@ export default function Step3Bot() {
   const omakaseFromCart = isFromCart('오마카세');
   const investigationFromCart = isFromCart('자동조사');
 
-  // 운영 주수 동기화
+  // 자동봇 신청 시 가동 일정 기본값 채우기 (한 번만)
   useEffect(() => {
-    if (step3.operationWeeksOption === 'same' && step1.operationWeeks > 0) {
-      updateStep3({ manualWeeks: step1.operationWeeks });
+    if (step3.applyBot !== 'yes') return;
+    if (step3.operationWeeksOption !== null) return;
+    const updates: Record<string, unknown> = { operationWeeksOption: 'manual' };
+    if (!step3.botStartDate && step1.resultAnnouncementDate) {
+      updates.botStartDate = ymdToMonthDay(step1.resultAnnouncementDate);
     }
-  }, [step3.operationWeeksOption, step1.operationWeeks, updateStep3]);
+    if (!step3.botEndDate && step1.closingDate) {
+      updates.botEndDate = ymdToMonthDay(step1.closingDate);
+    }
+    updateStep3(updates);
+  }, [
+    step3.applyBot,
+    step3.operationWeeksOption,
+    step3.botStartDate,
+    step3.botEndDate,
+    step1.resultAnnouncementDate,
+    step1.closingDate,
+    updateStep3,
+  ]);
+
+  // 가동 주수 자동 계산 (manual 모드)
+  const computedBotWeeks = useMemo(() => {
+    if (step3.operationWeeksOption !== 'manual') return 0;
+    if (!step3.botStartDate || !step3.botEndDate) return 0;
+    const baseYear = step1.closingDate
+      ? parseInt(step1.closingDate.split('-')[0], 10) || new Date().getFullYear()
+      : new Date().getFullYear();
+    return calculateWeeksFromMonthDay(step3.botStartDate, step3.botEndDate, baseYear);
+  }, [step3.operationWeeksOption, step3.botStartDate, step3.botEndDate, step1.closingDate]);
+
+  useEffect(() => {
+    if (step3.operationWeeksOption !== 'manual') return;
+    if (computedBotWeeks !== step3.manualWeeks) {
+      updateStep3({ manualWeeks: computedBotWeeks });
+    }
+  }, [computedBotWeeks, step3.manualWeeks, step3.operationWeeksOption, updateStep3]);
 
   // 양도 기능 노출 조건: 상점 또는 스탯 선택 시
   const showTransferFeature =
@@ -67,6 +145,8 @@ export default function Step3Bot() {
       updateStep3({
         operationWeeksOption: null,
         manualWeeks: 0,
+        botStartDate: '',
+        botEndDate: '',
         mainBot: null,
         cocBot: false,
         omakaseBot: false,
@@ -111,8 +191,8 @@ export default function Step3Bot() {
       });
     }
 
-    // 기본 봇이 아니면 조사 자동봇 및 하위 옵션 초기화
-    if (bot !== 'basic') {
+    // 메인 봇 미선택 시 조사 자동봇 및 하위 옵션 초기화
+    if (bot === null) {
       updateStep3({
         investigationBot: false,
         investigationDailyLimit: false,
@@ -153,10 +233,13 @@ export default function Step3Bot() {
     }
   };
 
+  // 조사 자동봇 사용 가능 조건 (메인 봇이 선택된 경우)
+  const canHaveInvestigationBot = step3.mainBot !== null;
+
   // 분리 계정 입력 노출 조건
   const showCocBotAccount = step3.cocBot && step3.mainBot !== null;
   const showInvestigationBotAccount =
-    step3.investigationBot && step3.mainBot === 'basic';
+    step3.investigationBot && canHaveInvestigationBot;
   const requiresSeparateAccounts = showCocBotAccount || showInvestigationBotAccount;
 
   return (
@@ -209,71 +292,91 @@ export default function Step3Bot() {
           {/* 2) 운영 기간 설정 */}
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-semibold mb-1">2) 운영 기간 설정</h3>
-              <p className="text-[13px] text-gray-600">
-                가동 비용은 주당 5,000원입니다.
-              </p>
+              <h3 className="text-[18px] font-semibold mb-1">2) 운영 기간 설정 <span className="text-red-500">*</span></h3>
             </div>
 
             <div className="space-y-3">
-              <label className="flex items-center gap-2 cursor-pointer">
+              {/* 장기 소규모 옵션 */}
+              <label
+                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.operationWeeksOption === 'longterm'
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  }`}
+              >
                 <input
                   type="radio"
                   name="operationWeeksOption"
-                  checked={step3.operationWeeksOption === 'same'}
-                  onChange={() => updateStep3({ operationWeeksOption: 'same' })}
-                  className="w-4 h-4 accent-[#ff7b00]"
+                  checked={step3.operationWeeksOption === 'longterm'}
+                  onChange={() => updateStep3({ operationWeeksOption: 'longterm', manualWeeks: 0 })}
+                  className="w-4 h-4 mt-1 shrink-0 accent-[#ff7b00]"
                 />
-                <span className="text-[14px]">
-                  1단계에서 입력한 커뮤니티 운영 기간과 동일 ({step1.operationWeeks}주)
-                </span>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                    <span className="text-[14px] font-medium">6개월 이상 장기 소규모 서버를 위한 자동봇이에요.</span>
+                    <span className="text-[14px] font-mono text-[#ff7b00] shrink-0">1만원</span>
+                  </div>
+                  {step3.operationWeeksOption === 'longterm' && (
+                    <p className="text-[13px] leading-[1.7] text-gray-700 border-l-2 border-[#ff7b00] pl-3">
+                      자동봇이 마스토돈과 동일한 머신에 설치됩니다. 가동 주수에 따른 비용이 없는 대신, 초기 세팅 비용 1만원이 청구됩니다.
+                    </p>
+                  )}
+                </div>
               </label>
 
-              <label className="flex items-center gap-2 cursor-pointer">
+              {/* 자캐 커뮤니티 옵션 */}
+              <label
+                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.operationWeeksOption === 'manual'
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  }`}
+              >
                 <input
                   type="radio"
                   name="operationWeeksOption"
                   checked={step3.operationWeeksOption === 'manual'}
                   onChange={() => updateStep3({ operationWeeksOption: 'manual' })}
-                  className="w-4 h-4 accent-[#ff7b00]"
+                  className="w-4 h-4 mt-1 shrink-0 accent-[#ff7b00]"
                 />
-                <span className="text-[14px]">직접 입력</span>
-              </label>
-
-              {step3.operationWeeksOption === 'manual' && (
-                <div className="ml-6 space-y-2">
-                  <label htmlFor="manualWeeks" className="block text-[14px] font-medium">
-                    운영 주수
-                  </label>
-                  <input
-                    id="manualWeeks"
-                    type="number"
-                    min="1"
-                    value={step3.manualWeeks || ''}
-                    onChange={(e) => updateStep3({ manualWeeks: parseInt(e.target.value) || 0 })}
-                    placeholder="예: 4, 8, 12"
-                    className="w-full md:w-48 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
-                  />
-                </div>
-              )}
-
-              {/* 가동 비용 표시 - 눈에 띄게 */}
-              {((step3.operationWeeksOption === 'manual' && step3.manualWeeks > 0) ||
-                (step3.operationWeeksOption === 'same' && step1.operationWeeks > 0)) && (
-                  <div className="mt-3 p-3 bg-[var(--brand-bg)] border border-[var(--brand-primary)] rounded-md">
-                    <p className="text-[14px] text-[var(--brand-primary)] font-medium">
-                      가동 비용: {(
-                        step3.operationWeeksOption === 'manual'
-                          ? step3.manualWeeks * 5000
-                          : step1.operationWeeks * 5000
-                      ).toLocaleString()}원 ({
-                        step3.operationWeeksOption === 'manual'
-                          ? step3.manualWeeks
-                          : step1.operationWeeks
-                      }주)
-                    </p>
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                    <span className="text-[14px] font-medium">자캐 커뮤니티를 위한 자동봇이에요.</span>
+                    <span className="text-[14px] font-mono text-[#ff7b00] shrink-0">주당 5천원</span>
                   </div>
-                )}
+                  {step3.operationWeeksOption === 'manual' && (
+                    <>
+                      <p className="text-[13px] leading-[1.7] text-gray-700 border-l-2 border-[#ff7b00] pl-3">
+                        기본적으로 합격자 발표일 ~ 폐장일을 기재해 주세요. 애프터 기간에도 자동봇 사용을 원하신다면 종료 일정을 늘리시거나, 이후 가동 기간을 추가하실 수 있습니다.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={step3.botStartDate}
+                          onChange={(e) => updateStep3({ botStartDate: normalizeMonthDayInput(e.target.value) })}
+                          onClick={(e) => e.stopPropagation()}
+                          placeholder="MM/DD"
+                          aria-label="가동 시작일"
+                          className="w-24 px-3 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px] font-mono text-center"
+                        />
+                        <span className="text-[14px] text-gray-500">~</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={step3.botEndDate}
+                          onChange={(e) => updateStep3({ botEndDate: normalizeMonthDayInput(e.target.value) })}
+                          onClick={(e) => e.stopPropagation()}
+                          placeholder="MM/DD"
+                          aria-label="가동 종료일"
+                          className="w-24 px-3 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px] font-mono text-center"
+                        />
+                        <span className="text-[14px] text-gray-700">
+                          ({step3.manualWeeks}주, {formatManwon(step3.manualWeeks * 5000)})
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </label>
             </div>
           </div>
 
@@ -281,15 +384,17 @@ export default function Step3Bot() {
           <div className="space-y-4">
             <div>
               <h3 className="text-[18px] font-semibold mb-1">3) 메인 봇 종류 <span className="text-red-500">*</span></h3>
-              <p className="text-[13px] text-gray-600">하나를 선택해 주세요.</p>
+              <p className="text-[13px] text-gray-600">
+                기본 계열 봇은 중복 선택할 수 없으며, CoC 봇은 기본 계열 봇과 함께 선택하거나 단독으로 신청할 수 있습니다.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* 기본 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* 1) 기본 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.mainBot === 'basic'
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
                   }`}
               >
                 <input
@@ -297,22 +402,25 @@ export default function Step3Bot() {
                   name="mainBot"
                   checked={step3.mainBot === 'basic'}
                   onChange={() => handleMainBotChange('basic')}
+                  onClick={() => {
+                    if (step3.mainBot === 'basic') handleMainBotChange(null);
+                  }}
                   className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
-                    기본
+                    1) 기본
                     {basicBotFromCart && step3.mainBot === 'basic' && <FromCartBadge />}
                   </div>
                   <div className="text-[13px] text-gray-600 mt-1">15,000원</div>
                 </div>
               </label>
 
-              {/* 기본+상점 */}
+              {/* 2) 기본+상점 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.mainBot === 'basicShop'
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
                   }`}
               >
                 <input
@@ -320,22 +428,25 @@ export default function Step3Bot() {
                   name="mainBot"
                   checked={step3.mainBot === 'basicShop'}
                   onChange={() => handleMainBotChange('basicShop')}
+                  onClick={() => {
+                    if (step3.mainBot === 'basicShop') handleMainBotChange(null);
+                  }}
                   className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
-                    기본+상점
+                    2) 기본+상점
                     {basicShopBotFromCart && step3.mainBot === 'basicShop' && <FromCartBadge />}
                   </div>
                   <div className="text-[13px] text-gray-600 mt-1">35,000원</div>
                 </div>
               </label>
 
-              {/* 기본+상점+스탯 */}
+              {/* 3) 기본+상점+스탯 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.mainBot === 'basicShopStat'
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
                   }`}
               >
                 <input
@@ -343,14 +454,39 @@ export default function Step3Bot() {
                   name="mainBot"
                   checked={step3.mainBot === 'basicShopStat'}
                   onChange={() => handleMainBotChange('basicShopStat')}
+                  onClick={() => {
+                    if (step3.mainBot === 'basicShopStat') handleMainBotChange(null);
+                  }}
                   className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
-                    기본+상점+스탯
+                    3) 기본+상점+스탯
                     {basicShopStatBotFromCart && step3.mainBot === 'basicShopStat' && <FromCartBadge />}
                   </div>
                   <div className="text-[13px] text-gray-600 mt-1">45,000원</div>
+                </div>
+              </label>
+
+              {/* 4) CoC 봇 (중복 선택 가능) */}
+              <label
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.cocBot
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={step3.cocBot}
+                  onChange={(e) => handleCocBotChange(e.target.checked)}
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">
+                    4) CoC 봇
+                    {cocBotFromCart && step3.cocBot && <FromCartBadge />}
+                  </div>
+                  <div className="text-[13px] text-gray-600 mt-1">+30,000원</div>
                 </div>
               </label>
             </div>
@@ -360,32 +496,12 @@ export default function Step3Bot() {
           <div className="space-y-4">
             <h3 className="text-[18px] font-semibold">4) 추가 기능 선택</h3>
 
-            {/* CoC 봇 */}
-            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.cocBot
-                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-              }`}>
-              <input
-                type="checkbox"
-                checked={step3.cocBot}
-                onChange={(e) => handleCocBotChange(e.target.checked)}
-                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
-              />
-              <div className="flex-1">
-                <div className="font-medium text-[14px]">
-                  CoC 봇
-                  {cocBotFromCart && step3.cocBot && <FromCartBadge />}
-                </div>
-                <div className="text-[13px] text-gray-600 mt-1">+30,000원</div>
-              </div>
-            </label>
-
-            {/* 조사 자동봇 (기본 봇 선택 시에만) */}
-            {step3.mainBot === 'basic' && (
+            {/* 조사 자동봇 (메인 봇 선택 시) */}
+            {canHaveInvestigationBot && (
               <div className="space-y-3">
                 <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.investigationBot
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   }`}>
                   <input
                     type="checkbox"
@@ -398,7 +514,7 @@ export default function Step3Bot() {
                       조사 자동봇
                       {investigationFromCart && step3.investigationBot && <FromCartBadge />}
                     </div>
-                    <div className="text-[13px] text-gray-600 mt-1">+20,000원 — 기본 자동봇 선택 시에만 추가 가능</div>
+                    <div className="text-[13px] text-gray-600 mt-1">+20,000원 — 메인 봇(기본 / 기본+상점 / 기본+상점+스탯)과 함께 신청 시 추가 가능</div>
                   </div>
                 </label>
 
@@ -406,8 +522,8 @@ export default function Step3Bot() {
                 {step3.investigationBot && (
                   <div className="ml-7 space-y-3">
                     <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.investigationDailyLimit
-                        ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                        : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                       }`}>
                       <input
                         type="checkbox"
@@ -448,8 +564,8 @@ export default function Step3Bot() {
 
             {/* 커스텀 명령어 업그레이드 */}
             <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.customCommandUpgrade
-                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+              : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
               }`}>
               <input
                 type="checkbox"
@@ -468,8 +584,8 @@ export default function Step3Bot() {
 
             {/* 예약 툿 */}
             <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.reservationToot
-                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+              : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
               }`}>
               <input
                 type="checkbox"
@@ -488,8 +604,8 @@ export default function Step3Bot() {
 
             {/* 자동 스진 */}
             <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.autoProfileImage
-                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+              : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
               }`}>
               <input
                 type="checkbox"
@@ -523,7 +639,7 @@ export default function Step3Bot() {
                     type="text"
                     value={step3.accountList}
                     onChange={(e) => updateStep3({ accountList: e.target.value })}
-                    placeholder="예: @NOTICE, @SYSTEM"
+                    placeholder="@NOTICE, @SYSTEM"
                     className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                   />
                 </div>
@@ -544,8 +660,8 @@ export default function Step3Bot() {
             {showTransferFeature && (
               <div className="space-y-3">
                 <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.tootCurrencyLink
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   }`}>
                   <input
                     type="checkbox"
@@ -584,8 +700,8 @@ export default function Step3Bot() {
             {showAttendanceSystem && (
               <div className="space-y-3">
                 <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.attendanceSystem
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   }`}>
                   <input
                     type="checkbox"
@@ -667,8 +783,8 @@ export default function Step3Bot() {
             {showTransferFeature && (
               <div className="space-y-3">
                 <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.transferFeature
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                   }`}>
                   <input
                     type="checkbox"
@@ -728,8 +844,8 @@ export default function Step3Bot() {
             {/* 오마카세 봇 */}
             <div className="space-y-3">
               <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step3.omakaseBot
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                 }`}>
                 <input
                   type="checkbox"
@@ -846,7 +962,7 @@ export default function Step3Bot() {
 
           {/* 6) 기타 정보 */}
           <div className="pt-6 border-t border-gray-200">
-            <h3 className="text-[18px] font-semibold mb-4">{(showCurrencyUnit || showStatList) ? '6)' : '5)'} 기타 정보</h3>
+            <h3 className="text-[18px] font-semibold mb-4">{(showCurrencyUnit || showStatList) ? '6)' : '5)'} 기타 정보 <span className="text-red-500">*</span></h3>
             <div className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="botSymbol" className="block text-[14px] font-medium">
@@ -868,10 +984,10 @@ export default function Step3Bot() {
                   <div className="space-y-1">
                     <p className="font-medium">
                       {showCocBotAccount && showInvestigationBotAccount
-                        ? '기본 자동봇 / CoC 봇 / 조사 자동봇은 각각 별도의 계정으로 운영됩니다.'
+                        ? '메인 봇 / CoC 봇 / 조사 자동봇은 각각 별도의 계정으로 운영됩니다.'
                         : showCocBotAccount
-                          ? '기본 자동봇과 CoC 봇은 각각 별도의 계정으로 운영됩니다.'
-                          : '기본 자동봇과 조사 자동봇은 각각 별도의 계정으로 운영됩니다.'}
+                          ? '메인 봇과 CoC 봇은 각각 별도의 계정으로 운영됩니다.'
+                          : '메인 봇과 조사 자동봇은 각각 별도의 계정으로 운영됩니다.'}
                     </p>
                     <p>
                       어떤 계정이 어떤 봇으로 사용될지 구분되도록 아이디를 따로 입력해 주세요. (예: @BOT / @CoC / @SEARCH)
@@ -883,14 +999,14 @@ export default function Step3Bot() {
               <div className={`grid grid-cols-1 ${requiresSeparateAccounts ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1'} gap-4`}>
                 <div className="space-y-2">
                   <label htmlFor="botAccountId" className="block text-[14px] font-medium">
-                    {requiresSeparateAccounts ? '기본 자동봇 계정 ID' : '봇 계정 ID'}
+                    {requiresSeparateAccounts ? '메인 봇 계정 ID' : '봇 계정 ID'}
                   </label>
                   <input
                     id="botAccountId"
                     type="text"
                     value={step3.botAccountId}
                     onChange={(e) => updateStep3({ botAccountId: e.target.value })}
-                    placeholder="예: @DICE, @BOT"
+                    placeholder="@DICE, @BOT"
                     className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                   />
                 </div>
@@ -905,7 +1021,7 @@ export default function Step3Bot() {
                       type="text"
                       value={step3.cocBotAccountId}
                       onChange={(e) => updateStep3({ cocBotAccountId: e.target.value })}
-                      placeholder="예: @CoC"
+                      placeholder="@CoC"
                       className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                     />
                   </div>
@@ -921,7 +1037,7 @@ export default function Step3Bot() {
                       type="text"
                       value={step3.investigationBotAccountId}
                       onChange={(e) => updateStep3({ investigationBotAccountId: e.target.value })}
-                      placeholder="예: @SEARCH"
+                      placeholder="@SEARCH"
                       className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                     />
                   </div>

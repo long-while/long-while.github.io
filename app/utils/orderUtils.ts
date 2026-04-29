@@ -200,17 +200,19 @@ export function validateStep1(data: OrderFormData['step1']): ValidationError[] {
     errors.push({ field: 'googlePassword', message: '비밀번호는 최소 8자 이상이어야 합니다.' });
   }
 
-  // 날짜 검증
-  if (!data.resultAnnouncementDate || !data.openingDate || !data.closingDate) {
-    errors.push({ field: 'dates', message: '모든 날짜를 입력해 주세요.' });
-  } else {
-    const dateError = validateDates(
-      data.resultAnnouncementDate,
-      data.openingDate,
-      data.closingDate
-    );
-    if (dateError) {
-      errors.push(dateError);
+  // 날짜 검증 (장기 소규모 서버 체크 시 스킵)
+  if (!data.isLongTermCommunity) {
+    if (!data.resultAnnouncementDate || !data.openingDate || !data.closingDate) {
+      errors.push({ field: 'dates', message: '모든 날짜를 입력해 주세요.' });
+    } else {
+      const dateError = validateDates(
+        data.resultAnnouncementDate,
+        data.openingDate,
+        data.closingDate
+      );
+      if (dateError) {
+        errors.push(dateError);
+      }
     }
   }
 
@@ -297,27 +299,45 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       });
     }
 
-    // 메인 봇 선택
-    if (data.mainBot === null) {
+    // 메인 봇 선택 (CoC 봇 단독 신청도 허용)
+    if (data.mainBot === null && !data.cocBot) {
       errors.push({
         field: 'mainBot',
-        message: '메인 봇 종류를 선택해 주세요.',
+        message: '메인 봇 종류를 선택해 주세요. (CoC 봇만 단독 신청도 가능합니다)',
       });
     }
 
-    // 봇 기호 검증
-    if (data.botSymbol) {
+    // 봇 기호 필수 + 길이 검증
+    if (!data.botSymbol || data.botSymbol.trim() === '') {
+      errors.push({
+        field: 'botSymbol',
+        message: '봇 기호를 입력해 주세요.',
+      });
+    } else {
       const symbolError = validateBotSymbol(data.botSymbol);
       if (symbolError) {
         errors.push(symbolError);
       }
     }
 
-    // 봇 계정 길이 검증
-    if (data.botAccountId && data.botAccountId.length > INPUT_LIMITS.botAccountId) {
+    // 봇 계정 ID 필수 + 길이 검증
+    if (!data.botAccountId || data.botAccountId.trim() === '') {
+      errors.push({
+        field: 'botAccountId',
+        message: '봇 계정 ID를 입력해 주세요.',
+      });
+    } else if (data.botAccountId.length > INPUT_LIMITS.botAccountId) {
       errors.push({
         field: 'botAccountId',
         message: `봇 계정은 ${INPUT_LIMITS.botAccountId}자 이하여야 합니다.`,
+      });
+    }
+
+    // 세팅 마감일 필수
+    if (!data.setupDeadline || data.setupDeadline.trim() === '') {
+      errors.push({
+        field: 'setupDeadline',
+        message: '세팅 마감일을 입력해 주세요.',
       });
     }
 
@@ -365,10 +385,10 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       });
     }
 
-    // 조사 자동봇이 기본 봇과 함께 신청된 경우 분리된 계정 입력 필수
+    // 조사 자동봇이 메인 봇과 함께 신청된 경우 분리된 계정 입력 필수
     if (
       data.investigationBot &&
-      data.mainBot === 'basic' &&
+      data.mainBot !== null &&
       data.botAccountId.trim() !== '' &&
       data.investigationBotAccountId.trim() === ''
     ) {
@@ -379,20 +399,20 @@ export function validateStep3(data: Step3Data): ValidationError[] {
     }
     if (
       data.investigationBot &&
-      data.mainBot === 'basic' &&
+      data.mainBot !== null &&
       data.botAccountId.trim() !== '' &&
       data.investigationBotAccountId.trim() !== '' &&
       data.botAccountId.trim() === data.investigationBotAccountId.trim()
     ) {
       errors.push({
         field: 'investigationBotAccountId',
-        message: '기본 자동봇과 조사 자동봇은 서로 다른 계정 ID를 사용해야 합니다.',
+        message: '메인 봇과 조사 자동봇은 서로 다른 계정 ID를 사용해야 합니다.',
       });
     }
     if (
       data.cocBot &&
       data.investigationBot &&
-      data.mainBot === 'basic' &&
+      data.mainBot !== null &&
       data.cocBotAccountId.trim() !== '' &&
       data.investigationBotAccountId.trim() !== '' &&
       data.cocBotAccountId.trim() === data.investigationBotAccountId.trim()
@@ -475,8 +495,8 @@ export function calculateServerPrice(data: OrderFormData['step2']): number {
 
   // 글자수 변경 (단, 기본값이 아닐 때만)
   if (data.changeCharacterLimit &&
-      data.characterLimitValue !== FORM_CONFIG.validation.characterLimit.default &&
-      data.characterLimitValue > 0) {
+    data.characterLimitValue !== FORM_CONFIG.validation.characterLimit.default &&
+    data.characterLimitValue > 0) {
     total += server.addons.characterLimit;
   }
 
@@ -520,17 +540,21 @@ export function calculateBotPrice(
   if (data.autoProfileImage) botCost += bot.addons.autoProfileImage;
   if (data.tootCurrencyLink) botCost += bot.addons.tootCurrencyLink;
   if (data.transferFeature) botCost += bot.addons.transferFeature;
-  if (data.investigationBot && data.mainBot === 'basic') botCost += bot.addons.investigationBot;
-  if (data.investigationDailyLimit && data.investigationBot && data.mainBot === 'basic') {
+  if (data.investigationBot && data.mainBot !== null) botCost += bot.addons.investigationBot;
+  if (data.investigationDailyLimit && data.investigationBot && data.mainBot !== null) {
     botCost += bot.addons.investigationDailyLimit;
   }
   if (data.attendanceSystem && (data.mainBot === 'basicShop' || data.mainBot === 'basicShopStat')) {
     botCost += bot.addons.attendanceSystem;
   }
 
-  // 가동비: 확정 주수 × 운영비
-  const finalWeeks = data.operationWeeksOption === 'same' ? operationWeeks : data.manualWeeks;
-  const operationCost = Math.max(0, finalWeeks) * bot.operationPerWeek;
+  // 가동비: 장기 옵션이면 세팅비 정액, 아니면 확정 주수 × 운영비
+  let operationCost: number;
+  if (data.operationWeeksOption === 'longterm') {
+    operationCost = bot.longTermSetupFee;
+  } else {
+    operationCost = Math.max(0, data.manualWeeks) * bot.operationPerWeek;
+  }
 
   return { botCost, operationCost };
 }
@@ -575,7 +599,11 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
 
   // 커뮤니티 정보
   text += `${step1.communityKoreanName} / ${step1.communityEnglishName} (약칭 '${step1.communityShortName}')\n\n`;
-  text += `${formatDateForDisplay(step1.openingDate)} ~ ${formatDateForDisplay(step1.closingDate)} (${step1.operationWeeks}주)\n\n`;
+  if (step1.isLongTermCommunity) {
+    text += `장기 소규모 서버\n\n`;
+  } else {
+    text += `${formatDateForDisplay(step1.openingDate)} ~ ${formatDateForDisplay(step1.closingDate)} (${step1.operationWeeks}주)\n\n`;
+  }
   text += `${step1.googleEmail} / ${step1.googlePassword}\n\n`;
   text += `커미션 신청자명 : ${step1.applicantNickname}\n\n`;
 
@@ -640,22 +668,27 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       };
       text += `+ ${fastNames[step2.fastDeadlineOption]}\n`;
     }
-    
+
     text += '\n';
-    
+
     // 기타 정보 (각각 별도 줄)
     if (step2.adminAccountId) text += `총괄 계정 : ${step2.adminAccountId}\n\n`;
     if (step2.desiredDeadline) text += `희망 마감일 : ${step2.desiredDeadline}\n\n`;
-    
+
     text += divider;
   }
 
   // 자동봇 옵션
   if (step3.applyBot === 'yes') {
-    const weeks = step3.operationWeeksOption === 'same' ? step1.operationWeeks : step3.manualWeeks;
-    
-    text += `자동봇 ${weeks}주\n`;
-    
+    if (step3.operationWeeksOption === 'longterm') {
+      text += `자동봇 (장기 소규모, 세팅비)\n`;
+    } else {
+      const range = step3.botStartDate && step3.botEndDate
+        ? `${step3.botStartDate} ~ ${step3.botEndDate} `
+        : '';
+      text += `자동봇 ${range}(${step3.manualWeeks}주)\n`;
+    }
+
     if (step3.mainBot) {
       const mainBotNames: Record<string, string> = {
         basic: '기본봇',
@@ -664,10 +697,10 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       };
       text += `${mainBotNames[step3.mainBot]}\n`;
     }
-    
+
     if (step3.cocBot) text += '+ CoC 봇\n';
-    if (step3.investigationBot && step3.mainBot === 'basic') text += '+ 조사 자동봇\n';
-    if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot === 'basic') {
+    if (step3.investigationBot && step3.mainBot !== null) text += '+ 조사 자동봇\n';
+    if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null) {
       const countLabel = step3.investigationDailyLimitCount > 0
         ? ` (일일 ${step3.investigationDailyLimitCount}회)`
         : '';
@@ -703,17 +736,17 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (attendanceEnabled) {
       text += `출석 명령어 : ${step3.attendanceCommand || '[출석]'} / 재화 +${step3.attendanceCurrencyAmount || 0}\n`;
     }
-    
+
     text += '\n';
-    
+
     const cocAccountActive = step3.cocBot && step3.mainBot !== null;
     const investigationAccountActive =
-      step3.investigationBot && step3.mainBot === 'basic';
+      step3.investigationBot && step3.mainBot !== null;
     const hasSeparateBotAccounts = cocAccountActive || investigationAccountActive;
 
     if (hasSeparateBotAccounts) {
       if (step3.botAccountId) {
-        text += `기본 자동봇 계정 : ${step3.botAccountId}\n`;
+        text += `메인 봇 계정 : ${step3.botAccountId}\n`;
       }
       if (cocAccountActive && step3.cocBotAccountId) {
         text += `CoC 봇 계정 : ${step3.cocBotAccountId}\n`;
@@ -733,21 +766,21 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     if (step3.botSymbol && step3.botSymbol !== '✶') text += `봇 기호 : ${step3.botSymbol}\n\n`;
     if (step3.setupDeadline) text += `희망 마감일 : ${step3.setupDeadline}\n\n`;
-    
+
     if (step3.omakaseDetails) {
       text += `오마카세 상세 : ${step3.omakaseDetails}\n\n`;
     }
-    
+
     text += divider;
   }
 
   // 견적
   text += '견적\n\n';
-  
+
   // 서버 관련
   if (step2.applyServerInstall === 'yes') {
     text += `서버 설치 ${server.base.toLocaleString()}\n`;
-    
+
     if (step2.additionalOption) {
       const optionNames: Record<string, string> = {
         logo: '로고 변경',
@@ -782,9 +815,13 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
 
   // 자동봇 관련
   if (step3.applyBot === 'yes') {
-    const weeks = step3.operationWeeksOption === 'same' ? step1.operationWeeks : step3.manualWeeks;
-    text += `자동봇 ${weeks}주 ${(weeks * bot.operationPerWeek).toLocaleString()}\n`;
-    
+    if (step3.operationWeeksOption === 'longterm') {
+      text += `장기 자동봇 세팅비 ${bot.longTermSetupFee.toLocaleString()}\n`;
+    } else {
+      const weeks = step3.manualWeeks;
+      text += `자동봇 ${weeks}주 ${(weeks * bot.operationPerWeek).toLocaleString()}\n`;
+    }
+
     if (step3.mainBot) {
       const mainBotNames: Record<string, string> = {
         basic: '기본봇',
@@ -796,10 +833,10 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (step3.cocBot) {
       text += `CoC 봇 ${bot.addons.cocBot.toLocaleString()}\n`;
     }
-    if (step3.investigationBot && step3.mainBot === 'basic') {
+    if (step3.investigationBot && step3.mainBot !== null) {
       text += `조사 자동봇 ${bot.addons.investigationBot.toLocaleString()}\n`;
     }
-    if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot === 'basic') {
+    if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null) {
       text += `일일 조사 횟수 제한 ${bot.addons.investigationDailyLimit.toLocaleString()}\n`;
     }
     if (step3.customCommandUpgrade) {
@@ -842,7 +879,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
   } else {
     totalDisplay = `${estimate.grandTotal.toLocaleString()}원`;
   }
-  
+
   text += `총 ${totalDisplay}`;
 
   if (estimate.hasVariablePrice) {

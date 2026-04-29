@@ -13,7 +13,7 @@ export type AdditionalOption = 'logo' | 'dayTheme' | 'nightTheme' | 'bothTheme' 
 export type MainBotType = 'basic' | 'basicShop' | 'basicShopStat' | null;
 
 // 운영 주수 옵션
-export type OperationWeeksOption = 'same' | 'manual' | null;
+export type OperationWeeksOption = 'manual' | 'longterm' | null;
 
 // 양도 옵션
 export type TransferOption = 'itemOnly' | 'currencyOnly' | 'all' | null;
@@ -28,6 +28,7 @@ export interface Step1Data {
   communityShortName: string;
   communityKoreanName: string;
   communityEnglishName: string;
+  isLongTermCommunity: boolean; // 장기 소규모 서버 여부 (체크 시 일정 입력 생략)
   resultAnnouncementDate: string; // yyyy-mm-dd
   openingDate: string; // yyyy-mm-dd
   closingDate: string; // yyyy-mm-dd
@@ -56,6 +57,8 @@ export interface Step3Data {
   applyBot: AgreementStatus;
   operationWeeksOption: OperationWeeksOption;
   manualWeeks: number;
+  botStartDate: string; // MM/DD
+  botEndDate: string; // MM/DD
   mainBot: MainBotType;
   cocBot: boolean;
   omakaseBot: boolean;

@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { Plus, Trash2, AlertCircle, Check } from 'lucide-react';
+import { ChevronDownIcon } from '@/app/components/icons';
 import type { NavigateFunction } from '@/app/types/navigation';
 import MastodonServerCalculator from '@/app/components/MastodonServerCalculator';
 
@@ -10,6 +12,7 @@ interface ServerCommissionProps {
 
 export default function ServerCommission({ onBack, onNavigate }: ServerCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
+  const [isLongTermInfoOpen, setIsLongTermInfoOpen] = useState(false);
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
@@ -47,27 +50,27 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
     price: number;
     description: string;
   }[] = [
-    {
-      name: '툿 글자수 제한 변경',
-      price: 5000,
-      description: '기본 공백포함 1000자.'
-    },
-    {
-      name: '검색 기능',
-      price: 30000,
-      description: '단어 단위 검색. 팔로우 중인 유저의 툿+멘션에서 찾아 결과를 반환합니다.'
-    },
-    {
-      name: '마스토돈 가이드',
-      price: 5000,
-      description: '테마 추가 시 서버 캡처본으로 작업, 노션 페이지로 제공. 타 플랫폼은 쓰지 않습니다. 한달 후 링크가 삭제됩니다.'
-    },
-    {
-      name: 'masto.host 에서 서버 데이터 이전',
-      price: 20000,
-      description: '팔로우 관계, 텍스트 데이터, 이미지 등 모든 정보를 기존 서버에서 새로운 서버로 옮겨드립니다.'
-    }
-  ];
+      {
+        name: '툿 글자수 제한 변경',
+        price: 5000,
+        description: '기본 공백포함 1000자.'
+      },
+      {
+        name: '검색 기능',
+        price: 30000,
+        description: '단어 단위 검색. 팔로우 중인 유저의 툿+멘션에서 찾아 결과를 반환합니다.'
+      },
+      {
+        name: '마스토돈 가이드',
+        price: 5000,
+        description: '테마 추가 시 서버 캡처본으로 작업, 노션 페이지로 제공. 타 플랫폼은 쓰지 않습니다. 한달 후 링크가 삭제됩니다.'
+      },
+      {
+        name: 'masto.host 에서 서버 데이터 이전',
+        price: 20000,
+        description: '팔로우 관계, 텍스트 데이터, 이미지 등 모든 정보를 기존 서버에서 새로운 서버로 옮겨드립니다.'
+      }
+    ];
 
   // 현재 선택된 테마 옵션
   const getSelectedThemeOption = () => {
@@ -131,6 +134,34 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           <h1 className="text-[40px] leading-[0.95] tracking-[-0.03em] font-bold text-[#ff7b00]">
             서버 설치 & 테마 커미션
           </h1>
+        </div>
+
+        {/* 장기 소규모 서버 안내 (드롭다운) */}
+        <div className="border border-border mb-10 overflow-hidden bg-white">
+          <button
+            type="button"
+            onClick={() => setIsLongTermInfoOpen(!isLongTermInfoOpen)}
+            aria-expanded={isLongTermInfoOpen}
+            className="w-full px-6 py-5 flex items-center justify-between gap-4 hover:bg-black/[0.02] transition-colors min-h-[44px] text-left"
+          >
+            <span className="text-[19px] font-semibold leading-[1.4]">
+              TRPG 혹은 자관 역극용으로 장기 소규모 서버 설치가 가능할까요?
+            </span>
+            <ChevronDownIcon
+              className={`w-5 h-5 shrink-0 transition-transform duration-300 ${isLongTermInfoOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          <div
+            className={`border-t border-border transition-all duration-300 ease-in-out ${isLongTermInfoOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 border-t-0'
+              }`}
+          >
+            <div className="px-6 py-6 text-[15px] leading-[1.8] text-foreground/80">
+              <p>
+                네, 가능합니다. 서버에 가입된 계정의 수와 상관없이 평균 동시접속자가 10인 미만이라면 소규모 서버 설치가 가능해요. 도메인과 서버를 포함하여 모든 정보와 데이터는 신청자님께 귀속되며, 커미션 진행을 돕도록 상세한 안내가 준비되어 있습니다. 자동봇을 가동하시게 된다면 동일한 VM에 세팅해드리므로 가동 주수에 따른 비용이 들지 않는 대신, 초기 세팅 비용이 1만원 청구됩니다.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* 서버비 계산기 */}

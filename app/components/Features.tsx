@@ -25,7 +25,7 @@ export default function Features() {
   // 주의사항
   const warning = {
     title: "주의사항",
-    description: "호환성 문제로 고급 인터페이스/커스텀 이모지를 지원하지 않습니다."
+    description: "호환성 문제로 고급 인터페이스(트윗덱)/커스텀 이모지를 지원하지 않습니다."
   };
 
   return (
@@ -37,8 +37,8 @@ export default function Features() {
       {/* 핵심 특징 4개 - 카드 형태 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         {highlightFeatures.map((feature, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="p-6 border border-border shadow-sm hover:border-[var(--brand-primary)] hover:shadow-md transition-all bg-white"
           >
             <div className="flex items-baseline gap-6">
@@ -67,11 +67,10 @@ export default function Features() {
           </span>
           <ChevronDownIcon className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
         </button>
-        
-        <div 
-          className={`border-t border-border transition-all duration-300 ease-in-out ${
-            isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 border-t-0'
-          }`}
+
+        <div
+          className={`border-t border-border transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 border-t-0'
+            }`}
         >
           <div className="px-6 py-6 space-y-6">
             {moreFeatures.map((feature, index) => (
