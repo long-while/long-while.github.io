@@ -164,6 +164,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
       name: "자동조사 타입",
       price: 20000,
       features: [
+        "[장소 목록] [진입/장소명] [조사/포인트명]",
         "장소 목록과 각 장소에서 조사할 수 있는 포인트 관리",
         "캐릭터 소지품 및 스탯과 연동 (특정 이벤트 발생 시 아이템 획득 / 체력 -5 등)"
       ]
