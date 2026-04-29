@@ -159,8 +159,8 @@ export default function Step2Server() {
               {/* 로고 변경 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === 'logo'
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
                   }`}
               >
                 <input
@@ -179,8 +179,8 @@ export default function Step2Server() {
               {/* 낮 테마 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === 'dayTheme'
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
                   }`}
               >
                 <input
@@ -199,8 +199,8 @@ export default function Step2Server() {
               {/* 밤 테마 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === 'nightTheme'
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
                   }`}
               >
                 <input
@@ -219,8 +219,8 @@ export default function Step2Server() {
               {/* 테마 2종 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === 'bothTheme'
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
                   }`}
               >
                 <input
@@ -244,8 +244,8 @@ export default function Step2Server() {
 
             {/* 노션 가이드 */}
             <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.notionGuide
-                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+              : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
               }`}>
               <input
                 type="checkbox"
@@ -267,8 +267,8 @@ export default function Step2Server() {
             {/* 글자수 제한 변경 */}
             <div className="space-y-3">
               <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.changeCharacterLimit
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                 }`}>
                 <input
                   type="checkbox"
@@ -309,8 +309,8 @@ export default function Step2Server() {
                     }
                     placeholder="예: 500, 1500, 2000"
                     className={`w-full md:w-64 px-4 py-2 border rounded-md focus:outline-none text-[14px] ${characterLimitError
-                        ? 'border-red-500 focus:border-red-500'
-                        : 'border-input focus:border-[#ff7b00]'
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-input focus:border-[#ff7b00]'
                       }`}
                   />
                   {characterLimitError && (
@@ -325,8 +325,8 @@ export default function Step2Server() {
             {/* 검색 옵션 */}
             <div className="space-y-3">
               <label className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 hover:shadow-sm ${step2.searchOption
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                 } ${serverCalcResult?.search === 'yes' ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
@@ -358,8 +358,8 @@ export default function Step2Server() {
 
             {/* masto.host 데이터 이전 */}
             <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.mastoHostMigration
-                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+              : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
               }`}>
               <input
                 type="checkbox"
@@ -381,8 +381,8 @@ export default function Step2Server() {
             {/* 빠른 마감 */}
             <div className="space-y-3">
               <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.fastDeadline
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                 }`}>
                 <input
                   type="checkbox"
@@ -411,8 +411,8 @@ export default function Step2Server() {
                   {/* 24시간 내 기본 서버 */}
                   <label
                     className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${step2.fastDeadlineOption === 'basic24h'
-                        ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                        : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                       }`}
                   >
                     <input
@@ -430,8 +430,8 @@ export default function Step2Server() {
                   {/* 48시간 내 로고 변경 */}
                   <label
                     className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${step2.fastDeadlineOption === 'logo48h'
-                        ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                        : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                       }`}
                   >
                     <input
@@ -449,8 +449,8 @@ export default function Step2Server() {
                   {/* 48시간 내 테마 커스텀 */}
                   <label
                     className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${step2.fastDeadlineOption === 'theme48h'
-                        ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                        : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
                       }`}
                   >
                     <input
@@ -482,10 +482,15 @@ export default function Step2Server() {
                   type="text"
                   value={step2.desiredDeadline}
                   onChange={(e) => updateStep2({ desiredDeadline: e.target.value })}
-                  placeholder="MM/DD (예: 03/15)"
+                  placeholder="MM/DD"
                   className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                 />
                 <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요.</p>
+                <div className="mt-2 p-3 bg-[#fff5eb] border border-[#ff7b00] rounded-md">
+                  <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+                    로고 혹은 테마 옵션을 신청하셨나요? 신청서를 접수하시면 테마와 로고 이미지 규격이 전달됩니다. 신청자님께서는 마감일로부터 <strong>최소 일주일 이전에 9종/12종/13종</strong>의 이미지를 전달해주셔야 합니다. 그때까지 디자인을 완성하고 이미지를 전달하실 수 있는지 생각해보고 마감일을 조정하세요.
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -509,7 +514,7 @@ export default function Step2Server() {
                   className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${adminAccountError
                     ? 'border-red-500 focus:border-red-500'
                     : 'border-input focus:border-[#ff7b00]'
-                  }`}
+                    }`}
                 />
                 {adminAccountError ? (
                   <div className="p-3 bg-red-50 border border-red-500 rounded-md">

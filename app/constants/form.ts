@@ -77,6 +77,7 @@ export const PRICING_CONFIG = {
       attendanceSystem: 10000,
     },
     operationPerWeek: 5000,
+    longTermSetupFee: 10000,
   },
 
   policy: {

@@ -92,7 +92,7 @@ export default function MastodonServerCalculator({ compact = false }: { compact?
             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-bold font-mono shrink-0">
               2
             </span>
-            러닝 인원
+            평균 동시접속자 수 (커뮤니티의 경우 러닝 인원)
           </label>
           <Select value={usersKey} onValueChange={setUsersKey}>
             <SelectTrigger
@@ -275,17 +275,17 @@ export default function MastodonServerCalculator({ compact = false }: { compact?
             <p className="text-[13px] text-foreground/60 leading-[1.75]">
               {result.type === 'gcp' && result.paidMonths > 0 && (
                 <>첫 3개월은 구글에서 제공하는 무료 크레딧을 소모하며, 이후 매달 약 {result.monthlyKrw}이 지출됩니다.<br />
-                서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.</>
+                  서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.</>
               )}
               {result.type === 'gcp' && result.paidMonths === 0 && (
                 <>서버 설치 후 3개월간은 구글에서 제공하는 무료 크레딧을 소모하여 서버비 없이 사용하실 수 있습니다.
-                애프터 등을 위해 서버를 3개월 이상 유지하실 경우, 사양을 낮추고 월 3만원 정도의 금액으로 서버를 유지해 드립니다.<br /><br />
-                무료 체험이 끝나도 자동 결제가 진행되지 않습니다. 만약 유료 플랜으로 전환하여 3개월 이상 서버를 사용하실 경우, 서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.</>
+                  애프터 등을 위해 서버를 3개월 이상 유지하실 경우, 사양을 낮추고 월 3만원 정도의 금액으로 서버를 유지해 드립니다.<br /><br />
+                  무료 체험이 끝나도 자동 결제가 진행되지 않습니다. 만약 유료 플랜으로 전환하여 3개월 이상 서버를 사용하실 경우, 서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.</>
               )}
               {result.type === 'vultr' && (
                 <>장기/소규모 서버의 경우 서버비 절약을 위해 구글이 아닌 Vultr라는 호스팅 업체를 통해 서버 컴퓨터를 대여하게 됩니다.
-                3개월 무료 크레딧을 지급하지 않는 대신, 월 서버비가 더 적습니다.<br /><br />
-                이때 발생하는 서버 비용은 커미션주가 아닌, 호스팅 업체에 가입 시 등록하시는 결제수단으로 월초에 자동 결제됩니다.</>
+                  3개월 무료 크레딧을 지급하지 않는 대신, 월 서버비가 더 적습니다.<br /><br />
+                  이때 발생하는 서버 비용은 커미션주가 아닌, 호스팅 업체에 가입 시 등록하시는 결제수단으로 월초에 자동 결제됩니다.</>
               )}
             </p>
           </div>

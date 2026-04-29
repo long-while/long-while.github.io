@@ -163,57 +163,88 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
       {/* 4) 커뮤니티 일정 */}
       <div className="pt-6 border-t border-gray-200">
         <h3 className="text-[18px] font-semibold mb-4">4) 커뮤니티 일정</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="resultAnnouncementDate" className="block text-[14px] font-medium">
-              합격자 발표일 <span className="text-red-500" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="resultAnnouncementDate"
-              type="date"
-              value={step1.resultAnnouncementDate}
-              onChange={(e) => updateStep1({ resultAnnouncementDate: e.target.value })}
-              aria-required="true"
-              className="form-input"
-            />
-          </div>
 
-          <div className="space-y-2">
-            <label htmlFor="openingDate" className="block text-[14px] font-medium">
-              개장일 <span className="text-red-500" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="openingDate"
-              type="date"
-              value={step1.openingDate}
-              onChange={(e) => updateStep1({ openingDate: e.target.value })}
-              aria-required="true"
-              className="form-input"
-            />
-          </div>
+        <label className="flex items-start gap-2 cursor-pointer mb-4">
+          <input
+            type="checkbox"
+            checked={step1.isLongTermCommunity}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              if (checked) {
+                updateStep1({
+                  isLongTermCommunity: true,
+                  resultAnnouncementDate: '',
+                  openingDate: '',
+                  closingDate: '',
+                  operationWeeks: 0,
+                });
+              } else {
+                updateStep1({ isLongTermCommunity: false });
+              }
+            }}
+            className="w-4 h-4 mt-1 shrink-0 accent-[#ff7b00]"
+          />
+          <span className="text-[14px] leading-[1.6]">
+            장기 소규모 서버입니다.
+            <span className="text-gray-500"> (합격자 발표/개장/폐장 일정 없이 운영)</span>
+          </span>
+        </label>
 
-          <div className="space-y-2">
-            <label htmlFor="closingDate" className="block text-[14px] font-medium">
-              폐장일 <span className="text-red-500" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="closingDate"
-              type="date"
-              value={step1.closingDate}
-              onChange={(e) => updateStep1({ closingDate: e.target.value })}
-              aria-required="true"
-              className="form-input"
-            />
-          </div>
-        </div>
+        {!step1.isLongTermCommunity && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="resultAnnouncementDate" className="block text-[14px] font-medium">
+                  합격자 발표일 <span className="text-red-500" aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="resultAnnouncementDate"
+                  type="date"
+                  value={step1.resultAnnouncementDate}
+                  onChange={(e) => updateStep1({ resultAnnouncementDate: e.target.value })}
+                  aria-required="true"
+                  className="form-input"
+                />
+              </div>
 
-        {/* 운영 기간 표시 */}
-        {step1.operationWeeks > 0 && (
-          <div className="mt-4 p-3 bg-[var(--brand-bg)] border border-[var(--brand-primary)] rounded-md">
-            <p className="text-[14px] text-[var(--brand-primary)] font-medium">
-              커뮤니티 운영기간: {step1.operationWeeks}주
-            </p>
-          </div>
+              <div className="space-y-2">
+                <label htmlFor="openingDate" className="block text-[14px] font-medium">
+                  개장일 <span className="text-red-500" aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="openingDate"
+                  type="date"
+                  value={step1.openingDate}
+                  onChange={(e) => updateStep1({ openingDate: e.target.value })}
+                  aria-required="true"
+                  className="form-input"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="closingDate" className="block text-[14px] font-medium">
+                  폐장일 <span className="text-red-500" aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="closingDate"
+                  type="date"
+                  value={step1.closingDate}
+                  onChange={(e) => updateStep1({ closingDate: e.target.value })}
+                  aria-required="true"
+                  className="form-input"
+                />
+              </div>
+            </div>
+
+            {/* 운영 기간 표시 */}
+            {step1.operationWeeks > 0 && (
+              <div className="mt-4 p-3 bg-[var(--brand-bg)] border border-[var(--brand-primary)] rounded-md">
+                <p className="text-[14px] text-[var(--brand-primary)] font-medium">
+                  커뮤니티 운영기간: {step1.operationWeeks}주
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
