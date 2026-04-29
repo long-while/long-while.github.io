@@ -90,6 +90,8 @@ export default function Step3Bot() {
         setupDeadline: '',
         botSymbol: '✶',
         botAccountId: '',
+        cocBotAccountId: '',
+        investigationBotAccountId: '',
       });
     }
   };
@@ -115,6 +117,7 @@ export default function Step3Bot() {
         investigationBot: false,
         investigationDailyLimit: false,
         investigationDailyLimitCount: 0,
+        investigationBotAccountId: '',
       });
     }
 
@@ -137,9 +140,24 @@ export default function Step3Bot() {
       updateStep3({
         investigationDailyLimit: false,
         investigationDailyLimitCount: 0,
+        investigationBotAccountId: '',
       });
     }
   };
+
+  // CoC 봇 해제 시 분리 계정 초기화
+  const handleCocBotChange = (checked: boolean) => {
+    updateStep3({ cocBot: checked });
+    if (!checked) {
+      updateStep3({ cocBotAccountId: '' });
+    }
+  };
+
+  // 분리 계정 입력 노출 조건
+  const showCocBotAccount = step3.cocBot && step3.mainBot !== null;
+  const showInvestigationBotAccount =
+    step3.investigationBot && step3.mainBot === 'basic';
+  const requiresSeparateAccounts = showCocBotAccount || showInvestigationBotAccount;
 
   return (
     <div className="space-y-8">
@@ -350,7 +368,7 @@ export default function Step3Bot() {
               <input
                 type="checkbox"
                 checked={step3.cocBot}
-                onChange={(e) => updateStep3({ cocBot: e.target.checked })}
+                onChange={(e) => handleCocBotChange(e.target.checked)}
                 className="w-4 h-4 shrink-0 accent-[#ff7b00]"
               />
               <div className="flex-1">
@@ -830,24 +848,42 @@ export default function Step3Bot() {
           <div className="pt-6 border-t border-gray-200">
             <h3 className="text-[18px] font-semibold mb-4">{(showCurrencyUnit || showStatList) ? '6)' : '5)'} 기타 정보</h3>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="botSymbol" className="block text-[14px] font-medium">
-                    봇 기호
-                  </label>
-                  <input
-                    id="botSymbol"
-                    type="text"
-                    value={step3.botSymbol}
-                    onChange={(e) => updateStep3({ botSymbol: e.target.value })}
-                    placeholder="기본값: ✶"
-                    className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
-                  />
-                </div>
+              <div className="space-y-2">
+                <label htmlFor="botSymbol" className="block text-[14px] font-medium">
+                  봇 기호
+                </label>
+                <input
+                  id="botSymbol"
+                  type="text"
+                  value={step3.botSymbol}
+                  onChange={(e) => updateStep3({ botSymbol: e.target.value })}
+                  placeholder="기본값: ✶"
+                  className="w-full md:w-64 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                />
+              </div>
 
+              {requiresSeparateAccounts && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-md text-[13px] text-amber-800 flex items-start gap-2">
+                  <AlertTriangle size={16} color="currentColor" className="mt-0.5 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-medium">
+                      {showCocBotAccount && showInvestigationBotAccount
+                        ? '기본 자동봇 / CoC 봇 / 조사 자동봇은 각각 별도의 계정으로 운영됩니다.'
+                        : showCocBotAccount
+                          ? '기본 자동봇과 CoC 봇은 각각 별도의 계정으로 운영됩니다.'
+                          : '기본 자동봇과 조사 자동봇은 각각 별도의 계정으로 운영됩니다.'}
+                    </p>
+                    <p>
+                      어떤 계정이 어떤 봇으로 사용될지 구분되도록 아이디를 따로 입력해 주세요. (예: @BOT / @CoC / @SEARCH)
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className={`grid grid-cols-1 ${requiresSeparateAccounts ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1'} gap-4`}>
                 <div className="space-y-2">
                   <label htmlFor="botAccountId" className="block text-[14px] font-medium">
-                    봇 계정 ID
+                    {requiresSeparateAccounts ? '기본 자동봇 계정 ID' : '봇 계정 ID'}
                   </label>
                   <input
                     id="botAccountId"
@@ -858,6 +894,38 @@ export default function Step3Bot() {
                     className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                   />
                 </div>
+
+                {showCocBotAccount && (
+                  <div className="space-y-2">
+                    <label htmlFor="cocBotAccountId" className="block text-[14px] font-medium">
+                      CoC 봇 계정 ID
+                    </label>
+                    <input
+                      id="cocBotAccountId"
+                      type="text"
+                      value={step3.cocBotAccountId}
+                      onChange={(e) => updateStep3({ cocBotAccountId: e.target.value })}
+                      placeholder="예: @CoC"
+                      className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                    />
+                  </div>
+                )}
+
+                {showInvestigationBotAccount && (
+                  <div className="space-y-2">
+                    <label htmlFor="investigationBotAccountId" className="block text-[14px] font-medium">
+                      조사 자동봇 계정 ID
+                    </label>
+                    <input
+                      id="investigationBotAccountId"
+                      type="text"
+                      value={step3.investigationBotAccountId}
+                      onChange={(e) => updateStep3({ investigationBotAccountId: e.target.value })}
+                      placeholder="예: @SEARCH"
+                      className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">

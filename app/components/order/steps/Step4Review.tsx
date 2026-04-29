@@ -291,12 +291,42 @@ export default function Step4Review() {
                   </p>
                 </div>
               )}
-              {step3.botAccountId && (
-                <div>
-                  <p className="text-[13px] text-gray-500 mb-1">봇 계정</p>
-                  <p className="text-[15px]">{step3.botAccountId}</p>
-                </div>
-              )}
+              {(() => {
+                const cocAccountActive = step3.cocBot && step3.mainBot !== null;
+                const investigationAccountActive =
+                  step3.investigationBot && step3.mainBot === 'basic';
+                const hasSeparate = cocAccountActive || investigationAccountActive;
+
+                if (!step3.botAccountId && !step3.cocBotAccountId && !step3.investigationBotAccountId) {
+                  return null;
+                }
+
+                if (!hasSeparate) {
+                  return step3.botAccountId ? (
+                    <div>
+                      <p className="text-[13px] text-gray-500 mb-1">봇 계정</p>
+                      <p className="text-[15px]">{step3.botAccountId}</p>
+                    </div>
+                  ) : null;
+                }
+
+                return (
+                  <div>
+                    <p className="text-[13px] text-gray-500 mb-1">봇 계정 (분리)</p>
+                    <div className="text-[15px] space-y-1">
+                      {step3.botAccountId && (
+                        <p>기본 자동봇: {step3.botAccountId}</p>
+                      )}
+                      {cocAccountActive && step3.cocBotAccountId && (
+                        <p>CoC 봇: {step3.cocBotAccountId}</p>
+                      )}
+                      {investigationAccountActive && step3.investigationBotAccountId && (
+                        <p>조사 자동봇: {step3.investigationBotAccountId}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>
