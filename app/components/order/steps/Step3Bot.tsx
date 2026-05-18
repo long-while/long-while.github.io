@@ -928,7 +928,7 @@ export default function Step3Bot() {
                 {showCurrencyUnit && (
                   <div className="space-y-2">
                     <label htmlFor="currencyUnit" className="block text-[14px] font-medium">
-                      재화 단위
+                      재화 단위 <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="currencyUnit"

@@ -423,8 +423,16 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       });
     }
 
-    // 재화 단위 길이 검증
-    if (data.currencyUnit && data.currencyUnit.length > INPUT_LIMITS.currencyUnit) {
+    // 재화 단위 필수 입력 (상점/스탯 봇 선택 시)
+    if (
+      (data.mainBot === 'basicShop' || data.mainBot === 'basicShopStat') &&
+      (!data.currencyUnit || data.currencyUnit.trim() === '')
+    ) {
+      errors.push({
+        field: 'currencyUnit',
+        message: '재화 단위를 입력해 주세요.',
+      });
+    } else if (data.currencyUnit && data.currencyUnit.length > INPUT_LIMITS.currencyUnit) {
       errors.push({
         field: 'currencyUnit',
         message: `재화 단위는 ${INPUT_LIMITS.currencyUnit}자 이하여야 합니다.`,
