@@ -354,6 +354,15 @@ export default function Step2Server() {
                 </div>
               </label>
 
+              {/* 장기/소규모 서버 + 검색 옵션 선택 시 서버비 주의 문구 */}
+              {serverCalcResult?.type === 'vultr' && step2.searchOption && (
+                <div className="ml-7 p-3 bg-[#fff5eb] border border-[#ff7b00] rounded-md animate-slideDown">
+                  <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+                    장기 소규모 서버에 검색 옵션을 추가하시면 매달 서버비가 총 <strong>4만원</strong> 정도 나오니 괜찮으신 분만 선택 바랍니다. 검색 옵션 제외 시 서버비는 <strong>1만원~3만원</strong> 사이, 원하시는 사양으로 사용하시게 됩니다.
+                  </p>
+                </div>
+              )}
+
             </div>
 
             {/* masto.host 데이터 이전 */}
