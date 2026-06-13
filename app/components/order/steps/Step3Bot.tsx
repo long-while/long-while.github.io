@@ -1,7 +1,17 @@
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEffect, useMemo } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Plus, X } from 'lucide-react';
 import { AlertTriangle } from 'griddy-icons';
+import { INPUT_LIMITS } from '@/app/types/order';
+import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
+
+// 예약 툿/자동 스진용 추가 계정 정책 (constants/form.ts 와 공유)
+const {
+  freeExtraSlotsWithAdmin: FREE_EXTRA_SLOTS_WITH_ADMIN,
+  freeExtraSlotsNoAdmin: FREE_EXTRA_SLOTS_NO_ADMIN,
+  maxTiers: MAX_ACCOUNT_TIERS,
+  slotsPerTier: SLOTS_PER_TIER,
+} = ACCOUNT_LIST_CONFIG;
 
 // yyyy-mm-dd → MM/DD
 function ymdToMonthDay(date: string): string {
@@ -63,6 +73,7 @@ export default function Step3Bot() {
   const { formData, updateStep3, cartSyncState } = useOrder();
   const step3 = formData.step3;
   const step1 = formData.step1;
+  const step2 = formData.step2;
 
   // 견적에서 동기화된 항목인지 확인
   const isFromCart = (itemName: string) => {
@@ -164,7 +175,8 @@ export default function Step3Bot() {
         attendanceCommand: '[출석]',
         currencyUnit: '',
         statList: '',
-        accountList: '',
+        accountList: [],
+        extraAccountTiers: 0,
         tootPerCurrency: '',
         omakaseDetails: '',
         setupDeadline: '',
@@ -241,6 +253,72 @@ export default function Step3Bot() {
   const showInvestigationBotAccount =
     step3.investigationBot && canHaveInvestigationBot;
   const requiresSeparateAccounts = showCocBotAccount || showInvestigationBotAccount;
+
+  // ── 예약 툿/자동 스진용 계정 목록 ──────────────────────────────
+  const showAccountList = step3.reservationToot || step3.autoProfileImage;
+  const hasAdminAccount = step2.adminAccountId.trim() !== '';
+  const accounts = step3.accountList;
+  const accountTiers = Math.min(MAX_ACCOUNT_TIERS, Math.max(0, step3.extraAccountTiers));
+  const freeExtraSlots = hasAdminAccount
+    ? FREE_EXTRA_SLOTS_WITH_ADMIN
+    : FREE_EXTRA_SLOTS_NO_ADMIN;
+  const maxExtraSlots = freeExtraSlots + accountTiers * SLOTS_PER_TIER;
+  const totalRegistered = (hasAdminAccount ? 1 : 0) + accounts.length;
+  const totalMaxAccounts = (hasAdminAccount ? 1 : 0) + maxExtraSlots;
+  const canAddAccountSlot = accounts.length < maxExtraSlots;
+  // 총괄 계정을 나중에 입력하는 등으로 무료 한도를 넘긴 경우
+  const isOverCapacity = accounts.length > maxExtraSlots;
+  const canBuyAccountTier =
+    accountTiers < MAX_ACCOUNT_TIERS && accounts.length >= maxExtraSlots;
+  const canRefundAccountTier =
+    accountTiers > 0 && accounts.length <= freeExtraSlots + (accountTiers - 1) * SLOTS_PER_TIER;
+
+  // 예약 툿/자동 스진을 모두 해제하면 계정 목록 초기화
+  const handleReservationTootChange = (checked: boolean) => {
+    const resetAccounts = !checked && !step3.autoProfileImage;
+    updateStep3({
+      reservationToot: checked,
+      ...(resetAccounts ? { accountList: [], extraAccountTiers: 0 } : {}),
+    });
+  };
+
+  const handleAutoProfileImageChange = (checked: boolean) => {
+    const resetAccounts = !checked && !step3.reservationToot;
+    updateStep3({
+      autoProfileImage: checked,
+      ...(resetAccounts ? { accountList: [], extraAccountTiers: 0 } : {}),
+    });
+  };
+
+  const addAccountSlot = () => {
+    if (accounts.length >= maxExtraSlots) return;
+    updateStep3({ accountList: [...accounts, ''] });
+  };
+
+  const removeAccountSlot = (index: number) => {
+    updateStep3({ accountList: accounts.filter((_, i) => i !== index) });
+  };
+
+  const updateAccountSlot = (index: number, value: string) => {
+    updateStep3({
+      accountList: accounts.map((account, i) => (i === index ? value : account)),
+    });
+  };
+
+  const buyAccountTier = () => {
+    if (accountTiers >= MAX_ACCOUNT_TIERS) return;
+    updateStep3({ extraAccountTiers: accountTiers + 1 });
+  };
+
+  const refundAccountTier = () => {
+    if (accountTiers <= 0) return;
+    const nextTiers = accountTiers - 1;
+    const nextMax = freeExtraSlots + nextTiers * SLOTS_PER_TIER;
+    updateStep3({
+      extraAccountTiers: nextTiers,
+      accountList: accounts.slice(0, nextMax),
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -590,7 +668,7 @@ export default function Step3Bot() {
               <input
                 type="checkbox"
                 checked={step3.reservationToot}
-                onChange={(e) => updateStep3({ reservationToot: e.target.checked })}
+                onChange={(e) => handleReservationTootChange(e.target.checked)}
                 className="w-4 h-4 shrink-0 accent-[#ff7b00]"
               />
               <div className="flex-1">
@@ -610,7 +688,7 @@ export default function Step3Bot() {
               <input
                 type="checkbox"
                 checked={step3.autoProfileImage}
-                onChange={(e) => updateStep3({ autoProfileImage: e.target.checked })}
+                onChange={(e) => handleAutoProfileImageChange(e.target.checked)}
                 className="w-4 h-4 shrink-0 accent-[#ff7b00]"
               />
               <div className="flex-1">
@@ -623,25 +701,124 @@ export default function Step3Bot() {
             </label>
 
             {/* 예약 툿 또는 자동 스진 선택 시 계정 목록 입력 */}
-            {(step3.reservationToot || step3.autoProfileImage) && (
+            {showAccountList && (
               <div className="ml-7 space-y-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                 <div className="space-y-2">
-                  <label htmlFor="accountList" className="block text-[14px] font-medium">
-                    예약 툿 혹은 스토리 진행에 사용할 계정 목록
-                  </label>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <label className="block text-[14px] font-medium">
+                      예약 툿 혹은 스토리 진행에 사용할 계정 목록
+                    </label>
+                    <span className={`text-[13px] shrink-0 ${isOverCapacity ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                      등록 {totalRegistered} / {totalMaxAccounts}개 (최대 {ACCOUNT_LIST_CONFIG.maxTotalAccounts}개)
+                    </span>
+                  </div>
+                  {isOverCapacity && (
+                    <p role="alert" className="text-[13px] text-red-600 bg-red-50 border border-red-300 p-2 rounded-md">
+                      무료 등록 한도를 초과했어요. 추가 계정을 구매하거나 칸을 줄여 주세요.
+                    </p>
+                  )}
                   <p className="text-[13px] text-gray-600">
                     예약 툿을 발송해야 하거나 자동 스토리 진행에 참여하기를 원하는 계정의 희망 아이디를 모두 적어주세요.<br />
                     마스토돈 개인 서버는 아이디 겹침을 고려하지 않으셔도 됩니다.<br />
                     최대한 간결한 이름, 특히 전체 대문자로 통일하여 캐릭터 계정과 차이를 두는 것을 추천드립니다.
                   </p>
-                  <input
-                    id="accountList"
-                    type="text"
-                    value={step3.accountList}
-                    onChange={(e) => updateStep3({ accountList: e.target.value })}
-                    placeholder="@NOTICE, @SYSTEM"
-                    className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
-                  />
+                  <p className="text-[13px] text-gray-600">
+                    {hasAdminAccount
+                      ? '총괄 계정을 포함해 기본 3개까지 무료로 등록할 수 있어요.'
+                      : '기본 3개까지 무료로 등록할 수 있어요.'} 더 필요하시면 {SLOTS_PER_TIER}칸당 +{PRICING_CONFIG.bot.addons.extraAccountTier.toLocaleString()}원으로 최대 {ACCOUNT_LIST_CONFIG.maxTotalAccounts}개까지 추가할 수 있습니다.
+                  </p>
+
+                  <div className="space-y-2">
+                    {/* 총괄 계정 (자동 입력, 삭제 불가) */}
+                    {hasAdminAccount && (
+                      <div className="flex items-center gap-2">
+                        <span className="w-20 shrink-0 text-[13px] font-medium text-gray-700">총괄 계정</span>
+                        <input
+                          type="text"
+                          value={step2.adminAccountId.trim()}
+                          readOnly
+                          aria-label="총괄 계정 (자동 입력)"
+                          className="flex-1 px-4 py-2 border border-input rounded-md bg-gray-100 text-gray-600 text-[14px] cursor-not-allowed focus:outline-none"
+                        />
+                        <span className="w-8 shrink-0 text-center text-[12px] text-gray-400">자동</span>
+                      </div>
+                    )}
+
+                    {/* 추가 계정 칸 */}
+                    {accounts.map((account, index) => {
+                      const slotNumber = hasAdminAccount ? index + 2 : index + 1;
+                      return (
+                      <div key={index} className="flex items-center gap-2">
+                        <span className="w-20 shrink-0 text-[13px] font-medium text-gray-700">
+                          계정 {slotNumber}
+                        </span>
+                        <input
+                          type="text"
+                          value={account}
+                          maxLength={INPUT_LIMITS.accountList}
+                          onChange={(e) => updateAccountSlot(index, e.target.value)}
+                          placeholder="@NOTICE"
+                          aria-label={`계정 ${slotNumber}`}
+                          className="flex-1 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeAccountSlot(index)}
+                          aria-label={`계정 ${slotNumber} 삭제`}
+                          className="w-8 h-8 shrink-0 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* 계정 추가 / 추가금 안내 */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {canAddAccountSlot ? (
+                      <button
+                        type="button"
+                        onClick={addAccountSlot}
+                        className="inline-flex items-center gap-1 px-3 py-2 border border-[#ff7b00] text-[#ff7b00] rounded-md text-[14px] font-medium hover:bg-[#fff5eb] transition-colors"
+                      >
+                        <Plus size={16} /> 계정 추가
+                      </button>
+                    ) : canBuyAccountTier ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[13px] text-gray-600">
+                          무료 칸을 모두 사용하셨어요.
+                        </span>
+                        <button
+                          type="button"
+                          onClick={buyAccountTier}
+                          className="inline-flex items-center gap-1 px-3 py-2 bg-[#ff7b00] text-white rounded-md text-[14px] font-medium hover:bg-[#e66f00] transition-colors"
+                        >
+                          <Plus size={16} /> 계정 {SLOTS_PER_TIER}칸 더 등록 (+{PRICING_CONFIG.bot.addons.extraAccountTier.toLocaleString()}원)
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[13px] text-gray-500">최대 {ACCOUNT_LIST_CONFIG.maxTotalAccounts}개까지 등록하셨어요.</span>
+                    )}
+                  </div>
+
+                  {/* 추가 구매 현황 */}
+                  {accountTiers > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 text-[13px]">
+                      <span className="text-[#ff7b00] font-medium">
+                        추가 계정 {accountTiers * SLOTS_PER_TIER}칸 구매됨 (+{(accountTiers * PRICING_CONFIG.bot.addons.extraAccountTier).toLocaleString()}원)
+                      </span>
+                      {canRefundAccountTier && (
+                        <button
+                          type="button"
+                          onClick={refundAccountTier}
+                          className="text-gray-500 underline hover:text-red-500 transition-colors"
+                        >
+                          마지막 추가 구매 취소
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
                   <p className="text-[13px] text-gray-700">

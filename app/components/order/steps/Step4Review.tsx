@@ -3,7 +3,7 @@ import { useOrder } from '@/app/contexts/OrderContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { calculateTotalEstimate, generateCopyText } from '@/app/utils/orderUtils';
 import { copyToClipboard } from '@/app/utils/clipboard';
-import { PRICING_CONFIG } from '@/app/constants/form';
+import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
 import { CheckCircle as CheckCircleIcon } from 'griddy-icons';
 
 const CREPE_URL = 'https://crepe.cm/@longwhile/lw5w0ofg';
@@ -342,17 +342,34 @@ export default function Step4Review() {
                   <p className="text-[15px]">{step3.setupDeadline}</p>
                 </div>
               )}
-              {(step3.currencyUnit || step3.statList || step3.tootPerCurrency || step3.accountList) && (
-                <div>
-                  <p className="text-[13px] text-gray-500 mb-1">기타 설정</p>
-                  <div className="text-[15px] space-y-1">
-                    {step3.currencyUnit && <p>재화 단위: {step3.currencyUnit}</p>}
-                    {step3.statList && <p>스탯: {step3.statList}</p>}
-                    {step3.tootPerCurrency && <p>툿-재화 비율: {step3.tootPerCurrency}</p>}
-                    {step3.accountList && <p>계정 목록: {step3.accountList}</p>}
+              {(() => {
+                const accountListActive = step3.reservationToot || step3.autoProfileImage;
+                const accounts = accountListActive
+                  ? [
+                      ...(step2.adminAccountId.trim() ? [step2.adminAccountId.trim()] : []),
+                      ...step3.accountList.map((a) => a.trim()).filter(Boolean),
+                    ]
+                  : [];
+                if (
+                  !step3.currencyUnit &&
+                  !step3.statList &&
+                  !step3.tootPerCurrency &&
+                  accounts.length === 0
+                ) {
+                  return null;
+                }
+                return (
+                  <div>
+                    <p className="text-[13px] text-gray-500 mb-1">기타 설정</p>
+                    <div className="text-[15px] space-y-1">
+                      {step3.currencyUnit && <p>재화 단위: {step3.currencyUnit}</p>}
+                      {step3.statList && <p>스탯: {step3.statList}</p>}
+                      {step3.tootPerCurrency && <p>툿-재화 비율: {step3.tootPerCurrency}</p>}
+                      {accounts.length > 0 && <p>계정 목록: {accounts.join(', ')}</p>}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </>
           )}
         </div>
@@ -488,6 +505,12 @@ export default function Step4Review() {
                   <div className="flex justify-between">
                     <span>자동 스진</span>
                     <span>{PRICING_CONFIG.bot.addons.autoProfileImage.toLocaleString()}원</span>
+                  </div>
+                )}
+                {(step3.reservationToot || step3.autoProfileImage) && step3.extraAccountTiers > 0 && (
+                  <div className="flex justify-between">
+                    <span>추가 계정 {Math.min(ACCOUNT_LIST_CONFIG.maxTiers, step3.extraAccountTiers) * ACCOUNT_LIST_CONFIG.slotsPerTier}칸</span>
+                    <span>{(Math.min(ACCOUNT_LIST_CONFIG.maxTiers, step3.extraAccountTiers) * PRICING_CONFIG.bot.addons.extraAccountTier).toLocaleString()}원</span>
                   </div>
                 )}
                 {step3.tootCurrencyLink && (

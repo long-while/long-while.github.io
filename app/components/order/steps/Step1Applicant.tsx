@@ -8,8 +8,11 @@ interface Step1ApplicantProps {
 }
 
 export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
-  const { formData, updateStep1 } = useOrder();
+  const { formData, updateStep1, restoredFromStorage } = useOrder();
   const step1 = formData.step1;
+
+  // 임시저장 복원 시 비밀번호는 저장되지 않아 비어 있으므로 재입력 안내
+  const passwordNeedsReentry = restoredFromStorage && step1.googlePassword.trim() === '';
 
   // 날짜 변경 시 자동으로 N주 계산
   useEffect(() => {
@@ -279,6 +282,15 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
             <p className="text-[12px] text-amber-600 bg-[#fff1e3] p-2 rounded-md mb-2">
               비밀번호는 브라우저에 저장되지 않으며, 페이지를 떠나면 입력 내용이 삭제됩니다.
             </p>
+            {passwordNeedsReentry && (
+              <p
+                role="alert"
+                className="text-[12px] text-red-600 bg-red-50 border border-red-300 p-2 rounded-md mb-2 flex items-start gap-1.5"
+              >
+                <span aria-hidden="true">⚠</span>
+                <span>저장된 신청서를 불러왔어요. 비밀번호는 보안상 저장되지 않으니, <strong>여기부터 다시 입력</strong>해 주세요.</span>
+              </p>
+            )}
             <input
               id="googlePassword"
               type="password"
@@ -286,8 +298,9 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
               onChange={(e) => updateStep1({ googlePassword: e.target.value })}
               placeholder="비밀번호 입력"
               aria-required="true"
+              aria-invalid={passwordNeedsReentry}
               autoComplete="new-password"
-              className="form-input"
+              className={`form-input ${passwordNeedsReentry ? 'border-red-500 ring-2 ring-red-200 focus:border-red-500' : ''}`}
             />
           </div>
         </div>

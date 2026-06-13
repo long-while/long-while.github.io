@@ -75,6 +75,7 @@ export const PRICING_CONFIG = {
       investigationBot: 20000,
       investigationDailyLimit: 5000,
       attendanceSystem: 10000,
+      extraAccountTier: 5000,
     },
     operationPerWeek: 5000,
     longTermSetupFee: 10000,
@@ -87,3 +88,14 @@ export const PRICING_CONFIG = {
 } as const;
 
 export type PricingConfig = typeof PRICING_CONFIG;
+
+/**
+ * 예약 툿/자동 스진용 계정 등록 정책
+ */
+export const ACCOUNT_LIST_CONFIG = {
+  freeExtraSlotsWithAdmin: 2, // 총괄 계정 외 무료 추가 칸
+  freeExtraSlotsNoAdmin: 3, // 총괄 계정이 없을 때 무료 추가 칸
+  maxTiers: 2, // 추가 구매 가능 단계
+  slotsPerTier: 3, // 단계당 추가되는 칸 수
+  maxTotalAccounts: 9, // 총괄 계정 포함 최대 등록 수
+} as const;
