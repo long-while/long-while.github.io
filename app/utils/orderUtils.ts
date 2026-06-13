@@ -1,6 +1,6 @@
 import type { OrderFormData, PriceEstimate, ValidationError, Step2Data, Step3Data } from '@/app/types/order';
 import { DATE_FORMAT_REGEX, GMAIL_REGEX, INPUT_LIMITS } from '@/app/types/order';
-import { PRICING_CONFIG, FORM_CONFIG } from '@/app/constants/form';
+import { PRICING_CONFIG, FORM_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 /**
@@ -455,6 +455,32 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       });
     }
 
+    // 예약 툿/자동 스진용 계정 목록 검증 (UI 가 막지만 손상된 데이터 대비)
+    if (data.reservationToot || data.autoProfileImage) {
+      if (
+        !Number.isInteger(data.extraAccountTiers) ||
+        data.extraAccountTiers < 0 ||
+        data.extraAccountTiers > ACCOUNT_LIST_CONFIG.maxTiers
+      ) {
+        errors.push({
+          field: 'extraAccountTiers',
+          message: '추가 계정 구매 단계가 올바르지 않습니다.',
+        });
+      }
+      if (data.accountList.length > ACCOUNT_LIST_CONFIG.maxTotalAccounts) {
+        errors.push({
+          field: 'accountList',
+          message: `계정은 최대 ${ACCOUNT_LIST_CONFIG.maxTotalAccounts}개까지 등록할 수 있습니다.`,
+        });
+      }
+      if (data.accountList.some((account) => account.length > INPUT_LIMITS.accountList)) {
+        errors.push({
+          field: 'accountList',
+          message: `계정 아이디는 각 ${INPUT_LIMITS.accountList}자 이하여야 합니다.`,
+        });
+      }
+    }
+
     // 출석 시스템 검증
     if (
       data.attendanceSystem &&
@@ -554,6 +580,11 @@ export function calculateBotPrice(
   }
   if (data.attendanceSystem && (data.mainBot === 'basicShop' || data.mainBot === 'basicShopStat')) {
     botCost += bot.addons.attendanceSystem;
+  }
+  // 예약 툿/자동 스진용 추가 계정 단계 (단계당 +5천원, 최대 2단계)
+  if (data.reservationToot || data.autoProfileImage) {
+    const tiers = Math.min(ACCOUNT_LIST_CONFIG.maxTiers, Math.max(0, data.extraAccountTiers));
+    botCost += tiers * bot.addons.extraAccountTier;
   }
 
   // 가동비: 장기 옵션이면 세팅비 정액, 아니면 확정 주수 × 운영비
@@ -740,7 +771,12 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (step3.currencyUnit) text += `재화 단위 : ${step3.currencyUnit}\n`;
     if (step3.statList) text += `스탯 : ${step3.statList}\n`;
     if (step3.tootPerCurrency) text += `${step3.tootPerCurrency}\n`;
-    if (step3.accountList) text += `계정 목록 : ${step3.accountList}\n`;
+    if (step3.reservationToot || step3.autoProfileImage) {
+      const accounts: string[] = [];
+      if (step2.adminAccountId.trim()) accounts.push(step2.adminAccountId.trim());
+      accounts.push(...step3.accountList.map((a) => a.trim()).filter(Boolean));
+      if (accounts.length > 0) text += `계정 목록 : ${accounts.join(', ')}\n`;
+    }
     if (attendanceEnabled) {
       text += `출석 명령어 : ${step3.attendanceCommand || '[출석]'} / 재화 +${step3.attendanceCurrencyAmount || 0}\n`;
     }
@@ -855,6 +891,10 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     if (step3.autoProfileImage) {
       text += `자동 스진 ${bot.addons.autoProfileImage.toLocaleString()}\n`;
+    }
+    if ((step3.reservationToot || step3.autoProfileImage) && step3.extraAccountTiers > 0) {
+      const tiers = Math.min(ACCOUNT_LIST_CONFIG.maxTiers, step3.extraAccountTiers);
+      text += `추가 계정 ${tiers * ACCOUNT_LIST_CONFIG.slotsPerTier}칸 ${(tiers * bot.addons.extraAccountTier).toLocaleString()}\n`;
     }
     if (step3.tootCurrencyLink) {
       text += `툿-재화 연동 ${bot.addons.tootCurrencyLink.toLocaleString()}\n`;

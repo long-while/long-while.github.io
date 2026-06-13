@@ -16,6 +16,8 @@ interface OrderContextType {
   resetForm: () => void;
   saveToLocalStorage: () => void;
   loadFromLocalStorage: () => boolean;
+  // 임시저장 복원 직후 여부 (구글 비밀번호는 저장되지 않아 재입력 안내가 필요)
+  restoredFromStorage: boolean;
   syncFromCart: (cartItems: EstimateItem[]) => void;
   cartSyncState: CartSyncState | null;
   clearCartSync: () => void;
@@ -73,7 +75,8 @@ const initialStep3Data: Step3Data = {
   attendanceCommand: '[출석]',
   currencyUnit: '',
   statList: '',
-  accountList: '',
+  accountList: [],
+  extraAccountTiers: 0,
   tootPerCurrency: '',
   omakaseDetails: '',
   setupDeadline: '',
@@ -94,12 +97,39 @@ const initialFormData: OrderFormData = {
   step4: initialStep4Data,
 };
 
+/**
+ * 저장된 step3 데이터를 현재 스키마로 변환한다.
+ * v1: accountList 가 콤마 구분 문자열이었으므로 배열로 변환하고,
+ * extraAccountTiers 누락 시 0 으로 보정한다. v2 데이터는 그대로 통과한다.
+ */
+function migrateStep3(rawStep3: unknown): Partial<Step3Data> {
+  if (!rawStep3 || typeof rawStep3 !== 'object') return {};
+  const step3 = rawStep3 as Record<string, unknown>;
+  const migrated: Record<string, unknown> = { ...step3 };
+
+  if (typeof step3.accountList === 'string') {
+    migrated.accountList = step3.accountList
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  } else if (!Array.isArray(step3.accountList)) {
+    migrated.accountList = [];
+  }
+
+  if (typeof step3.extraAccountTiers !== 'number') {
+    migrated.extraAccountTiers = 0;
+  }
+
+  return migrated as Partial<Step3Data>;
+}
+
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export function OrderProvider({ children }: { children: ReactNode }) {
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [cartSyncState, setCartSyncState] = useState<CartSyncState | null>(null);
+  const [restoredFromStorage, setRestoredFromStorage] = useState(false);
 
   const updateStep1 = useCallback((data: Partial<Step1Data>) => {
     setFormData(prev => ({
@@ -155,6 +185,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const resetForm = useCallback(() => {
     setFormData(initialFormData);
     setCurrentStep(1);
+    setRestoredFromStorage(false);
     localStorage.removeItem(ORDER_STORAGE_KEY);
     clearCartSync();
   }, [clearCartSync]);
@@ -193,24 +224,25 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
       const parsed = JSON.parse(saved);
 
-      // 스키마 버전 확인 (버전이 없거나 현재 버전보다 낮으면 레거시 데이터)
+      // 스키마 버전 확인 (v0=추적 이전, 미래 버전은 호환 불가하므로 폐기)
       const version = parsed.version || 0;
-      if (version < SCHEMA_VERSION) {
-        // 레거시 데이터는 삭제하고 새로 시작 (향후 마이그레이션 로직 추가 가능)
+      if (version < 1 || version > SCHEMA_VERSION) {
         localStorage.removeItem(ORDER_STORAGE_KEY);
         return false;
       }
 
       if (parsed.formData && parsed.currentStep) {
-        // 기존 데이터와 초기값을 병합하여 누락된 필드 방지
+        // 기존 데이터와 초기값을 병합하여 누락된 필드 방지 (v1 → v2 마이그레이션 포함)
         const mergedFormData: OrderFormData = {
           step1: { ...initialStep1Data, ...parsed.formData.step1 },
           step2: { ...initialStep2Data, ...parsed.formData.step2 },
-          step3: { ...initialStep3Data, ...parsed.formData.step3 },
+          step3: { ...initialStep3Data, ...migrateStep3(parsed.formData.step3) },
           step4: { ...initialStep4Data, ...parsed.formData.step4 },
         };
         setFormData(mergedFormData);
         setCurrentStep(parsed.currentStep);
+        // 비밀번호는 저장되지 않으므로 복원 시 재입력 안내 플래그 설정
+        setRestoredFromStorage(true);
         return true;
       }
       return false;
@@ -262,6 +294,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         resetForm,
         saveToLocalStorage,
         loadFromLocalStorage,
+        restoredFromStorage,
         syncFromCart,
         cartSyncState,
         clearCartSync,

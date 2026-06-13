@@ -76,7 +76,8 @@ export interface Step3Data {
   attendanceCommand: string; // 출석 명령어 (항상 [..] 형식)
   currencyUnit: string;
   statList: string;
-  accountList: string;
+  accountList: string[]; // 예약 툿/자동 스진용 추가 계정 (총괄 계정 제외)
+  extraAccountTiers: number; // 추가 계정 구매 단계 (0~2, 단계당 +5천원·3칸)
   tootPerCurrency: string;
   omakaseDetails: string;
   setupDeadline: string; // MM/DD
@@ -119,7 +120,8 @@ export interface ValidationError {
 export const ORDER_STORAGE_KEY = 'mas_commission_order_draft';
 
 // 스키마 버전 (데이터 구조 변경 시 증가)
-export const SCHEMA_VERSION = 1;
+// v2: step3.accountList 를 string → string[] 로 변경, extraAccountTiers 추가
+export const SCHEMA_VERSION = 2;
 
 // localStorage 저장 데이터 타입
 export interface StoredOrderData {
@@ -149,7 +151,7 @@ export const INPUT_LIMITS = {
   investigationBotAccountId: 100,
   currencyUnit: 20,
   statList: 500,
-  accountList: 500,
+  accountList: 100, // 계정 1칸당 최대 길이
   tootPerCurrency: 200,
   omakaseDetails: 1000,
 } as const;
