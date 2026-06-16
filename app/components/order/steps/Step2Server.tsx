@@ -1,7 +1,8 @@
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { useState, useEffect } from 'react';
-import { validateCharacterLimit } from '@/app/utils/orderUtils';
+import { useState, useEffect, useMemo } from 'react';
+import { validateCharacterLimit, computeRequiredFastDeadline, getDeadlineBlackoutError } from '@/app/utils/orderUtils';
+import type { FastDeadlineOption } from '@/app/types/order';
 import { ShoppingCart } from 'lucide-react';
 import MastodonServerCalculator from '@/app/components/MastodonServerCalculator';
 
@@ -50,6 +51,29 @@ export default function Step2Server() {
       updateStep2({ searchOption: true });
     }
   }, [serverCalcResult?.search]);
+
+  // 마감일 접수 불가 기간(마감 중단/휴가) 안내
+  const deadlineBlackoutError = useMemo(
+    () => getDeadlineBlackoutError(step2.desiredDeadline, 'desiredDeadline'),
+    [step2.desiredDeadline]
+  );
+
+  // 마감일이 임박했을 때 강제 적용되는 빠른 마감 옵션 (선택한 커스텀 옵션 기준)
+  const requiredFastDeadline = useMemo(
+    () => computeRequiredFastDeadline(step2.desiredDeadline, step2.additionalOption),
+    [step2.desiredDeadline, step2.additionalOption]
+  );
+
+  // 강제 옵션이 있으면 빠른 마감을 자동으로 켜고 해당 옵션으로 고정
+  useEffect(() => {
+    if (!requiredFastDeadline) return;
+    if (step2.fastDeadline && step2.fastDeadlineOption === requiredFastDeadline) return;
+    updateStep2({ fastDeadline: true, fastDeadlineOption: requiredFastDeadline });
+  }, [requiredFastDeadline, step2.fastDeadline, step2.fastDeadlineOption, updateStep2]);
+
+  // 강제 적용 시 해당 옵션 외 다른 빠른 마감 옵션은 잠금
+  const isFastOptionLocked = (option: FastDeadlineOption): boolean =>
+    requiredFastDeadline !== null && requiredFastDeadline !== option;
 
   // 글자수 값 검증
   useEffect(() => {
@@ -389,25 +413,32 @@ export default function Step2Server() {
 
             {/* 빠른 마감 */}
             <div className="space-y-3">
-              <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.fastDeadline
+              <label className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 hover:shadow-sm ${step2.fastDeadline
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                }`}>
+                } ${requiredFastDeadline ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
                   checked={step2.fastDeadline}
+                  disabled={!!requiredFastDeadline}
                   onChange={(e) => {
+                    if (requiredFastDeadline) return;
                     updateStep2({ fastDeadline: e.target.checked });
                     if (!e.target.checked) {
                       updateStep2({ fastDeadlineOption: null });
                     }
                   }}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00] disabled:cursor-not-allowed"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
                     48시간 이내 빠른 마감
                     {fastDeadlineFromCart && step2.fastDeadline && <FromCartBadge />}
+                    {requiredFastDeadline && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-medium rounded-full ml-2">
+                        마감 임박 필수
+                      </span>
+                    )}
                   </div>
                 </div>
               </label>
@@ -415,21 +446,50 @@ export default function Step2Server() {
               {/* 빠른 마감 옵션 (조건부 노출) */}
               {step2.fastDeadline && (
                 <div className="ml-7 space-y-3 animate-slideDown">
-                  <p className="text-[13px] text-gray-600 mb-2">아래 옵션 중 하나를 선택해 주세요.</p>
+                  {requiredFastDeadline ? (
+                    <div className="p-3 bg-[#fff5eb] border border-[#ff7b00] rounded-md">
+                      <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+                        희망 마감일이 작성일로부터 2일 이내라, 선택하신 옵션에 맞는 빠른 마감이 필수로 적용됩니다.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-[13px] text-gray-600 mb-2">아래 옵션 중 하나를 선택해 주세요.</p>
+                  )}
+
+                  {/* 48시간 내 기본 서버 */}
+                  <label
+                    className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-300 ${step2.fastDeadlineOption === 'basic48h'
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      } ${isFastOptionLocked('basic48h') ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="fastDeadlineOption"
+                      checked={step2.fastDeadlineOption === 'basic48h'}
+                      disabled={isFastOptionLocked('basic48h')}
+                      onChange={() => updateStep2({ fastDeadlineOption: 'basic48h' })}
+                      className="w-4 h-4 accent-[#ff7b00] disabled:cursor-not-allowed"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-[14px]">48시간 내 기본 서버 설치 마감 (+5,000원)</div>
+                    </div>
+                  </label>
 
                   {/* 24시간 내 기본 서버 */}
                   <label
-                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${step2.fastDeadlineOption === 'basic24h'
+                    className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-300 ${step2.fastDeadlineOption === 'basic24h'
                       ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                       : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                      }`}
+                      } ${isFastOptionLocked('basic24h') ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <input
                       type="radio"
                       name="fastDeadlineOption"
                       checked={step2.fastDeadlineOption === 'basic24h'}
+                      disabled={isFastOptionLocked('basic24h')}
                       onChange={() => updateStep2({ fastDeadlineOption: 'basic24h' })}
-                      className="w-4 h-4 accent-[#ff7b00]"
+                      className="w-4 h-4 accent-[#ff7b00] disabled:cursor-not-allowed"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">24시간 내 기본 서버 설치 마감 (+10,000원)</div>
@@ -438,17 +498,18 @@ export default function Step2Server() {
 
                   {/* 48시간 내 로고 변경 */}
                   <label
-                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${step2.fastDeadlineOption === 'logo48h'
+                    className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-300 ${step2.fastDeadlineOption === 'logo48h'
                       ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                       : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                      }`}
+                      } ${isFastOptionLocked('logo48h') ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <input
                       type="radio"
                       name="fastDeadlineOption"
                       checked={step2.fastDeadlineOption === 'logo48h'}
+                      disabled={isFastOptionLocked('logo48h')}
                       onChange={() => updateStep2({ fastDeadlineOption: 'logo48h' })}
-                      className="w-4 h-4 accent-[#ff7b00]"
+                      className="w-4 h-4 accent-[#ff7b00] disabled:cursor-not-allowed"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">48시간 내 로고 변경된 서버 설치 마감 (+15,000원)</div>
@@ -457,17 +518,18 @@ export default function Step2Server() {
 
                   {/* 48시간 내 테마 커스텀 */}
                   <label
-                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-300 ${step2.fastDeadlineOption === 'theme48h'
+                    className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-300 ${step2.fastDeadlineOption === 'theme48h'
                       ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                       : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                      }`}
+                      } ${isFastOptionLocked('theme48h') ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <input
                       type="radio"
                       name="fastDeadlineOption"
                       checked={step2.fastDeadlineOption === 'theme48h'}
+                      disabled={isFastOptionLocked('theme48h')}
                       onChange={() => updateStep2({ fastDeadlineOption: 'theme48h' })}
-                      className="w-4 h-4 accent-[#ff7b00]"
+                      className="w-4 h-4 accent-[#ff7b00] disabled:cursor-not-allowed"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">48시간 내 테마 커스텀된 서버 설치 마감 (+20,000원)</div>
@@ -492,9 +554,18 @@ export default function Step2Server() {
                   value={step2.desiredDeadline}
                   onChange={(e) => updateStep2({ desiredDeadline: e.target.value })}
                   placeholder="MM/DD"
-                  className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${deadlineBlackoutError
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-input focus:border-[#ff7b00]'
+                    }`}
                 />
-                <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요.</p>
+                {deadlineBlackoutError ? (
+                  <div className="p-3 bg-red-50 border border-red-500 rounded-md">
+                    <p className="text-[13px] text-red-600">{deadlineBlackoutError.message}</p>
+                  </div>
+                ) : (
+                  <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요.</p>
+                )}
                 <div className="mt-2 p-3 bg-[#fff5eb] border border-[#ff7b00] rounded-md">
                   <p className="text-[13px] leading-[1.7] text-[#cc5500]">
                     로고 혹은 테마 옵션을 신청하셨나요? 신청서를 접수하시면 테마와 로고 이미지 규격이 전달됩니다. 신청자님께서는 마감일로부터 <strong>최소 일주일 이전에 9종/12종/13종</strong>의 이미지를 전달해주셔야 합니다. 그때까지 디자인을 완성하고 이미지를 전달하실 수 있는지 생각해보고 마감일을 조정하세요.

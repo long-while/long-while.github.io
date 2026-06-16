@@ -39,6 +39,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
 
   // 빠른마감 옵션들 (체크박스 형태)
   const rushOptions = [
+    { estimateName: '빠른마감: 48시간 내 기본 서버 설치', displayName: '48시간 내 기본 서버 설치 마감', price: 5000, description: '결제 요청 시각으로부터 48시간 내에 기본 옵션 서버를 설치합니다.' },
     { estimateName: '빠른마감: 24시간 내 기본 서버 설치', displayName: '24시간 내 기본 서버 설치 마감', price: 10000, description: '결제 요청 시각으로부터 24시간 내에 기본 옵션 서버를 설치합니다.' },
     { estimateName: '빠른마감: 48시간 내 로고 변경 서버 설치', displayName: '48시간 내 로고 변경된 서버 설치 마감', price: 15000, description: '결제 요청 시각으로부터 48시간 내에 로고 변경 옵션 서버를 설치합니다.' },
     { estimateName: '빠른마감: 48시간 내 테마 커스텀 서버 설치', displayName: '48시간 내 테마 커스텀된 서버 설치 마감', price: 20000, description: '결제 요청 시각으로부터 48시간 내에 커스텀 테마 옵션 서버를 설치합니다.' },

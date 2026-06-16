@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { ShoppingCart, Plus, X } from 'lucide-react';
 import { AlertTriangle } from 'griddy-icons';
 import { INPUT_LIMITS } from '@/app/types/order';
+import { getDeadlineBlackoutError } from '@/app/utils/orderUtils';
 import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
 
 // 예약 툿/자동 스진용 추가 계정 정책 (constants/form.ts 와 공유)
@@ -135,6 +136,12 @@ export default function Step3Bot() {
       updateStep3({ manualWeeks: computedBotWeeks });
     }
   }, [computedBotWeeks, step3.manualWeeks, step3.operationWeeksOption, updateStep3]);
+
+  // 세팅 마감일 접수 불가 기간(마감 중단/휴가) 안내
+  const setupDeadlineBlackoutError = useMemo(
+    () => getDeadlineBlackoutError(step3.setupDeadline, 'setupDeadline'),
+    [step3.setupDeadline]
+  );
 
   // 양도 기능 노출 조건: 상점 또는 스탯 선택 시
   const showTransferFeature =
@@ -1231,9 +1238,18 @@ export default function Step3Bot() {
                   value={step3.setupDeadline}
                   onChange={(e) => updateStep3({ setupDeadline: e.target.value })}
                   placeholder="MM/DD (예: 03/15)"
-                  className="w-full md:w-64 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                  className={`w-full md:w-64 px-4 py-2 border rounded-md focus:outline-none text-[14px] ${setupDeadlineBlackoutError
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-input focus:border-[#ff7b00]'
+                    }`}
                 />
-                <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요. 오마카세 자동봇 기능 등의 테스트가 필요한 경우, 테스트 기간까지 고려해서 작성합니다.</p>
+                {setupDeadlineBlackoutError ? (
+                  <div className="p-3 bg-red-50 border border-red-500 rounded-md">
+                    <p className="text-[13px] text-red-600">{setupDeadlineBlackoutError.message}</p>
+                  </div>
+                ) : (
+                  <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요. 오마카세 자동봇 기능 등의 테스트가 필요한 경우, 테스트 기간까지 고려해서 작성합니다.</p>
+                )}
               </div>
             </div>
           </div>
