@@ -45,10 +45,15 @@ export default function Step2Server() {
   // 빠른 마감이 견적에서 선택되었는지
   const fastDeadlineFromCart = isFromCart('빠른마감');
 
-  // 계산기에서 검색='예'면 searchOption 강제 체크
+  // 계산기 검색 여부와 검색 옵션을 양방향 동기화
+  // (계산기에서 '예'/'아니오'를 고르면 검색 옵션 체크 상태가 따라감)
+  const searchDecidedByCalc =
+    serverCalcResult?.search === 'yes' || serverCalcResult?.search === 'no';
   useEffect(() => {
     if (serverCalcResult?.search === 'yes' && !step2.searchOption) {
       updateStep2({ searchOption: true });
+    } else if (serverCalcResult?.search === 'no' && step2.searchOption) {
+      updateStep2({ searchOption: false });
     }
   }, [serverCalcResult?.search]);
 
@@ -180,6 +185,26 @@ export default function Step2Server() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* 기본 (커스텀 없음) */}
+              <label
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === null
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  }`}
+              >
+                <input
+                  type="radio"
+                  name="additionalOption"
+                  checked={step2.additionalOption === null}
+                  onChange={() => updateStep2({ additionalOption: null })}
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">기본</div>
+                  <div className="text-[13px] text-gray-600 mt-1">무료 — 기본 트위터 테마</div>
+                </div>
+              </label>
+
               {/* 로고 변경 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === 'logo'
@@ -351,15 +376,15 @@ export default function Step2Server() {
               <label className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 hover:shadow-sm ${step2.searchOption
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                } ${serverCalcResult?.search === 'yes' ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                } ${searchDecidedByCalc ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
                   checked={step2.searchOption}
                   onChange={(e) => {
-                    if (serverCalcResult?.search === 'yes') return;
+                    if (searchDecidedByCalc) return;
                     updateStep2({ searchOption: e.target.checked });
                   }}
-                  disabled={serverCalcResult?.search === 'yes'}
+                  disabled={searchDecidedByCalc}
                   className="w-4 h-4 shrink-0 accent-[#ff7b00] disabled:cursor-not-allowed"
                 />
                 <div className="flex-1">
@@ -371,9 +396,14 @@ export default function Step2Server() {
                         계산기에서 선택됨
                       </span>
                     )}
+                    {serverCalcResult?.search === 'no' && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full ml-2">
+                        계산기에서 제외됨
+                      </span>
+                    )}
                   </div>
                   <div className="text-[13px] text-gray-600 mt-1">
-                    서버에 검색 기능을 추가합니다.
+                    서버에 검색 기능을 추가합니다. 위 계산기의 ‘검색 기능 추가 여부’와 연동됩니다.
                   </div>
                 </div>
               </label>
