@@ -1,4 +1,4 @@
-import type { OrderFormData, PriceEstimate, ValidationError, Step2Data, Step3Data } from '@/app/types/order';
+import type { OrderFormData, PriceEstimate, ValidationError, Step2Data, Step3Data, AdditionalOption, FastDeadlineOption } from '@/app/types/order';
 import { DATE_FORMAT_REGEX, GMAIL_REGEX, INPUT_LIMITS } from '@/app/types/order';
 import { PRICING_CONFIG, FORM_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
@@ -75,6 +75,100 @@ export function validateDates(
   }
 
   return null;
+}
+
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+/**
+ * MM/DD 문자열을 기준일(reference) 연도를 적용한 Date 로 변환한다.
+ * 연말에 작성하며 연초 마감을 적는 경우를 대비해, 반년 이상 과거가 되면 다음 해로 보정한다.
+ * 파싱 불가 시 null.
+ */
+function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
+  const match = mmdd.trim().match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (!match) return null;
+  const month = parseInt(match[1], 10);
+  const day = parseInt(match[2], 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+  let date = new Date(reference.getFullYear(), month - 1, day);
+  // Date 가 날짜를 보정(예: 2/31)했다면 입력이 유효하지 않은 것
+  if (date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+
+  if ((date.getTime() - reference.getTime()) / DAY_MS < -182) {
+    date = new Date(reference.getFullYear() + 1, month - 1, day);
+  }
+  return date;
+}
+
+/**
+ * 마감일(MM/DD)이 운영 정책상 접수 불가 기간인지 검사한다.
+ * - 6/15 ~ 6/27: 마감 접수 중단
+ * - 7/1 ~ 7/10: 휴가 기간
+ * 접수 가능하거나 파싱 불가하면 null.
+ */
+export function getDeadlineBlackoutError(deadline: string, field: string): ValidationError | null {
+  const match = deadline.trim().match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (!match) return null;
+  const month = parseInt(match[1], 10);
+  const day = parseInt(match[2], 10);
+
+  if (month === 6 && day >= 15 && day <= 27) {
+    return { field, message: '6월 27일까지의 마감은 더 받지 않고 있습니다.' };
+  }
+  if (month === 7 && day >= 1 && day <= 10) {
+    return { field, message: '휴가 기간입니다. 7월 1일 전, 또는 7월 10일 이후로 마감일을 지정해주세요.' };
+  }
+  return null;
+}
+
+/**
+ * 마감일까지 남은 일수를 만(full) 단위로 계산한다.
+ * 기준 시각은 마감일의 오후 11시이며, 작성 시각의 시·분은 고려하지 않고
+ * 달력상의 날짜 차이(만 N일)만 사용한다.
+ * 파싱 불가 시 null.
+ */
+export function getFullDaysUntilDeadline(deadline: string, referenceDate: Date = new Date()): number | null {
+  const deadlineDate = parseMonthDayToDate(deadline, referenceDate);
+  if (!deadlineDate) return null;
+  const today = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth(),
+    referenceDate.getDate()
+  );
+  const target = new Date(
+    deadlineDate.getFullYear(),
+    deadlineDate.getMonth(),
+    deadlineDate.getDate()
+  );
+  return Math.round((target.getTime() - today.getTime()) / DAY_MS);
+}
+
+/**
+ * 마감일이 임박했을 때 강제로 적용되어야 하는 빠른 마감 옵션을 계산한다.
+ * - 만 2일 이내: 선택한 커스텀 옵션 기준 48시간 옵션(테마/로고/기본) 강제
+ * - 만 1일 이내 + 기본 옵션: 24시간 기본 옵션 강제
+ * 시간은 고려하지 않고 만 1일/만 2일 단위로만 판단한다.
+ * 강제할 필요가 없으면 null.
+ */
+export function computeRequiredFastDeadline(
+  deadline: string,
+  additionalOption: AdditionalOption,
+  referenceDate: Date = new Date()
+): FastDeadlineOption {
+  const daysUntil = getFullDaysUntilDeadline(deadline, referenceDate);
+  if (daysUntil === null) return null;
+  if (daysUntil > 2) return null;
+
+  const isTheme =
+    additionalOption === 'dayTheme' ||
+    additionalOption === 'nightTheme' ||
+    additionalOption === 'bothTheme';
+  if (isTheme) return 'theme48h';
+  if (additionalOption === 'logo') return 'logo48h';
+
+  // 기본 옵션: 만 1일 이내면 24시간, 그 외(만 2일)면 48시간
+  return daysUntil <= 1 ? 'basic24h' : 'basic48h';
 }
 
 /**
@@ -247,6 +341,24 @@ export function validateStep2(data: Step2Data): ValidationError[] {
         field: 'desiredDeadline',
         message: '희망 마감일을 입력해 주세요.',
       });
+    } else {
+      // 접수 불가 기간(마감 중단/휴가) 검증 → 다음 단계 진행 차단
+      const blackoutError = getDeadlineBlackoutError(data.desiredDeadline, 'desiredDeadline');
+      if (blackoutError) {
+        errors.push(blackoutError);
+      }
+
+      // 마감 임박 시 빠른 마감 옵션 강제 (UI 가 자동 적용하지만 손상된 데이터 대비)
+      const requiredFastDeadline = computeRequiredFastDeadline(
+        data.desiredDeadline,
+        data.additionalOption
+      );
+      if (requiredFastDeadline && (!data.fastDeadline || data.fastDeadlineOption !== requiredFastDeadline)) {
+        errors.push({
+          field: 'fastDeadline',
+          message: '마감일이 임박하여 해당하는 빠른 마감 옵션을 선택하셔야 합니다.',
+        });
+      }
     }
 
     if (!data.adminAccountId || data.adminAccountId.trim() === '') {
@@ -333,12 +445,17 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       });
     }
 
-    // 세팅 마감일 필수
+    // 세팅 마감일 필수 + 접수 불가 기간(마감 중단/휴가) 검증
     if (!data.setupDeadline || data.setupDeadline.trim() === '') {
       errors.push({
         field: 'setupDeadline',
         message: '세팅 마감일을 입력해 주세요.',
       });
+    } else {
+      const blackoutError = getDeadlineBlackoutError(data.setupDeadline, 'setupDeadline');
+      if (blackoutError) {
+        errors.push(blackoutError);
+      }
     }
 
     // CoC 봇 계정 길이 검증
@@ -701,6 +818,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     if (step2.fastDeadline && step2.fastDeadlineOption) {
       const fastNames: Record<string, string> = {
+        basic48h: '빠른 마감 (48시간/기본)',
         basic24h: '빠른 마감 (24시간/기본)',
         logo48h: '빠른 마감 (48시간/로고)',
         theme48h: '빠른 마감 (48시간/테마)',
@@ -848,6 +966,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     if (step2.fastDeadline && step2.fastDeadlineOption) {
       const fastNames: Record<string, string> = {
+        basic48h: '48H 빠른마감',
         basic24h: '24H 빠른마감',
         logo48h: '48H 빠른마감',
         theme48h: '48H 빠른마감',

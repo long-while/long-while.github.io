@@ -19,7 +19,7 @@ export type OperationWeeksOption = 'manual' | 'longterm' | null;
 export type TransferOption = 'itemOnly' | 'currencyOnly' | 'all' | null;
 
 // 빠른 마감 옵션
-export type FastDeadlineOption = 'basic24h' | 'logo48h' | 'theme48h' | null;
+export type FastDeadlineOption = 'basic48h' | 'basic24h' | 'logo48h' | 'theme48h' | null;
 
 // Step 1: 신청자 및 커뮤니티 정보
 export interface Step1Data {

@@ -52,6 +52,7 @@ export const PRICING_CONFIG = {
       search: 30000,
       mastoHostMigration: 20000,
       fastDeadline: {
+        basic48h: 5000,
         basic24h: 10000,
         logo48h: 15000,
         theme48h: 20000,

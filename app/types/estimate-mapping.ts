@@ -15,6 +15,7 @@ export type EstimateMappingKey =
   | 'notionGuide'        // → step2.notionGuide = true
   | 'characterLimit'     // → step2.changeCharacterLimit = true
   | 'mastoHostMigration' // → step2.mastoHostMigration = true
+  | 'fastDeadline48hBasic' // → step2.fastDeadline = true, fastDeadlineOption = 'basic48h'
   | 'fastDeadline24h'    // → step2.fastDeadline = true, fastDeadlineOption = 'basic24h'
   | 'fastDeadline48hLogo'// → step2.fastDeadline = true, fastDeadlineOption = 'logo48h'
   | 'fastDeadline48hTheme' // → step2.fastDeadline = true, fastDeadlineOption = 'theme48h'
@@ -54,6 +55,7 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   'masto.host 에서 서버 데이터 이전': 'mastoHostMigration',
   
   // 빠른 마감 옵션
+  '빠른마감: 48시간 내 기본 서버 설치': 'fastDeadline48hBasic',
   '빠른마감: 24시간 내 기본 서버 설치': 'fastDeadline24h',
   '빠른마감: 48시간 내 로고 변경 서버 설치': 'fastDeadline48hLogo',
   '빠른마감: 48시간 내 테마 커스텀 서버 설치': 'fastDeadline48hTheme',
@@ -120,6 +122,11 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   ],
   
   // 빠른 마감
+  fastDeadline48hBasic: [
+    { step: 2, field: 'applyServerInstall', value: 'yes' },
+    { step: 2, field: 'fastDeadline', value: true },
+    { step: 2, field: 'fastDeadlineOption', value: 'basic48h' }
+  ],
   fastDeadline24h: [
     { step: 2, field: 'fastDeadline', value: true },
     { step: 2, field: 'fastDeadlineOption', value: 'basic24h' }

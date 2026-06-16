@@ -429,6 +429,7 @@ export default function Step4Review() {
                   <div className="flex justify-between">
                     <span>
                       빠른 마감 (
+                      {step2.fastDeadlineOption === 'basic48h' && '48시간/기본'}
                       {step2.fastDeadlineOption === 'basic24h' && '24시간/기본'}
                       {step2.fastDeadlineOption === 'logo48h' && '48시간/로고'}
                       {step2.fastDeadlineOption === 'theme48h' && '48시간/테마'}
