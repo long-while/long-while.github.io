@@ -80,16 +80,50 @@ export function validateDates(
 const DAY_MS = 1000 * 60 * 60 * 24;
 
 /**
- * MM/DD 문자열을 기준일(reference) 연도를 적용한 Date 로 변환한다.
+ * 마감일 입력에서 월/일을 추출한다.
+ * 구분자(/ . -)가 있거나 없는 형식 모두 허용한다.
+ * 예: "06/16", "6/16", "6.16", "6-16", "0616"(MMDD), "616"(MDD)
+ * 유효 범위를 벗어나거나 파싱 불가하면 null.
+ */
+function extractMonthDay(raw: string): { month: number; day: number } | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  let month: number | null = null;
+  let day: number | null = null;
+
+  const separated = trimmed.match(/^(\d{1,2})\s*[/.\-]\s*(\d{1,2})$/);
+  if (separated) {
+    month = parseInt(separated[1], 10);
+    day = parseInt(separated[2], 10);
+  } else {
+    const digits = trimmed.replace(/\D/g, '');
+    if (digits.length === 4) {
+      // MMDD
+      month = parseInt(digits.slice(0, 2), 10);
+      day = parseInt(digits.slice(2), 10);
+    } else if (digits.length === 3) {
+      // MDD (한 자리 월)
+      month = parseInt(digits.slice(0, 1), 10);
+      day = parseInt(digits.slice(1), 10);
+    }
+  }
+
+  if (month === null || day === null) return null;
+  if (!Number.isInteger(month) || !Number.isInteger(day)) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { month, day };
+}
+
+/**
+ * 마감일 문자열을 기준일(reference) 연도를 적용한 Date 로 변환한다.
  * 연말에 작성하며 연초 마감을 적는 경우를 대비해, 반년 이상 과거가 되면 다음 해로 보정한다.
  * 파싱 불가 시 null.
  */
 function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
-  const match = mmdd.trim().match(/^(\d{1,2})\/(\d{1,2})$/);
-  if (!match) return null;
-  const month = parseInt(match[1], 10);
-  const day = parseInt(match[2], 10);
-  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const parsed = extractMonthDay(mmdd);
+  if (!parsed) return null;
+  const { month, day } = parsed;
 
   let date = new Date(reference.getFullYear(), month - 1, day);
   // Date 가 날짜를 보정(예: 2/31)했다면 입력이 유효하지 않은 것
@@ -102,16 +136,15 @@ function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
 }
 
 /**
- * 마감일(MM/DD)이 운영 정책상 접수 불가 기간인지 검사한다.
+ * 마감일이 운영 정책상 접수 불가 기간인지 검사한다.
  * - 6/15 ~ 6/27: 마감 접수 중단
  * - 7/1 ~ 7/10: 휴가 기간
  * 접수 가능하거나 파싱 불가하면 null.
  */
 export function getDeadlineBlackoutError(deadline: string, field: string): ValidationError | null {
-  const match = deadline.trim().match(/^(\d{1,2})\/(\d{1,2})$/);
-  if (!match) return null;
-  const month = parseInt(match[1], 10);
-  const day = parseInt(match[2], 10);
+  const parsed = extractMonthDay(deadline);
+  if (!parsed) return null;
+  const { month, day } = parsed;
 
   if (month === 6 && day >= 15 && day <= 27) {
     return { field, message: '6월 27일까지의 마감은 더 받지 않고 있습니다.' };
