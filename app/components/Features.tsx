@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDownIcon, WarningIcon } from '@/app/components/icons';
+import { ChevronDownIcon } from '@/app/components/icons';
 
 export default function Features() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -21,12 +21,6 @@ export default function Features() {
     { title: "DM과 팔로워 공개 툿에도 답글 수 표시", description: "모든 유형의 툿에서 답글 수를 확인할 수 있습니다" },
     { title: "스크롤 오류 수정", description: "답멘을 위해 타래의 최하단 멘션 선택 시 스크롤이 맨 위로 올라가는 오류 해결" },
   ];
-
-  // 주의사항
-  const warning = {
-    title: "주의사항",
-    description: "호환성 문제로 고급 인터페이스(트윗덱)/커스텀 이모지를 지원하지 않습니다."
-  };
 
   return (
     <section className="py-16">
@@ -86,19 +80,6 @@ export default function Features() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 주의사항 */}
-      <div className="p-6 border border-amber-500/50 bg-[#fff1e3]">
-        <div className="flex items-center gap-4">
-          <WarningIcon className="w-6 h-6 text-amber-600 shrink-0" />
-          <div>
-            <h3 className="text-[17px] font-semibold mb-2 text-amber-800">{warning.title}</h3>
-            <p className="text-[15px] leading-[1.7] text-amber-700">
-              {warning.description}
-            </p>
           </div>
         </div>
       </div>

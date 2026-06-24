@@ -137,8 +137,7 @@ function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
 
 /**
  * 마감일이 운영 정책상 접수 불가 기간인지 검사한다.
- * - 6/15 ~ 6/27: 마감 접수 중단
- * - 7/1 ~ 7/10: 휴가 기간
+ * - 6/24 ~ 7/12: 슬롯 없음 (접수 불가)
  * 접수 가능하거나 파싱 불가하면 null.
  */
 export function getDeadlineBlackoutError(deadline: string, field: string): ValidationError | null {
@@ -146,11 +145,8 @@ export function getDeadlineBlackoutError(deadline: string, field: string): Valid
   if (!parsed) return null;
   const { month, day } = parsed;
 
-  if (month === 6 && day >= 15 && day <= 27) {
-    return { field, message: '6월 27일까지의 마감은 더 받지 않고 있습니다.' };
-  }
-  if (month === 7 && day >= 1 && day <= 10) {
-    return { field, message: '휴가 기간입니다. 7월 1일 전, 또는 7월 10일 이후로 마감일을 지정해주세요.' };
+  if ((month === 6 && day >= 24) || (month === 7 && day <= 12)) {
+    return { field, message: '슬롯이 없는 기간입니다.' };
   }
   return null;
 }
