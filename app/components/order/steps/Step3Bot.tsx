@@ -102,6 +102,12 @@ export default function Step3Bot() {
   useEffect(() => {
     if (step3.applyBot !== 'yes') return;
     if (step3.operationWeeksOption !== null) return;
+    // 장기 소규모 서버(Step1 체크)는 일정이 없으므로 장기 자동봇(세팅비)을 기본값으로.
+    // 그렇지 않으면 manual + 빈 날짜 → 0주 → 가동비 0원 과소견적 함정에 빠진다.
+    if (step1.isLongTermCommunity) {
+      updateStep3({ operationWeeksOption: 'longterm', manualWeeks: 0 });
+      return;
+    }
     const updates: Record<string, unknown> = { operationWeeksOption: 'manual' };
     if (!step3.botStartDate && step1.resultAnnouncementDate) {
       updates.botStartDate = ymdToMonthDay(step1.resultAnnouncementDate);
@@ -115,6 +121,7 @@ export default function Step3Bot() {
     step3.operationWeeksOption,
     step3.botStartDate,
     step3.botEndDate,
+    step1.isLongTermCommunity,
     step1.resultAnnouncementDate,
     step1.closingDate,
     updateStep3,

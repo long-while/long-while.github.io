@@ -20,6 +20,8 @@ export default function Step2Server() {
   const { formData, updateStep2, cartSyncState } = useOrder();
   const { serverCalcResult } = useEstimate();
   const step2 = formData.step2;
+  // 장기 소규모 서버 선택 시: 검색 기능(검색 서버) 추가 불가 (월 1만원 서버비 유지)
+  const isLongTermServer = formData.step1.isLongTermCommunity;
   const [characterLimitError, setCharacterLimitError] = useState<string | null>(null);
   const [adminAccountError, setAdminAccountError] = useState<string | null>(null);
 
@@ -45,17 +47,32 @@ export default function Step2Server() {
   // 빠른 마감이 견적에서 선택되었는지
   const fastDeadlineFromCart = isFromCart('빠른마감');
 
+  // 검색 차단 규칙: Vultr(장기·소규모) 서버는 검색 불가, GCP는 허용.
+  // 장기 소규모 서버(Step1 체크)는 항상 Vultr로 취급한다.
+  const hostingIsVultr = serverCalcResult?.type === 'vultr';
+  const searchBlockedByVultr = isLongTermServer || hostingIsVultr;
+
   // 계산기 검색 여부와 검색 옵션을 양방향 동기화
   // (계산기에서 '예'/'아니오'를 고르면 검색 옵션 체크 상태가 따라감)
   const searchDecidedByCalc =
     serverCalcResult?.search === 'yes' || serverCalcResult?.search === 'no';
+  // 계산기에서 검색 여부가 결정되었거나, Vultr 서버라 검색이 아예 막힌 경우
+  const searchLocked = searchDecidedByCalc || searchBlockedByVultr;
   useEffect(() => {
+    if (searchBlockedByVultr) return; // Vultr 서버는 아래 효과에서 검색을 강제로 끔
     if (serverCalcResult?.search === 'yes' && !step2.searchOption) {
       updateStep2({ searchOption: true });
     } else if (serverCalcResult?.search === 'no' && step2.searchOption) {
       updateStep2({ searchOption: false });
     }
-  }, [serverCalcResult?.search]);
+  }, [serverCalcResult?.search, searchBlockedByVultr]);
+
+  // Vultr(장기·소규모) 서버 선택 시 검색 옵션 강제 해제
+  useEffect(() => {
+    if (searchBlockedByVultr && step2.searchOption) {
+      updateStep2({ searchOption: false });
+    }
+  }, [searchBlockedByVultr, step2.searchOption, updateStep2]);
 
   // 마감일 접수 불가 기간(마감 중단/휴가) 안내
   const deadlineBlackoutError = useMemo(
@@ -170,7 +187,7 @@ export default function Step2Server() {
         <div className="space-y-8 pt-6 border-t border-gray-200 animate-slideDown">
 
           {/* 서버 사양 계산기 */}
-          <MastodonServerCalculator compact />
+          <MastodonServerCalculator compact longTerm={isLongTermServer} />
 
           {/* 2) 커스텀 옵션 선택 */}
           <div className="space-y-4">
@@ -376,27 +393,32 @@ export default function Step2Server() {
               <label className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 hover:shadow-sm ${step2.searchOption
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                 : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                } ${searchDecidedByCalc ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                } ${searchLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
                   checked={step2.searchOption}
                   onChange={(e) => {
-                    if (searchDecidedByCalc) return;
+                    if (searchLocked) return;
                     updateStep2({ searchOption: e.target.checked });
                   }}
-                  disabled={searchDecidedByCalc}
+                  disabled={searchLocked}
                   className="w-4 h-4 shrink-0 accent-[#ff7b00] disabled:cursor-not-allowed"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
                     검색 옵션 (+30,000원)
                     {searchFromCart && step2.searchOption && <FromCartBadge />}
-                    {serverCalcResult?.search === 'yes' && (
+                    {searchBlockedByVultr && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full ml-2">
+                        장기·소규모(Vultr) 서버 선택 불가
+                      </span>
+                    )}
+                    {!searchBlockedByVultr && serverCalcResult?.search === 'yes' && (
                       <span className="inline-flex items-center px-2 py-0.5 bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-medium rounded-full ml-2">
                         계산기에서 선택됨
                       </span>
                     )}
-                    {serverCalcResult?.search === 'no' && (
+                    {!searchBlockedByVultr && serverCalcResult?.search === 'no' && (
                       <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full ml-2">
                         계산기에서 제외됨
                       </span>
@@ -408,11 +430,13 @@ export default function Step2Server() {
                 </div>
               </label>
 
-              {/* 장기/소규모 서버 + 검색 옵션 선택 시 서버비 주의 문구 */}
-              {serverCalcResult?.type === 'vultr' && step2.searchOption && (
+              {/* Vultr(장기·소규모) 서버: 검색 기능 추가 불가 안내 */}
+              {searchBlockedByVultr && (
                 <div className="ml-7 p-3 bg-[#fff5eb] border border-[#ff7b00] rounded-md animate-slideDown">
                   <p className="text-[13px] leading-[1.7] text-[#cc5500]">
-                    장기 소규모 서버에 검색 옵션을 추가하시면 매달 서버비가 총 <strong>4만원</strong> 정도 나오니 괜찮으신 분만 선택 바랍니다. 검색 옵션 제외 시 서버비는 <strong>1만원~3만원</strong> 사이, 원하시는 사양으로 사용하시게 됩니다.
+                    {isLongTermServer
+                      ? '장기 소규모 서버(반영구)는 검색 서버가 별도로 필요해 월 서버비가 크게 오릅니다. 서버비 절약을 위해 검색 기능을 추가할 수 없어요. 검색이 필요하시면 Step 1에서 ‘장기 소규모 서버’ 체크를 해제해 주세요.'
+                      : '이 사양은 장기·소규모(Vultr) 서버라, 검색 서버 비용이 커서 검색 기능을 추가할 수 없습니다. 검색이 필요하시면 위 계산기에서 운영 기간을 12개월 미만(GCP 사양)으로 선택해 주세요.'}
                   </p>
                 </div>
               )}

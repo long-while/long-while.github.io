@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { Plus, Trash2, AlertCircle, Check } from 'lucide-react';
 import { ChevronDownIcon } from '@/app/components/icons';
@@ -11,12 +11,23 @@ interface ServerCommissionProps {
 }
 
 export default function ServerCommission({ onBack, onNavigate }: ServerCommissionProps) {
-  const { addItem, removeItem, items } = useEstimate();
+  const { addItem, removeItem, items, serverCalcResult } = useEstimate();
   const [isLongTermInfoOpen, setIsLongTermInfoOpen] = useState(false);
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
   };
+
+  // 검색 차단 규칙: 계산기가 Vultr(장기·소규모) 서버로 판정하면 검색 기능은 담을 수 없다.
+  const SEARCH_ITEM_NAME = '검색 기능';
+  const searchBlocked = serverCalcResult?.type === 'vultr';
+
+  // Vultr 판정으로 바뀌면 이미 담긴 검색 기능 항목을 제거해 견적과 정책을 일치시킨다.
+  useEffect(() => {
+    if (!searchBlocked) return;
+    const searchItem = items.find(item => item.name === SEARCH_ITEM_NAME);
+    if (searchItem) removeItem(searchItem.id);
+  }, [searchBlocked, items, removeItem]);
 
   // 테마 옵션들 (택1 그룹)
   const themeOptions = [
@@ -306,37 +317,49 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           <div className="space-y-3">
             {additionalOptions.map((option) => {
               const isSelected = isItemInEstimate(option.name);
+              const isBlocked = option.name === SEARCH_ITEM_NAME && searchBlocked;
               return (
-                <button
-                  key={option.name}
-                  type="button"
-                  onClick={() => handleToggleEstimate(option.name, option.price, option.description)}
-                  className={`w-full border p-5 transition-all text-left ${isSelected
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                    } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
-                  aria-pressed={isSelected}
-                  aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
-                >
-                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div
-                        className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
-                          }`}
-                        aria-hidden
-                      >
-                        {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                <div key={option.name}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isBlocked) return;
+                      handleToggleEstimate(option.name, option.price, option.description);
+                    }}
+                    disabled={isBlocked}
+                    className={`w-full border p-5 transition-all text-left ${isSelected
+                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      } ${isBlocked ? 'opacity-50 cursor-not-allowed hover:border-border hover:bg-white' : ''} focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                    aria-pressed={isSelected}
+                    aria-disabled={isBlocked}
+                    aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
+                  >
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div
+                          className={`w-6 h-6 min-w-[24px] rounded border-2 flex items-center justify-center transition-all shrink-0 ${isSelected ? 'border-[#ff7b00] bg-[#ff7b00]' : 'border-gray-300'
+                            }`}
+                          aria-hidden
+                        >
+                          {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                        </div>
+                        <div>
+                          <h3 className="text-[15px] text-black font-semibold">{option.name}</h3>
+                          <span className="text-[14px] leading-[1.6] text-foreground/60">
+                            {option.description}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-[15px] text-black font-semibold">{option.name}</h3>
-                        <span className="text-[14px] leading-[1.6] text-foreground/60">
-                          {option.description}
-                        </span>
-                      </div>
+                      <span className="text-[15px] font-mono leading-normal text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
                     </div>
-                    <span className="text-[15px] font-mono leading-normal text-[#ff7b00] shrink-0 pl-10 md:pl-0">₩{option.price.toLocaleString()}</span>
-                  </div>
-                </button>
+                  </button>
+                  {isBlocked && (
+                    <p className="mt-2 text-[13px] leading-[1.7] text-[#cc5500]">
+                      위 계산기에서 장기·소규모(Vultr) 서버로 판정되어 검색 기능을 추가할 수 없습니다. 검색이 필요하시면 운영 기간을 12개월 미만(GCP 사양)으로 선택해 주세요.
+                    </p>
+                  )}
+                </div>
               );
             })}
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { MONTH_OPTIONS, USERS_OPTIONS, getServerCalcResult } from '@/app/lib/mastodonServerConfig';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
@@ -10,7 +10,14 @@ import {
   SelectValue,
 } from '@/app/components/ui/select';
 
-export default function MastodonServerCalculator({ compact = false }: { compact?: boolean }) {
+export default function MastodonServerCalculator({
+  compact = false,
+  longTerm = false,
+}: {
+  compact?: boolean;
+  /** 장기 소규모 서버: 기간을 12개월 이상(Vultr)으로 고정하고 검색을 막는다 */
+  longTerm?: boolean;
+}) {
   const { serverCalcResult, setServerCalcResult } = useEstimate();
 
   const [months, setMonths] = useState<string>(
@@ -22,6 +29,29 @@ export default function MastodonServerCalculator({ compact = false }: { compact?
   const [search, setSearch] = useState<'yes' | 'no' | null>(
     serverCalcResult ? serverCalcResult.search : null
   );
+
+  // 장기 소규모 서버는 반영구(12개월 이상) 운영 → 기간을 12개월로 고정
+  useEffect(() => {
+    if (longTerm && months !== '12') {
+      setMonths('12');
+    }
+  }, [longTerm, months]);
+
+  // 현재 인원/기간이 Vultr(장기·소규모) 호스팅인지 검색 제외 기준으로 판정 (검색값에 따른 순환 방지)
+  const baselineIsVultr = useMemo(() => {
+    if (!months || !usersKey) return false;
+    return getServerCalcResult(Number(months), usersKey, 'no').type === 'vultr';
+  }, [months, usersKey]);
+
+  // 검색 차단 규칙: Vultr(장기·소규모) 서버는 검색 서버 비용이 커서 막고, GCP는 허용한다.
+  const searchLocked = longTerm || baselineIsVultr;
+
+  // 검색 잠금 시 '아니오'로 강제 고정
+  useEffect(() => {
+    if (searchLocked && search !== 'no') {
+      setSearch('no');
+    }
+  }, [searchLocked, search]);
 
   const isAllSelected = !!(months && usersKey && search);
   const result: ServerCalcResult | null = isAllSelected
@@ -69,21 +99,27 @@ export default function MastodonServerCalculator({ compact = false }: { compact?
             </span>
             서버 운영 기간
           </label>
-          <Select value={months} onValueChange={setMonths}>
-            <SelectTrigger
-              className={`h-[46px] text-[14px] rounded-none w-full
-                ${months ? 'border-[#ff7b00]' : ''}`}
-            >
-              <SelectValue placeholder="선택해주세요" />
-            </SelectTrigger>
-            <SelectContent>
-              {MONTH_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={String(o.value)}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {longTerm ? (
+            <div className="h-[46px] px-3 flex items-center text-[14px] border border-[#ff7b00] bg-[#fff5eb] text-[#cc5500]">
+              12개월 이상 · 장기 소규모 서버 (반영구)
+            </div>
+          ) : (
+            <Select value={months} onValueChange={setMonths}>
+              <SelectTrigger
+                className={`h-[46px] text-[14px] rounded-none w-full
+                  ${months ? 'border-[#ff7b00]' : ''}`}
+              >
+                <SelectValue placeholder="선택해주세요" />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTH_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={String(o.value)}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* 2. 러닝 인원 */}
@@ -125,17 +161,31 @@ export default function MastodonServerCalculator({ compact = false }: { compact?
               <button
                 key={val}
                 type="button"
-                onClick={() => setSearch(val)}
+                onClick={() => {
+                  if (searchLocked) return;
+                  setSearch(val);
+                }}
+                disabled={searchLocked}
                 className={`px-5 py-2.5 border text-[14px] transition-all min-h-[44px]
                   ${search === val
                     ? 'border-[#ff7b00] bg-[#fff5eb] text-[#ff7b00] font-medium'
                     : 'border-border text-foreground/60 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                  }`}
+                  }
+                  ${searchLocked ? 'opacity-40 cursor-not-allowed hover:border-border hover:bg-transparent' : ''}`}
               >
                 {val === 'yes' ? '예' : '아니오'}
               </button>
             ))}
           </div>
+          {searchLocked && (
+            <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+              {longTerm
+                ? '장기 소규모 서버(반영구)는 검색 서버가 별도로 필요해 서버비가 크게 올라, 검색을 '
+                : '이 사양은 장기·소규모(Vultr) 서버라 검색 서버 비용이 커, 검색을 '}
+              <strong>‘아니오’로 고정</strong>합니다.
+              {!longTerm && ' 검색이 필요하시면 운영 기간을 12개월 미만(GCP 사양)으로 선택해 주세요.'}
+            </p>
+          )}
         </div>
 
         {/* 미선택 안내 */}

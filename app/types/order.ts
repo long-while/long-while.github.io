@@ -29,6 +29,7 @@ export interface Step1Data {
   communityKoreanName: string;
   communityEnglishName: string;
   isLongTermCommunity: boolean; // 장기 소규모 서버 여부 (체크 시 일정 입력 생략)
+  longTermConfirmed: boolean; // 장기 소규모 서버 안내 확인 여부 (체크 시 '확인했습니다' 필수)
   resultAnnouncementDate: string; // yyyy-mm-dd
   openingDate: string; // yyyy-mm-dd
   closingDate: string; // yyyy-mm-dd
