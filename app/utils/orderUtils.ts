@@ -323,6 +323,14 @@ export function validateStep1(data: OrderFormData['step1']): ValidationError[] {
     errors.push({ field: 'googlePassword', message: '비밀번호는 최소 8자 이상이어야 합니다.' });
   }
 
+  // 장기 소규모 서버 체크 시 안내 확인('확인했습니다') 필수
+  if (data.isLongTermCommunity && !data.longTermConfirmed) {
+    errors.push({
+      field: 'longTermConfirmed',
+      message: '장기 소규모 서버 안내를 확인하신 후 확인 체크를 해주세요.',
+    });
+  }
+
   // 날짜 검증 (장기 소규모 서버 체크 시 스킵)
   if (!data.isLongTermCommunity) {
     if (!data.resultAnnouncementDate || !data.openingDate || !data.closingDate) {

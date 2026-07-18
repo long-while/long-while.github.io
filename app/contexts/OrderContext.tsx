@@ -30,6 +30,7 @@ const initialStep1Data: Step1Data = {
   communityKoreanName: '',
   communityEnglishName: '',
   isLongTermCommunity: false,
+  longTermConfirmed: false,
   resultAnnouncementDate: '',
   openingDate: '',
   closingDate: '',
@@ -132,10 +133,15 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [restoredFromStorage, setRestoredFromStorage] = useState(false);
 
   const updateStep1 = useCallback((data: Partial<Step1Data>) => {
-    setFormData(prev => ({
-      ...prev,
-      step1: { ...prev.step1, ...data },
-    }));
+    setFormData(prev => {
+      const step1 = { ...prev.step1, ...data };
+      // 불변식: 장기 소규모 서버는 검색 옵션과 공존 불가 (월 1만원 서버비 유지)
+      // UI 효과(Step2)와 별개로 데이터 단에서도 강제 해제해, 견적·복사·요약이 항상 일치하도록 한다.
+      const step2 = step1.isLongTermCommunity && prev.step2.searchOption
+        ? { ...prev.step2, searchOption: false }
+        : prev.step2;
+      return { ...prev, step1, step2 };
+    });
   }, []);
 
   const updateStep2 = useCallback((data: Partial<Step2Data>) => {
@@ -165,11 +171,18 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
     const { step2, step3 } = syncCartToOrderData(cartItems);
 
-    setFormData(prev => ({
-      ...prev,
-      step2: { ...prev.step2, ...step2 },
-      step3: { ...prev.step3, ...step3 },
-    }));
+    setFormData(prev => {
+      const mergedStep2 = { ...prev.step2, ...step2 };
+      // 불변식 유지: 장기 소규모 서버면 장바구니의 검색 옵션을 무시한다.
+      if (prev.step1.isLongTermCommunity) {
+        mergedStep2.searchOption = false;
+      }
+      return {
+        ...prev,
+        step2: mergedStep2,
+        step3: { ...prev.step3, ...step3 },
+      };
+    });
 
     // 동기화 상태 업데이트
     const syncState = loadSyncState();
@@ -239,6 +252,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
           step3: { ...initialStep3Data, ...migrateStep3(parsed.formData.step3) },
           step4: { ...initialStep4Data, ...parsed.formData.step4 },
         };
+        // 불변식 유지: 예전(변경 전) 저장본이 장기 소규모 + 검색을 동시에 담고 있어도 검색을 해제한다.
+        if (mergedFormData.step1.isLongTermCommunity) {
+          mergedFormData.step2.searchOption = false;
+        }
         setFormData(mergedFormData);
         setCurrentStep(parsed.currentStep);
         // 비밀번호는 저장되지 않으므로 복원 시 재입력 안내 플래그 설정

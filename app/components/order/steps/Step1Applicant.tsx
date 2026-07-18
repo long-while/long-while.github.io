@@ -176,13 +176,14 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
               if (checked) {
                 updateStep1({
                   isLongTermCommunity: true,
+                  longTermConfirmed: false, // 체크할 때마다 '확인했습니다'를 다시 받도록 초기화
                   resultAnnouncementDate: '',
                   openingDate: '',
                   closingDate: '',
                   operationWeeks: 0,
                 });
               } else {
-                updateStep1({ isLongTermCommunity: false });
+                updateStep1({ isLongTermCommunity: false, longTermConfirmed: false });
               }
             }}
             className="w-4 h-4 mt-1 shrink-0 accent-[#ff7b00]"
@@ -192,6 +193,40 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
             <span className="text-gray-500"> (합격자 발표/개장/폐장 일정 없이 운영)</span>
           </span>
         </label>
+
+        {/* 장기 소규모 서버 안내 + '확인했습니다' 게이트 */}
+        {step1.isLongTermCommunity && (
+          <div className="mb-4 p-4 bg-amber-50 border border-amber-300 rounded-lg animate-slideDown space-y-3">
+            <p className="text-[14px] font-semibold text-amber-800">
+              ⚠ 장기 소규모 서버가 맞으신지 꼭 확인해 주세요
+            </p>
+            <ul className="space-y-1.5 text-[13px] leading-[1.7] text-amber-800">
+              <li className="pl-3 relative before:content-['·'] before:absolute before:left-0">
+                장기 소규모 서버는 <strong>최소 반년(6개월) 이상</strong> 소규모로 (반영구적으로) 운영하려는 경우에만 해당됩니다.
+              </li>
+              <li className="pl-3 relative before:content-['·'] before:absolute before:left-0">
+                자관·역극용이더라도 <strong>3개월 이하로 짧게</strong> 쓰실 예정이라면 이 항목을 체크하지 마시고, 아래 일정란에 <strong>아무 날짜나 대략</strong> 적어 주세요.
+              </li>
+              <li className="pl-3 relative before:content-['·'] before:absolute before:left-0">
+                정말 장기적으로 유지하실 게 아니라면 체크하지 말아 주세요.
+              </li>
+              <li className="pl-3 relative before:content-['·'] before:absolute before:left-0">
+                장기 소규모 서버는 저렴한 월 서버비 유지를 위해 <strong>검색 기능(검색 서버)을 추가할 수 없습니다.</strong> (서버비는 인원수·기간에 따라 달라지며, 검색을 넣으면 검색 서버가 별도로 필요해 월 서버비가 크게 오릅니다.)
+              </li>
+            </ul>
+            <label className="flex items-start gap-2 cursor-pointer pt-1 border-t border-amber-200">
+              <input
+                type="checkbox"
+                checked={step1.longTermConfirmed}
+                onChange={(e) => updateStep1({ longTermConfirmed: e.target.checked })}
+                className="w-4 h-4 mt-1 shrink-0 accent-[#ff7b00]"
+              />
+              <span className="text-[14px] font-medium text-amber-900 leading-[1.6]">
+                위 내용을 이해했으며, 반년 이상 반영구적으로 운영할 장기 소규모 서버가 맞습니다.
+              </span>
+            </label>
+          </div>
+        )}
 
         {!step1.isLongTermCommunity && (
           <>
