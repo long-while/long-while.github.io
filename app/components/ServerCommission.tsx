@@ -69,7 +69,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
       },
       {
         name: '검색 기능',
-        price: 30000,
+        price: 15000,
         description: '단어 단위 검색. 팔로우 중인 유저의 툿+멘션에서 찾아 결과를 반환합니다.'
       },
       {
@@ -188,6 +188,10 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           <div className="max-w-4xl space-y-6 text-[15px] leading-[1.8]">
             <p>
               <span className="font-medium">기본 마감일:</span> 서버 개장 3~5일 전
+            </p>
+            {/* 접수 불가 기간: 신청서 검증(orderUtils 의 getDeadlineBlackoutError)과 동일한 기간 */}
+            <p className="text-[#cc5500] font-medium">
+              9/7~9/16 은 마감이 불가능한 기간입니다. 해당 기간을 마감일로 신청하실 수 없어요.
             </p>
             <p className="text-foreground/70">
               개장으로부터 48시간 이상 남은 시점에 문의하실 경우 추가금 없음! (옵션에 따라 다를수도 있습니다)

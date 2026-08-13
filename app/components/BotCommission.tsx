@@ -12,6 +12,12 @@ interface BotCommissionProps {
 const MAIN_BOT_TYPES = ['기본 타입', '기본&상점 타입', '기본&상점&스탯 타입'] as const;
 const SHOP_BOT_TYPES = ['기본&상점 타입', '기본&상점&스탯 타입'] as const;
 
+// CoC 타입은 기능이 겹치는 기본 타입과 함께 담을 수 없다 (기본&상점 이상은 허용)
+const COC_EXCLUSIVE_PAIRS: Record<string, string> = {
+  'CoC 타입': '기본 타입',
+  '기본 타입': 'CoC 타입',
+};
+
 export default function BotCommission({ onBack, onNavigate }: BotCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
@@ -74,6 +80,15 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
         setToastMessage(`"${conflict}" 선택을 먼저 취소해 주세요. 메인 봇 타입은 하나만 선택할 수 있어요.`);
         return;
       }
+    }
+
+    // CoC 타입 ↔ 기본 타입: 기능이 겹쳐 함께 담을 수 없음
+    const cocConflict = COC_EXCLUSIVE_PAIRS[name];
+    if (cocConflict && isItemInEstimate(cocConflict)) {
+      setToastMessage(
+        `"${cocConflict}" 선택을 먼저 취소해 주세요. CoC 타입과 기본 타입은 기능이 겹쳐 함께 선택할 수 없어요. (기본&상점 이상은 CoC 타입과 함께 선택 가능합니다)`
+      );
+      return;
     }
 
     // 없으면 추가

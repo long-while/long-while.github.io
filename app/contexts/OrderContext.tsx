@@ -124,6 +124,22 @@ function migrateStep3(rawStep3: unknown): Partial<Step3Data> {
   return migrated as Partial<Step3Data>;
 }
 
+/**
+ * 불변식: CoC 봇은 기능이 겹치는 '기본' 봇과 공존 불가. (기본+상점 이상은 허용)
+ * 두 값이 동시에 들어오면 기본 봇 선택을 해제하고, 메인 봇에 딸린 옵션도 함께 정리한다.
+ */
+function applyCocBotExclusivity(step3: Step3Data): Step3Data {
+  if (!step3.cocBot || step3.mainBot !== 'basic') return step3;
+  return {
+    ...step3,
+    mainBot: null,
+    investigationBot: false,
+    investigationDailyLimit: false,
+    investigationDailyLimitCount: 0,
+    investigationBotAccountId: '',
+  };
+}
+
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export function OrderProvider({ children }: { children: ReactNode }) {
@@ -154,7 +170,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const updateStep3 = useCallback((data: Partial<Step3Data>) => {
     setFormData(prev => ({
       ...prev,
-      step3: { ...prev.step3, ...data },
+      step3: applyCocBotExclusivity({ ...prev.step3, ...data }),
     }));
   }, []);
 
@@ -180,7 +196,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       return {
         ...prev,
         step2: mergedStep2,
-        step3: { ...prev.step3, ...step3 },
+        // 불변식 유지: 장바구니에 기본 봇 + CoC 봇이 함께 담겨 있어도 기본 봇을 해제한다.
+        step3: applyCocBotExclusivity({ ...prev.step3, ...step3 }),
       };
     });
 
@@ -256,6 +273,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         if (mergedFormData.step1.isLongTermCommunity) {
           mergedFormData.step2.searchOption = false;
         }
+        // 불변식 유지: 예전 저장본에 기본 봇 + CoC 봇이 함께 담겨 있어도 기본 봇을 해제한다.
+        mergedFormData.step3 = applyCocBotExclusivity(mergedFormData.step3);
         setFormData(mergedFormData);
         setCurrentStep(parsed.currentStep);
         // 비밀번호는 저장되지 않으므로 복원 시 재입력 안내 플래그 설정

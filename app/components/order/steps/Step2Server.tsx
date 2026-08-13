@@ -1,7 +1,7 @@
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState, useEffect, useMemo } from 'react';
-import { validateCharacterLimit, computeRequiredFastDeadline, getDeadlineBlackoutError } from '@/app/utils/orderUtils';
+import { validateCharacterLimit, computeRequiredFastDeadline, getDeadlineBlackoutError, validateAccountId, DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
 import type { FastDeadlineOption } from '@/app/types/order';
 import { ShoppingCart } from 'lucide-react';
 import MastodonServerCalculator from '@/app/components/MastodonServerCalculator';
@@ -406,7 +406,7 @@ export default function Step2Server() {
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
-                    검색 옵션 (+30,000원)
+                    검색 옵션 (+15,000원)
                     {searchFromCart && step2.searchOption && <FromCartBadge />}
                     {searchBlockedByVultr && (
                       <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full ml-2">
@@ -618,7 +618,11 @@ export default function Step2Server() {
                     <p className="text-[13px] text-red-600">{deadlineBlackoutError.message}</p>
                   </div>
                 ) : (
-                  <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요.</p>
+                  <p className="text-[12px] text-gray-600">
+                    월/일 형식으로 입력해 주세요.
+                    <br />
+                    <strong>{DEADLINE_BLACKOUT_LABEL} 은 마감이 불가능한 기간입니다.</strong>
+                  </p>
                 )}
                 <div className="mt-2 p-3 bg-[#fff5eb] border border-[#ff7b00] rounded-md">
                   <p className="text-[13px] leading-[1.7] text-[#cc5500]">
@@ -640,6 +644,10 @@ export default function Step2Server() {
                     updateStep2({ adminAccountId: value });
                     if (/[,\/]/.test(value)) {
                       setAdminAccountError('총괄 계정은 하나만 입력해 주세요.');
+                    } else if (value.trim() !== '') {
+                      // 3자 이상 + admin/owner/moderator 사용 불가 (대소문자 무관)
+                      const accountError = validateAccountId(value, 'adminAccountId', '총괄 계정 아이디');
+                      setAdminAccountError(accountError ? accountError.message : null);
                     } else {
                       setAdminAccountError(null);
                     }
@@ -655,7 +663,7 @@ export default function Step2Server() {
                     <p className="text-[13px] text-red-600">{adminAccountError}</p>
                   </div>
                 ) : (
-                  <p className="text-[12px] text-gray-600">대문자 권장</p>
+                  <p className="text-[12px] text-gray-600">대문자 권장 / 3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
                 )}
               </div>
             </div>

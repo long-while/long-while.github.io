@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { ShoppingCart, Plus, X } from 'lucide-react';
 import { AlertTriangle } from 'griddy-icons';
 import { INPUT_LIMITS } from '@/app/types/order';
-import { getDeadlineBlackoutError } from '@/app/utils/orderUtils';
+import { getDeadlineBlackoutError, validateAccountId, DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
 import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
 
 // 예약 툿/자동 스진용 추가 계정 정책 (constants/form.ts 와 공유)
@@ -150,6 +150,34 @@ export default function Step3Bot() {
     [step3.setupDeadline]
   );
 
+  // 계정 아이디 규칙(3자 이상 / admin·owner·moderator 불가) 실시간 안내
+  // 빈칸은 다음 단계 진행 시 필수 검증에서 걸러지므로 입력 중에는 표시하지 않는다.
+  const botAccountIdError = useMemo(
+    () =>
+      step3.botAccountId.trim() === ''
+        ? null
+        : validateAccountId(step3.botAccountId, 'botAccountId', '봇 계정 ID'),
+    [step3.botAccountId]
+  );
+  const cocBotAccountIdError = useMemo(
+    () =>
+      step3.cocBotAccountId.trim() === ''
+        ? null
+        : validateAccountId(step3.cocBotAccountId, 'cocBotAccountId', 'CoC 봇 계정 ID'),
+    [step3.cocBotAccountId]
+  );
+  const investigationBotAccountIdError = useMemo(
+    () =>
+      step3.investigationBotAccountId.trim() === ''
+        ? null
+        : validateAccountId(
+            step3.investigationBotAccountId,
+            'investigationBotAccountId',
+            '조사 자동봇 계정 ID'
+          ),
+    [step3.investigationBotAccountId]
+  );
+
   // 양도 기능 노출 조건: 상점 또는 스탯 선택 시
   const showTransferFeature =
     step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat';
@@ -261,6 +289,9 @@ export default function Step3Bot() {
 
   // 조사 자동봇 사용 가능 조건 (메인 봇이 선택된 경우)
   const canHaveInvestigationBot = step3.mainBot !== null;
+
+  // CoC 봇은 기본 봇과 기능이 겹쳐 함께 선택 불가 (기본+상점 이상은 허용)
+  const basicBotBlockedByCoc = step3.cocBot;
 
   // 분리 계정 입력 노출 조건
   const showCocBotAccount = step3.cocBot && step3.mainBot !== null;
@@ -477,16 +508,20 @@ export default function Step3Bot() {
             <div>
               <h3 className="text-[18px] font-semibold mb-1">3) 메인 봇 종류 <span className="text-red-500">*</span></h3>
               <p className="text-[13px] text-gray-600">
-                기본 계열 봇은 중복 선택할 수 없으며, CoC 봇은 기본 계열 봇과 함께 선택하거나 단독으로 신청할 수 있습니다.
+                기본 계열 봇은 중복 선택할 수 없으며, CoC 봇은 기본+상점 이상 봇과 함께 선택하거나 단독으로 신청할 수 있습니다.
+                <br />
+                <strong>기본 봇은 CoC 봇과 기능이 겹쳐 함께 선택할 수 없습니다.</strong>
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* 1) 기본 */}
+              {/* 1) 기본 (CoC 봇 선택 시 잠금) */}
               <label
-                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.mainBot === 'basic'
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 ${basicBotBlockedByCoc
+                  ? 'border-border bg-gray-50 opacity-60 cursor-not-allowed'
+                  : step3.mainBot === 'basic'
+                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20 cursor-pointer'
+                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm cursor-pointer'
                   }`}
               >
                 <input
@@ -497,12 +532,18 @@ export default function Step3Bot() {
                   onClick={() => {
                     if (step3.mainBot === 'basic') handleMainBotChange(null);
                   }}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  disabled={basicBotBlockedByCoc}
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00] disabled:cursor-not-allowed"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
                     1) 기본
                     {basicBotFromCart && step3.mainBot === 'basic' && <FromCartBadge />}
+                    {basicBotBlockedByCoc && (
+                      <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full ml-2">
+                        CoC 봇과 중복 불가
+                      </span>
+                    )}
                   </div>
                   <div className="text-[13px] text-gray-600 mt-1">15,000원</div>
                 </div>
@@ -582,6 +623,14 @@ export default function Step3Bot() {
                 </div>
               </label>
             </div>
+
+            {/* CoC 봇 선택 시 기본 봇 잠금 안내 */}
+            {basicBotBlockedByCoc && (
+              <p className="text-[13px] leading-[1.7] text-gray-700 border-l-2 border-[#ff7b00] pl-3">
+                CoC 봇을 선택하셔서 <strong>기본 봇</strong>은 선택할 수 없습니다. 두 봇은 기능이 겹쳐 함께 신청하실 필요가 없어요.
+                기본 봇 단독으로 신청하시려면 CoC 봇 선택을 해제해 주세요. (기본+상점, 기본+상점+스탯은 CoC 봇과 함께 선택하실 수 있습니다.)
+              </p>
+            )}
           </div>
 
           {/* 4) 추가 기능 선택 */}
@@ -1190,7 +1239,7 @@ export default function Step3Bot() {
               <div className={`grid grid-cols-1 ${requiresSeparateAccounts ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1'} gap-4`}>
                 <div className="space-y-2">
                   <label htmlFor="botAccountId" className="block text-[14px] font-medium">
-                    {requiresSeparateAccounts ? '메인 봇 계정 ID' : '봇 계정 ID'}
+                    {requiresSeparateAccounts ? '메인 봇 계정 ID' : '봇 계정 ID'} <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="botAccountId"
@@ -1198,14 +1247,22 @@ export default function Step3Bot() {
                     value={step3.botAccountId}
                     onChange={(e) => updateStep3({ botAccountId: e.target.value })}
                     placeholder="@DICE, @BOT"
-                    className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${botAccountIdError
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-input focus:border-[#ff7b00]'
+                      }`}
                   />
+                  {botAccountIdError ? (
+                    <p className="text-[12px] text-red-600">{botAccountIdError.message}</p>
+                  ) : (
+                    <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
+                  )}
                 </div>
 
                 {showCocBotAccount && (
                   <div className="space-y-2">
                     <label htmlFor="cocBotAccountId" className="block text-[14px] font-medium">
-                      CoC 봇 계정 ID
+                      CoC 봇 계정 ID <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="cocBotAccountId"
@@ -1213,15 +1270,23 @@ export default function Step3Bot() {
                       value={step3.cocBotAccountId}
                       onChange={(e) => updateStep3({ cocBotAccountId: e.target.value })}
                       placeholder="@CoC"
-                      className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${cocBotAccountIdError
+                        ? 'border-red-500 focus:border-red-500'
+                        : 'border-input focus:border-[#ff7b00]'
+                        }`}
                     />
+                    {cocBotAccountIdError ? (
+                      <p className="text-[12px] text-red-600">{cocBotAccountIdError.message}</p>
+                    ) : (
+                      <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
+                    )}
                   </div>
                 )}
 
                 {showInvestigationBotAccount && (
                   <div className="space-y-2">
                     <label htmlFor="investigationBotAccountId" className="block text-[14px] font-medium">
-                      조사 자동봇 계정 ID
+                      조사 자동봇 계정 ID <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="investigationBotAccountId"
@@ -1229,8 +1294,16 @@ export default function Step3Bot() {
                       value={step3.investigationBotAccountId}
                       onChange={(e) => updateStep3({ investigationBotAccountId: e.target.value })}
                       placeholder="@SEARCH"
-                      className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${investigationBotAccountIdError
+                        ? 'border-red-500 focus:border-red-500'
+                        : 'border-input focus:border-[#ff7b00]'
+                        }`}
                     />
+                    {investigationBotAccountIdError ? (
+                      <p className="text-[12px] text-red-600">{investigationBotAccountIdError.message}</p>
+                    ) : (
+                      <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -1255,7 +1328,11 @@ export default function Step3Bot() {
                     <p className="text-[13px] text-red-600">{setupDeadlineBlackoutError.message}</p>
                   </div>
                 ) : (
-                  <p className="text-[12px] text-gray-600">월/일 형식으로 입력해 주세요. 오마카세 자동봇 기능 등의 테스트가 필요한 경우, 테스트 기간까지 고려해서 작성합니다.</p>
+                  <p className="text-[12px] text-gray-600">
+                    월/일 형식으로 입력해 주세요. 오마카세 자동봇 기능 등의 테스트가 필요한 경우, 테스트 기간까지 고려해서 작성합니다.
+                    <br />
+                    <strong>{DEADLINE_BLACKOUT_LABEL} 은 마감이 불가능한 기간입니다.</strong>
+                  </p>
                 )}
               </div>
             </div>
