@@ -137,16 +137,18 @@ function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
 
 /**
  * 마감일이 운영 정책상 접수 불가 기간인지 검사한다.
- * - 6/24 ~ 7/12: 슬롯 없음 (접수 불가)
+ * - 9/7 ~ 9/16: 마감 불가능 (접수 불가)
  * 접수 가능하거나 파싱 불가하면 null.
  */
+export const DEADLINE_BLACKOUT_LABEL = '9/7~9/16';
+
 export function getDeadlineBlackoutError(deadline: string, field: string): ValidationError | null {
   const parsed = extractMonthDay(deadline);
   if (!parsed) return null;
   const { month, day } = parsed;
 
-  if ((month === 6 && day >= 24) || (month === 7 && day <= 12)) {
-    return { field, message: '슬롯이 없는 기간입니다.' };
+  if (month === 9 && day >= 7 && day <= 16) {
+    return { field, message: `${DEADLINE_BLACKOUT_LABEL} 은 마감이 불가능한 기간입니다.` };
   }
   return null;
 }
@@ -245,6 +247,59 @@ export function validateCharacterLimit(value: number): ValidationError | null {
       message: `글자수는 ${characterLimit.max} 이하여야 합니다.`,
     };
   }
+  return null;
+}
+
+/** 계정 아이디 최소 길이 (@ 제외) */
+export const ACCOUNT_ID_MIN_LENGTH = 3;
+
+/** 마스토돈 예약어라 계정 아이디로 쓸 수 없는 값 (대소문자 무관) */
+const RESERVED_ACCOUNT_IDS = ['admin', 'owner', 'moderator'];
+
+/**
+ * 계정 아이디 정규화: 앞뒤 공백과 선행 @ 를 제거한다.
+ */
+export function normalizeAccountId(raw: string): string {
+  return raw.trim().replace(/^@+/, '').trim();
+}
+
+/**
+ * 두 계정 아이디가 같은 계정인지 비교한다. (@ 유무·대소문자 무시)
+ */
+export function isSameAccountId(a: string, b: string): boolean {
+  return normalizeAccountId(a).toLowerCase() === normalizeAccountId(b).toLowerCase();
+}
+
+/**
+ * 봇/총괄 계정 아이디 검증.
+ * - 빈칸 불가
+ * - @ 를 뺀 실제 아이디가 3자 이상
+ * - admin / owner / moderator 는 대소문자 무관 사용 불가
+ * 문제가 없으면 null.
+ */
+export function validateAccountId(
+  raw: string,
+  field: string,
+  label: string
+): ValidationError | null {
+  const id = normalizeAccountId(raw ?? '');
+
+  if (id === '') {
+    return { field, message: `${label}를 입력해 주세요.` };
+  }
+  if (id.length < ACCOUNT_ID_MIN_LENGTH) {
+    return {
+      field,
+      message: `${label}는 ${ACCOUNT_ID_MIN_LENGTH}자 이상이어야 합니다. (@ 제외)`,
+    };
+  }
+  if (RESERVED_ACCOUNT_IDS.includes(id.toLowerCase())) {
+    return {
+      field,
+      message: `${label}로 admin, owner, moderator 는 사용할 수 없습니다. (대소문자 무관)`,
+    };
+  }
+
   return null;
 }
 
@@ -398,11 +453,18 @@ export function validateStep2(data: Step2Data): ValidationError[] {
       }
     }
 
-    if (!data.adminAccountId || data.adminAccountId.trim() === '') {
-      errors.push({
-        field: 'adminAccountId',
-        message: '총괄 계정 아이디를 입력해 주세요.',
-      });
+  }
+
+  // 총괄 계정 아이디: 빈칸 불가 + 3자 이상 + 예약어(admin/owner/moderator) 불가
+  // 서버 설치를 신청하지 않는 경우에는 입력된 값만 같은 규칙으로 검증한다.
+  if (data.applyServerInstall === 'yes' || data.adminAccountId.trim() !== '') {
+    const adminAccountError = validateAccountId(
+      data.adminAccountId,
+      'adminAccountId',
+      '총괄 계정 아이디'
+    );
+    if (adminAccountError) {
+      errors.push(adminAccountError);
     }
   }
 
@@ -456,6 +518,15 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       });
     }
 
+    // CoC 봇은 기능이 겹치는 '기본' 봇과 함께 신청할 수 없다 (기본+상점 이상은 허용)
+    if (data.cocBot && data.mainBot === 'basic') {
+      errors.push({
+        field: 'mainBot',
+        message:
+          'CoC 봇은 기본 봇과 기능이 겹쳐 함께 신청할 수 없습니다. CoC 봇 단독으로 신청하시거나, 메인 봇을 기본+상점 이상으로 선택해 주세요.',
+      });
+    }
+
     // 봇 기호 필수 + 길이 검증
     if (!data.botSymbol || data.botSymbol.trim() === '') {
       errors.push({
@@ -469,12 +540,10 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       }
     }
 
-    // 봇 계정 ID 필수 + 길이 검증
-    if (!data.botAccountId || data.botAccountId.trim() === '') {
-      errors.push({
-        field: 'botAccountId',
-        message: '봇 계정 ID를 입력해 주세요.',
-      });
+    // 봇 계정 ID 필수 + 길이 검증 (빈칸/3자 미만/예약어 차단)
+    const botAccountError = validateAccountId(data.botAccountId, 'botAccountId', '봇 계정 ID');
+    if (botAccountError) {
+      errors.push(botAccountError);
     } else if (data.botAccountId.length > INPUT_LIMITS.botAccountId) {
       errors.push({
         field: 'botAccountId',
@@ -495,23 +564,40 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       }
     }
 
-    // CoC 봇 계정 길이 검증
-    if (data.cocBotAccountId && data.cocBotAccountId.length > INPUT_LIMITS.cocBotAccountId) {
-      errors.push({
-        field: 'cocBotAccountId',
-        message: `CoC 봇 계정은 ${INPUT_LIMITS.cocBotAccountId}자 이하여야 합니다.`,
-      });
+    // CoC 봇 계정 길이 + 아이디 규칙 검증 (입력된 경우)
+    if (data.cocBotAccountId && data.cocBotAccountId.trim() !== '') {
+      const cocAccountError = validateAccountId(
+        data.cocBotAccountId,
+        'cocBotAccountId',
+        'CoC 봇 계정 ID'
+      );
+      if (cocAccountError) {
+        errors.push(cocAccountError);
+      } else if (data.cocBotAccountId.length > INPUT_LIMITS.cocBotAccountId) {
+        errors.push({
+          field: 'cocBotAccountId',
+          message: `CoC 봇 계정은 ${INPUT_LIMITS.cocBotAccountId}자 이하여야 합니다.`,
+        });
+      }
     }
 
-    // 조사 자동봇 계정 길이 검증
-    if (
-      data.investigationBotAccountId &&
-      data.investigationBotAccountId.length > INPUT_LIMITS.investigationBotAccountId
-    ) {
-      errors.push({
-        field: 'investigationBotAccountId',
-        message: `조사 자동봇 계정은 ${INPUT_LIMITS.investigationBotAccountId}자 이하여야 합니다.`,
-      });
+    // 조사 자동봇 계정 길이 + 아이디 규칙 검증 (입력된 경우)
+    if (data.investigationBotAccountId && data.investigationBotAccountId.trim() !== '') {
+      const investigationAccountError = validateAccountId(
+        data.investigationBotAccountId,
+        'investigationBotAccountId',
+        '조사 자동봇 계정 ID'
+      );
+      if (investigationAccountError) {
+        errors.push(investigationAccountError);
+      } else if (
+        data.investigationBotAccountId.length > INPUT_LIMITS.investigationBotAccountId
+      ) {
+        errors.push({
+          field: 'investigationBotAccountId',
+          message: `조사 자동봇 계정은 ${INPUT_LIMITS.investigationBotAccountId}자 이하여야 합니다.`,
+        });
+      }
     }
 
     // CoC 봇이 메인 봇과 함께 신청된 경우 분리된 계정 입력 필수
@@ -531,7 +617,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       data.mainBot &&
       data.botAccountId.trim() !== '' &&
       data.cocBotAccountId.trim() !== '' &&
-      data.botAccountId.trim() === data.cocBotAccountId.trim()
+      isSameAccountId(data.botAccountId, data.cocBotAccountId)
     ) {
       errors.push({
         field: 'cocBotAccountId',
@@ -556,7 +642,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       data.mainBot !== null &&
       data.botAccountId.trim() !== '' &&
       data.investigationBotAccountId.trim() !== '' &&
-      data.botAccountId.trim() === data.investigationBotAccountId.trim()
+      isSameAccountId(data.botAccountId, data.investigationBotAccountId)
     ) {
       errors.push({
         field: 'investigationBotAccountId',
@@ -569,7 +655,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       data.mainBot !== null &&
       data.cocBotAccountId.trim() !== '' &&
       data.investigationBotAccountId.trim() !== '' &&
-      data.cocBotAccountId.trim() === data.investigationBotAccountId.trim()
+      isSameAccountId(data.cocBotAccountId, data.investigationBotAccountId)
     ) {
       errors.push({
         field: 'investigationBotAccountId',

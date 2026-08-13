@@ -57,7 +57,7 @@ function Home() {
               <div className="option-item"><span>전체 테마 커스텀 (낮/밤 2종)</span> <span>+30,000원</span></div>
               <div className="option-item"><span>로고 변경</span> <span>+5,000원</span></div>
               <div className="option-item"><span>글자수 제한 변경</span> <span>+5,000원</span></div>
-              <div className="option-item"><span>단어 검색 기능 (베타)</span> <span>+30,000원</span></div>
+              <div className="option-item"><span>단어 검색 기능 (베타)</span> <span>+15,000원</span></div>
               <div className="option-item"><span>노션 가이드 제공</span> <span>+5,000원</span></div>
             </div>
           </div>

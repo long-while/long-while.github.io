@@ -49,7 +49,7 @@ export const PRICING_CONFIG = {
     addons: {
       notionGuide: 5000,
       characterLimit: 5000,
-      search: 30000,
+      search: 15000,
       mastoHostMigration: 20000,
       fastDeadline: {
         basic48h: 5000,
@@ -70,7 +70,7 @@ export const PRICING_CONFIG = {
       cocBot: 30000,
       reservationToot: 5000,
       autoProfileImage: 5000,
-      tootCurrencyLink: 7000,
+      tootCurrencyLink: 10000,
       transferFeature: 10000,
       customCommandUpgrade: 5000,
       investigationBot: 20000,
