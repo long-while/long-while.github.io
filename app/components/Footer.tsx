@@ -1,5 +1,6 @@
 import type { FooterProps } from '@/app/types/navigation';
 import { ExternalLinkIcon } from '@/app/components/icons';
+import { navLinkProps } from '@/app/lib/navLink';
 
 export default function Footer({ onNavigate }: FooterProps) {
   const footerLinkClass = "text-[14px] text-foreground/70 hover:text-[var(--brand-primary)] transition-colors py-1 min-h-[44px] flex items-center focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2";
@@ -9,12 +10,12 @@ export default function Footer({ onNavigate }: FooterProps) {
       <div className="max-w-[1060px] mx-auto px-8 py-8">
         {/* 브랜드 섹션 */}
         <div className="mb-6">
-          <button
-            onClick={() => onNavigate('home')}
+          <a
+            {...navLinkProps('home', onNavigate)}
             className="text-[20px] font-bold tracking-[-0.01em] hover:text-[var(--brand-primary)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2"
           >
             한참 커미션
-          </button>
+          </a>
           <p className="text-[13px] text-foreground/70 mt-1.5 max-w-[400px]">
             마스토돈 자캐커뮤를 위한 코딩 커미션.<br />
             서버 설치부터 자동봇까지 한번에.
@@ -32,12 +33,12 @@ export default function Footer({ onNavigate }: FooterProps) {
             <div>
               <h3 className="text-[14px] font-semibold mb-4 text-foreground/90">서비스</h3>
               <nav className="space-y-1">
-                <button onClick={() => onNavigate('server')} className={footerLinkClass}>
+                <a {...navLinkProps('server', onNavigate)} className={footerLinkClass}>
                   서버 설치 커미션
-                </button>
-                <button onClick={() => onNavigate('bot')} className={footerLinkClass}>
+                </a>
+                <a {...navLinkProps('bot', onNavigate)} className={footerLinkClass}>
                   자동봇 커미션
-                </button>
+                </a>
               </nav>
             </div>
 
@@ -45,12 +46,12 @@ export default function Footer({ onNavigate }: FooterProps) {
             <div>
               <h3 className="text-[14px] font-semibold mb-4 text-foreground/90">고객 지원</h3>
               <nav className="space-y-1">
-                <button onClick={() => onNavigate('faq')} className={footerLinkClass}>
+                <a {...navLinkProps('faq', onNavigate)} className={footerLinkClass}>
                   자주 묻는 질문
-                </button>
-                <button onClick={() => onNavigate('terms')} className={footerLinkClass}>
+                </a>
+                <a {...navLinkProps('terms', onNavigate)} className={footerLinkClass}>
                   약관 및 안내
-                </button>
+                </a>
                 <a
                   href="https://crepe.cm/@longwhile/lw5w0ofg"
                   target="_blank"

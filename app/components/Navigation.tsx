@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { MenuIcon, CloseIcon } from '@/app/components/icons';
+import { navLinkProps } from '@/app/lib/navLink';
 import type { NavigationProps, MenuItem, PageType } from '@/app/types/navigation';
 
 export default function Navigation({ currentPage, onNavigate }: NavigationProps) {
@@ -20,14 +21,31 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
     { id: 'order', label: '신청하기', isPrimary: true },
   ];
 
-  const handleMenuClick = (item: MenuItem) => {
+  /**
+   * 메뉴 항목을 실제 <a href> 로 렌더링하기 위한 props.
+   * 검색엔진이 링크를 따라 하위 페이지를 발견할 수 있어야 하므로 button 이 아닌 anchor 를 쓴다.
+   */
+  const linkPropsFor = (item: MenuItem) => {
     if (item.isExternal && item.url) {
-      window.open(item.url, '_blank', 'noopener,noreferrer');
-    } else {
-      onNavigate(item.id as PageType);
+      return {
+        href: item.url,
+        target: '_blank' as const,
+        rel: 'noopener noreferrer',
+        onClick: () => setIsMobileMenuOpen(false),
+      };
     }
-    setIsMobileMenuOpen(false);
+
+    const base = navLinkProps(item.id as PageType, onNavigate);
+    return {
+      href: base.href,
+      onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+        base.onClick(event);
+        setIsMobileMenuOpen(false);
+      },
+    };
   };
+
+  const homeLinkProps = linkPropsFor({ id: 'home', label: '홈' });
 
   return (
     <>
@@ -36,28 +54,28 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
         <div className="max-w-[1400px] mx-auto px-8">
           <div className="flex items-center justify-between h-16">
             {/* 로고 */}
-            <button
-              onClick={() => onNavigate('home')}
+            <a
+              {...homeLinkProps}
               className="text-[20px] font-medium tracking-[-0.01em] hover:text-[var(--brand-primary)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2"
             >
               한참 커미션
-            </button>
+            </a>
 
             {/* 데스크톱 메뉴 - 플랫 네비게이션 */}
             <div className="hidden md:flex items-center gap-1">
               {/* 플랫 메뉴 아이템 */}
               {navItems.map((item) => (
-                <button
+                <a
                   key={item.id}
-                  onClick={() => handleMenuClick(item)}
-                  className={`px-4 py-2 text-[14px] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 rounded ${
-                    currentPage === item.id 
-                      ? 'text-[var(--brand-primary)] font-medium' 
+                  {...linkPropsFor(item)}
+                  className={`inline-flex items-center px-4 py-2 text-[14px] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 rounded ${
+                    currentPage === item.id
+                      ? 'text-[var(--brand-primary)] font-medium'
                       : 'text-foreground hover:text-[var(--brand-primary)]'
                   }`}
                 >
                   {item.label}
-                </button>
+                </a>
               ))}
 
               {/* 구분선 */}
@@ -65,20 +83,20 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
 
               {/* 주요 CTA */}
               {primaryActions.map((item) => (
-                <button
+                <a
                   key={item.id}
-                  onClick={() => handleMenuClick(item)}
-                  className={`px-4 py-2 text-[14px] transition-all relative focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 ${
-                    item.isPrimary 
+                  {...linkPropsFor(item)}
+                  className={`inline-flex items-center px-4 py-2 text-[14px] transition-all relative focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 ${
+                    item.isPrimary
                       ? 'bg-[var(--brand-primary)] text-white rounded-full hover:brightness-95 active:scale-[0.98] shadow-sm hover:shadow-md ml-2'
-                      : currentPage === item.id 
-                        ? 'text-[var(--brand-primary)] font-medium' 
+                      : currentPage === item.id
+                        ? 'text-[var(--brand-primary)] font-medium'
                         : 'text-foreground hover:text-[var(--brand-primary)]'
                   }`}
                 >
                   {item.label}
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span 
+                    <span
                       className={`absolute -top-1 -right-1 text-[11px] font-mono w-5 h-5 rounded-full flex items-center justify-center ${
                         item.isPrimary ? 'bg-white text-[var(--brand-primary)]' : 'bg-[var(--brand-primary)] text-white'
                       }`}
@@ -89,7 +107,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                       {item.badge}
                     </span>
                   )}
-                </button>
+                </a>
               ))}
             </div>
 
@@ -140,28 +158,28 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
 
             <nav className="space-y-2">
               {/* 홈 */}
-              <button
-                onClick={() => handleMenuClick({ id: 'home', label: '홈' })}
-                className={`w-full text-left px-4 py-3 min-h-[44px] text-[16px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors rounded focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 ${
+              <a
+                {...homeLinkProps}
+                className={`block w-full text-left px-4 py-3 min-h-[44px] text-[16px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors rounded focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 ${
                   currentPage === 'home' ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)] font-medium' : 'text-foreground'
                 }`}
               >
                 홈
-              </button>
+              </a>
 
               {/* 플랫 네비게이션 메뉴 */}
               {navItems.map((item) => (
-                <button
+                <a
                   key={item.id}
-                  onClick={() => handleMenuClick(item)}
-                  className={`w-full text-left px-4 py-3 min-h-[44px] text-[16px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors rounded focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 ${
-                    currentPage === item.id 
-                      ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)] font-medium' 
+                  {...linkPropsFor(item)}
+                  className={`block w-full text-left px-4 py-3 min-h-[44px] text-[16px] hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)] transition-colors rounded focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 ${
+                    currentPage === item.id
+                      ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)] font-medium'
                       : 'text-foreground'
                   }`}
                 >
                   {item.label}
-                </button>
+                </a>
               ))}
 
               {/* 구분선 */}
@@ -169,14 +187,14 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
 
               {/* 주요 CTA */}
               {primaryActions.map((item) => (
-                <button
+                <a
                   key={item.id}
-                  onClick={() => handleMenuClick(item)}
+                  {...linkPropsFor(item)}
                   className={`w-full text-left px-4 py-3 min-h-[44px] text-[16px] transition-colors rounded flex items-center justify-between focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2 ${
-                    item.isPrimary 
+                    item.isPrimary
                       ? 'bg-[var(--brand-primary)] text-white hover:brightness-95 active:scale-[0.98]'
-                      : currentPage === item.id 
-                        ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)] font-medium' 
+                      : currentPage === item.id
+                        ? 'bg-[var(--brand-bg)] text-[var(--brand-primary)] font-medium'
                         : 'text-foreground hover:bg-[var(--brand-bg)] hover:text-[var(--brand-primary)]'
                   }`}
                 >
@@ -188,7 +206,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                       {item.badge}
                     </span>
                   )}
-                </button>
+                </a>
               ))}
             </nav>
           </div>

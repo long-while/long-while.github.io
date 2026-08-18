@@ -10,6 +10,8 @@ import Terms from "@/app/components/Terms";
 import Footer from "@/app/components/Footer";
 import FloatingEstimateButton from "@/app/components/FloatingEstimateButton";
 import WelcomeModal from "@/app/components/WelcomeModal";
+import { isLegacyHashEntry, pageForLocation, routeForPage } from "@/app/constants/seo";
+import { applyRouteMeta } from "@/app/lib/documentMeta";
 import type { PageType } from "@/app/types/navigation";
 
 // 메인 페이지에서 안 보이는 무거운 컴포넌트는 lazy loading
@@ -18,123 +20,93 @@ const BotCommission = lazy(() => import("@/app/components/BotCommission"));
 const EstimatePage = lazy(() => import("@/app/components/EstimatePage"));
 const OrderApp = lazy(() => import("@/app/components/order/OrderApp"));
 
-// 초기 hash 값에 따라 초기 페이지 상태 결정
+// 현재 URL 경로에 따라 초기 페이지 상태 결정 (SSR/프리렌더 시에는 initialPage 를 받는다)
 const getInitialPage = (): PageType => {
   if (typeof window === 'undefined') return 'home';
-  const hash = window.location.hash.slice(1);
-  // faq, terms는 home 페이지 내 섹션이므로 home으로 처리
-  if (hash && ['server', 'bot', 'estimate', 'order'].includes(hash)) {
-    return hash as PageType;
-  }
-  return 'home';
+  return pageForLocation(window.location.pathname, window.location.hash);
 };
 
-function AppContent() {
-  const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage);
-  const currentPageRef = useRef<PageType>(getInitialPage());
+interface AppProps {
+  /** 빌드 타임 프리렌더에서 렌더할 페이지를 지정한다 */
+  initialPage?: PageType;
+}
+
+function AppContent({ initialPage }: AppProps) {
+  const [currentPage, setCurrentPage] = useState<PageType>(() => initialPage ?? getInitialPage());
   const faqRef = useRef<HTMLDivElement>(null);
   const termsRef = useRef<HTMLDivElement>(null);
-  const isUpdatingHashRef = useRef(false);
-  const isInitialMountRef = useRef(true);
 
-  // currentPage가 변경될 때마다 ref 업데이트
-  useEffect(() => {
-    currentPageRef.current = currentPage;
-  }, [currentPage]);
-
-  const handleNavigate = useCallback((page: string) => {
-    if (page === 'faq') {
-      setCurrentPage('home');
-      setTimeout(() => {
-        faqRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } else if (page === 'terms') {
-      setCurrentPage('home');
-      setTimeout(() => {
-        termsRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } else {
-      setCurrentPage(page as PageType);
-      // 페이지 이동 시 즉시 스크롤을 맨 위로 이동
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
+  // 홈 내 섹션(FAQ/약관)으로 스크롤
+  const scrollToSection = useCallback((section: 'faq' | 'terms') => {
+    setTimeout(() => {
+      const target = section === 'faq' ? faqRef.current : termsRef.current;
+      target?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   }, []);
 
-  // URL hash 변경 처리 (브라우저 뒤로가기/앞으로가기 포함)
+  const handleNavigate = useCallback((page: string) => {
+    // faq/terms 는 별도 페이지가 아니라 홈의 섹션이므로 앵커로 이동한다
+    if (page === 'faq' || page === 'terms') {
+      setCurrentPage('home');
+      window.history.pushState(null, '', `/#${page}`);
+      scrollToSection(page);
+      return;
+    }
+
+    const route = routeForPage(page as PageType);
+    setCurrentPage(route.page);
+    if (window.location.pathname + window.location.hash !== route.path) {
+      window.history.pushState(null, '', route.path);
+    }
+    // 페이지 이동 시 즉시 스크롤을 맨 위로 이동
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [scrollToSection]);
+
+  // 최초 진입 처리: 구버전 해시 링크(#server 등) 경로 치환 + 앵커 스크롤
   useEffect(() => {
-    const handleHashChange = (isInitial = false) => {
-      // 무한 루프 방지: 프로그래밍 방식으로 hash를 변경할 때는 무시
-      if (isUpdatingHashRef.current) {
+    const { pathname, hash, search } = window.location;
+
+    // 예전에 공유된 #server 형태의 링크는 새 경로로 1회 치환한다 (색인/공유 링크 호환)
+    if (isLegacyHashEntry(pathname, hash)) {
+      const route = routeForPage(pageForLocation(pathname, hash));
+      window.history.replaceState(null, '', route.path + search);
+      return;
+    }
+
+    const anchor = hash.replace(/^#/, '');
+    if (anchor === 'faq' || anchor === 'terms') {
+      scrollToSection(anchor);
+    }
+    // 최초 1회만 실행
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 브라우저 뒤로/앞으로 가기 처리
+  useEffect(() => {
+    const handlePopState = () => {
+      const { pathname, hash } = window.location;
+      const page = pageForLocation(pathname, hash);
+      setCurrentPage(page);
+
+      // 세션 도중 구버전 해시 링크를 타고 들어온 경우에도 주소를 새 경로로 맞춰 준다
+      if (isLegacyHashEntry(pathname, hash)) {
+        window.history.replaceState(null, '', routeForPage(page).path);
         return;
       }
 
-      const hash = window.location.hash.slice(1);
-      
-      // hash가 빈 문자열이거나 'home'인 경우 홈으로 이동
-      if (!hash || hash === 'home') {
-        if (currentPageRef.current !== 'home') {
-          setCurrentPage('home');
-        }
-      } else if (['server', 'bot', 'estimate', 'faq', 'terms', 'order'].includes(hash)) {
-        // faq, terms는 handleNavigate를 통해 스크롤 처리
-        // 다른 페이지는 초기 로드 시 이미 설정되어 있으므로 hashchange 이벤트에서만 처리
-        if (hash === 'faq' || hash === 'terms') {
-          handleNavigate(hash);
-        } else if (!isInitial && currentPageRef.current !== hash) {
-          handleNavigate(hash);
-        }
+      const anchor = window.location.hash.replace(/^#/, '');
+      if (page === 'home' && (anchor === 'faq' || anchor === 'terms')) {
+        scrollToSection(anchor);
       }
     };
 
-    // 초기 로드 시 hash 확인 (faq, terms 스크롤 처리용)
-    const hash = window.location.hash.slice(1);
-    if (hash === 'faq' || hash === 'terms') {
-      // faq, terms는 초기 로드 시 스크롤 처리 필요
-      setTimeout(() => {
-        handleNavigate(hash);
-      }, 100);
-    }
-    
-    const hashChangeHandler = () => handleHashChange(false);
-    window.addEventListener('hashchange', hashChangeHandler);
-    return () => window.removeEventListener('hashchange', hashChangeHandler);
-  }, [handleNavigate]);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [scrollToSection]);
 
-  // 페이지 변경 시 hash 업데이트 (무한 루프 방지)
+  // 페이지가 바뀌면 title/description/canonical 도 함께 갱신
   useEffect(() => {
-    // 초기 마운트 시에는 hash 동기화 건너뛰기 (이미 hash에 맞는 페이지로 초기화됨)
-    if (isInitialMountRef.current) {
-      isInitialMountRef.current = false;
-      return;
-    }
-
-    // hashchange 이벤트로 인한 변경은 무시
-    if (isUpdatingHashRef.current) {
-      return;
-    }
-
-    const currentHash = window.location.hash.slice(1);
-    const expectedHash = currentPage === 'home' ? '' : currentPage;
-
-    // hash와 currentPage가 동기화되어 있는지 확인
-    if (currentHash !== expectedHash) {
-      isUpdatingHashRef.current = true;
-      
-      if (currentPage === 'home') {
-        // home 페이지일 때는 hash를 제거
-        if (window.location.hash) {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        }
-      } else {
-        // 다른 페이지일 때는 hash 설정
-        window.location.hash = currentPage;
-      }
-      
-      // 다음 이벤트 루프에서 플래그 리셋
-      setTimeout(() => {
-        isUpdatingHashRef.current = false;
-      }, 0);
-    }
+    applyRouteMeta(routeForPage(currentPage));
   }, [currentPage]);
 
   if (currentPage === 'server') {
@@ -143,7 +115,7 @@ function AppContent() {
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="pt-16">
           <Suspense fallback={<div className="min-h-screen" />}>
-            <ServerCommission onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
+            <ServerCommission onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />
           </Suspense>
           <Footer onNavigate={handleNavigate} />
         </div>
@@ -158,7 +130,7 @@ function AppContent() {
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="pt-16">
           <Suspense fallback={<div className="min-h-screen" />}>
-            <BotCommission onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
+            <BotCommission onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />
           </Suspense>
           <Footer onNavigate={handleNavigate} />
         </div>
@@ -173,7 +145,7 @@ function AppContent() {
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="pt-16">
           <Suspense fallback={<div className="min-h-screen" />}>
-            <EstimatePage onBack={() => setCurrentPage('home')} onNavigate={handleNavigate} />
+            <EstimatePage onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />
           </Suspense>
           <Footer onNavigate={handleNavigate} />
         </div>
@@ -195,42 +167,42 @@ function AppContent() {
       <div className="min-h-screen bg-white text-foreground pt-16">
         {/* Hero 섹션 - 풀 width */}
         <Header />
-        
+
         {/* 섹션 1: 서비스 카드 (뭘 파는지 명확히) */}
         <div id="services-section" className="bg-white">
           <div className="max-w-[1060px] mx-auto px-8 py-16">
             <ServiceCards onNavigate={handleNavigate} />
           </div>
         </div>
-        
+
         {/* 섹션 2: 특징 하이라이트 (왜 우리를 선택해야 하는지) - 배경색 다변화 */}
         <div className="bg-gray-50">
           <div className="max-w-[1060px] mx-auto px-8">
             <Features />
           </div>
         </div>
-        
+
         {/* 섹션 3: 진행 순서 */}
         <div className="bg-white">
           <div className="max-w-[1060px] mx-auto px-8 py-16">
             <Process />
           </div>
         </div>
-        
+
         {/* 섹션 4: FAQ - 배경색 다변화 */}
         <div className="bg-gray-50">
-          <div className="max-w-[1060px] mx-auto px-8 py-16" ref={faqRef}>
+          <div id="faq" className="max-w-[1060px] mx-auto px-8 py-16 scroll-mt-16" ref={faqRef}>
             <FAQ />
           </div>
         </div>
-        
+
         {/* 섹션 5: 약관 */}
         <div className="bg-white">
-          <div className="max-w-[1060px] mx-auto px-8 py-16" ref={termsRef}>
+          <div id="terms" className="max-w-[1060px] mx-auto px-8 py-16 scroll-mt-16" ref={termsRef}>
             <Terms />
           </div>
         </div>
-        
+
         <Footer onNavigate={handleNavigate} />
       </div>
       <FloatingEstimateButton onNavigate={handleNavigate} currentPage={currentPage} />
@@ -239,10 +211,10 @@ function AppContent() {
   );
 }
 
-export default function App() {
+export default function App({ initialPage }: AppProps = {}) {
   return (
     <EstimateProvider>
-      <AppContent />
+      <AppContent initialPage={initialPage} />
     </EstimateProvider>
   );
 }

@@ -25,7 +25,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
   const handleTermsClick = () => {
     if (onNavigate) {
       // 새 탭에서 약관 및 안내 페이지 열기
-      window.open(window.location.origin + '?page=terms', '_blank', 'noopener,noreferrer');
+      window.open(window.location.origin + '/#terms', '_blank', 'noopener,noreferrer');
     }
   };
 

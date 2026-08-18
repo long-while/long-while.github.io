@@ -1,3 +1,5 @@
+import { navLinkProps } from '@/app/lib/navLink';
+
 interface ServiceCardsProps {
   onNavigate: (page: string) => void;
 }
@@ -12,9 +14,9 @@ export default function ServiceCards({ onNavigate }: ServiceCardsProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <button
-          onClick={() => onNavigate('server')}
-          className="p-12 border border-border hover:bg-[var(--brand-bg)] hover:border-[var(--brand-primary)] shadow-sm hover:shadow-md active:scale-[0.98] transition-all text-left group"
+        <a
+          {...navLinkProps('server', onNavigate)}
+          className="block p-12 border border-border hover:bg-[var(--brand-bg)] hover:border-[var(--brand-primary)] shadow-sm hover:shadow-md active:scale-[0.98] transition-all text-left group"
         >
           <div className="text-[12px] font-mono text-[var(--brand-primary)] mb-6">01</div>
           <h3 className="text-[22px] md:text-[29px] mb-4 tracking-[-0.01em]">
@@ -27,11 +29,11 @@ export default function ServiceCards({ onNavigate }: ServiceCardsProps) {
             <span>자세히 보기</span>
             <span className="text-[18px]">→</span>
           </div>
-        </button>
+        </a>
 
-        <button
-          onClick={() => onNavigate('bot')}
-          className="p-12 border border-border hover:bg-[var(--brand-bg)] hover:border-[var(--brand-primary)] shadow-sm hover:shadow-md active:scale-[0.98] transition-all text-left group"
+        <a
+          {...navLinkProps('bot', onNavigate)}
+          className="block p-12 border border-border hover:bg-[var(--brand-bg)] hover:border-[var(--brand-primary)] shadow-sm hover:shadow-md active:scale-[0.98] transition-all text-left group"
         >
           <div className="text-[12px] font-mono text-[var(--brand-primary)] mb-6">02</div>
           <h3 className="text-[22px] md:text-[29px] mb-4 tracking-[-0.01em]">
@@ -44,7 +46,7 @@ export default function ServiceCards({ onNavigate }: ServiceCardsProps) {
             <span>자세히 보기</span>
             <span className="text-[18px]">→</span>
           </div>
-        </button>
+        </a>
       </div>
     </section>
   );

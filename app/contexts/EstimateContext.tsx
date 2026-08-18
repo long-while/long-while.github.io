@@ -31,6 +31,8 @@ const SERVER_CALC_KEY = 'mas_commission_server_calc';
 
 // localStorage에서 견적 데이터 불러오기
 function loadEstimateFromStorage(): EstimateItem[] {
+  // 빌드 타임 프리렌더(Node)에는 localStorage 가 없다
+  if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -44,6 +46,7 @@ function loadEstimateFromStorage(): EstimateItem[] {
 
 // localStorage에 견적 데이터 저장하기
 function saveEstimateToStorage(items: EstimateItem[]): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   } catch (error) {
@@ -64,6 +67,7 @@ function isValidServerCalcResult(obj: unknown): obj is ServerCalcResult {
 }
 
 function loadServerCalcFromStorage(): ServerCalcResult | null {
+  if (typeof window === 'undefined') return null;
   try {
     const stored = localStorage.getItem(SERVER_CALC_KEY);
     if (stored) {
@@ -77,6 +81,7 @@ function loadServerCalcFromStorage(): ServerCalcResult | null {
 }
 
 function saveServerCalcToStorage(result: ServerCalcResult | null): void {
+  if (typeof window === 'undefined') return;
   try {
     if (result) {
       localStorage.setItem(SERVER_CALC_KEY, JSON.stringify(result));

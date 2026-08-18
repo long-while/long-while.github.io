@@ -107,7 +107,7 @@ export default function Process() {
       {/* 신청서 작성 CTA */}
       <div className="text-center mb-10">
         <a 
-          href="#order"
+          href="/order/"
           className="inline-flex items-center gap-2 px-8 py-4 bg-[var(--brand-primary)] text-white rounded-full font-semibold text-[16px] shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98] transition-all"
         >
           신청서 작성하기
