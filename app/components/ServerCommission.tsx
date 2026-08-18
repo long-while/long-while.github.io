@@ -4,6 +4,7 @@ import { Plus, Trash2, AlertCircle, Check } from 'lucide-react';
 import { ChevronDownIcon } from '@/app/components/icons';
 import type { NavigateFunction } from '@/app/types/navigation';
 import MastodonServerCalculator from '@/app/components/MastodonServerCalculator';
+import { DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
 
 interface ServerCommissionProps {
   onBack: () => void;
@@ -191,7 +192,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
             </p>
             {/* 접수 불가 기간: 신청서 검증(orderUtils 의 getDeadlineBlackoutError)과 동일한 기간 */}
             <p className="text-[#cc5500] font-medium">
-              9/7~9/16 은 마감이 불가능한 기간입니다. 해당 기간을 마감일로 신청하실 수 없어요.
+              {DEADLINE_BLACKOUT_LABEL} 은 마감이 불가능한 기간입니다. 해당 기간을 마감일로 신청하실 수 없어요.
             </p>
             <p className="text-foreground/70">
               개장으로부터 48시간 이상 남은 시점에 문의하실 경우 추가금 없음! (옵션에 따라 다를수도 있습니다)
