@@ -138,7 +138,7 @@ function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
 /**
  * 마감일이 운영 정책상 접수 불가 기간인지 검사한다.
  * - 8/21 ~ 8/24: 휴가 (접수 불가)
- * - 9/7 ~ 9/16: 마감 중단 (접수 불가)
+ * - 10/1 ~ 10/15: 휴식기 (접수 불가)
  * 접수 가능하거나 파싱 불가하면 null.
  */
 type DeadlineBlackoutRange = {
@@ -149,14 +149,14 @@ type DeadlineBlackoutRange = {
 
 export const DEADLINE_BLACKOUT_RANGES: DeadlineBlackoutRange[] = [
   { month: 8, startDay: 21, endDay: 24 },
-  { month: 9, startDay: 7, endDay: 16 },
+  { month: 10, startDay: 1, endDay: 15 },
 ];
 
 function formatBlackoutRange({ month, startDay, endDay }: DeadlineBlackoutRange): string {
   return `${month}/${startDay}~${month}/${endDay}`;
 }
 
-/** 안내 문구용 전체 접수 불가 기간 라벨 (예: '8/21~8/24, 9/7~9/16') */
+/** 안내 문구용 전체 접수 불가 기간 라벨 (예: '8/21~8/24, 10/1~10/15') */
 export const DEADLINE_BLACKOUT_LABEL = DEADLINE_BLACKOUT_RANGES.map(formatBlackoutRange).join(', ');
 
 export function getDeadlineBlackoutError(deadline: string, field: string): ValidationError | null {
