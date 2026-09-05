@@ -144,20 +144,6 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           </h1>
         </div>
 
-        {/* 마스토돈 가이드 무료 제공 안내 */}
-        <div className="mb-10 border-2 border-[#ff7b00] bg-[#fff5eb] px-6 py-6 md:px-8 md:py-7">
-          <p className="text-[13px] font-mono tracking-[0.08em] text-[#ff7b00] mb-2">FREE</p>
-          <h2 className="text-[24px] md:text-[28px] leading-[1.3] tracking-[-0.02em] font-bold text-[#cc5500] mb-3">
-            마스토돈 가이드, 서버 설치 커미션 신청 시 무료 제공!
-          </h2>
-          <p className="text-[15px] leading-[1.8] text-foreground/80">
-            마스토돈 커뮤니티를 처음 러닝하는 러너를 위한 가이드를 노션 페이지로 무료 제공합니다. 별도로 신청하지 않으셔도 서버를 설치해드릴 때 함께 전달드려요.
-          </p>
-          <p className="text-[14px] leading-[1.8] text-foreground/60 mt-3">
-            기본 트위터 블루 테마가 적용된 캡처 화면을 이용한 가이드를 제공합니다. 각 서버의 테마가 적용된 가이드는 제공하지 않습니다. 타 플랫폼은 쓰지 않으며, 한달 후 링크가 삭제됩니다.
-          </p>
-        </div>
-
         {/* 장기 소규모 서버 안내 (드롭다운) */}
         <div className="border border-border mb-10 overflow-hidden bg-white">
           <button
@@ -214,7 +200,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
               도메인(사이트명)의 경우, 커뮤니티명과 어울리는 도메인을 제가 구매해 적용해드립니다.
             </p>
             <p className="text-foreground/70">
-              준비물로 구글 클라우드 플랫폼을 이용해보지 않은 구글 계정을 준비해주세요!
+              서버 설치 커미션 신청 시, 첫 맛톤커 러너 분들을 위한 노션 가이드를 무료로 제공합니다. 합격자 가이드에 링크를 첨부하여 사용할 수 있습니다.
             </p>
           </div>
         </section>
