@@ -42,7 +42,6 @@ export interface Step1Data {
 export interface Step2Data {
   applyServerInstall: AgreementStatus;
   additionalOption: AdditionalOption;
-  notionGuide: boolean;
   changeCharacterLimit: boolean;
   characterLimitValue: number;
   searchOption: boolean;

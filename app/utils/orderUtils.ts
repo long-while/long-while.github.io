@@ -784,9 +784,6 @@ export function calculateServerPrice(data: OrderFormData['step2']): number {
     total += server.options[data.additionalOption as keyof typeof server.options];
   }
 
-  // 노션 가이드
-  if (data.notionGuide) total += server.addons.notionGuide;
-
   // 글자수 변경 (단, 기본값이 아닐 때만)
   if (data.changeCharacterLimit &&
     data.characterLimitValue !== FORM_CONFIG.validation.characterLimit.default &&
@@ -947,9 +944,6 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       };
       text += `+ ${optionNames[step2.additionalOption]}\n`;
     }
-    if (step2.notionGuide) {
-      text += '+ 노션 가이드\n';
-    }
     if (step2.changeCharacterLimit && step2.characterLimitValue > 0) {
       text += `+ 글자수 변경 (${step2.characterLimitValue}자)\n`;
     }
@@ -1094,9 +1088,6 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
         bothTheme: '테마 2종',
       };
       text += `${optionNames[step2.additionalOption]} ${server.options[step2.additionalOption as keyof typeof server.options].toLocaleString()}\n`;
-    }
-    if (step2.notionGuide) {
-      text += `마스토돈 가이드 ${server.addons.notionGuide.toLocaleString()}\n`;
     }
     if (step2.changeCharacterLimit && step2.characterLimitValue > 0) {
       text += `글자수 변경 ${server.addons.characterLimit.toLocaleString()}\n`;

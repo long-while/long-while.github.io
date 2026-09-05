@@ -36,8 +36,6 @@ export default function Step2Server() {
   const serverFromCart = isFromCart('마스토돈 서버 설치');
   // 테마 옵션이 견적에서 선택되었는지
   const themeFromCart = isFromCart('테마') || isFromCart('로고');
-  // 노션 가이드가 견적에서 선택되었는지
-  const notionFromCart = isFromCart('마스토돈 가이드');
   // 글자수 제한이 견적에서 선택되었는지
   const charLimitFromCart = isFromCart('글자수');
   // 검색 옵션이 견적에서 선택되었는지
@@ -122,7 +120,6 @@ export default function Step2Server() {
     if (value === 'no') {
       updateStep2({
         additionalOption: null,
-        notionGuide: false,
         changeCharacterLimit: false,
         characterLimitValue: 0,
         searchOption: false,
@@ -308,27 +305,15 @@ export default function Step2Server() {
           <div className="space-y-4">
             <h3 className="text-[18px] font-semibold">3) 기타 옵션 선택</h3>
 
-            {/* 노션 가이드 */}
-            <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.notionGuide
-              ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-              : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-              }`}>
-              <input
-                type="checkbox"
-                checked={step2.notionGuide}
-                onChange={(e) => updateStep2({ notionGuide: e.target.checked })}
-                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
-              />
-              <div className="flex-1">
-                <div className="font-medium text-[14px]">
-                  노션 마스토돈 가이드 제공 (+5,000원)
-                  {notionFromCart && step2.notionGuide && <FromCartBadge />}
-                </div>
-                <div className="text-[13px] text-gray-600 mt-1">
-                  마스토돈 커뮤니티를 처음 러닝하는 러너를 위한 가이드입니다.
-                </div>
+            {/* 마스토돈 가이드: 서버 설치 신청 시 무료 제공 (선택 항목 아님) */}
+            <div className="p-4 border border-[#ff7b00] rounded-lg bg-[#fff5eb]">
+              <div className="font-medium text-[14px] text-[#cc5500]">
+                노션 마스토돈 가이드 무료 제공
               </div>
-            </label>
+              <div className="text-[13px] text-gray-600 mt-1">
+                마스토돈 커뮤니티를 처음 러닝하는 러너를 위한 가이드입니다. 서버 설치 커미션을 신청하시면 별도 신청 없이 함께 전달드립니다. 기본 트위터 블루 테마 캡처 화면으로 제작되며, 각 서버 테마가 적용된 가이드는 제공하지 않습니다.
+              </div>
+            </div>
 
             {/* 글자수 제한 변경 */}
             <div className="space-y-3">

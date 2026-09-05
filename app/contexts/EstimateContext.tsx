@@ -29,6 +29,13 @@ const EstimateContext = createContext<EstimateContextType | undefined>(undefined
 const STORAGE_KEY = 'mas_commission_estimate';
 const SERVER_CALC_KEY = 'mas_commission_server_calc';
 
+/**
+ * 더 이상 판매하지 않는 항목 이름.
+ * 이전에 담아둔 장바구니가 localStorage 에 남아 있으면 사라진 옵션이 계속 견적에 잡히므로
+ * 불러오는 시점에 걸러낸다. ('마스토돈 가이드'는 서버 설치 시 무료 제공으로 전환)
+ */
+const RETIRED_ITEM_NAMES = ['마스토돈 가이드'];
+
 // localStorage에서 견적 데이터 불러오기
 function loadEstimateFromStorage(): EstimateItem[] {
   // 빌드 타임 프리렌더(Node)에는 localStorage 가 없다
@@ -36,7 +43,8 @@ function loadEstimateFromStorage(): EstimateItem[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const items = JSON.parse(stored) as EstimateItem[];
+      return items.filter((item) => !RETIRED_ITEM_NAMES.includes(item.name));
     }
   } catch (error) {
     console.error('견적 데이터 불러오기 실패:', error);
