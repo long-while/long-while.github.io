@@ -203,12 +203,11 @@ export default function Step4Review() {
                   </p>
                 </div>
               )}
-              {(step2.notionGuide || step2.changeCharacterLimit || step2.searchOption || step2.mastoHostMigration || step2.fastDeadline) && (
+              {(step2.changeCharacterLimit || step2.searchOption || step2.mastoHostMigration || step2.fastDeadline) && (
                 <div>
                   <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
                   <p className="text-[15px]">
                     {[
-                      step2.notionGuide && '노션 가이드',
                       step2.changeCharacterLimit && `글자수 ${step2.characterLimitValue}자`,
                       step2.searchOption && '검색 옵션',
                       step2.mastoHostMigration && 'masto.host 데이터 이전',
@@ -399,12 +398,6 @@ export default function Step4Review() {
                       {step2.additionalOption === 'bothTheme' && '테마 2종'}
                     </span>
                     <span>{PRICING_CONFIG.server.options[step2.additionalOption].toLocaleString()}원</span>
-                  </div>
-                )}
-                {step2.notionGuide && (
-                  <div className="flex justify-between">
-                    <span>마스토돈 가이드</span>
-                    <span>{PRICING_CONFIG.server.addons.notionGuide.toLocaleString()}원</span>
                   </div>
                 )}
                 {step2.changeCharacterLimit && step2.characterLimitValue > 0 && (

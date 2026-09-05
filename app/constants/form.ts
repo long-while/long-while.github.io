@@ -47,7 +47,6 @@ export const PRICING_CONFIG = {
       bothTheme: 30000,
     },
     addons: {
-      notionGuide: 5000,
       characterLimit: 5000,
       search: 15000,
       mastoHostMigration: 20000,

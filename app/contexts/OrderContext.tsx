@@ -42,7 +42,6 @@ const initialStep1Data: Step1Data = {
 const initialStep2Data: Step2Data = {
   applyServerInstall: null,
   additionalOption: null,
-  notionGuide: false,
   changeCharacterLimit: false,
   characterLimitValue: 0,
   searchOption: false,

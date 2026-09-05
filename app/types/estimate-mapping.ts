@@ -12,7 +12,6 @@ export type EstimateMappingKey =
   | 'dayTheme'           // → step2.additionalOption = 'dayTheme'
   | 'nightTheme'         // → step2.additionalOption = 'nightTheme'
   | 'bothTheme'          // → step2.additionalOption = 'bothTheme'
-  | 'notionGuide'        // → step2.notionGuide = true
   | 'characterLimit'     // → step2.changeCharacterLimit = true
   | 'mastoHostMigration' // → step2.mastoHostMigration = true
   | 'fastDeadline48hBasic' // → step2.fastDeadline = true, fastDeadlineOption = 'basic48h'
@@ -51,7 +50,6 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   '테마 전체 커스텀': 'bothTheme', // 낮/밤 2종
   '툿 글자수 제한 변경': 'characterLimit',
   '검색 기능': 'search',
-  '마스토돈 가이드': 'notionGuide',
   'masto.host 에서 서버 데이터 이전': 'mastoHostMigration',
   
   // 빠른 마감 옵션
@@ -110,7 +108,6 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   bothTheme: [{ step: 2, field: 'additionalOption', value: 'bothTheme' }],
   
   // 기타 서버 옵션
-  notionGuide: [{ step: 2, field: 'notionGuide', value: true }],
   characterLimit: [{ step: 2, field: 'changeCharacterLimit', value: true }],
   mastoHostMigration: [
     { step: 2, field: 'applyServerInstall', value: 'yes' },
