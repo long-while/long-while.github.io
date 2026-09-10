@@ -1,6 +1,6 @@
 import type { OrderFormData, PriceEstimate, ValidationError, Step2Data, Step3Data, AdditionalOption, FastDeadlineOption } from '@/app/types/order';
 import { DATE_FORMAT_REGEX, GMAIL_REGEX, INPUT_LIMITS } from '@/app/types/order';
-import { PRICING_CONFIG, FORM_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
+import { PRICING_CONFIG, FORM_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 /**
@@ -137,8 +137,7 @@ function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
 
 /**
  * 마감일이 운영 정책상 접수 불가 기간인지 검사한다.
- * - 8/21 ~ 8/24: 휴가 (접수 불가)
- * - 10/1 ~ 10/15: 휴식기 (접수 불가)
+ * - 10/15 ~ 10/28: 휴식기 (접수 불가)
  * 접수 가능하거나 파싱 불가하면 null.
  */
 type DeadlineBlackoutRange = {
@@ -148,15 +147,14 @@ type DeadlineBlackoutRange = {
 };
 
 export const DEADLINE_BLACKOUT_RANGES: DeadlineBlackoutRange[] = [
-  { month: 8, startDay: 21, endDay: 24 },
-  { month: 10, startDay: 1, endDay: 15 },
+  { month: 10, startDay: 15, endDay: 28 },
 ];
 
 function formatBlackoutRange({ month, startDay, endDay }: DeadlineBlackoutRange): string {
   return `${month}/${startDay}~${month}/${endDay}`;
 }
 
-/** 안내 문구용 전체 접수 불가 기간 라벨 (예: '8/21~8/24, 10/1~10/15') */
+/** 안내 문구용 전체 접수 불가 기간 라벨 (예: '10/15~10/28') */
 export const DEADLINE_BLACKOUT_LABEL = DEADLINE_BLACKOUT_RANGES.map(formatBlackoutRange).join(', ');
 
 export function getDeadlineBlackoutError(deadline: string, field: string): ValidationError | null {
@@ -771,13 +769,28 @@ export function validateStep3(data: Step3Data): ValidationError[] {
 }
 
 /**
- * 서버 파트 견적 계산
+ * 서버 설치 실비(도메인·SMTP)가 부과되는지 판단한다.
+ * 서버 설치를 신청하면 항상 부과되며, 장기 소규모 서버만 제외된다.
  */
-export function calculateServerPrice(data: OrderFormData['step2']): number {
+export function hasServerInfraFee(data: OrderFormData): boolean {
+  return data.step2.applyServerInstall === 'yes' && !data.step1.isLongTermCommunity;
+}
+
+/**
+ * 서버 파트 견적 계산
+ * @param isLongTermCommunity 장기 소규모 서버면 도메인·SMTP 실비를 받지 않는다.
+ */
+export function calculateServerPrice(
+  data: OrderFormData['step2'],
+  isLongTermCommunity: boolean = false
+): number {
   if (data.applyServerInstall !== 'yes') return 0;
 
   const { server } = PRICING_CONFIG;
   let total = server.base;
+
+  // 도메인 구입 + SMTP 메일 발송 실비 (자동 포함, 해제 불가)
+  if (!isLongTermCommunity) total += server.infraFee;
 
   // 추가 옵션 (배타적)
   if (data.additionalOption && server.options[data.additionalOption as keyof typeof server.options]) {
@@ -859,7 +872,7 @@ export function calculateBotPrice(
  * 최종 견적 계산
  */
 export function calculateTotalEstimate(data: OrderFormData): PriceEstimate {
-  const serverTotal = calculateServerPrice(data.step2);
+  const serverTotal = calculateServerPrice(data.step2, data.step1.isLongTermCommunity);
   const { botCost, operationCost } = calculateBotPrice(data.step3, data.step1.operationWeeks);
 
   const variableItems: string[] = [];
@@ -889,6 +902,7 @@ function formatDateForDisplay(date: string): string {
 export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, serverCalcResult?: ServerCalcResult | null): string {
   const { step1, step2, step3 } = data;
   const { server, bot } = PRICING_CONFIG;
+  const infraFeeApplied = hasServerInfraFee(data);
   const divider = '==================\n\n';
 
   let text = divider;
@@ -935,6 +949,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       }
     }
 
+    if (infraFeeApplied) {
+      text += `+ ${SERVER_INFRA_FEE_ITEM.name}\n`;
+    }
     if (step2.additionalOption) {
       const optionNames: Record<string, string> = {
         logo: '로고 변경',
@@ -1079,6 +1096,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
   // 서버 관련
   if (step2.applyServerInstall === 'yes') {
     text += `서버 설치 ${server.base.toLocaleString()}\n`;
+    if (infraFeeApplied) {
+      text += `${SERVER_INFRA_FEE_ITEM.name} ${server.infraFee.toLocaleString()}\n`;
+    }
 
     if (step2.additionalOption) {
       const optionNames: Record<string, string> = {

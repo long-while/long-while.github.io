@@ -40,6 +40,8 @@ export const PRICING_CONFIG = {
 
   server: {
     base: 20000,
+    // 도메인 구입 + SMTP 메일 발송 서비스 실비. 서버 설치에 자동 포함(장기 소규모 서버 제외)
+    infraFee: 5000,
     options: {
       logo: 5000,
       dayTheme: 20000,
@@ -88,6 +90,22 @@ export const PRICING_CONFIG = {
 } as const;
 
 export type PricingConfig = typeof PRICING_CONFIG;
+
+/** 견적(장바구니)에서 서버 설치 본품을 가리키는 항목명 */
+export const SERVER_INSTALL_ITEM_NAME = '마스토돈 서버 설치';
+
+/**
+ * 서버 설치 신청 시 자동으로 따라붙는 실비 항목.
+ * 개별 선택/해제가 불가능하며, 장기 소규모 서버는 제외된다.
+ */
+export const SERVER_INFRA_FEE_ITEM = {
+  name: '도메인·메일(SMTP) 부가비용',
+  price: PRICING_CONFIG.server.infraFee,
+  description: '도메인 구입과 메일 발송(SMTP) 서비스에 나가는 실비입니다. 서버 설치에 자동 포함되며 따로 해제하실 수 없어요.',
+} as const;
+
+/** 이 개월 수 이상이면 장기 소규모(반영구) 서버로 본다 */
+export const LONG_TERM_MIN_MONTHS = 12;
 
 /**
  * 예약 툿/자동 스진용 계정 등록 정책

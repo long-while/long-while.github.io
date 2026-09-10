@@ -2,6 +2,7 @@ import { useOrder } from '@/app/contexts/OrderContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState, useEffect, useMemo } from 'react';
 import { validateCharacterLimit, computeRequiredFastDeadline, getDeadlineBlackoutError, validateAccountId, DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
+import { SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
 import type { FastDeadlineOption } from '@/app/types/order';
 import { ShoppingCart } from 'lucide-react';
 import MastodonServerCalculator from '@/app/components/MastodonServerCalculator';
@@ -182,6 +183,32 @@ export default function Step2Server() {
       {/* 서버 설치 "예" 선택 시에만 표시되는 옵션들 */}
       {step2.applyServerInstall === 'yes' && (
         <div className="space-y-8 pt-6 border-t border-gray-200 animate-slideDown">
+
+          {/* 자동 포함 실비 안내 (해제 불가 / 장기 소규모 서버 제외) */}
+          {!isLongTermServer && (
+            <div className="flex items-start gap-3 p-4 border border-[#ff7b00]/30 bg-[#fff5eb] rounded-lg">
+              <input
+                type="checkbox"
+                checked
+                disabled
+                readOnly
+                aria-label={`${SERVER_INFRA_FEE_ITEM.name} (해제 불가)`}
+                className="w-4 h-4 mt-0.5 shrink-0 accent-[#ff7b00] cursor-not-allowed"
+              />
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="font-medium text-[14px]">{SERVER_INFRA_FEE_ITEM.name}</span>
+                  <span className="text-[11px] font-medium text-white bg-[#ff7b00] rounded-full px-2 py-0.5">
+                    필수 포함
+                  </span>
+                  <span className="text-[14px] font-medium text-[#ff7b00]">
+                    +{SERVER_INFRA_FEE_ITEM.price.toLocaleString()}원
+                  </span>
+                </div>
+                <p className="text-[13px] text-gray-600 mt-1">{SERVER_INFRA_FEE_ITEM.description}</p>
+              </div>
+            </div>
+          )}
 
           {/* 서버 사양 계산기 */}
           <MastodonServerCalculator compact longTerm={isLongTermServer} />

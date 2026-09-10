@@ -8,7 +8,8 @@
     "build": "vite build && vite build --ssr app/entry-server.tsx && node scripts/prerender.mjs",
     "build:client": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist"
+    "deploy": "npm run build && gh-pages -d dist",
+    "test": "vite build --ssr tests/pricing.test.ts --outDir .tmp-test --emptyOutDir --logLevel error && node .tmp-test/pricing.test.js"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

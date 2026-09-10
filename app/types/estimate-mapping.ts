@@ -70,6 +70,7 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   '예약 툿': 'reservationToot',
   '스토리 자동 진행': 'autoProfileImage',
   '커스텀 명령어 업그레이드': 'customCommandUpgrade',
+  '재화, 아이템 양도 기능': 'transferFeature',
   '양도 기능': 'transferFeature',
   '툿수-재화 자동반영': 'tootCurrencyLink',
   '일일 조사 횟수 제한': 'investigationDailyLimit',

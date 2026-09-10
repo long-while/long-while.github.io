@@ -93,7 +93,7 @@ export default function Step3Bot() {
   const reservationFromCart = isFromCart('예약 툿');
   const autoProfileFromCart = isFromCart('스토리 자동 진행');
   const tootCurrencyFromCart = isFromCart('툿수-재화 자동반영');
-  const transferFromCart = isFromCart('양도 기능');
+  const transferFromCart = isFromCart('재화, 아이템 양도 기능');
   const attendanceFromCart = isFromCart('출석 시스템');
   const omakaseFromCart = isFromCart('오마카세');
   const investigationFromCart = isFromCart('자동조사');
@@ -171,10 +171,10 @@ export default function Step3Bot() {
       step3.investigationBotAccountId.trim() === ''
         ? null
         : validateAccountId(
-            step3.investigationBotAccountId,
-            'investigationBotAccountId',
-            '조사 자동봇 계정 ID'
-          ),
+          step3.investigationBotAccountId,
+          'investigationBotAccountId',
+          '조사 자동봇 계정 ID'
+        ),
     [step3.investigationBotAccountId]
   );
 
@@ -422,8 +422,8 @@ export default function Step3Bot() {
               {/* 장기 소규모 옵션 */}
               <label
                 className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.operationWeeksOption === 'longterm'
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
                   }`}
               >
                 <input
@@ -449,8 +449,8 @@ export default function Step3Bot() {
               {/* 자캐 커뮤니티 옵션 */}
               <label
                 className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.operationWeeksOption === 'manual'
-                    ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                    : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
                   }`}
               >
                 <input
@@ -811,28 +811,28 @@ export default function Step3Bot() {
                     {accounts.map((account, index) => {
                       const slotNumber = hasAdminAccount ? index + 2 : index + 1;
                       return (
-                      <div key={index} className="flex items-center gap-2">
-                        <span className="w-20 shrink-0 text-[13px] font-medium text-gray-700">
-                          계정 {slotNumber}
-                        </span>
-                        <input
-                          type="text"
-                          value={account}
-                          maxLength={INPUT_LIMITS.accountList}
-                          onChange={(e) => updateAccountSlot(index, e.target.value)}
-                          placeholder="@NOTICE"
-                          aria-label={`계정 ${slotNumber}`}
-                          className="flex-1 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeAccountSlot(index)}
-                          aria-label={`계정 ${slotNumber} 삭제`}
-                          className="w-8 h-8 shrink-0 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
+                        <div key={index} className="flex items-center gap-2">
+                          <span className="w-20 shrink-0 text-[13px] font-medium text-gray-700">
+                            계정 {slotNumber}
+                          </span>
+                          <input
+                            type="text"
+                            value={account}
+                            maxLength={INPUT_LIMITS.accountList}
+                            onChange={(e) => updateAccountSlot(index, e.target.value)}
+                            placeholder="@NOTICE"
+                            aria-label={`계정 ${slotNumber}`}
+                            className="flex-1 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeAccountSlot(index)}
+                            aria-label={`계정 ${slotNumber} 삭제`}
+                            className="w-8 h-8 shrink-0 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
