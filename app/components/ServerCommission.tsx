@@ -5,6 +5,7 @@ import { ChevronDownIcon } from '@/app/components/icons';
 import type { NavigateFunction } from '@/app/types/navigation';
 import MastodonServerCalculator from '@/app/components/MastodonServerCalculator';
 import { DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
+import { SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
 
 interface ServerCommissionProps {
   onBack: () => void;
@@ -237,6 +238,24 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                     )}
                   </button>
                 </div>
+              </div>
+
+              {/* 자동 포함되는 실비 안내 (선택/해제 불가) */}
+              <div className="mt-4 pt-4 border-t border-border/60 flex flex-col md:flex-row md:justify-between md:items-center gap-1 md:gap-4">
+                <div className="flex-1">
+                  <p className="text-[14px] text-black font-medium">
+                    + {SERVER_INFRA_FEE_ITEM.name}
+                    <span className="ml-2 text-[11px] font-medium text-[#ff7b00] bg-[#fff5eb] rounded-full px-2 py-0.5 align-middle">
+                      필수 포함
+                    </span>
+                  </p>
+                  <p className="text-[13px] leading-[1.6] text-foreground/60 mt-0.5">
+                    {SERVER_INFRA_FEE_ITEM.description} (장기 소규모 서버는 제외)
+                  </p>
+                </div>
+                <span className="text-[14px] font-mono leading-normal text-[#ff7b00] shrink-0">
+                  ₩{SERVER_INFRA_FEE_ITEM.price.toLocaleString()}
+                </span>
               </div>
             </div>
 

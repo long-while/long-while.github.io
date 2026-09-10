@@ -200,7 +200,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
   // requires: 단일 항목명(string) 또는 "이 중 하나(any)" 배열(string[])
   const additionalOptions: { name: string; price: number; description?: string; aliases?: string[]; priceLabel?: string; requires?: string | string[]; requiresLabel?: string }[] = [
     { name: "커스텀 명령어 업그레이드", price: 5000, aliases: ["기본 타입 - 커스텀 명령어 업그레이드", "기본&상점 타입 - 커스텀 명령어 업그레이드", "기본&상점&스탯 타입 - 커스텀 명령어 업그레이드"], requires: [...MAIN_BOT_TYPES], requiresLabel: "기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나" },
-    { name: "양도 기능", price: 10000, aliases: ["기본&상점 타입 - 양도 기능", "기본&상점&스탯 타입 - 양도 기능"], requires: [...SHOP_BOT_TYPES], requiresLabel: "기본&상점 또는 기본&상점&스탯 타입" },
+    { name: "재화, 아이템 양도 기능", price: 10000, aliases: ["양도 기능", "기본&상점 타입 - 양도 기능", "기본&상점&스탯 타입 - 양도 기능"], requires: [...SHOP_BOT_TYPES], requiresLabel: "기본&상점 또는 기본&상점&스탯 타입" },
     { name: "툿수-재화 자동반영", price: 10000, aliases: ["기본&상점 타입 - 툿수-재화 자동반영", "기본&상점&스탯 타입 - 툿수-재화 자동반영"], requires: [...SHOP_BOT_TYPES], requiresLabel: "기본&상점 또는 기본&상점&스탯 타입" },
     { name: "출석 시스템", price: 10000, description: "매일 [출석] 혹은 지정한 명령어를 사용하여 1회 출석 후 운영진이 지정한 재화 획득", requires: [...SHOP_BOT_TYPES], requiresLabel: "기본&상점 또는 기본&상점&스탯 타입" },
     { name: "예약 툿", price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: "기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나" },

@@ -1,9 +1,9 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { calculateTotalEstimate, generateCopyText } from '@/app/utils/orderUtils';
+import { calculateTotalEstimate, generateCopyText, hasServerInfraFee } from '@/app/utils/orderUtils';
 import { copyToClipboard } from '@/app/utils/clipboard';
-import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
+import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
 import { CheckCircle as CheckCircleIcon } from 'griddy-icons';
 
 const CREPE_URL = 'https://crepe.cm/@longwhile/lw5w0ofg';
@@ -36,6 +36,9 @@ export default function Step4Review() {
       };
     }
   }, [formData]);
+
+  // 도메인·SMTP 실비 부과 여부 (서버 설치 신청 시 자동 포함, 장기 소규모는 제외)
+  const infraFeeApplied = hasServerInfraFee(formData);
 
   // 복사 버튼 활성화 조건: 체크박스 선택 시
   const isCopyEnabled = policyConfirmed && !isCopying;
@@ -389,6 +392,17 @@ export default function Step4Review() {
                   <span>서버 설치</span>
                   <span>{PRICING_CONFIG.server.base.toLocaleString()}원</span>
                 </div>
+                {infraFeeApplied && (
+                  <div className="flex justify-between">
+                    <span>
+                      {SERVER_INFRA_FEE_ITEM.name}
+                      <span className="ml-1.5 text-[11px] text-[#ff7b00] bg-[#fff5eb] rounded-full px-1.5 py-0.5">
+                        필수 포함
+                      </span>
+                    </span>
+                    <span>{PRICING_CONFIG.server.infraFee.toLocaleString()}원</span>
+                  </div>
+                )}
                 {step2.additionalOption && (
                   <div className="flex justify-between">
                     <span>

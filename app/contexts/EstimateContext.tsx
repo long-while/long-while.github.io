@@ -2,6 +2,11 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import type { EstimateMappingKey } from '@/app/types/estimate-mapping';
 import { ESTIMATE_NAME_TO_MAPPING_KEY } from '@/app/types/estimate-mapping';
 import { saveSyncState, clearSyncState } from '@/app/utils/cartOrderSync';
+import {
+  SERVER_INSTALL_ITEM_NAME,
+  SERVER_INFRA_FEE_ITEM,
+  LONG_TERM_MIN_MONTHS,
+} from '@/app/constants/form';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 export interface EstimateItem {
@@ -11,6 +16,8 @@ export interface EstimateItem {
   category: 'server' | 'bot';
   description?: string;
   mappingKey?: EstimateMappingKey;
+  /** 자동 포함 항목: 사용자가 개별로 제거할 수 없다 */
+  locked?: boolean;
 }
 
 interface EstimateContextType {
@@ -101,6 +108,53 @@ function saveServerCalcToStorage(result: ServerCalcResult | null): void {
   }
 }
 
+/** 견적 항목 id 생성 */
+function createItemId(): string {
+  return Date.now().toString() + Math.random().toString(36).slice(2, 11);
+}
+
+/**
+ * 서버 설치 실비(도메인·SMTP) 항목을 견적 상태에 맞춰 강제 동기화한다.
+ * - 서버 설치가 담겨 있고 장기 소규모 서버가 아니면 항상 1개 포함
+ * - 그 외에는 제거 (중복도 정리)
+ * 바뀔 게 없으면 입력 배열을 그대로 돌려줘 불필요한 리렌더링을 막는다.
+ */
+export function syncInfraFeeItem(items: EstimateItem[], shouldInclude: boolean): EstimateItem[] {
+  const feeItems = items.filter((item) => item.name === SERVER_INFRA_FEE_ITEM.name);
+
+  if (!shouldInclude) {
+    if (feeItems.length === 0) return items;
+    return items.filter((item) => item.name !== SERVER_INFRA_FEE_ITEM.name);
+  }
+
+  const [existing, ...duplicates] = feeItems;
+  const isUpToDate =
+    existing !== undefined &&
+    existing.price === SERVER_INFRA_FEE_ITEM.price &&
+    existing.description === SERVER_INFRA_FEE_ITEM.description &&
+    existing.locked === true;
+  if (isUpToDate && duplicates.length === 0) return items;
+
+  const withoutFee = items.filter((item) => item.name !== SERVER_INFRA_FEE_ITEM.name);
+  const feeItem: EstimateItem = {
+    id: existing?.id ?? createItemId(),
+    name: SERVER_INFRA_FEE_ITEM.name,
+    price: SERVER_INFRA_FEE_ITEM.price,
+    description: SERVER_INFRA_FEE_ITEM.description,
+    category: 'server',
+    locked: true,
+  };
+
+  // 서버 설치 본품 바로 뒤에 붙여 견적서에서 함께 읽히게 한다.
+  const anchorIndex = withoutFee.findIndex((item) => item.name === SERVER_INSTALL_ITEM_NAME);
+  if (anchorIndex === -1) return [...withoutFee, feeItem];
+  return [
+    ...withoutFee.slice(0, anchorIndex + 1),
+    feeItem,
+    ...withoutFee.slice(anchorIndex + 1),
+  ];
+}
+
 export function EstimateProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<EstimateItem[]>(() => loadEstimateFromStorage());
   const [serverCalcResult, setServerCalcResultState] = useState<ServerCalcResult | null>(
@@ -118,7 +172,7 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
     
     const newItem: EstimateItem = {
       ...item,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      id: createItemId(),
       mappingKey,
     };
     setItems((prev) => [...prev, newItem]);
@@ -128,6 +182,9 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
   };
 
   const removeItem = (id: string) => {
+    const target = items.find((item) => item.id === id);
+    // 자동 포함 항목(실비)은 개별 제거를 허용하지 않는다.
+    if (!target || target.locked) return;
     setItems((prev) => prev.filter((item) => item.id !== id));
     // 항목 제거 시 동기화 상태 초기화
     clearSyncState();
@@ -146,6 +203,16 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
   const proceedToOrder = () => {
     saveSyncState(items);
   };
+
+  // 서버 설치 실비 자동 포함 여부: 장기 소규모(12개월 이상) 서버는 제외한다.
+  const isLongTermServer = (serverCalcResult?.months ?? 0) >= LONG_TERM_MIN_MONTHS;
+  const needsInfraFee =
+    items.some((item) => item.name === SERVER_INSTALL_ITEM_NAME) && !isLongTermServer;
+
+  // 사용자 조작과 무관하게 실비 항목 상태를 항상 맞춰준다.
+  useEffect(() => {
+    setItems((prev) => syncInfraFeeItem(prev, needsInfraFee));
+  }, [needsInfraFee, items]);
 
   // items가 변경될 때마다 localStorage에 저장
   useEffect(() => {

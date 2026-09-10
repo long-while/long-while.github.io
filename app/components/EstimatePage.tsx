@@ -1,5 +1,5 @@
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { Trash2, Server, Bot } from 'lucide-react';
+import { Trash2, Server, Bot, Lock } from 'lucide-react';
 import { ArrowRightIcon } from '@/app/components/icons';
 import type { NavigateFunction } from '@/app/types/navigation';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
@@ -37,7 +37,15 @@ function ItemRow({ item, onRemove }: { item: EstimateItem; onRemove: () => void 
   return (
     <div className="flex items-center gap-4 px-5 py-4 hover:bg-black/[0.01] transition-colors">
       <div className="flex-1 min-w-0">
-        <h4 className="text-[15px] text-black font-semibold break-words">{item.name}</h4>
+        <h4 className="text-[15px] text-black font-semibold break-words">
+          {item.name}
+          {item.locked && (
+            <span className="ml-2 inline-flex items-center gap-1 align-middle px-2 py-0.5 bg-[#fff5eb] text-[#ff7b00] text-[11px] font-medium rounded-full">
+              <Lock size={10} aria-hidden />
+              필수 포함
+            </span>
+          )}
+        </h4>
         {item.description && (
           <p className="text-[13px] leading-[1.6] text-foreground/50 break-words mt-0.5">
             {extractCommands(item.description)}
@@ -47,13 +55,23 @@ function ItemRow({ item, onRemove }: { item: EstimateItem; onRemove: () => void 
       <span className="text-[15px] font-mono leading-normal text-[#ff7b00] shrink-0">
         {item.price === 0 ? '협의' : `₩${item.price.toLocaleString()}`}
       </span>
-      <button
-        onClick={onRemove}
-        className="p-1.5 text-foreground/30 hover:text-red-500 transition-colors shrink-0 rounded focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
-        aria-label={`${item.name} 삭제`}
-      >
-        <Trash2 size={16} />
-      </button>
+      {item.locked ? (
+        <span
+          className="p-1.5 text-foreground/25 shrink-0"
+          title="서버 설치에 자동으로 포함되는 항목이라 삭제하실 수 없어요."
+        >
+          <Lock size={16} aria-hidden />
+          <span className="sr-only">{item.name}은(는) 삭제할 수 없는 필수 항목입니다</span>
+        </span>
+      ) : (
+        <button
+          onClick={onRemove}
+          className="p-1.5 text-foreground/30 hover:text-red-500 transition-colors shrink-0 rounded focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+          aria-label={`${item.name} 삭제`}
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
     </div>
   );
 }
