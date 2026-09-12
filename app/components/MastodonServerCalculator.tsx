@@ -154,7 +154,7 @@ export default function MastodonServerCalculator({
               3
             </span>
             검색 기능 추가 여부
-            <span className="text-[12px] text-foreground/40 font-normal">(세팅비용 +30,000원)</span>
+            <span className="text-[12px] text-foreground/40 font-normal">(세팅비용 +15,000원)</span>
           </label>
           <div className="flex gap-3">
             {(['yes', 'no'] as const).map((val) => (
