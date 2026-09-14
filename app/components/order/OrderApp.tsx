@@ -217,7 +217,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
         )}
 
         {/* 신청서 폼 */}
-        <OrderForm onNavigate={onNavigate} />
+        <OrderForm />
       </div>
 
       <Footer onNavigate={onNavigate} />

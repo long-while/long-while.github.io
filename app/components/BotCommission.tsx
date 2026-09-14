@@ -2,6 +2,7 @@ import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState, useEffect } from 'react';
 import { Plus, Minus, AlertTriangle, Check, ChevronDown } from 'lucide-react';
 import type { NavigateFunction } from '@/app/types/navigation';
+import { useEditTargetHighlight } from '@/app/hooks/useEditTargetHighlight';
 
 interface BotCommissionProps {
   onBack: () => void;
@@ -25,6 +26,7 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
   const [omakaseDetailOpen, setOmakaseDetailOpen] = useState(false);
   const [investigationExampleOpen, setInvestigationExampleOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const highlightedOption = useEditTargetHighlight();
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
@@ -374,7 +376,12 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
             <h2 className="text-[29px] tracking-[-0.01em] font-semibold">가동 기간에 따른 금액</h2>
           </div>
 
-          <div className="border border-border p-5">
+          <div
+            data-option-name="기본 가동료"
+            className={`border border-border p-5 ${
+              highlightedOption?.startsWith('기본 가동료') ? 'outline outline-[3px] outline-[#ff7b00] outline-offset-2' : ''
+            }`}
+          >
             <div className="space-y-3 text-[14px] leading-[1.8] text-foreground/80">
               <p>봇 가동 비용은 1주에 5천원입니다.</p>
               <p>커뮤니티 용도의 자동봇이라면 운영 주수만큼 숫자를 올려주세요.</p>
@@ -585,14 +592,20 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                     <button
                       type="button"
                       onClick={() => handleToggleEstimate(type.name, type.price, type.features.join(', '))}
-                      className="w-full flex justify-between items-center p-6 bg-black/[0.01] border-b border-border text-left hover:bg-[#fff5eb]/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                      data-option-name={type.name}
+                      className={`w-full flex justify-between items-center p-6 bg-black/[0.01] border-b border-border text-left hover:bg-[#fff5eb]/50 transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${highlightedOption === type.name ? 'outline outline-[3px] outline-[#ff7b00] -outline-offset-2' : ''}`}
                       aria-pressed={typeSelected}
                       aria-label={typeSelected ? `${type.name} 견적에서 제거` : `${type.name} 견적에 추가`}
                     >
                       {headerContent}
                     </button>
                   ) : (
-                    <div className="flex justify-between items-center p-6 bg-black/[0.01] border-b border-border">
+                    <div
+                      data-option-name={type.name}
+                      className={`flex justify-between items-center p-6 bg-black/[0.01] border-b border-border ${
+                        highlightedOption === type.name ? 'outline outline-[3px] outline-[#ff7b00] -outline-offset-2' : ''
+                      }`}
+                    >
                       {headerContent}
                     </div>
                   )}
@@ -788,12 +801,14 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   key={index}
                   type="button"
                   onClick={handleClick}
+                  data-option-name={option.name}
+                  data-option-aliases={option.aliases?.join("|")}
                   className={`w-full border p-5 transition-all text-left ${disabled
                     ? 'border-border bg-gray-50/60 opacity-60 cursor-not-allowed'
                     : isSelected
                       ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                       : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                    } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                    } ${highlightedOption === option.name ? 'outline outline-[3px] outline-[#ff7b00] outline-offset-2' : ''} focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
                   aria-disabled={disabled}
                   aria-label={disabled ? `${option.name} — ${requiresLabel} 선택 필요` : isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}

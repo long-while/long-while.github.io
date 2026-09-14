@@ -1,5 +1,6 @@
+import { useCallback, useEffect } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { Trash2, Server, Bot, Lock } from 'lucide-react';
+import { Trash2, Server, Bot, Lock, Pencil, X } from 'lucide-react';
 import { ArrowRightIcon } from '@/app/components/icons';
 import type { NavigateFunction } from '@/app/types/navigation';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
@@ -32,8 +33,54 @@ function calculateSubtotal(items: EstimateItem[]): number {
   return items.reduce((sum, item) => sum + item.price, 0);
 }
 
+/** 삭제 알림이 저절로 사라지기까지의 시간 */
+const UNDO_TIMEOUT_MS = 8000;
+
+/** 삭제 직후 뜨는 되돌리기 알림 */
+function UndoToast({ itemId, name, onUndo, onDismiss }: {
+  itemId: string;
+  name: string;
+  onUndo: () => void;
+  onDismiss: () => void;
+}) {
+  useEffect(() => {
+    const timer = setTimeout(onDismiss, UNDO_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+    // 삭제 건마다 타이머를 새로 시작한다 (이름은 중복될 수 있어 id 를 쓴다)
+  }, [itemId, onDismiss]);
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-5 py-4 bg-black text-white rounded-lg shadow-lg max-w-[calc(100vw-32px)]"
+    >
+      <span className="text-[14px] break-keep">
+        '{name}'을(를) 삭제했습니다.
+      </span>
+      <button
+        onClick={onUndo}
+        className="text-[14px] font-semibold text-[#ffab5e] hover:text-[#ffc890] underline shrink-0 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2 rounded"
+      >
+        실행 취소
+      </button>
+      <button
+        onClick={onDismiss}
+        className="p-1 text-white/50 hover:text-white shrink-0 rounded focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
+        aria-label="알림 닫기"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  );
+}
+
 // 아이템 행 컴포넌트
-function ItemRow({ item, onRemove }: { item: EstimateItem; onRemove: () => void }) {
+function ItemRow({ item, onRemove, onEdit }: {
+  item: EstimateItem;
+  onRemove: () => void;
+  onEdit: () => void;
+}) {
   return (
     <div className="flex items-center gap-4 px-5 py-4 hover:bg-black/[0.01] transition-colors">
       <div className="flex-1 min-w-0">
@@ -64,28 +111,68 @@ function ItemRow({ item, onRemove }: { item: EstimateItem; onRemove: () => void 
           <span className="sr-only">{item.name}은(는) 삭제할 수 없는 필수 항목입니다</span>
         </span>
       ) : (
-        <button
-          onClick={onRemove}
-          className="p-1.5 text-foreground/30 hover:text-red-500 transition-colors shrink-0 rounded focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
-          aria-label={`${item.name} 삭제`}
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={onEdit}
+            className="p-1.5 text-foreground/30 hover:text-[#ff7b00] transition-colors rounded focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+            aria-label={`${item.name} 수정하러 가기`}
+            title="상품 페이지에서 이 항목을 다시 고릅니다"
+          >
+            <Pencil size={16} />
+          </button>
+          <button
+            onClick={onRemove}
+            className="p-1.5 text-foreground/30 hover:text-red-500 transition-colors rounded focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+            aria-label={`${item.name} 삭제`}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       )}
     </div>
   );
 }
 
 export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) {
-  const { items, removeItem, getTotalPrice, proceedToOrder } = useEstimate();
+  const {
+    items,
+    removeItem,
+    getTotalPrice,
+    proceedToOrder,
+    lastRemoved,
+    undoRemove,
+    dismissLastRemoved,
+    setEditTargetName,
+  } = useEstimate();
+
+  // 견적함을 떠나면 삭제 알림도 함께 정리한다 (다음에 들어왔을 때 묵은 알림이 뜨지 않도록)
+  useEffect(() => dismissLastRemoved, [dismissLastRemoved]);
 
   const handleProceedToOrder = () => {
     proceedToOrder();
     onNavigate('order');
   };
 
+  /**
+   * 항목 수정: 해당 상품 페이지로 이동하면서 어떤 옵션을 고치려는지 넘긴다.
+   * 상품 페이지가 그 옵션으로 스크롤해 강조해 준다.
+   */
+  const handleEdit = useCallback((item: EstimateItem) => {
+    setEditTargetName(item.name);
+    onNavigate(item.category === 'bot' ? 'bot' : 'server');
+  }, [onNavigate, setEditTargetName]);
+
   return (
     <div className="min-h-screen bg-white">
+      {lastRemoved && (
+        <UndoToast
+          itemId={lastRemoved.item.id}
+          name={lastRemoved.item.name}
+          onUndo={undoRemove}
+          onDismiss={dismissLastRemoved}
+        />
+      )}
+
       <div className="max-w-[1060px] mx-auto px-8 py-16">
         {/* 뒤로가기 버튼 */}
         <button
@@ -169,7 +256,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                         </div>
                         <div className="divide-y divide-border">
                           {serverItems.map((item) => (
-                            <ItemRow key={item.id} item={item} onRemove={() => removeItem(item.id)} />
+                            <ItemRow key={item.id} item={item} onRemove={() => removeItem(item.id, { trackUndo: true })} onEdit={() => handleEdit(item)} />
                           ))}
                         </div>
                       </div>
@@ -189,7 +276,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                         </div>
                         <div className="divide-y divide-border">
                           {botItems.map((item) => (
-                            <ItemRow key={item.id} item={item} onRemove={() => removeItem(item.id)} />
+                            <ItemRow key={item.id} item={item} onRemove={() => removeItem(item.id, { trackUndo: true })} onEdit={() => handleEdit(item)} />
                           ))}
                         </div>
                       </div>
@@ -206,7 +293,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                         </div>
                         <div className="divide-y divide-border">
                           {otherItems.map((item) => (
-                            <ItemRow key={item.id} item={item} onRemove={() => removeItem(item.id)} />
+                            <ItemRow key={item.id} item={item} onRemove={() => removeItem(item.id, { trackUndo: true })} onEdit={() => handleEdit(item)} />
                           ))}
                         </div>
                       </div>

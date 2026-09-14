@@ -20,15 +20,29 @@ export interface EstimateItem {
   locked?: boolean;
 }
 
+/** 실행 취소를 위해 보관하는 직전 삭제 항목 */
+export interface RemovedEstimateItem {
+  item: EstimateItem;
+  /** 삭제 전 위치. 되돌릴 때 같은 자리에 넣는다 */
+  index: number;
+}
+
 interface EstimateContextType {
   items: EstimateItem[];
   addItem: (item: Omit<EstimateItem, 'id'>) => void;
-  removeItem: (id: string) => void;
+  removeItem: (id: string, options?: { trackUndo?: boolean }) => void;
   clearItems: () => void;
   getTotalPrice: () => number;
   proceedToOrder: () => void;
   serverCalcResult: ServerCalcResult | null;
   setServerCalcResult: (result: ServerCalcResult | null) => void;
+  /** 직전에 삭제한 항목 (실행 취소 알림용). 되돌리거나 닫으면 비워진다 */
+  lastRemoved: RemovedEstimateItem | null;
+  undoRemove: () => void;
+  dismissLastRemoved: () => void;
+  /** 견적함에서 '수정'을 눌러 이동할 때, 상품 페이지에서 강조할 항목 이름 */
+  editTargetName: string | null;
+  setEditTargetName: (name: string | null) => void;
 }
 
 const EstimateContext = createContext<EstimateContextType | undefined>(undefined);
@@ -155,11 +169,33 @@ export function syncInfraFeeItem(items: EstimateItem[], shouldInclude: boolean):
   ];
 }
 
+/**
+ * 삭제했던 항목을 원래 자리에 되돌린다.
+ *
+ * 같은 항목이 이미 다시 담겨 있으면 넣지 않는다. id 는 addItem 이 매번 새로 발급하므로
+ * id 뿐 아니라 이름으로도 확인해야 '검색 기능' 이 두 줄로 남아 금액이 두 배가 되는 걸 막을 수 있다.
+ */
+export function insertRemovedItem(
+  items: EstimateItem[],
+  removed: RemovedEstimateItem
+): EstimateItem[] {
+  const alreadyPresent = items.some(
+    (item) => item.id === removed.item.id || item.name === removed.item.name
+  );
+  if (alreadyPresent) return items;
+
+  const next = [...items];
+  next.splice(Math.min(Math.max(removed.index, 0), next.length), 0, removed.item);
+  return next;
+}
+
 export function EstimateProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<EstimateItem[]>(() => loadEstimateFromStorage());
   const [serverCalcResult, setServerCalcResultState] = useState<ServerCalcResult | null>(
     () => loadServerCalcFromStorage()
   );
+  const [lastRemoved, setLastRemoved] = useState<RemovedEstimateItem | null>(null);
+  const [editTargetName, setEditTargetName] = useState<string | null>(null);
 
   const setServerCalcResult = useCallback((result: ServerCalcResult | null) => {
     setServerCalcResultState(result);
@@ -176,22 +212,47 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
       mappingKey,
     };
     setItems((prev) => [...prev, newItem]);
-    
+    // 새로 담았으면 직전 삭제 되돌리기는 의미가 없다
+    setLastRemoved(null);
+
     // 항목 추가 시 동기화 상태 초기화 (새로운 동기화 필요)
     clearSyncState();
   };
 
-  const removeItem = (id: string) => {
-    const target = items.find((item) => item.id === id);
+  /**
+   * 견적 항목 제거.
+   *
+   * `trackUndo` 는 견적함에서 삭제 버튼을 눌렀을 때만 켠다.
+   * 상품 페이지에서 옵션을 토글하거나(선택 해제) 규칙에 따라 자동 제거되는 경우까지 기록하면,
+   * 나중에 견적함에 들어갔을 때 엉뚱한 '실행 취소' 알림이 떠 버린다.
+   */
+  const removeItem = (id: string, options?: { trackUndo?: boolean }) => {
+    const index = items.findIndex((item) => item.id === id);
+    const target = items[index];
     // 자동 포함 항목(실비)은 개별 제거를 허용하지 않는다.
     if (!target || target.locked) return;
     setItems((prev) => prev.filter((item) => item.id !== id));
+    if (options?.trackUndo) {
+      setLastRemoved({ item: target, index });
+    }
     // 항목 제거 시 동기화 상태 초기화
     clearSyncState();
   };
 
+  /** 삭제한 항목을 원래 자리에 되돌린다 */
+  const undoRemove = useCallback(() => {
+    if (!lastRemoved) return;
+
+    setItems((prev) => insertRemovedItem(prev, lastRemoved));
+    setLastRemoved(null);
+    clearSyncState();
+  }, [lastRemoved]);
+
+  const dismissLastRemoved = useCallback(() => setLastRemoved(null), []);
+
   const clearItems = () => {
     setItems([]);
+    setLastRemoved(null);
     clearSyncState();
   };
 
@@ -221,7 +282,21 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
 
   return (
     <EstimateContext.Provider
-      value={{ items, addItem, removeItem, clearItems, getTotalPrice, proceedToOrder, serverCalcResult, setServerCalcResult }}
+      value={{
+        items,
+        addItem,
+        removeItem,
+        clearItems,
+        getTotalPrice,
+        proceedToOrder,
+        serverCalcResult,
+        setServerCalcResult,
+        lastRemoved,
+        undoRemove,
+        dismissLastRemoved,
+        editTargetName,
+        setEditTargetName,
+      }}
     >
       {children}
     </EstimateContext.Provider>

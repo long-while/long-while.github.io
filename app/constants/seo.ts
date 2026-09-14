@@ -30,7 +30,8 @@ export interface RouteMeta {
 
 /**
  * 실제 URL 을 가지는 페이지 목록.
- * faq/terms 는 홈 페이지 내 섹션이므로 별도 경로가 아니라 앵커(/#faq)로 다룬다.
+ * faq/terms 는 예전에 홈 페이지 내 섹션이었으나 본문이 길어 별도 페이지로 분리했다.
+ * 예전에 공유된 /#faq · /#terms 링크는 isLegacyHashEntry 경로를 타고 새 URL 로 치환된다.
  */
 export const ROUTES: RouteMeta[] = [
   {
@@ -58,6 +59,22 @@ export const ROUTES: RouteMeta[] = [
     indexable: true,
   },
   {
+    page: 'terms',
+    path: '/terms/',
+    title: '이용안내 · 약관 | 한참 커미션',
+    description:
+      '한참 커미션 이용안내. 견적비, 오류 유지보수, 질문 횟수, 테마 이미지 교체, 환불, 빠른마감 등 추가금이 발생하는 조건을 확인하세요.',
+    indexable: true,
+  },
+  {
+    page: 'faq',
+    path: '/faq/',
+    title: '자주 묻는 질문 | 한참 커미션',
+    description:
+      '마스토돈 서버 설치·자동봇 커미션에 대해 자주 묻는 질문 모음. 신청과 일정, 서비스 범위, 서버비와 사양에 대한 답변을 확인하세요.',
+    indexable: true,
+  },
+  {
     // 이용자별 장바구니 화면이라 색인 대상이 아니다
     page: 'estimate',
     path: '/estimate/',
@@ -74,12 +91,6 @@ export const ROUTES: RouteMeta[] = [
     indexable: false,
   },
 ];
-
-/** 홈 페이지 내 섹션 앵커 */
-const HOME_ANCHORS: Partial<Record<PageType, string>> = {
-  faq: '/#faq',
-  terms: '/#terms',
-};
 
 const HOME_ROUTE = ROUTES[0];
 
@@ -98,12 +109,9 @@ export function routeForPath(pathname: string): RouteMeta | undefined {
   return ROUTES.find((route) => route.path === normalized);
 }
 
-/**
- * 링크(<a href>)에 사용할 URL.
- * faq/terms 는 홈의 섹션 앵커로, 나머지는 자기 경로로 연결한다.
- */
+/** 링크(<a href>)에 사용할 URL */
 export function hrefForPage(page: PageType): string {
-  return HOME_ANCHORS[page] ?? routeForPage(page).path;
+  return routeForPage(page).path;
 }
 
 /**

@@ -3,7 +3,7 @@
  * 별도 테스트 러너 없이 `npm run test` (vite SSR 번들 → node 실행)로 돌린다.
  */
 
-import { syncInfraFeeItem } from '@/app/contexts/EstimateContext';
+import { syncInfraFeeItem, insertRemovedItem } from '@/app/contexts/EstimateContext';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
 import {
   calculateServerPrice,
@@ -11,7 +11,12 @@ import {
   generateCopyText,
   getDeadlineBlackoutError,
   hasServerInfraFee,
+  MISSING_GOOGLE_EMAIL_MARK,
+  MISSING_GOOGLE_PASSWORD_MARK,
+  validateGoogleAccount,
+  validateStep1,
 } from '@/app/utils/orderUtils';
+import { FAQ_ITEMS, FAQ_CATEGORIES } from '@/app/components/FAQ';
 import {
   PRICING_CONFIG,
   SERVER_INFRA_FEE_ITEM,
@@ -137,6 +142,39 @@ const staleFee = syncInfraFeeItem(
 check('예전에 저장된 실비 항목은 최신 금액으로 갱신된다', staleFee?.price, PRICING_CONFIG.server.infraFee);
 check('예전에 저장된 실비 항목도 잠금 처리된다', staleFee?.locked, true);
 
+// ===== 삭제 되돌리기(undo) =====
+
+const undoBase: EstimateItem[] = [installItem, themeItem];
+const searchItem: EstimateItem = { id: 'search', name: '검색 기능', price: 15000, category: 'server' };
+
+check(
+  '삭제한 항목이 원래 자리에 돌아온다',
+  insertRemovedItem(undoBase, { item: searchItem, index: 1 }).map((i) => i.name),
+  [SERVER_INSTALL_ITEM_NAME, searchItem.name, themeItem.name]
+);
+check(
+  '같은 id 가 이미 있으면 중복 삽입하지 않는다',
+  insertRemovedItem([...undoBase, searchItem], { item: searchItem, index: 1 }).length,
+  3
+);
+check(
+  '이름이 같고 id 만 다르면(다시 담은 경우) 중복 삽입하지 않는다',
+  insertRemovedItem([...undoBase, { ...searchItem, id: 'different' }], { item: searchItem, index: 1 })
+    .filter((i) => i.name === searchItem.name).length,
+  1
+);
+check(
+  'index 가 배열보다 크면 끝에 붙인다',
+  insertRemovedItem(undoBase, { item: searchItem, index: 99 }).map((i) => i.name).pop(),
+  searchItem.name
+);
+check(
+  'index 가 음수여도 맨 앞에 붙는다',
+  insertRemovedItem(undoBase, { item: searchItem, index: -5 })[0].name,
+  searchItem.name
+);
+check('되돌릴 게 없으면 원본 배열 그대로', insertRemovedItem([], { item: searchItem, index: 0 }).length, 1);
+
 // ===== 신청서 견적 =====
 
 const noServer = createFormData();
@@ -175,16 +213,17 @@ check(
 // ===== 복붙용 텍스트 =====
 
 const copyText = generateCopyText(serverOrder, calculateTotalEstimate(serverOrder), null);
-check('복붙 텍스트 옵션 줄', copyText.includes(`+ ${SERVER_INFRA_FEE_ITEM.name}`), true);
+check('복붙 텍스트 옵션 줄', copyText.includes(`+ ${SERVER_INFRA_FEE_ITEM.copyLabel}`), true);
+check('복붙 텍스트에는 긴 이름이 나오지 않는다', copyText.includes(SERVER_INFRA_FEE_ITEM.name), false);
 check(
   '복붙 텍스트 견적 줄',
-  copyText.includes(`${SERVER_INFRA_FEE_ITEM.name} ${PRICING_CONFIG.server.infraFee.toLocaleString()}`),
+  copyText.includes(`${SERVER_INFRA_FEE_ITEM.copyLabel} ${PRICING_CONFIG.server.infraFee.toLocaleString()}`),
   true
 );
 check('복붙 텍스트 총액', copyText.trim().endsWith('25,000원'), true);
 
 const longTermCopyText = generateCopyText(longTermOrder, calculateTotalEstimate(longTermOrder), null);
-check('장기 소규모 복붙 텍스트에는 실비가 없다', longTermCopyText.includes(SERVER_INFRA_FEE_ITEM.name), false);
+check('장기 소규모 복붙 텍스트에는 실비가 없다', longTermCopyText.includes(SERVER_INFRA_FEE_ITEM.copyLabel), false);
 check('장기 소규모 복붙 텍스트 총액', longTermCopyText.trim().endsWith('2만원'), true);
 
 // ===== 마감 불가 기간 =====
@@ -196,6 +235,93 @@ check('10/14는 마감 가능', getDeadlineBlackoutError('10/14', 'desiredDeadli
 check('10/29는 마감 가능', getDeadlineBlackoutError('10/29', 'desiredDeadline'), null);
 check('8/22는 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('8/22', 'desiredDeadline'), null);
 check('10/3은 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('10/3', 'desiredDeadline'), null);
+
+// ===== 구글 계정 검증 (Step 1 → Step 4 이동) =====
+
+const emptyStep1 = createFormData().step1;
+check(
+  '빈 구글 계정은 이메일·비밀번호 두 가지 오류',
+  validateGoogleAccount(emptyStep1).map((e) => e.field),
+  ['googleEmail', 'googlePassword']
+);
+check(
+  'Gmail 이 아니면 오류',
+  validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@naver.com', googlePassword: 'longenough' })
+    .map((e) => e.field),
+  ['googleEmail']
+);
+check(
+  '비밀번호 8자 미만이면 오류',
+  validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@gmail.com', googlePassword: 'short' })
+    .map((e) => e.field),
+  ['googlePassword']
+);
+check(
+  '정상 입력이면 오류 없음',
+  validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@gmail.com', googlePassword: 'longenough' }),
+  []
+);
+
+// 구글 계정은 Step 4 에서 받으므로 Step 1 검증에는 더 이상 포함되지 않는다
+const filledStep1 = {
+  ...emptyStep1,
+  termsAgreed: 'yes' as const,
+  applicantNickname: '한참',
+  communityShortName: '망저',
+  communityKoreanName: '망각의 저편',
+  communityEnglishName: 'Beyond the Oblivion',
+  resultAnnouncementDate: '2026-01-01',
+  openingDate: '2026-01-10',
+  closingDate: '2026-03-10',
+};
+check('Step 1 검증은 구글 계정을 요구하지 않는다', validateStep1(filledStep1), []);
+check(
+  'Step 1 검증에 googleEmail 필드가 없다',
+  validateStep1(emptyStep1).some((e) => e.field.startsWith('google')),
+  false
+);
+
+// ===== 복사 텍스트의 구글 계정 누락 표시 =====
+
+const missingAccountOrder: OrderFormData = {
+  ...serverOrder,
+  step1: { ...serverOrder.step1, googleEmail: '', googlePassword: '' },
+};
+const missingAccountText = generateCopyText(
+  missingAccountOrder,
+  calculateTotalEstimate(missingAccountOrder),
+  null
+);
+check('비밀번호가 비면 복사 텍스트에 표시가 남는다', missingAccountText.includes(MISSING_GOOGLE_PASSWORD_MARK), true);
+check('이메일이 비면 복사 텍스트에 표시가 남는다', missingAccountText.includes(MISSING_GOOGLE_EMAIL_MARK), true);
+check('빈 계정이 " / " 로만 남지 않는다', missingAccountText.includes('\n / \n'), false);
+
+const filledAccountOrder: OrderFormData = {
+  ...serverOrder,
+  step1: { ...serverOrder.step1, googleEmail: 'me@gmail.com', googlePassword: 'longenough' },
+};
+const filledAccountText = generateCopyText(
+  filledAccountOrder,
+  calculateTotalEstimate(filledAccountOrder),
+  null
+);
+check('정상 입력이면 표시가 붙지 않는다', filledAccountText.includes('[!]'), false);
+check('정상 입력은 이메일 / 비밀번호로 들어간다', filledAccountText.includes('me@gmail.com / longenough'), true);
+
+// ===== FAQ 분류 =====
+
+check('FAQ 항목 수', FAQ_ITEMS.length, 15);
+check('메인 대표 질문 수', FAQ_ITEMS.filter((item) => item.featured).length, 4);
+check(
+  '분류별 질문 수',
+  FAQ_CATEGORIES.map((category) => FAQ_ITEMS.filter((item) => item.category === category).length),
+  [4, 4, 7]
+);
+check(
+  '모든 질문에 유효한 분류가 있다',
+  FAQ_ITEMS.every((item) => FAQ_CATEGORIES.includes(item.category)),
+  true
+);
 
 console.log(failed === 0 ? '\n모든 검증 통과' : `\n${failed}개 실패`);
 if (failed > 0) process.exit(1);

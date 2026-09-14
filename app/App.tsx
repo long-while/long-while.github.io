@@ -1,17 +1,17 @@
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense, type ReactNode } from "react";
 import { EstimateProvider } from "@/app/contexts/EstimateContext";
 import Navigation from "@/app/components/Navigation";
 import Header from "@/app/components/Header";
 import ServiceCards from "@/app/components/ServiceCards";
 import Features from "@/app/components/Features";
 import Process from "@/app/components/Process";
-import FAQ from "@/app/components/FAQ";
-import Terms from "@/app/components/Terms";
+import FAQ, { FAQ_ITEMS } from "@/app/components/FAQ";
 import Footer from "@/app/components/Footer";
 import FloatingEstimateButton from "@/app/components/FloatingEstimateButton";
 import WelcomeModal from "@/app/components/WelcomeModal";
 import { isLegacyHashEntry, pageForLocation, routeForPage } from "@/app/constants/seo";
 import { applyRouteMeta } from "@/app/lib/documentMeta";
+import { navLinkProps } from "@/app/lib/navLink";
 import type { PageType } from "@/app/types/navigation";
 
 // 메인 페이지에서 안 보이는 무거운 컴포넌트는 lazy loading
@@ -19,6 +19,11 @@ const ServerCommission = lazy(() => import("@/app/components/ServerCommission"))
 const BotCommission = lazy(() => import("@/app/components/BotCommission"));
 const EstimatePage = lazy(() => import("@/app/components/EstimatePage"));
 const OrderApp = lazy(() => import("@/app/components/order/OrderApp"));
+const FaqPage = lazy(() => import("@/app/components/FaqPage"));
+const GuidePage = lazy(() => import("@/app/components/GuidePage"));
+
+/** 메인에 노출하는 대표 질문. 전체 목록은 /faq/ 에서 본다 */
+const FEATURED_FAQ_ITEMS = FAQ_ITEMS.filter((item) => item.featured);
 
 // 현재 URL 경로에 따라 초기 페이지 상태 결정 (SSR/프리렌더 시에는 initialPage 를 받는다)
 const getInitialPage = (): PageType => {
@@ -31,28 +36,30 @@ interface AppProps {
   initialPage?: PageType;
 }
 
+/** 메인 외 하위 페이지의 공통 껍데기 (상단 네비 + 본문 + 푸터) */
+function SubPageLayout({ currentPage, onNavigate, children }: {
+  currentPage: PageType;
+  onNavigate: (page: string) => void;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <Navigation currentPage={currentPage} onNavigate={onNavigate} />
+      <div className="pt-16">
+        <Suspense fallback={<div className="min-h-screen" />}>
+          {children}
+        </Suspense>
+        <Footer onNavigate={onNavigate} />
+      </div>
+      <FloatingEstimateButton onNavigate={onNavigate} currentPage={currentPage} />
+    </>
+  );
+}
+
 function AppContent({ initialPage }: AppProps) {
   const [currentPage, setCurrentPage] = useState<PageType>(() => initialPage ?? getInitialPage());
-  const faqRef = useRef<HTMLDivElement>(null);
-  const termsRef = useRef<HTMLDivElement>(null);
-
-  // 홈 내 섹션(FAQ/약관)으로 스크롤
-  const scrollToSection = useCallback((section: 'faq' | 'terms') => {
-    setTimeout(() => {
-      const target = section === 'faq' ? faqRef.current : termsRef.current;
-      target?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  }, []);
 
   const handleNavigate = useCallback((page: string) => {
-    // faq/terms 는 별도 페이지가 아니라 홈의 섹션이므로 앵커로 이동한다
-    if (page === 'faq' || page === 'terms') {
-      setCurrentPage('home');
-      window.history.pushState(null, '', `/#${page}`);
-      scrollToSection(page);
-      return;
-    }
-
     const route = routeForPage(page as PageType);
     setCurrentPage(route.page);
     if (window.location.pathname + window.location.hash !== route.path) {
@@ -60,23 +67,15 @@ function AppContent({ initialPage }: AppProps) {
     }
     // 페이지 이동 시 즉시 스크롤을 맨 위로 이동
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [scrollToSection]);
+  }, []);
 
-  // 최초 진입 처리: 구버전 해시 링크(#server 등) 경로 치환 + 앵커 스크롤
+  // 최초 진입 처리: 구버전 해시 링크(#server, #faq 등)를 새 경로로 1회 치환한다 (색인/공유 링크 호환)
   useEffect(() => {
     const { pathname, hash, search } = window.location;
+    if (!isLegacyHashEntry(pathname, hash)) return;
 
-    // 예전에 공유된 #server 형태의 링크는 새 경로로 1회 치환한다 (색인/공유 링크 호환)
-    if (isLegacyHashEntry(pathname, hash)) {
-      const route = routeForPage(pageForLocation(pathname, hash));
-      window.history.replaceState(null, '', route.path + search);
-      return;
-    }
-
-    const anchor = hash.replace(/^#/, '');
-    if (anchor === 'faq' || anchor === 'terms') {
-      scrollToSection(anchor);
-    }
+    const route = routeForPage(pageForLocation(pathname, hash));
+    window.history.replaceState(null, '', route.path + search);
     // 최초 1회만 실행
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -89,75 +88,44 @@ function AppContent({ initialPage }: AppProps) {
       setCurrentPage(page);
 
       // 세션 도중 구버전 해시 링크를 타고 들어온 경우에도 주소를 새 경로로 맞춰 준다
+      // (최초 진입 처리와 동일하게 쿼리스트링은 보존한다)
       if (isLegacyHashEntry(pathname, hash)) {
-        window.history.replaceState(null, '', routeForPage(page).path);
-        return;
-      }
-
-      const anchor = window.location.hash.replace(/^#/, '');
-      if (page === 'home' && (anchor === 'faq' || anchor === 'terms')) {
-        scrollToSection(anchor);
+        window.history.replaceState(null, '', routeForPage(page).path + window.location.search);
       }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [scrollToSection]);
+  }, []);
 
   // 페이지가 바뀌면 title/description/canonical 도 함께 갱신
   useEffect(() => {
     applyRouteMeta(routeForPage(currentPage));
   }, [currentPage]);
 
-  if (currentPage === 'server') {
-    return (
-      <>
-        <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
-        <div className="pt-16">
-          <Suspense fallback={<div className="min-h-screen" />}>
-            <ServerCommission onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />
-          </Suspense>
-          <Footer onNavigate={handleNavigate} />
-        </div>
-        <FloatingEstimateButton onNavigate={handleNavigate} currentPage={currentPage} />
-      </>
-    );
-  }
-
-  if (currentPage === 'bot') {
-    return (
-      <>
-        <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
-        <div className="pt-16">
-          <Suspense fallback={<div className="min-h-screen" />}>
-            <BotCommission onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />
-          </Suspense>
-          <Footer onNavigate={handleNavigate} />
-        </div>
-        <FloatingEstimateButton onNavigate={handleNavigate} currentPage={currentPage} />
-      </>
-    );
-  }
-
-  if (currentPage === 'estimate') {
-    return (
-      <>
-        <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
-        <div className="pt-16">
-          <Suspense fallback={<div className="min-h-screen" />}>
-            <EstimatePage onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />
-          </Suspense>
-          <Footer onNavigate={handleNavigate} />
-        </div>
-      </>
-    );
-  }
-
   if (currentPage === 'order') {
     return (
       <Suspense fallback={<div className="min-h-screen" />}>
         <OrderApp onNavigate={handleNavigate} />
       </Suspense>
+    );
+  }
+
+  if (currentPage !== 'home') {
+    return (
+      <SubPageLayout currentPage={currentPage} onNavigate={handleNavigate}>
+        {currentPage === 'server' && (
+          <ServerCommission onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />
+        )}
+        {currentPage === 'bot' && (
+          <BotCommission onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />
+        )}
+        {currentPage === 'estimate' && (
+          <EstimatePage onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />
+        )}
+        {currentPage === 'terms' && <GuidePage onNavigate={handleNavigate} />}
+        {currentPage === 'faq' && <FaqPage onNavigate={handleNavigate} />}
+      </SubPageLayout>
     );
   }
 
@@ -189,17 +157,51 @@ function AppContent({ initialPage }: AppProps) {
           </div>
         </div>
 
-        {/* 섹션 4: FAQ - 배경색 다변화 */}
+        {/* 섹션 4: 대표 FAQ - 전체 목록은 /faq/ 로 분리 */}
         <div className="bg-gray-50">
-          <div id="faq" className="max-w-[1060px] mx-auto px-8 py-16 scroll-mt-16" ref={faqRef}>
-            <FAQ />
+          <div className="max-w-[1060px] mx-auto px-8 py-16">
+            <FAQ
+              items={FEATURED_FAQ_ITEMS}
+              showSearch={false}
+              footer={
+                <a
+                  {...navLinkProps('faq', handleNavigate)}
+                  className="inline-flex items-center gap-2 text-[15px] text-[var(--brand-primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2"
+                >
+                  전체 FAQ {FAQ_ITEMS.length}개 보기
+                  <span className="text-[18px]">→</span>
+                </a>
+              }
+            />
           </div>
         </div>
 
-        {/* 섹션 5: 약관 */}
+        {/* 섹션 5: 하단 CTA */}
         <div className="bg-white">
-          <div id="terms" className="max-w-[1060px] mx-auto px-8 py-16 scroll-mt-16" ref={termsRef}>
-            <Terms />
+          <div className="max-w-[1060px] mx-auto px-8 py-20 text-center border-t border-border">
+            <h2 className="text-[29px] tracking-[-0.01em] font-semibold mb-4">
+              준비되셨나요?
+            </h2>
+            <p className="text-[16px] leading-[1.8] text-foreground/60 mb-8 max-w-[560px] mx-auto">
+              원하는 옵션을 골라 예상 금액을 확인해 보세요.<br />
+              견적을 담아두면 신청서에 그대로 이어집니다.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <a
+                {...navLinkProps('server', handleNavigate)}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-[var(--brand-primary)] text-white rounded-full font-semibold text-[16px] shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98] transition-all focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2"
+              >
+                서버 커미션 견적 내기
+                <span className="text-[18px]">→</span>
+              </a>
+              <a
+                {...navLinkProps('bot', handleNavigate)}
+                className="inline-flex items-center gap-2 px-8 py-4 border border-[var(--brand-primary)] text-[var(--brand-primary)] rounded-full font-semibold text-[16px] hover:bg-[var(--brand-bg)] active:scale-[0.98] transition-all focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2"
+              >
+                자동봇 커미션 견적 내기
+                <span className="text-[18px]">→</span>
+              </a>
+            </div>
           </div>
         </div>
 

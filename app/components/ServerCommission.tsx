@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useEditTargetHighlight } from '@/app/hooks/useEditTargetHighlight';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { Plus, Trash2, AlertCircle, Check } from 'lucide-react';
 import { ChevronDownIcon } from '@/app/components/icons';
@@ -15,6 +16,7 @@ interface ServerCommissionProps {
 export default function ServerCommission({ onBack, onNavigate }: ServerCommissionProps) {
   const { addItem, removeItem, items, serverCalcResult } = useEstimate();
   const [isLongTermInfoOpen, setIsLongTermInfoOpen] = useState(false);
+  const highlightedOption = useEditTargetHighlight();
 
   const isItemInEstimate = (name: string) => {
     return items.some(item => item.name === name);
@@ -213,7 +215,7 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
           </div>
 
           <div className="space-y-3">
-            <div className={`border p-5 transition-all ${isItemInEstimate('마스토돈 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'}`}>
+            <div data-option-name="마스토돈 서버 설치" className={`border p-5 transition-all ${isItemInEstimate('마스토돈 서버 설치') ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20' : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'} ${highlightedOption === '마스토돈 서버 설치' ? 'outline outline-3 outline-[#ff7b00] outline-offset-2' : ''}`}>
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
                   <h3 className="text-[15px] text-black font-semibold">마스토돈 서버 설치</h3>
@@ -294,10 +296,11 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                 <button
                   key={option.name}
                   onClick={() => handleThemeOptionSelect(option.name, option.price, option.description)}
+                  data-option-name={option.name}
                   className={`w-full border p-5 transition-all text-left focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 ${isSelected
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                    }`}
+                    } ${highlightedOption === option.name ? 'outline outline-[3px] outline-[#ff7b00] outline-offset-2' : ''}`}
                 >
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-4 flex-1">
@@ -346,10 +349,11 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                       handleToggleEstimate(option.name, option.price, option.description);
                     }}
                     disabled={isBlocked}
+                    data-option-name={option.name}
                     className={`w-full border p-5 transition-all text-left ${isSelected
                       ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                       : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                      } ${isBlocked ? 'opacity-50 cursor-not-allowed hover:border-border hover:bg-white' : ''} focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                      } ${isBlocked ? 'opacity-50 cursor-not-allowed hover:border-border hover:bg-white' : ''} ${highlightedOption === option.name ? 'outline outline-[3px] outline-[#ff7b00] outline-offset-2' : ''} focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                     aria-pressed={isSelected}
                     aria-disabled={isBlocked}
                     aria-label={isSelected ? `${option.name} 견적에서 제거` : `${option.name} 견적에 추가`}
@@ -398,10 +402,11 @@ export default function ServerCommission({ onBack, onNavigate }: ServerCommissio
                   key={option.estimateName}
                   type="button"
                   onClick={() => handleToggleEstimate(option.estimateName, option.price)}
+                  data-option-name={option.estimateName}
                   className={`w-full border p-5 transition-all text-left ${isSelected
                     ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
                     : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
-                    } focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
+                    } ${highlightedOption === option.estimateName ? 'outline outline-[3px] outline-[#ff7b00] outline-offset-2' : ''} focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2`}
                   aria-pressed={isSelected}
                   aria-label={isSelected ? `${option.displayName} 견적에서 제거` : `${option.displayName} 견적에 추가`}
                 >

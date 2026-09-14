@@ -1,18 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
+import TermsModal from '@/app/components/order/TermsModal';
+import { FieldError, FieldGroupError, useFieldAria } from '@/app/contexts/FieldErrorContext';
 import { calculateOperationWeeks } from '@/app/utils/orderUtils';
 import { INPUT_LIMITS } from '@/app/types/order';
 
-interface Step1ApplicantProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
-  const { formData, updateStep1, restoredFromStorage } = useOrder();
+export default function Step1Applicant() {
+  const { formData, updateStep1 } = useOrder();
+  const fieldAria = useFieldAria();
   const step1 = formData.step1;
-
-  // 임시저장 복원 시 비밀번호는 저장되지 않아 비어 있으므로 재입력 안내
-  const passwordNeedsReentry = restoredFromStorage && step1.googlePassword.trim() === '';
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   // 날짜 변경 시 자동으로 N주 계산
   useEffect(() => {
@@ -21,13 +18,6 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
       updateStep1({ operationWeeks: weeks });
     }
   }, [step1.openingDate, step1.closingDate, updateStep1]);
-
-  const handleTermsClick = () => {
-    if (onNavigate) {
-      // 새 탭에서 약관 및 안내 페이지 열기
-      window.open(window.location.origin + '/#terms', '_blank', 'noopener,noreferrer');
-    }
-  };
 
   return (
     <div className="space-y-8">
@@ -42,43 +32,37 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
       </div>
 
       {/* 1) 약관 동의 */}
-      <fieldset className="space-y-3">
-        <legend className="text-[18px] font-semibold">
+      <div className="space-y-3">
+        <h3 className="text-[18px] font-semibold">
           1) 약관 동의 <span className="text-red-500" aria-hidden="true">*</span>
           <span className="sr-only">(필수)</span>
-        </legend>
-        <p id="terms-description" className="text-[13px] text-gray-600 mt-1 mb-3">
-          커미션 진행을 위해 <button type="button" onClick={handleTermsClick} className="underline hover:text-[var(--brand-primary)]">약관 및 안내</button>를 확인하셨나요?
-        </p>
-        <div
-          role="radiogroup"
-          aria-labelledby="terms-legend"
-          aria-describedby="terms-description"
-          aria-required="true"
-          className="flex gap-4"
-        >
-          <label className="flex items-center gap-2 cursor-pointer min-h-[44px] px-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors">
+        </h3>
+        <FieldGroupError field="termsAgreed">
+          <label className="flex items-start gap-3 cursor-pointer min-h-[44px] px-2 -mx-2 py-2 rounded-lg hover:bg-gray-50 transition-colors">
             <input
-              type="radio"
-              name="termsAgreed"
+              id="termsAgreed"
+              type="checkbox"
               checked={step1.termsAgreed === 'yes'}
-              onChange={() => updateStep1({ termsAgreed: 'yes' })}
-              className="w-5 h-5 form-radio"
+              onChange={(e) => updateStep1({ termsAgreed: e.target.checked ? 'yes' : 'no' })}
+              className="w-5 h-5 mt-0.5 shrink-0 accent-[#ff7b00]"
+              aria-required="true"
+              {...fieldAria('termsAgreed')}
             />
-            <span className="text-[14px]">예</span>
+            <span className="text-[14px] leading-[1.6]">
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setIsTermsModalOpen(true); }}
+                className="underline font-medium hover:text-[var(--brand-primary)]"
+              >
+                이용안내
+              </button>
+              를 확인했으며, 내용에 동의합니다.
+            </span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer min-h-[44px] px-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors">
-            <input
-              type="radio"
-              name="termsAgreed"
-              checked={step1.termsAgreed === 'no'}
-              onChange={() => updateStep1({ termsAgreed: 'no' })}
-              className="w-5 h-5 form-radio"
-            />
-            <span className="text-[14px]">아니오</span>
-          </label>
-        </div>
-      </fieldset>
+        </FieldGroupError>
+      </div>
+
+      <TermsModal open={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
 
       {/* 2) 신청자 닉네임 */}
       <div className="pt-6 border-t border-gray-200">
@@ -89,6 +73,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
           </label>
           <input
             id="applicantNickname"
+            {...fieldAria('applicantNickname')}
             type="text"
             value={step1.applicantNickname}
             onChange={(e) => updateStep1({ applicantNickname: e.target.value.slice(0, INPUT_LIMITS.applicantNickname) })}
@@ -97,6 +82,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
             aria-required="true"
             className="form-input"
           />
+          <FieldError field="applicantNickname" />
         </div>
       </div>
 
@@ -113,6 +99,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
             </p>
             <input
               id="communityShortName"
+              {...fieldAria('communityShortName')}
               type="text"
               value={step1.communityShortName}
               onChange={(e) => updateStep1({ communityShortName: e.target.value.slice(0, INPUT_LIMITS.communityShortName) })}
@@ -121,6 +108,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
               aria-required="true"
               className="form-input"
             />
+            <FieldError field="communityShortName" />
           </div>
 
           <div className="space-y-2">
@@ -132,6 +120,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
             </p>
             <input
               id="communityKoreanName"
+              {...fieldAria('communityKoreanName')}
               type="text"
               value={step1.communityKoreanName}
               onChange={(e) => updateStep1({ communityKoreanName: e.target.value.slice(0, INPUT_LIMITS.communityKoreanName) })}
@@ -140,6 +129,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
               aria-required="true"
               className="form-input"
             />
+            <FieldError field="communityKoreanName" />
           </div>
 
           <div className="space-y-2">
@@ -151,6 +141,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
             </p>
             <input
               id="communityEnglishName"
+              {...fieldAria('communityEnglishName')}
               type="text"
               value={step1.communityEnglishName}
               onChange={(e) => updateStep1({ communityEnglishName: e.target.value.slice(0, INPUT_LIMITS.communityEnglishName) })}
@@ -159,6 +150,7 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
               aria-required="true"
               className="form-input"
             />
+            <FieldError field="communityEnglishName" />
           </div>
         </div>
       </div>
@@ -225,11 +217,12 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
                 위 내용을 이해했으며, 반년 이상 반영구적으로 운영할 장기 소규모 서버가 맞습니다.
               </span>
             </label>
+            <FieldError field="longTermConfirmed" />
           </div>
         )}
 
         {!step1.isLongTermCommunity && (
-          <>
+          <FieldGroupError field="dates">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label htmlFor="resultAnnouncementDate" className="block text-[14px] font-medium">
@@ -282,63 +275,8 @@ export default function Step1Applicant({ onNavigate }: Step1ApplicantProps) {
                 </p>
               </div>
             )}
-          </>
+          </FieldGroupError>
         )}
-      </div>
-
-      {/* 5) 커뮤니티 구글 계정 */}
-      <div className="pt-6 border-t border-gray-200">
-        <h3 className="text-[18px] font-semibold mb-2">5) 커뮤니티 구글 계정</h3>
-        <p className="text-[13px] text-gray-600 mb-4">
-          서버 설치와 자동봇 운영을 위해 커뮤니티의 구글 계정이 필요합니다.<br />
-          구글 이메일 주소와 비밀번호를 적어 주세요.<br />
-          개인 구글계정을 사용하셔도 상관은 없으나, 개인정보 보호를 위해 새로운 계정을 개설하시는 걸 추천드립니다.
-        </p>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="googleEmail" className="block text-[14px] font-medium">
-              커뮤니티 구글 이메일 주소 <span className="text-red-500" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="googleEmail"
-              type="email"
-              value={step1.googleEmail}
-              onChange={(e) => updateStep1({ googleEmail: e.target.value })}
-              placeholder="example@gmail.com"
-              aria-required="true"
-              className="form-input"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="googlePassword" className="block text-[14px] font-medium">
-              구글 비밀번호 <span className="text-red-500" aria-hidden="true">*</span>
-            </label>
-            <p className="text-[12px] text-amber-600 bg-[#fff1e3] p-2 rounded-md mb-2">
-              비밀번호는 브라우저에 저장되지 않으며, 페이지를 떠나면 입력 내용이 삭제됩니다.
-            </p>
-            {passwordNeedsReentry && (
-              <p
-                role="alert"
-                className="text-[12px] text-red-600 bg-red-50 border border-red-300 p-2 rounded-md mb-2 flex items-start gap-1.5"
-              >
-                <span aria-hidden="true">⚠</span>
-                <span>저장된 신청서를 불러왔어요. 비밀번호는 보안상 저장되지 않으니, <strong>여기부터 다시 입력</strong>해 주세요.</span>
-              </p>
-            )}
-            <input
-              id="googlePassword"
-              type="password"
-              value={step1.googlePassword}
-              onChange={(e) => updateStep1({ googlePassword: e.target.value })}
-              placeholder="비밀번호 입력"
-              aria-required="true"
-              aria-invalid={passwordNeedsReentry}
-              autoComplete="new-password"
-              className={`form-input ${passwordNeedsReentry ? 'border-red-500 ring-2 ring-red-200 focus:border-red-500' : ''}`}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );
