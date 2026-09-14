@@ -9,7 +9,7 @@
     "build:client": "vite build",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist",
-    "test": "vite build --ssr tests/pricing.test.ts --outDir .tmp-test --emptyOutDir --logLevel error && node .tmp-test/pricing.test.js"
+    "test": "vite build --ssr tests/pricing.test.ts --outDir .tmp-test --emptyOutDir --logLevel error && node .tmp-test/pricing.test.js && vite build --ssr tests/routing.test.ts --outDir .tmp-test --emptyOutDir --logLevel error && node .tmp-test/routing.test.js"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

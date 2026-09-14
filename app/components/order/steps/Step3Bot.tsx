@@ -1,4 +1,5 @@
 import { useOrder } from '@/app/contexts/OrderContext';
+import { FieldError, FieldGroupError, useFieldAria } from '@/app/contexts/FieldErrorContext';
 import { useEffect, useMemo } from 'react';
 import { ShoppingCart, Plus, X } from 'lucide-react';
 import { AlertTriangle } from 'griddy-icons';
@@ -72,6 +73,7 @@ function FromCartBadge() {
 
 export default function Step3Bot() {
   const { formData, updateStep3, cartSyncState } = useOrder();
+  const fieldAria = useFieldAria();
   const step3 = formData.step3;
   const step1 = formData.step1;
   const step2 = formData.step2;
@@ -385,28 +387,31 @@ export default function Step3Bot() {
             {step3.applyBot === 'yes' && (basicBotFromCart || basicShopBotFromCart || basicShopStatBotFromCart || cocBotFromCart || omakaseFromCart || investigationFromCart) && <FromCartBadge />}
           </span>
         </label>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="applyBot"
-              checked={step3.applyBot === 'yes'}
-              onChange={() => handleBotApplyChange('yes')}
-              className="w-4 h-4 accent-[#ff7b00]"
-            />
-            <span className="text-[14px]">예</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="applyBot"
-              checked={step3.applyBot === 'no'}
-              onChange={() => handleBotApplyChange('no')}
-              className="w-5 h-5 accent-[#ff7b00] cursor-pointer"
-            />
-            <span className="text-[14px]">아니오</span>
-          </label>
-        </div>
+        <FieldGroupError field="applyBot">
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                id="applyBot"
+                type="radio"
+                name="applyBot"
+                checked={step3.applyBot === 'yes'}
+                onChange={() => handleBotApplyChange('yes')}
+                className="w-4 h-4 accent-[#ff7b00]"
+              />
+              <span className="text-[14px]">예</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="applyBot"
+                checked={step3.applyBot === 'no'}
+                onChange={() => handleBotApplyChange('no')}
+                className="w-5 h-5 accent-[#ff7b00] cursor-pointer"
+              />
+              <span className="text-[14px]">아니오</span>
+            </label>
+          </div>
+        </FieldGroupError>
       </div>
 
       {/* 자동봇 "예" 선택 시에만 표시되는 옵션들 */}
@@ -418,6 +423,7 @@ export default function Step3Bot() {
               <h3 className="text-[18px] font-semibold mb-1">2) 운영 기간 설정 <span className="text-red-500">*</span></h3>
             </div>
 
+            <FieldGroupError field="operationWeeksOption">
             <div className="space-y-3">
               {/* 장기 소규모 옵션 */}
               <label
@@ -427,6 +433,7 @@ export default function Step3Bot() {
                   }`}
               >
                 <input
+                  id="operationWeeksOption"
                   type="radio"
                   name="operationWeeksOption"
                   checked={step3.operationWeeksOption === 'longterm'}
@@ -501,6 +508,7 @@ export default function Step3Bot() {
                 </div>
               </label>
             </div>
+            </FieldGroupError>
           </div>
 
           {/* 3) 메인 봇 종류 */}
@@ -514,6 +522,7 @@ export default function Step3Bot() {
               </p>
             </div>
 
+            <FieldGroupError field="mainBot">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* 1) 기본 (CoC 봇 선택 시 잠금) */}
               <label
@@ -525,6 +534,7 @@ export default function Step3Bot() {
                   }`}
               >
                 <input
+                  id="mainBot"
                   type="radio"
                   name="mainBot"
                   checked={step3.mainBot === 'basic'}
@@ -631,6 +641,7 @@ export default function Step3Bot() {
                 기본 봇 단독으로 신청하시려면 CoC 봇 선택을 해제해 주세요. (기본+상점, 기본+상점+스탯은 CoC 봇과 함께 선택하실 수 있습니다.)
               </p>
             )}
+            </FieldGroupError>
           </div>
 
           {/* 4) 추가 기능 선택 */}
@@ -791,6 +802,7 @@ export default function Step3Bot() {
                       : '기본 3개까지 무료로 등록할 수 있어요.'} 더 필요하시면 {SLOTS_PER_TIER}칸당 +{PRICING_CONFIG.bot.addons.extraAccountTier.toLocaleString()}원으로 최대 {ACCOUNT_LIST_CONFIG.maxTotalAccounts}개까지 추가할 수 있습니다.
                   </p>
 
+                  <FieldGroupError field="accountList">
                   <div className="space-y-2">
                     {/* 총괄 계정 (자동 입력, 삭제 불가) */}
                     {hasAdminAccount && (
@@ -836,8 +848,10 @@ export default function Step3Bot() {
                       );
                     })}
                   </div>
+                  </FieldGroupError>
 
                   {/* 계정 추가 / 추가금 안내 */}
+                  <FieldGroupError field="extraAccountTiers">
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     {canAddAccountSlot ? (
                       <button
@@ -864,6 +878,7 @@ export default function Step3Bot() {
                       <span className="text-[13px] text-gray-500">최대 {ACCOUNT_LIST_CONFIG.maxTotalAccounts}개까지 등록하셨어요.</span>
                     )}
                   </div>
+                  </FieldGroupError>
 
                   {/* 추가 구매 현황 */}
                   {accountTiers > 0 && (
@@ -968,6 +983,7 @@ export default function Step3Bot() {
                       </label>
                       <input
                         id="attendanceCurrencyAmount"
+                        {...fieldAria('attendanceCurrencyAmount')}
                         type="number"
                         min="1"
                         step="1"
@@ -986,6 +1002,7 @@ export default function Step3Bot() {
                         placeholder="예: 10"
                         className="w-full md:w-48 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                       />
+                      <FieldError field="attendanceCurrencyAmount" />
                       <p className="text-[12px] text-gray-500">정수만 입력해 주세요. 기본값은 10입니다.</p>
                     </div>
 
@@ -997,6 +1014,7 @@ export default function Step3Bot() {
                         <span className="text-[16px] font-mono text-gray-700 px-2 py-2 bg-white border border-input border-r-0 rounded-l-md">[</span>
                         <input
                           id="attendanceCommand"
+                          {...fieldAria('attendanceCommand')}
                           type="text"
                           value={(step3.attendanceCommand || '[출석]').replace(/^\[|\]$/g, '')}
                           onChange={(e) => {
@@ -1012,6 +1030,7 @@ export default function Step3Bot() {
                         />
                         <span className="text-[16px] font-mono text-gray-700 px-2 py-2 bg-white border border-input border-l-0 rounded-r-md">]</span>
                       </div>
+                      <FieldError field="attendanceCommand" />
                       <p className="text-[12px] text-gray-500">예: 출석, 보고, 기상 — 항상 대괄호로 감싸 사용됩니다.</p>
                     </div>
                   </div>
@@ -1149,12 +1168,14 @@ export default function Step3Bot() {
                   </div>
                   <textarea
                     id="omakaseDetails"
+                    {...fieldAria('omakaseDetails')}
                     value={step3.omakaseDetails}
                     onChange={(e) => updateStep3({ omakaseDetails: e.target.value })}
                     placeholder="외부 문서 링크를 입력해 주세요."
                     rows={3}
                     className="w-full px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px] resize-none"
                   />
+                  <FieldError field="omakaseDetails" />
                 </div>
               )}
             </div>
@@ -1172,12 +1193,14 @@ export default function Step3Bot() {
                     </label>
                     <input
                       id="currencyUnit"
+                      {...fieldAria('currencyUnit')}
                       type="text"
                       value={step3.currencyUnit}
                       onChange={(e) => updateStep3({ currencyUnit: e.target.value })}
                       placeholder="예: 갈레온, 코인, 골드"
                       className="w-full md:w-96 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                     />
+                    <FieldError field="currencyUnit" />
                   </div>
                 )}
 
@@ -1188,12 +1211,14 @@ export default function Step3Bot() {
                     </label>
                     <input
                       id="statList"
+                      {...fieldAria('statList')}
                       type="text"
                       value={step3.statList}
                       onChange={(e) => updateStep3({ statList: e.target.value })}
                       placeholder="예: 체력, 정신력, 행운"
                       className="w-full md:w-96 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                     />
+                    <FieldError field="statList" />
                   </div>
                 )}
               </div>
@@ -1210,12 +1235,14 @@ export default function Step3Bot() {
                 </label>
                 <input
                   id="botSymbol"
+                  {...fieldAria('botSymbol')}
                   type="text"
                   value={step3.botSymbol}
                   onChange={(e) => updateStep3({ botSymbol: e.target.value })}
                   placeholder="기본값: ✶"
                   className="w-full md:w-64 px-4 py-2 border border-input rounded-md focus:border-[#ff7b00] focus:outline-none text-[14px]"
                 />
+                <FieldError field="botSymbol" />
               </div>
 
               {requiresSeparateAccounts && (
@@ -1243,6 +1270,7 @@ export default function Step3Bot() {
                   </label>
                   <input
                     id="botAccountId"
+                    {...fieldAria('botAccountId')}
                     type="text"
                     value={step3.botAccountId}
                     onChange={(e) => updateStep3({ botAccountId: e.target.value })}
@@ -1252,8 +1280,9 @@ export default function Step3Bot() {
                       : 'border-input focus:border-[#ff7b00]'
                       }`}
                   />
+                  {!botAccountIdError && <FieldError field="botAccountId" />}
                   {botAccountIdError ? (
-                    <p className="text-[12px] text-red-600">{botAccountIdError.message}</p>
+                    <p id="botAccountId-error" role="alert" className="text-[12px] text-red-600">{botAccountIdError.message}</p>
                   ) : (
                     <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
                   )}
@@ -1266,6 +1295,7 @@ export default function Step3Bot() {
                     </label>
                     <input
                       id="cocBotAccountId"
+                      {...fieldAria('cocBotAccountId')}
                       type="text"
                       value={step3.cocBotAccountId}
                       onChange={(e) => updateStep3({ cocBotAccountId: e.target.value })}
@@ -1275,8 +1305,9 @@ export default function Step3Bot() {
                         : 'border-input focus:border-[#ff7b00]'
                         }`}
                     />
+                    {!cocBotAccountIdError && <FieldError field="cocBotAccountId" />}
                     {cocBotAccountIdError ? (
-                      <p className="text-[12px] text-red-600">{cocBotAccountIdError.message}</p>
+                      <p id="cocBotAccountId-error" role="alert" className="text-[12px] text-red-600">{cocBotAccountIdError.message}</p>
                     ) : (
                       <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
                     )}
@@ -1290,6 +1321,7 @@ export default function Step3Bot() {
                     </label>
                     <input
                       id="investigationBotAccountId"
+                      {...fieldAria('investigationBotAccountId')}
                       type="text"
                       value={step3.investigationBotAccountId}
                       onChange={(e) => updateStep3({ investigationBotAccountId: e.target.value })}
@@ -1299,8 +1331,9 @@ export default function Step3Bot() {
                         : 'border-input focus:border-[#ff7b00]'
                         }`}
                     />
+                    {!investigationBotAccountIdError && <FieldError field="investigationBotAccountId" />}
                     {investigationBotAccountIdError ? (
-                      <p className="text-[12px] text-red-600">{investigationBotAccountIdError.message}</p>
+                      <p id="investigationBotAccountId-error" role="alert" className="text-[12px] text-red-600">{investigationBotAccountIdError.message}</p>
                     ) : (
                       <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
                     )}
@@ -1314,6 +1347,7 @@ export default function Step3Bot() {
                 </label>
                 <input
                   id="setupDeadline"
+                  {...fieldAria('setupDeadline')}
                   type="text"
                   value={step3.setupDeadline}
                   onChange={(e) => updateStep3({ setupDeadline: e.target.value })}
@@ -1323,8 +1357,9 @@ export default function Step3Bot() {
                     : 'border-input focus:border-[#ff7b00]'
                     }`}
                 />
+                {!setupDeadlineBlackoutError && <FieldError field="setupDeadline" />}
                 {setupDeadlineBlackoutError ? (
-                  <div className="p-3 bg-red-50 border border-red-500 rounded-md">
+                  <div id="setupDeadline-error" role="alert" className="p-3 bg-red-50 border border-red-500 rounded-md">
                     <p className="text-[13px] text-red-600">{setupDeadlineBlackoutError.message}</p>
                   </div>
                 ) : (

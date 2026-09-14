@@ -50,7 +50,7 @@ export default function Footer({ onNavigate }: FooterProps) {
                   자주 묻는 질문
                 </a>
                 <a {...navLinkProps('terms', onNavigate)} className={footerLinkClass}>
-                  약관 및 안내
+                  이용안내
                 </a>
                 <a
                   href="https://crepe.cm/@longwhile/lw5w0ofg"

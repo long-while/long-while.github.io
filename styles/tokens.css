@@ -295,6 +295,42 @@
   cursor: not-allowed;
 }
 
+/* ----------------------------------------
+ * 필드 단위 오류
+ * 검증에 걸린 입력칸에는 useFieldAria 가 aria-invalid="true" 를 붙인다.
+ * 그 속성을 그대로 스타일 훅으로 쓰면 입력칸마다 클래스를 덧붙일 필요가 없고,
+ * 오류 메시지를 어디에 두든(인접 형제가 아니어도) 테두리가 정상 동작한다.
+ * ---------------------------------------- */
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #dc2626;
+}
+
+input[aria-invalid='true'],
+textarea[aria-invalid='true'],
+select[aria-invalid='true'] {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18);
+}
+
+input[aria-invalid='true']:focus,
+textarea[aria-invalid='true']:focus,
+select[aria-invalid='true']:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35);
+}
+
+/* 입력칸이 아닌 묶음(라디오/체크박스 그룹, 날짜 3칸)은 블록 단위로 표시한다 */
+.field-group-error {
+  border-left: 3px solid #ef4444;
+  padding-left: 12px;
+}
+
 .form-option {
   display: flex;
   align-items: center;

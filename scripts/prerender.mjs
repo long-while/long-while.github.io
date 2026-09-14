@@ -95,7 +95,10 @@ function serviceSchema(route) {
 }
 
 function schemasForRoute(route) {
-  if (route.page === 'home') return [organizationSchema(), webSiteSchema(), faqSchema()];
+  // FAQPage 구조화 데이터는 질문 전체가 실제로 실린 /faq/ 에만 붙인다.
+  // (메인에는 대표 질문 4개만 남아 있어 스키마와 본문이 어긋난다)
+  if (route.page === 'home') return [organizationSchema(), webSiteSchema()];
+  if (route.page === 'faq') return [faqSchema()];
   if (route.page === 'server' || route.page === 'bot') return [serviceSchema(route)];
   return [];
 }

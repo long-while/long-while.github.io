@@ -1,4 +1,5 @@
 import { useOrder } from '@/app/contexts/OrderContext';
+import { FieldError, FieldGroupError, useFieldAria } from '@/app/contexts/FieldErrorContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { useState, useEffect, useMemo } from 'react';
 import { validateCharacterLimit, computeRequiredFastDeadline, getDeadlineBlackoutError, validateAccountId, DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
@@ -19,6 +20,7 @@ function FromCartBadge() {
 
 export default function Step2Server() {
   const { formData, updateStep2, cartSyncState } = useOrder();
+  const fieldAria = useFieldAria();
   const { serverCalcResult } = useEstimate();
   const step2 = formData.step2;
   // 장기 소규모 서버 선택 시: 검색 기능(검색 서버) 추가 불가 (월 1만원 서버비 유지)
@@ -156,28 +158,31 @@ export default function Step2Server() {
             서버 설치 기본 비용: <span className="font-medium text-[#ff7b00]">20,000원</span>
           </p>
         </label>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="applyServerInstall"
-              checked={step2.applyServerInstall === 'yes'}
-              onChange={() => handleServerInstallChange('yes')}
-              className="w-5 h-5 accent-[#ff7b00] cursor-pointer"
-            />
-            <span className="text-[14px]">예</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-            <input
-              type="radio"
-              name="applyServerInstall"
-              checked={step2.applyServerInstall === 'no'}
-              onChange={() => handleServerInstallChange('no')}
-              className="w-5 h-5 accent-[#ff7b00] cursor-pointer"
-            />
-            <span className="text-[14px]">아니오</span>
-          </label>
-        </div>
+        <FieldGroupError field="applyServerInstall">
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                id="applyServerInstall"
+                type="radio"
+                name="applyServerInstall"
+                checked={step2.applyServerInstall === 'yes'}
+                onChange={() => handleServerInstallChange('yes')}
+                className="w-5 h-5 accent-[#ff7b00] cursor-pointer"
+              />
+              <span className="text-[14px]">예</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+              <input
+                type="radio"
+                name="applyServerInstall"
+                checked={step2.applyServerInstall === 'no'}
+                onChange={() => handleServerInstallChange('no')}
+                className="w-5 h-5 accent-[#ff7b00] cursor-pointer"
+              />
+              <span className="text-[14px]">아니오</span>
+            </label>
+          </div>
+        </FieldGroupError>
       </div>
 
       {/* 서버 설치 "예" 선택 시에만 표시되는 옵션들 */}
@@ -379,6 +384,7 @@ export default function Step2Server() {
                   </label>
                   <input
                     id="characterLimitValue"
+                    {...fieldAria('characterLimitValue')}
                     type="number"
                     min="1"
                     value={step2.characterLimitValue || ''}
@@ -391,8 +397,9 @@ export default function Step2Server() {
                       : 'border-input focus:border-[#ff7b00]'
                       }`}
                   />
+                  {!characterLimitError && <FieldError field="characterLimitValue" />}
                   {characterLimitError && (
-                    <div className="p-3 bg-red-50 border border-red-500 rounded-md">
+                    <div id="characterLimitValue-error" role="alert" className="p-3 bg-red-50 border border-red-500 rounded-md">
                       <p className="text-[13px] text-red-600">{characterLimitError}</p>
                     </div>
                   )}
@@ -478,6 +485,7 @@ export default function Step2Server() {
             </label>
 
             {/* 빠른 마감 */}
+            <FieldGroupError field="fastDeadline">
             <div className="space-y-3">
               <label className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 hover:shadow-sm ${step2.fastDeadline
                 ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
@@ -604,6 +612,7 @@ export default function Step2Server() {
                 </div>
               )}
             </div>
+            </FieldGroupError>
           </div>
 
           {/* 4) 기타 정보 */}
@@ -616,6 +625,7 @@ export default function Step2Server() {
                 </label>
                 <input
                   id="desiredDeadline"
+                  {...fieldAria('desiredDeadline')}
                   type="text"
                   value={step2.desiredDeadline}
                   onChange={(e) => updateStep2({ desiredDeadline: e.target.value })}
@@ -625,8 +635,9 @@ export default function Step2Server() {
                     : 'border-input focus:border-[#ff7b00]'
                     }`}
                 />
+                {!deadlineBlackoutError && <FieldError field="desiredDeadline" />}
                 {deadlineBlackoutError ? (
-                  <div className="p-3 bg-red-50 border border-red-500 rounded-md">
+                  <div id="desiredDeadline-error" role="alert" className="p-3 bg-red-50 border border-red-500 rounded-md">
                     <p className="text-[13px] text-red-600">{deadlineBlackoutError.message}</p>
                   </div>
                 ) : (
@@ -649,6 +660,7 @@ export default function Step2Server() {
                 </label>
                 <input
                   id="adminAccountId"
+                  {...fieldAria('adminAccountId')}
                   type="text"
                   value={step2.adminAccountId}
                   onChange={(e) => {
@@ -670,8 +682,9 @@ export default function Step2Server() {
                     : 'border-input focus:border-[#ff7b00]'
                     }`}
                 />
+                {!adminAccountError && <FieldError field="adminAccountId" />}
                 {adminAccountError ? (
-                  <div className="p-3 bg-red-50 border border-red-500 rounded-md">
+                  <div id="adminAccountId-error" role="alert" className="p-3 bg-red-50 border border-red-500 rounded-md">
                     <p className="text-[13px] text-red-600">{adminAccountError}</p>
                   </div>
                 ) : (

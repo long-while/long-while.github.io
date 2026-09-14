@@ -3,7 +3,10 @@ import type { OrderFormData, Step1Data, Step2Data, Step3Data, Step4Data } from '
 import { ORDER_STORAGE_KEY, SCHEMA_VERSION } from '@/app/types/order';
 import { FORM_CONFIG } from '@/app/constants/form';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
-import { syncCartToOrderData, loadSyncState, clearSyncState, type CartSyncState } from '@/app/utils/cartOrderSync';
+import { syncCartToOrderData, loadSyncState, clearSyncState } from '@/app/utils/cartOrderSync';
+// cartOrderSync 는 이 타입을 re-export 하지 않으므로 원본에서 가져온다.
+// (예전에는 잘못된 경로라 cartSyncState 가 any 로 무너져 있었다)
+import type { CartSyncState } from '@/app/types/estimate-mapping';
 
 interface OrderContextType {
   formData: OrderFormData;

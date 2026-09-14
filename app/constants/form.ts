@@ -99,7 +99,13 @@ export const SERVER_INSTALL_ITEM_NAME = '마스토돈 서버 설치';
  * 개별 선택/해제가 불가능하며, 장기 소규모 서버는 제외된다.
  */
 export const SERVER_INFRA_FEE_ITEM = {
+  /**
+   * 견적 항목의 식별 키로도 쓰이므로 바꾸지 말 것.
+   * (localStorage 에 저장된 장바구니를 이름으로 대조한다 — syncInfraFeeItem 참고)
+   */
   name: '도메인·메일(SMTP) 부가비용',
+  /** 크레페로 보내는 복사 텍스트에서 쓰는 짧은 이름 */
+  copyLabel: '부가비용',
   price: PRICING_CONFIG.server.infraFee,
   description: '도메인 구입과 메일 발송(SMTP) 서비스에 나가는 실비입니다. 서버 설치에 자동 포함되며 따로 해제하실 수 없어요.',
 } as const;

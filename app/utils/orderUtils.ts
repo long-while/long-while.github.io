@@ -338,6 +338,30 @@ export function validateBotSymbol(symbol: string): ValidationError | null {
 }
 
 /**
+ * 커뮤니티 구글 계정 검증
+ *
+ * 입력란은 Step 4(최종 확인)에 있습니다. 비밀번호는 브라우저에 저장되지 않기 때문에,
+ * 신청서를 복사해 제출하기 직전에 받는 편이 중간에 날아갈 위험이 적습니다.
+ */
+export function validateGoogleAccount(data: OrderFormData['step1']): ValidationError[] {
+  const errors: ValidationError[] = [];
+
+  if (!data.googleEmail.trim()) {
+    errors.push({ field: 'googleEmail', message: '구글 이메일을 입력해 주세요.' });
+  } else if (!isValidGmail(data.googleEmail)) {
+    errors.push({ field: 'googleEmail', message: '올바른 Gmail 주소를 입력해 주세요. (예: example@gmail.com)' });
+  }
+
+  if (!data.googlePassword.trim()) {
+    errors.push({ field: 'googlePassword', message: '구글 비밀번호를 입력해 주세요.' });
+  } else if (data.googlePassword.length < 8) {
+    errors.push({ field: 'googlePassword', message: '비밀번호는 최소 8자 이상이어야 합니다.' });
+  }
+
+  return errors;
+}
+
+/**
  * Step 1 필수 필드 검증
  */
 export function validateStep1(data: OrderFormData['step1']): ValidationError[] {
@@ -380,20 +404,6 @@ export function validateStep1(data: OrderFormData['step1']): ValidationError[] {
     errors.push({ field: 'communityEnglishName', message: '영어 이름을 입력해 주세요.' });
   } else if (data.communityEnglishName.length > INPUT_LIMITS.communityEnglishName) {
     errors.push({ field: 'communityEnglishName', message: `영어 이름은 ${INPUT_LIMITS.communityEnglishName}자 이하여야 합니다.` });
-  }
-
-  // Gmail 검증
-  if (!data.googleEmail.trim()) {
-    errors.push({ field: 'googleEmail', message: '구글 이메일을 입력해 주세요.' });
-  } else if (!isValidGmail(data.googleEmail)) {
-    errors.push({ field: 'googleEmail', message: '올바른 Gmail 주소를 입력해 주세요. (예: example@gmail.com)' });
-  }
-
-  // 비밀번호 검증
-  if (!data.googlePassword.trim()) {
-    errors.push({ field: 'googlePassword', message: '구글 비밀번호를 입력해 주세요.' });
-  } else if (data.googlePassword.length < 8) {
-    errors.push({ field: 'googlePassword', message: '비밀번호는 최소 8자 이상이어야 합니다.' });
   }
 
   // 장기 소규모 서버 체크 시 안내 확인('확인했습니다') 필수
@@ -897,6 +907,14 @@ function formatDateForDisplay(date: string): string {
 }
 
 /**
+ * 구글 계정이 비어 있을 때 복사 텍스트에 남기는 표시.
+ * 예전에는 빈 값이 그대로 들어가 'abc@gmail.com / ' 처럼 보였고,
+ * 신청자도 받는 쪽도 누락을 알아채지 못한 채 접수되는 일이 반복됐다.
+ */
+export const MISSING_GOOGLE_EMAIL_MARK = '[!] 이메일 미입력 — 신청자 확인 필요';
+export const MISSING_GOOGLE_PASSWORD_MARK = '[!] 비밀번호 미입력 — 신청자 확인 필요';
+
+/**
  * 최종 복사용 텍스트 생성
  */
 export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, serverCalcResult?: ServerCalcResult | null): string {
@@ -914,7 +932,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
   } else {
     text += `${formatDateForDisplay(step1.openingDate)} ~ ${formatDateForDisplay(step1.closingDate)} (${step1.operationWeeks}주)\n\n`;
   }
-  text += `${step1.googleEmail} / ${step1.googlePassword}\n\n`;
+  // 빈 값이 'abc@gmail.com / ' 처럼 조용히 지나가면 받는 쪽에서 누락을 알아채기 어렵다.
+  // 검증에서 걸러지지만, 혹시 빠져나가더라도 눈에 띄도록 표시를 남긴다.
+  text += `${step1.googleEmail.trim() || MISSING_GOOGLE_EMAIL_MARK} / ${step1.googlePassword.trim() || MISSING_GOOGLE_PASSWORD_MARK}\n\n`;
   text += `커미션 신청자명 : ${step1.applicantNickname}\n\n`;
 
   text += divider;
@@ -950,7 +970,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
 
     if (infraFeeApplied) {
-      text += `+ ${SERVER_INFRA_FEE_ITEM.name}\n`;
+      text += `+ ${SERVER_INFRA_FEE_ITEM.copyLabel}\n`;
     }
     if (step2.additionalOption) {
       const optionNames: Record<string, string> = {
@@ -1097,7 +1117,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
   if (step2.applyServerInstall === 'yes') {
     text += `서버 설치 ${server.base.toLocaleString()}\n`;
     if (infraFeeApplied) {
-      text += `${SERVER_INFRA_FEE_ITEM.name} ${server.infraFee.toLocaleString()}\n`;
+      text += `${SERVER_INFRA_FEE_ITEM.copyLabel} ${server.infraFee.toLocaleString()}\n`;
     }
 
     if (step2.additionalOption) {

@@ -1,27 +1,33 @@
 import { useState } from 'react';
 import { ArrowRightIcon, ChevronDownIcon } from '@/app/components/icons';
-import { ClipboardList, ChatBubbleText, Rocket } from 'griddy-icons';
+import { ShoppingBasket, Send, ChatBubbleText, Rocket } from 'griddy-icons';
 import type { ReactNode } from 'react';
 
 export default function Process() {
   const [showDetailedSteps, setShowDetailedSteps] = useState(false);
 
-  // 간소화된 3단계 요약
+  // 간소화된 4단계 요약
   const simpleSteps: { number: string; title: string; description: string; icon: ReactNode }[] = [
     {
       number: "01",
-      title: "서비스 선택 & 신청서 작성",
-      description: "원하는 옵션을 견적에 담고, 온라인 신청서를 작성해주세요.",
-      icon: <ClipboardList size={28} color="var(--brand-primary)" />
+      title: "서비스 선택 & 견적 확인",
+      description: "원하는 옵션을 견적에 담고, 예상 금액을 미리 확인하세요.",
+      icon: <ShoppingBasket size={28} color="var(--brand-primary)" />
     },
     {
       number: "02",
+      title: "신청서 작성 후 크레페로 제출",
+      description: "온라인 신청서를 작성하고, 복사된 내용을 크레페로 보내주세요.",
+      icon: <Send size={28} color="var(--brand-primary)" />
+    },
+    {
+      number: "03",
       title: "조율 & 견적서 확인",
       description: "마감일, 추가 요청사항을 조율하고 최종 견적서를 확인합니다.",
       icon: <ChatBubbleText size={28} color="var(--brand-primary)" />
     },
     {
-      number: "03",
+      number: "04",
       title: "결제 & 작업 진행",
       description: "작업 일자가 가까워지면 결제 요청을 보내드리고, 완료 후 전달드립니다.",
       icon: <Rocket size={28} color="var(--brand-primary)" />
@@ -85,8 +91,8 @@ export default function Process() {
         </h2>
       </div>
 
-      {/* 간소화된 3단계 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      {/* 간소화된 4단계 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {simpleSteps.map((step, index) => (
           <div 
             key={index} 

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { calculateTotalEstimate, generateCopyText, hasServerInfraFee } from '@/app/utils/orderUtils';
+import { calculateTotalEstimate, generateCopyText, hasServerInfraFee, validateGoogleAccount } from '@/app/utils/orderUtils';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
 import { CheckCircle as CheckCircleIcon } from 'griddy-icons';
@@ -9,16 +9,24 @@ import { CheckCircle as CheckCircleIcon } from 'griddy-icons';
 const CREPE_URL = 'https://crepe.cm/@longwhile/lw5w0ofg';
 
 export default function Step4Review() {
-  const { formData, setCurrentStep } = useOrder();
+  const { formData, setCurrentStep, updateStep1, restoredFromStorage } = useOrder();
   const { serverCalcResult } = useEstimate();
   const { step1, step2, step3 } = formData;
+  // 임시저장 복원 시 비밀번호는 저장되지 않아 비어 있으므로 재입력 안내
+  const passwordNeedsReentry = restoredFromStorage && step1.googlePassword.trim() === '';
   const [policyConfirmed, setPolicyConfirmed] = useState(false);
+  // 구글 계정 오류는 복사를 한 번 시도한 뒤부터 보여준다 (입력 전부터 빨갛게 두지 않도록)
+  const [googleErrorsShown, setGoogleErrorsShown] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // 클립보드 복사가 실패했을 때 직접 선택해 복사할 수 있도록 원문을 보여준다
+  const [copyFailed, setCopyFailed] = useState(false);
+  const [showCopyText, setShowCopyText] = useState(false);
+  const copyTextAreaRef = useRef<HTMLTextAreaElement>(null);
 
   // 실시간 견적 계산
   const estimate = useMemo(() => {
@@ -40,7 +48,26 @@ export default function Step4Review() {
   // 도메인·SMTP 실비 부과 여부 (서버 설치 신청 시 자동 포함, 장기 소규모는 제외)
   const infraFeeApplied = hasServerInfraFee(formData);
 
-  // 복사 버튼 활성화 조건: 체크박스 선택 시
+  /**
+   * 화면에 보여 주는 신청서 원문.
+   * 스냅샷으로 굳히면, 복사한 뒤 이 화면에서 구글 계정을 고쳤을 때
+   * '내용 보기'가 옛 값을 보여 주고 그대로 다시 복사돼 버린다. 항상 현재 값에서 파생시킨다.
+   */
+  const copyTextPreview = useMemo(
+    () => generateCopyText(formData, estimate, serverCalcResult),
+    [formData, estimate, serverCalcResult]
+  );
+
+  // 구글 계정 검증 (Step 1 에서 이 단계로 옮겨온 항목)
+  const googleErrors = useMemo(() => validateGoogleAccount(step1), [step1]);
+
+  const googleErrorFor = useCallback(
+    (field: string) =>
+      googleErrorsShown ? googleErrors.find((e) => e.field === field)?.message ?? null : null,
+    [googleErrors, googleErrorsShown]
+  );
+
+  // 복사 버튼 활성화 조건: 정책 동의 체크
   const isCopyEnabled = policyConfirmed && !isCopying;
 
   // 카운트다운 정리
@@ -71,13 +98,23 @@ export default function Step4Review() {
   const handleCopy = useCallback(async () => {
     if (!isCopyEnabled) return;
 
+    // 구글 계정이 비어 있으면 복사 전에 막고 해당 입력칸으로 보낸다
+    if (googleErrors.length > 0) {
+      setGoogleErrorsShown(true);
+      setError('커뮤니티 구글 계정을 입력해 주세요.');
+      document.getElementById('googleAccount')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById(googleErrors[0].field)?.focus({ preventScroll: true });
+      return;
+    }
+
     setIsCopying(true);
     setError(null);
 
-    const copyText = generateCopyText(formData, estimate, serverCalcResult);
-    const result = await copyToClipboard(copyText);
+    const result = await copyToClipboard(copyTextPreview);
 
     if (result.success) {
+      setCopyFailed(false);
+      setShowCopyText(false);
       setCopySuccess(true);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -100,10 +137,26 @@ export default function Step4Review() {
       }, 1000);
     } else {
       setError(result.error);
+      // 복사에 실패하면 원문을 바로 펼쳐서 직접 선택할 수 있게 한다
+      setCopyFailed(true);
+      setShowCopyText(true);
     }
 
     setIsCopying(false);
-  }, [formData, estimate, isCopyEnabled]);
+  }, [copyTextPreview, isCopyEnabled, googleErrors]);
+
+  /** 복사 실패 시 원문 전체를 선택해 준다 (사용자는 Ctrl+C 만 누르면 된다) */
+  const selectCopyText = useCallback(() => {
+    const textarea = copyTextAreaRef.current;
+    if (!textarea) return;
+    textarea.focus();
+    textarea.select();
+  }, []);
+
+  // 복사 원문이 펼쳐지면 바로 선택해 둔다
+  useEffect(() => {
+    if (showCopyText && copyFailed) selectCopyText();
+  }, [showCopyText, copyFailed, selectCopyText]);
 
   // 수정 버튼 핸들러
   const handleEdit = useCallback((step: 1 | 2 | 3) => {
@@ -155,8 +208,14 @@ export default function Step4Review() {
             <p className="text-[15px]">{step1.applicantNickname || '-'}</p>
           </div>
           <div>
-            <p className="text-[13px] text-gray-500 mb-1">구글 이메일</p>
-            <p className="text-[15px]">{step1.googleEmail || '-'}</p>
+            <p className="text-[13px] text-gray-500 mb-1">구글 계정</p>
+            <p className="text-[15px]">
+              {step1.googleEmail || <span className="text-red-600 font-medium">이메일 미입력</span>}
+              {' / '}
+              {step1.googlePassword
+                ? '비밀번호 입력됨'
+                : <span className="text-red-600 font-medium">비밀번호 미입력</span>}
+            </p>
           </div>
           <div>
             <p className="text-[13px] text-gray-500 mb-1">커뮤니티</p>
@@ -627,10 +686,122 @@ export default function Step4Review() {
         </div>
       </div>
 
+      {/* 커뮤니티 구글 계정 (제출 직전에 받는다 — 비밀번호는 저장되지 않기 때문) */}
+      <div id="googleAccount" className="p-6 bg-white border border-border rounded-lg scroll-mt-24">
+        <h3 className="text-[18px] font-semibold mb-2">
+          커뮤니티 구글 계정 <span className="text-red-500" aria-hidden="true">*</span>
+        </h3>
+        <p className="text-[13px] text-gray-600 mb-4">
+          서버 설치와 자동봇 운영을 위해 커뮤니티의 구글 계정이 필요합니다.<br />
+          개인 구글계정을 사용하셔도 상관은 없으나, 개인정보 보호를 위해 새로운 계정을 개설하시는 걸 추천드립니다.
+        </p>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="googleEmail" className="block text-[14px] font-medium">
+              커뮤니티 구글 이메일 주소 <span className="text-red-500" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="googleEmail"
+              type="email"
+              value={step1.googleEmail}
+              onChange={(e) => updateStep1({ googleEmail: e.target.value })}
+              placeholder="example@gmail.com"
+              aria-required="true"
+              aria-invalid={Boolean(googleErrorFor('googleEmail'))}
+              aria-describedby={googleErrorFor('googleEmail') ? 'googleEmail-error' : undefined}
+              className="form-input"
+            />
+            {googleErrorFor('googleEmail') && (
+              <p id="googleEmail-error" role="alert" className="field-error">
+                <span aria-hidden="true">⚠</span>
+                <span>{googleErrorFor('googleEmail')}</span>
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="googlePassword" className="block text-[14px] font-medium">
+              구글 비밀번호 <span className="text-red-500" aria-hidden="true">*</span>
+            </label>
+            <p className="text-[12px] text-amber-600 bg-[#fff1e3] p-2 rounded-md mb-2">
+              비밀번호는 브라우저에 저장되지 않으며, 페이지를 떠나면 입력 내용이 삭제됩니다.
+            </p>
+            {passwordNeedsReentry && (
+              <p
+                role="alert"
+                className="text-[12px] text-red-600 bg-red-50 border border-red-300 p-2 rounded-md mb-2 flex items-start gap-1.5"
+              >
+                <span aria-hidden="true">⚠</span>
+                <span>저장된 신청서를 불러왔어요. 비밀번호는 보안상 저장되지 않으니, <strong>여기부터 다시 입력</strong>해 주세요.</span>
+              </p>
+            )}
+            <input
+              id="googlePassword"
+              type="password"
+              value={step1.googlePassword}
+              onChange={(e) => updateStep1({ googlePassword: e.target.value })}
+              placeholder="비밀번호 입력"
+              aria-required="true"
+              aria-invalid={Boolean(googleErrorFor('googlePassword'))}
+              aria-describedby={googleErrorFor('googlePassword') ? 'googlePassword-error' : undefined}
+              autoComplete="new-password"
+              className="form-input"
+            />
+            {googleErrorFor('googlePassword') && (
+              <p id="googlePassword-error" role="alert" className="field-error">
+                <span aria-hidden="true">⚠</span>
+                <span>{googleErrorFor('googlePassword')}</span>
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* 에러 메시지 */}
       {error && (
         <div className="p-4 bg-red-50 border border-red-500 rounded-lg animate-bounceIn">
           <p className="text-[14px] text-red-700 text-center">{error}</p>
+        </div>
+      )}
+
+      {/* 복사한 내용 보기
+          복사에 실패하면 '직접 선택해서 복사'하라고 안내하는데, 화면에 그 텍스트가 없으면
+          사용자가 할 수 있는 게 없다. 실패 시에는 펼친 상태로, 성공 후에는 접은 상태로 보여준다. */}
+      {(copyFailed || copySuccess) && (
+        <div className={`border rounded-lg ${copyFailed ? 'border-red-500 bg-red-50/40' : 'border-border'}`}>
+          <button
+            type="button"
+            onClick={() => setShowCopyText((open) => !open)}
+            aria-expanded={showCopyText}
+            className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-black/[0.02] transition-colors rounded-lg focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+          >
+            <span className="text-[15px] font-medium">
+              {copyFailed ? '아래 내용을 직접 선택해서 복사해 주세요' : '신청서 내용 보기'}
+            </span>
+            <span className="text-[13px] text-gray-500">{showCopyText ? '접기' : '펼치기'}</span>
+          </button>
+
+          {showCopyText && (
+            <div className="px-5 pb-5 space-y-3">
+              <textarea
+                ref={copyTextAreaRef}
+                readOnly
+                value={copyTextPreview}
+                rows={12}
+                aria-label="신청서 복사 내용"
+                onFocus={(e) => e.currentTarget.select()}
+                className="w-full px-4 py-3 border border-input rounded-md font-mono text-[13px] leading-[1.7] bg-white resize-y"
+              />
+              <button
+                type="button"
+                onClick={selectCopyText}
+                className="px-4 py-2 border border-[#ff7b00] text-[#ff7b00] rounded-md text-[14px] font-medium hover:bg-[#fff5eb] transition-colors focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+              >
+                전체 선택
+              </button>
+            </div>
+          )}
         </div>
       )}
 

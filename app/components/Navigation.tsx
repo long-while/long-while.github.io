@@ -12,6 +12,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
   const navItems: MenuItem[] = [
     { id: 'server', label: '서버 커미션' },
     { id: 'bot', label: '자동봇 커미션' },
+    { id: 'terms', label: '이용안내' },
     { id: 'faq', label: 'FAQ' },
   ];
 

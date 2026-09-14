@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import { validateStep1, validateStep2, validateStep3 } from '@/app/utils/orderUtils';
+import { FieldErrorProvider } from '@/app/contexts/FieldErrorContext';
+import type { ValidationError } from '@/app/types/order';
 import Step1Applicant from './steps/Step1Applicant';
 import Step2Server from './steps/Step2Server';
 import Step3Bot from './steps/Step3Bot';
@@ -8,11 +10,7 @@ import Step4Review from './steps/Step4Review';
 import { CheckCircle, X } from 'lucide-react';
 import { AlertTriangle } from 'griddy-icons';
 
-interface OrderFormProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function OrderForm({ onNavigate }: OrderFormProps) {
+export default function OrderForm() {
   const { formData, currentStep, setCurrentStep, cartSyncState, clearCartSync } = useOrder();
   const [showSyncNotice, setShowSyncNotice] = useState(false);
 
@@ -22,8 +20,12 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
       setShowSyncNotice(true);
     }
   }, [cartSyncState]);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  /** '다음'을 한 번 눌러 검증이 돌았는지. 그 뒤부터는 입력할 때마다 오류를 다시 계산한다 */
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  /** 잠긴 단계를 눌렀을 때의 안내. 특정 입력칸의 오류가 아니라 별도로 보여준다 */
+  const [stepNotice, setStepNotice] = useState<string | null>(null);
 
   // 각 스텝의 완료 여부 확인 (통합 검증 함수 사용)
   const isStepComplete = useCallback((step: number): boolean => {
@@ -57,26 +59,53 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
     4: canAccessStep(4),
   }), [canAccessStep]);
 
-  const handleNext = () => {
-    // Step별 통합 검증 함수 사용
-    let errors: { field: string; message: string }[] = [];
-
-    if (currentStep === 1) {
-      errors = validateStep1(formData.step1);
-    } else if (currentStep === 2) {
-      errors = validateStep2(formData.step2);
-    } else if (currentStep === 3) {
-      errors = validateStep3(formData.step3);
+  /**
+   * 상단 오류 목록에서 항목을 누르면 해당 입력칸으로 이동해 포커스를 준다.
+   * 입력칸 id 와 검증 field 이름이 같은 경우에만 동작하고, 아니면 그룹 위치로 스크롤한다.
+   */
+  const focusField = (field: string) => {
+    const input = document.getElementById(field);
+    // disabled 입력칸에는 포커스가 들어가지 않으므로 메시지 위치로 보낸다
+    if (input && !(input as HTMLInputElement).disabled) {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (input as HTMLElement).focus({ preventScroll: true });
+      return;
     }
+    const anchor = document.getElementById(`${field}-error`) ?? input;
+    anchor?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  /** 현재 단계의 검증 결과 */
+  const errorsForCurrentStep = useCallback((): ValidationError[] => {
+    if (currentStep === 1) return validateStep1(formData.step1);
+    if (currentStep === 2) return validateStep2(formData.step2);
+    if (currentStep === 3) return validateStep3(formData.step3);
+    return [];
+  }, [currentStep, formData]);
+
+  /**
+   * '다음'을 한 번 누른 뒤에는 사용자가 값을 고칠 때마다 오류를 다시 계산한다.
+   * 그러지 않으면 고친 입력칸이 다음 '다음' 클릭 전까지 계속 빨갛게 남는다.
+   */
+  useEffect(() => {
+    if (!submitAttempted) return;
+    setValidationErrors(errorsForCurrentStep());
+  }, [submitAttempted, errorsForCurrentStep]);
+
+  const handleNext = () => {
+    const errors = errorsForCurrentStep();
+    setStepNotice(null);
 
     if (errors.length > 0) {
-      setValidationErrors(errors.map(e => e.message));
+      setSubmitAttempted(true);
+      setValidationErrors(errors);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
+    setSubmitAttempted(false);
     setValidationErrors([]);
-    
+
     if (currentStep < 4) {
       setIsTransitioning(true);
       setTimeout(() => {
@@ -101,6 +130,8 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
   // 스텝 변경 시 에러 초기화
   useEffect(() => {
     setValidationErrors([]);
+    setSubmitAttempted(false);
+    setStepNotice(null);
   }, [currentStep]);
 
   const renderProgressBar = () => {
@@ -155,7 +186,7 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
                   key={step.num}
                   onClick={() => {
                     if (!isAccessible) {
-                      setValidationErrors(['이전 단계를 먼저 완료해 주세요.']);
+                      setStepNotice('이전 단계를 먼저 완료해 주세요.');
                       return;
                     }
                     setIsTransitioning(true);
@@ -235,6 +266,20 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
         </div>
       )}
 
+      {/* 잠긴 단계를 눌렀을 때의 안내 */}
+      {stepNotice && (
+        <div role="status" className="mb-6 p-4 bg-amber-50 border border-amber-400 rounded-md flex items-center justify-between gap-4">
+          <p className="text-[14px] text-amber-800">{stepNotice}</p>
+          <button
+            onClick={() => setStepNotice(null)}
+            className="p-1 hover:bg-amber-100 rounded-full transition-colors shrink-0"
+            aria-label="알림 닫기"
+          >
+            <X className="w-4 h-4 text-amber-700" />
+          </button>
+        </div>
+      )}
+
       {/* 검증 에러 표시 - 애니메이션 추가 */}
       {validationErrors.length > 0 && (
         <div 
@@ -249,14 +294,20 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
           </h3>
           <ul className="list-disc list-inside space-y-1">
             {validationErrors.map((error, idx) => (
-              <li 
-                key={idx} 
+              <li
+                key={`${error.field}-${idx}`}
                 className="text-[14px] text-red-600"
                 style={{
                   animation: `fadeInUp 0.3s ease-out ${idx * 0.1}s both`
                 }}
               >
-                {error}
+                <button
+                  type="button"
+                  onClick={() => focusField(error.field)}
+                  className="text-left underline decoration-red-300 underline-offset-2 hover:decoration-red-600 focus-visible:outline-2 focus-visible:outline-red-500 focus-visible:outline-offset-2 rounded"
+                >
+                  {error.message}
+                </button>
               </li>
             ))}
           </ul>
@@ -269,10 +320,12 @@ export default function OrderForm({ onNavigate }: OrderFormProps) {
           isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
         }`}
       >
-        {currentStep === 1 && <Step1Applicant onNavigate={onNavigate} />}
-        {currentStep === 2 && <Step2Server />}
-        {currentStep === 3 && <Step3Bot />}
-        {currentStep === 4 && <Step4Review />}
+        <FieldErrorProvider errors={validationErrors}>
+          {currentStep === 1 && <Step1Applicant />}
+          {currentStep === 2 && <Step2Server />}
+          {currentStep === 3 && <Step3Bot />}
+          {currentStep === 4 && <Step4Review />}
+        </FieldErrorProvider>
       </div>
 
       {/* 네비게이션 버튼 */}
