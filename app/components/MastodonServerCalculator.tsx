@@ -346,8 +346,8 @@ export default function MastodonServerCalculator({
           <div className="border border-border bg-gray-50/50 px-4 py-4 space-y-1.5">
             <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">규모와 예산</p>
             <p className="text-[13px] text-foreground/60 leading-[1.75]">
-              사양과 서버비는 계단처럼 증가하기 때문에, 11인 규모와 30인 규모가 동일한 사양의 서버를 사용하게 될 수도 있습니다.
-              이 경우, 11인 서버는 널널하지만 30인 서버는 다소 렉이 발생할 수 있습니다.
+              사양과 서버비는 계단처럼 증가하기 때문에, 11인 규모와 25인 규모가 동일한 사양의 서버를 사용하게 될 수도 있습니다.
+              이 경우, 11인 서버는 널널하지만 25인 서버는 다소 렉이 발생할 수 있습니다.
               좁은 공간에 많은 사람이 들어와 있으니까요.
               이때, 서버비 증가를 감안하시고 더 넓은 서버를 선택하시거나,
               렉을 감안하고 예산에 맞추어 사양이 낮은 서버를 설치할 수도 있습니다.

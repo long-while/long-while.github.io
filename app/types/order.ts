@@ -61,6 +61,7 @@ export interface Step3Data {
   botEndDate: string; // MM/DD
   mainBot: MainBotType;
   cocBot: boolean;
+  trpg2d6Bot: boolean;
   omakaseBot: boolean;
   investigationBot: boolean;
   investigationDailyLimit: boolean;
@@ -84,6 +85,7 @@ export interface Step3Data {
   botSymbol: string;
   botAccountId: string;
   cocBotAccountId: string;
+  trpg2d6BotAccountId: string;
   investigationBotAccountId: string;
 }
 
@@ -148,6 +150,7 @@ export const INPUT_LIMITS = {
   adminAccountId: 100,
   botAccountId: 100,
   cocBotAccountId: 100,
+  trpg2d6BotAccountId: 100,
   investigationBotAccountId: 100,
   currencyUnit: 20,
   statList: 500,

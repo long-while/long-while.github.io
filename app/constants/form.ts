@@ -69,6 +69,7 @@ export const PRICING_CONFIG = {
     },
     addons: {
       cocBot: 30000,
+      trpg2d6Bot: 80000,
       reservationToot: 5000,
       autoProfileImage: 5000,
       tootCurrencyLink: 10000,

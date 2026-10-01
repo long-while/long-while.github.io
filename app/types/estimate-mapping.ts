@@ -23,7 +23,8 @@ export type EstimateMappingKey =
   | 'basicBot'           // → step3.mainBot = 'basic'
   | 'basicShopBot'       // → step3.mainBot = 'basicShop'
   | 'basicShopStatBot'   // → step3.mainBot = 'basicShopStat'
-  | 'cocBot'             // → step3.cocBot = true
+  | 'cocBot'             // → step3.cocBot = true (D100 타입)
+  | 'trpg2d6Bot'         // → step3.trpg2d6Bot = true (2D6 3종세트 타입)
   | 'omakaseBot'         // → step3.omakaseBot = true
   | 'reservationToot'    // → step3.reservationToot = true
   | 'autoProfileImage'   // → step3.autoProfileImage = true (스토리 자동 진행)
@@ -43,7 +44,7 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   // 서버 설치 기본 옵션
   '마스토돈 서버 설치': 'serverInstall',
   '자동봇 설치': 'botInstall',
-  
+
   // 서버 추가 옵션
   '로고만 변경': 'logo',
   '테마 1종 커스텀': 'dayTheme',  // 낮 또는 밤 1종
@@ -51,18 +52,24 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   '툿 글자수 제한 변경': 'characterLimit',
   '검색 기능': 'search',
   'masto.host 에서 서버 데이터 이전': 'mastoHostMigration',
-  
+
   // 빠른 마감 옵션
   '빠른마감: 48시간 내 기본 서버 설치': 'fastDeadline48hBasic',
   '빠른마감: 24시간 내 기본 서버 설치': 'fastDeadline24h',
   '빠른마감: 48시간 내 로고 변경 서버 설치': 'fastDeadline48hLogo',
   '빠른마감: 48시간 내 테마 커스텀 서버 설치': 'fastDeadline48hTheme',
-  
+
   // 봇 타입
   '기본 타입': 'basicBot',
   '기본&상점 타입': 'basicShopBot',
   '기본&상점&스탯 타입': 'basicShopStatBot',
+  'D100 룰 대응 TRPG봇': 'cocBot',
+  '2D6 룰 대응 TRPG봇 3종': 'trpg2d6Bot',
+  // 예전 이름으로 저장된 장바구니 호환
+  'D100 롤언더 판정 TRPG봇': 'cocBot',
+  '2D6 특기표 판정 TRPG봇 3종 세트': 'trpg2d6Bot',
   'CoC 타입': 'cocBot',
+  'D100 기반 TRPG봇': 'cocBot',
   '오마카세 타입': 'omakaseBot',
   '자동조사 타입': 'autoInvestigation',
 
@@ -101,13 +108,13 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   // 서버 설치
   serverInstall: [{ step: 2, field: 'applyServerInstall', value: 'yes' }],
   botInstall: [{ step: 3, field: 'applyBot', value: 'yes' }],
-  
+
   // 추가 옵션 (테마)
   logo: [{ step: 2, field: 'additionalOption', value: 'logo' }],
   dayTheme: [{ step: 2, field: 'additionalOption', value: 'dayTheme' }],
   nightTheme: [{ step: 2, field: 'additionalOption', value: 'nightTheme' }],
   bothTheme: [{ step: 2, field: 'additionalOption', value: 'bothTheme' }],
-  
+
   // 기타 서버 옵션
   characterLimit: [{ step: 2, field: 'changeCharacterLimit', value: true }],
   mastoHostMigration: [
@@ -118,7 +125,7 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
     { step: 2, field: 'applyServerInstall', value: 'yes' },
     { step: 2, field: 'searchOption', value: true }
   ],
-  
+
   // 빠른 마감
   fastDeadline48hBasic: [
     { step: 2, field: 'applyServerInstall', value: 'yes' },
@@ -137,7 +144,7 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
     { step: 2, field: 'fastDeadline', value: true },
     { step: 2, field: 'fastDeadlineOption', value: 'theme48h' }
   ],
-  
+
   // 메인 봇 타입
   basicBot: [
     { step: 3, field: 'applyBot', value: 'yes' },
@@ -151,11 +158,15 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
     { step: 3, field: 'applyBot', value: 'yes' },
     { step: 3, field: 'mainBot', value: 'basicShopStat' }
   ],
-  
+
   // 봇 추가 옵션
   cocBot: [
     { step: 3, field: 'applyBot', value: 'yes' },
     { step: 3, field: 'cocBot', value: true }
+  ],
+  trpg2d6Bot: [
+    { step: 3, field: 'applyBot', value: 'yes' },
+    { step: 3, field: 'trpg2d6Bot', value: true }
   ],
   omakaseBot: [
     { step: 3, field: 'applyBot', value: 'yes' },
@@ -166,7 +177,7 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   tootCurrencyLink: [{ step: 3, field: 'tootCurrencyLink', value: true }],
   transferFeature: [{ step: 3, field: 'transferFeature', value: true }],
   operationWeeks: [], // 특별 처리 필요 (값이 동적)
-  
+
   // 기타 봇 옵션
   customCommandUpgrade: [
     { step: 3, field: 'customCommandUpgrade', value: true }

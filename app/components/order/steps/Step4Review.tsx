@@ -1,7 +1,14 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { calculateTotalEstimate, generateCopyText, hasServerInfraFee, validateGoogleAccount } from '@/app/utils/orderUtils';
+import {
+  calculateTotalEstimate,
+  generateCopyText,
+  getPrimaryBotAccountLabel,
+  hasServerInfraFee,
+  isTrpg2d6AccountSeparate,
+  validateGoogleAccount,
+} from '@/app/utils/orderUtils';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
 import { CheckCircle as CheckCircleIcon } from 'griddy-icons';
@@ -329,7 +336,7 @@ export default function Step4Review() {
                   </p>
                 </div>
               )}
-              {(step3.cocBot || step3.customCommandUpgrade || step3.reservationToot || step3.autoProfileImage ||
+              {(step3.cocBot || step3.trpg2d6Bot || step3.customCommandUpgrade || step3.reservationToot || step3.autoProfileImage ||
                 step3.tootCurrencyLink || step3.transferFeature || step3.omakaseBot ||
                 (step3.investigationBot && step3.mainBot !== null) ||
                 (step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat'))) && (
@@ -337,7 +344,8 @@ export default function Step4Review() {
                     <p className="text-[13px] text-gray-500 mb-1">추가 옵션</p>
                     <p className="text-[15px]">
                       {[
-                        step3.cocBot && 'CoC 봇',
+                        step3.cocBot && 'D100 타입',
+                        step3.trpg2d6Bot && '2D6 3종세트 타입',
                         step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
                         step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null &&
                         `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`,
@@ -359,16 +367,24 @@ export default function Step4Review() {
                 const cocAccountActive = step3.cocBot && step3.mainBot !== null;
                 const investigationAccountActive =
                   step3.investigationBot && step3.mainBot !== null;
-                const hasSeparate = cocAccountActive || investigationAccountActive;
+                const trpg2d6AccountActive = isTrpg2d6AccountSeparate(step3);
+                const hasSeparate =
+                  cocAccountActive || investigationAccountActive || trpg2d6AccountActive;
+                const primaryLabel = getPrimaryBotAccountLabel(step3);
 
-                if (!step3.botAccountId && !step3.cocBotAccountId && !step3.investigationBotAccountId) {
+                if (
+                  !step3.botAccountId &&
+                  !step3.cocBotAccountId &&
+                  !step3.trpg2d6BotAccountId &&
+                  !step3.investigationBotAccountId
+                ) {
                   return null;
                 }
 
                 if (!hasSeparate) {
                   return step3.botAccountId ? (
                     <div>
-                      <p className="text-[13px] text-gray-500 mb-1">봇 계정</p>
+                      <p className="text-[13px] text-gray-500 mb-1">{primaryLabel}</p>
                       <p className="text-[15px]">{step3.botAccountId}</p>
                     </div>
                   ) : null;
@@ -379,10 +395,13 @@ export default function Step4Review() {
                     <p className="text-[13px] text-gray-500 mb-1">봇 계정 (분리)</p>
                     <div className="text-[15px] space-y-1">
                       {step3.botAccountId && (
-                        <p>메인 봇: {step3.botAccountId}</p>
+                        <p>{primaryLabel}: {step3.botAccountId}</p>
                       )}
                       {cocAccountActive && step3.cocBotAccountId && (
-                        <p>CoC 봇: {step3.cocBotAccountId}</p>
+                        <p>D100 봇 계정: {step3.cocBotAccountId}</p>
+                      )}
+                      {trpg2d6AccountActive && step3.trpg2d6BotAccountId && (
+                        <p>2D6 기본 다이스봇 아이디: {step3.trpg2d6BotAccountId}</p>
                       )}
                       {investigationAccountActive && step3.investigationBotAccountId && (
                         <p>조사 자동봇: {step3.investigationBotAccountId}</p>
@@ -538,8 +557,14 @@ export default function Step4Review() {
                 {/* 추가 옵션들 */}
                 {step3.cocBot && (
                   <div className="flex justify-between">
-                    <span>CoC 봇</span>
+                    <span>D100 타입</span>
                     <span>{PRICING_CONFIG.bot.addons.cocBot.toLocaleString()}원</span>
+                  </div>
+                )}
+                {step3.trpg2d6Bot && (
+                  <div className="flex justify-between">
+                    <span>2D6 3종세트 타입</span>
+                    <span>{PRICING_CONFIG.bot.addons.trpg2d6Bot.toLocaleString()}원</span>
                   </div>
                 )}
                 {step3.investigationBot && step3.mainBot !== null && (

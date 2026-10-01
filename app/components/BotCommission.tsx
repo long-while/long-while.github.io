@@ -13,10 +13,14 @@ interface BotCommissionProps {
 const MAIN_BOT_TYPES = ['기본 타입', '기본&상점 타입', '기본&상점&스탯 타입'] as const;
 const SHOP_BOT_TYPES = ['기본&상점 타입', '기본&상점&스탯 타입'] as const;
 
-// CoC 타입은 기능이 겹치는 기본 타입과 함께 담을 수 없다 (기본&상점 이상은 허용)
-const COC_EXCLUSIVE_PAIRS: Record<string, string> = {
-  'CoC 타입': '기본 타입',
-  '기본 타입': 'CoC 타입',
+const D100_BOT_NAME = 'D100 룰 대응 TRPG봇';
+const TRPG_2D6_BOT_NAME = '2D6 룰 대응 TRPG봇 3종';
+
+// TRPG봇(D100 / 2D6)은 기능이 겹치는 기본 타입과 함께 담을 수 없다 (기본&상점 이상은 허용)
+const TRPG_EXCLUSIVE_PAIRS: Record<string, string[]> = {
+  [D100_BOT_NAME]: ['기본 타입'],
+  [TRPG_2D6_BOT_NAME]: ['기본 타입'],
+  '기본 타입': [D100_BOT_NAME, TRPG_2D6_BOT_NAME],
 };
 
 export default function BotCommission({ onBack, onNavigate }: BotCommissionProps) {
@@ -84,11 +88,11 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
       }
     }
 
-    // CoC 타입 ↔ 기본 타입: 기능이 겹쳐 함께 담을 수 없음
-    const cocConflict = COC_EXCLUSIVE_PAIRS[name];
-    if (cocConflict && isItemInEstimate(cocConflict)) {
+    // TRPG봇 ↔ 기본 타입: 기능이 겹쳐 함께 담을 수 없음
+    const trpgConflict = TRPG_EXCLUSIVE_PAIRS[name]?.find(isItemInEstimate);
+    if (trpgConflict) {
       setToastMessage(
-        `"${cocConflict}" 선택을 먼저 취소해 주세요. CoC 타입과 기본 타입은 기능이 겹쳐 함께 선택할 수 없어요. (기본&상점 이상은 CoC 타입과 함께 선택 가능합니다)`
+        `"${trpgConflict}" 선택을 먼저 취소해 주세요. TRPG봇과 기본 타입은 기능이 겹쳐 함께 선택할 수 없어요. (기본&상점 이상은 TRPG봇과 함께 선택 가능합니다)`
       );
       return;
     }
@@ -162,19 +166,35 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
       ]
     },
     {
-      name: "CoC 타입",
+      name: "D100 룰 대응 TRPG봇",
       price: 30000,
       features: [
-        "숫자만 변경하면 되는 탐사자 시트 제공",
-        "편집 가능한 커스텀 시트와 랜덤 표 시트 제공",
+        "크툴루 호러 탐사를 위한 필수품!",
+        "D100 롤언더(기능치 이하 성공) 판정을 쓰는 TRPG용 자동봇",
+        "봇과 연동된, 편집 가능한 플레이어 구글 시트 제공",
+        "편집 가능한 커스텀 시트 + 랜덤표 시트 제공 (표 내용은 직접 입력)",
         "[nDm±k]",
         "기본 판정 [근력] [설득]",
-        "보너스/패널티 다이스 [근력+1] [관찰력-2]",
+        "보너스/페널티 다이스 [근력+1] [관찰력-2]",
         "판정, 피해 정산, 치명타가 모두 적용되는 무기 공격",
-        "[▨▨ 변화/수치] 예: [이성 변화/-3]",
         "[랜덤/옵션, 옵션, 옵션] 여러 개의 옵션 중 하나를 랜덤 선택",
-        "[장기적 광기] [일시적 광기] 표 굴림",
-        "[시트 업데이트] 탐사자 시트를 수동으로 업데이트한 후 자동봇에 반영"
+        "룰북 내 정보는 제공 X / 판정 기능만 제공 / 광기 목록 등은 직접 입력"
+      ]
+    },
+    {
+      name: "2D6 룰 대응 TRPG봇 3종",
+      price: 80000,
+      features: [
+        "2D6 특기표 판정을 쓰는 J룰 TRPG용 자동봇 3종 세트",
+        "특기를 체크하는 방식의 플레이어 구글 시트 제공",
+        "편집 가능한 커스텀 시트 + 랜덤표 시트 제공",
+        "[nDm±k] [nDm±k>=a] [xBy] [aSG@b#c±d>=e] [nDAm±k] 등 지원",
+        "기본 판정 [특기명]",
+        "보너스/페널티 다이스",
+        "명령어를 통한 아이템 관리",
+        "[랜덤/옵션, 옵션, 옵션] 여러 개의 옵션 중 하나를 랜덤 선택",
+        "룰북 내 정보는 제공 X / 판정 기능만 제공 / 특기명, 광기표 등은 직접 입력",
+        "일부만 선택해 설치 시 룰 당 3만원 (문의 요망)"
       ]
     },
     {
@@ -378,9 +398,8 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
 
           <div
             data-option-name="기본 가동료"
-            className={`border border-border p-5 ${
-              highlightedOption?.startsWith('기본 가동료') ? 'outline outline-[3px] outline-[#ff7b00] outline-offset-2' : ''
-            }`}
+            className={`border border-border p-5 ${highlightedOption?.startsWith('기본 가동료') ? 'outline outline-[3px] outline-[#ff7b00] outline-offset-2' : ''
+              }`}
           >
             <div className="space-y-3 text-[14px] leading-[1.8] text-foreground/80">
               <p>봇 가동 비용은 1주에 5천원입니다.</p>
@@ -602,9 +621,8 @@ export default function BotCommission({ onBack, onNavigate }: BotCommissionProps
                   ) : (
                     <div
                       data-option-name={type.name}
-                      className={`flex justify-between items-center p-6 bg-black/[0.01] border-b border-border ${
-                        highlightedOption === type.name ? 'outline outline-[3px] outline-[#ff7b00] -outline-offset-2' : ''
-                      }`}
+                      className={`flex justify-between items-center p-6 bg-black/[0.01] border-b border-border ${highlightedOption === type.name ? 'outline outline-[3px] outline-[#ff7b00] -outline-offset-2' : ''
+                        }`}
                     >
                       {headerContent}
                     </div>

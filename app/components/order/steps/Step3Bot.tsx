@@ -4,7 +4,13 @@ import { useEffect, useMemo } from 'react';
 import { ShoppingCart, Plus, X } from 'lucide-react';
 import { AlertTriangle } from 'griddy-icons';
 import { INPUT_LIMITS } from '@/app/types/order';
-import { getDeadlineBlackoutError, validateAccountId, DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
+import {
+  getDeadlineBlackoutError,
+  getPrimaryBotAccountLabel,
+  isTrpg2d6AccountSeparate,
+  validateAccountId,
+  DEADLINE_BLACKOUT_LABEL,
+} from '@/app/utils/orderUtils';
 import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
 
 // 예약 툿/자동 스진용 추가 계정 정책 (constants/form.ts 와 공유)
@@ -90,7 +96,8 @@ export default function Step3Bot() {
   const basicShopBotFromCart = isFromCart('기본&상점 타입') && !isFromCart('기본&상점&스탯');
   const basicShopStatBotFromCart = isFromCart('기본&상점&스탯 타입');
   // 추가 기능이 견적에서 선택되었는지
-  const cocBotFromCart = isFromCart('CoC');
+  const cocBotFromCart = isFromCart('D100');
+  const trpg2d6BotFromCart = isFromCart('2D6');
   const customCommandUpgradeFromCart = isFromCart('커스텀 명령어');
   const reservationFromCart = isFromCart('예약 툿');
   const autoProfileFromCart = isFromCart('스토리 자동 진행');
@@ -165,8 +172,19 @@ export default function Step3Bot() {
     () =>
       step3.cocBotAccountId.trim() === ''
         ? null
-        : validateAccountId(step3.cocBotAccountId, 'cocBotAccountId', 'CoC 봇 계정 ID'),
+        : validateAccountId(step3.cocBotAccountId, 'cocBotAccountId', 'D100 봇 계정 ID'),
     [step3.cocBotAccountId]
+  );
+  const trpg2d6BotAccountIdError = useMemo(
+    () =>
+      step3.trpg2d6BotAccountId.trim() === ''
+        ? null
+        : validateAccountId(
+          step3.trpg2d6BotAccountId,
+          'trpg2d6BotAccountId',
+          '2D6 기본 다이스봇 아이디'
+        ),
+    [step3.trpg2d6BotAccountId]
   );
   const investigationBotAccountIdError = useMemo(
     () =>
@@ -204,6 +222,7 @@ export default function Step3Bot() {
         botEndDate: '',
         mainBot: null,
         cocBot: false,
+        trpg2d6Bot: false,
         omakaseBot: false,
         investigationBot: false,
         investigationDailyLimit: false,
@@ -227,6 +246,7 @@ export default function Step3Bot() {
         botSymbol: '✶',
         botAccountId: '',
         cocBotAccountId: '',
+        trpg2d6BotAccountId: '',
         investigationBotAccountId: '',
       });
     }
@@ -281,7 +301,7 @@ export default function Step3Bot() {
     }
   };
 
-  // CoC 봇 해제 시 분리 계정 초기화
+  // D100 봇 해제 시 분리 계정 초기화
   const handleCocBotChange = (checked: boolean) => {
     updateStep3({ cocBot: checked });
     if (!checked) {
@@ -289,17 +309,38 @@ export default function Step3Bot() {
     }
   };
 
+  // 2D6 봇 해제 시 분리 계정 초기화
+  const handleTrpg2d6BotChange = (checked: boolean) => {
+    updateStep3({ trpg2d6Bot: checked });
+    if (!checked) {
+      updateStep3({ trpg2d6BotAccountId: '' });
+    }
+  };
+
   // 조사 자동봇 사용 가능 조건 (메인 봇이 선택된 경우)
   const canHaveInvestigationBot = step3.mainBot !== null;
 
-  // CoC 봇은 기본 봇과 기능이 겹쳐 함께 선택 불가 (기본+상점 이상은 허용)
-  const basicBotBlockedByCoc = step3.cocBot;
+  // TRPG 봇(D100 / 2D6)은 기본 봇과 기능이 겹쳐 함께 선택 불가 (기본+상점 이상은 허용)
+  const basicBotBlockedByCoc = step3.cocBot || step3.trpg2d6Bot;
+  const blockingTrpgBotNames = [
+    step3.cocBot && 'D100 타입',
+    step3.trpg2d6Bot && '2D6 3종세트 타입',
+  ].filter(Boolean).join(', ');
 
   // 분리 계정 입력 노출 조건
   const showCocBotAccount = step3.cocBot && step3.mainBot !== null;
+  const showTrpg2d6BotAccount = isTrpg2d6AccountSeparate(step3);
   const showInvestigationBotAccount =
     step3.investigationBot && canHaveInvestigationBot;
-  const requiresSeparateAccounts = showCocBotAccount || showInvestigationBotAccount;
+  const requiresSeparateAccounts =
+    showCocBotAccount || showTrpg2d6BotAccount || showInvestigationBotAccount;
+  const primaryAccountLabel = getPrimaryBotAccountLabel(step3);
+  const separateBotNames = [
+    step3.mainBot !== null ? '메인 봇' : step3.cocBot ? 'D100 봇' : null,
+    showCocBotAccount && 'D100 봇',
+    showTrpg2d6BotAccount && '2D6 봇',
+    showInvestigationBotAccount && '조사 자동봇',
+  ].filter(Boolean).join(' / ');
 
   // ── 예약 툿/자동 스진용 계정 목록 ──────────────────────────────
   const showAccountList = step3.reservationToot || step3.autoProfileImage;
@@ -384,7 +425,7 @@ export default function Step3Bot() {
         <label className="block">
           <span className="text-[18px] font-semibold">
             1) 자동봇을 신청하시나요? <span className="text-red-500">*</span>
-            {step3.applyBot === 'yes' && (basicBotFromCart || basicShopBotFromCart || basicShopStatBotFromCart || cocBotFromCart || omakaseFromCart || investigationFromCart) && <FromCartBadge />}
+            {step3.applyBot === 'yes' && (basicBotFromCart || basicShopBotFromCart || basicShopStatBotFromCart || cocBotFromCart || trpg2d6BotFromCart || omakaseFromCart || investigationFromCart) && <FromCartBadge />}
           </span>
         </label>
         <FieldGroupError field="applyBot">
@@ -516,15 +557,15 @@ export default function Step3Bot() {
             <div>
               <h3 className="text-[18px] font-semibold mb-1">3) 메인 봇 종류 <span className="text-red-500">*</span></h3>
               <p className="text-[13px] text-gray-600">
-                기본 계열 봇은 중복 선택할 수 없으며, CoC 봇은 기본+상점 이상 봇과 함께 선택하거나 단독으로 신청할 수 있습니다.
+                기본 계열 봇은 중복 선택할 수 없으며, D100 타입과 2D6 3종세트 타입은 기본+상점 이상 봇과 함께 선택하거나 단독으로 신청할 수 있습니다.
                 <br />
-                <strong>기본 봇은 CoC 봇과 기능이 겹쳐 함께 선택할 수 없습니다.</strong>
+                <strong>기본 봇은 D100 타입, 2D6 3종세트 타입과 기능이 겹쳐 함께 선택할 수 없습니다.</strong>
               </p>
             </div>
 
             <FieldGroupError field="mainBot">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* 1) 기본 (CoC 봇 선택 시 잠금) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* 1) 기본 (TRPG 봇 선택 시 잠금) */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 ${basicBotBlockedByCoc
                   ? 'border-border bg-gray-50 opacity-60 cursor-not-allowed'
@@ -551,7 +592,7 @@ export default function Step3Bot() {
                     {basicBotFromCart && step3.mainBot === 'basic' && <FromCartBadge />}
                     {basicBotBlockedByCoc && (
                       <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full ml-2">
-                        CoC 봇과 중복 불가
+                        {blockingTrpgBotNames}과 중복 불가
                       </span>
                     )}
                   </div>
@@ -611,7 +652,7 @@ export default function Step3Bot() {
                 </div>
               </label>
 
-              {/* 4) CoC 봇 (중복 선택 가능) */}
+              {/* 4) D100 타입 (중복 선택 가능) */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.cocBot
                   ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
@@ -626,19 +667,41 @@ export default function Step3Bot() {
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
-                    4) CoC 봇
+                    4) D100 타입
                     {cocBotFromCart && step3.cocBot && <FromCartBadge />}
                   </div>
-                  <div className="text-[13px] text-gray-600 mt-1">+30,000원</div>
+                  <div className="text-[13px] text-gray-600 mt-1">+{PRICING_CONFIG.bot.addons.cocBot.toLocaleString()}원</div>
+                </div>
+              </label>
+
+              {/* 5) 2D6 3종세트 타입 (중복 선택 가능) */}
+              <label
+                className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step3.trpg2d6Bot
+                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
+                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={step3.trpg2d6Bot}
+                  onChange={(e) => handleTrpg2d6BotChange(e.target.checked)}
+                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-[14px]">
+                    5) 2D6 3종세트 타입
+                    {trpg2d6BotFromCart && step3.trpg2d6Bot && <FromCartBadge />}
+                  </div>
+                  <div className="text-[13px] text-gray-600 mt-1">+{PRICING_CONFIG.bot.addons.trpg2d6Bot.toLocaleString()}원</div>
                 </div>
               </label>
             </div>
 
-            {/* CoC 봇 선택 시 기본 봇 잠금 안내 */}
+            {/* TRPG 봇 선택 시 기본 봇 잠금 안내 */}
             {basicBotBlockedByCoc && (
               <p className="text-[13px] leading-[1.7] text-gray-700 border-l-2 border-[#ff7b00] pl-3">
-                CoC 봇을 선택하셔서 <strong>기본 봇</strong>은 선택할 수 없습니다. 두 봇은 기능이 겹쳐 함께 신청하실 필요가 없어요.
-                기본 봇 단독으로 신청하시려면 CoC 봇 선택을 해제해 주세요. (기본+상점, 기본+상점+스탯은 CoC 봇과 함께 선택하실 수 있습니다.)
+                {blockingTrpgBotNames}을 선택하셔서 <strong>기본 봇</strong>은 선택할 수 없습니다. 기능이 겹쳐 함께 신청하실 필요가 없어요.
+                기본 봇 단독으로 신청하시려면 {blockingTrpgBotNames} 선택을 해제해 주세요. (기본+상점, 기본+상점+스탯은 함께 선택하실 수 있습니다.)
               </p>
             )}
             </FieldGroupError>
@@ -1250,14 +1313,10 @@ export default function Step3Bot() {
                   <AlertTriangle size={16} color="currentColor" className="mt-0.5 shrink-0" />
                   <div className="space-y-1">
                     <p className="font-medium">
-                      {showCocBotAccount && showInvestigationBotAccount
-                        ? '메인 봇 / CoC 봇 / 조사 자동봇은 각각 별도의 계정으로 운영됩니다.'
-                        : showCocBotAccount
-                          ? '메인 봇과 CoC 봇은 각각 별도의 계정으로 운영됩니다.'
-                          : '메인 봇과 조사 자동봇은 각각 별도의 계정으로 운영됩니다.'}
+                      {separateBotNames}은(는) 각각 별도의 계정으로 운영됩니다.
                     </p>
                     <p>
-                      어떤 계정이 어떤 봇으로 사용될지 구분되도록 아이디를 따로 입력해 주세요. (예: @BOT / @CoC / @SEARCH)
+                      어떤 계정이 어떤 봇으로 사용될지 구분되도록 아이디를 따로 입력해 주세요. (예: @BOT / @CoC / @DICE / @SEARCH)
                     </p>
                   </div>
                 </div>
@@ -1266,7 +1325,7 @@ export default function Step3Bot() {
               <div className={`grid grid-cols-1 ${requiresSeparateAccounts ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1'} gap-4`}>
                 <div className="space-y-2">
                   <label htmlFor="botAccountId" className="block text-[14px] font-medium">
-                    {requiresSeparateAccounts ? '메인 봇 계정 ID' : '봇 계정 ID'} <span className="text-red-500">*</span>
+                    {primaryAccountLabel.endsWith('계정') ? `${primaryAccountLabel} ID` : primaryAccountLabel} <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="botAccountId"
@@ -1291,7 +1350,7 @@ export default function Step3Bot() {
                 {showCocBotAccount && (
                   <div className="space-y-2">
                     <label htmlFor="cocBotAccountId" className="block text-[14px] font-medium">
-                      CoC 봇 계정 ID <span className="text-red-500">*</span>
+                      D100 봇 계정 ID <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="cocBotAccountId"
@@ -1308,6 +1367,32 @@ export default function Step3Bot() {
                     {!cocBotAccountIdError && <FieldError field="cocBotAccountId" />}
                     {cocBotAccountIdError ? (
                       <p id="cocBotAccountId-error" role="alert" className="text-[12px] text-red-600">{cocBotAccountIdError.message}</p>
+                    ) : (
+                      <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
+                    )}
+                  </div>
+                )}
+
+                {showTrpg2d6BotAccount && (
+                  <div className="space-y-2">
+                    <label htmlFor="trpg2d6BotAccountId" className="block text-[14px] font-medium">
+                      2D6 기본 다이스봇 아이디 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="trpg2d6BotAccountId"
+                      {...fieldAria('trpg2d6BotAccountId')}
+                      type="text"
+                      value={step3.trpg2d6BotAccountId}
+                      onChange={(e) => updateStep3({ trpg2d6BotAccountId: e.target.value })}
+                      placeholder="@DICE"
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${trpg2d6BotAccountIdError
+                        ? 'border-red-500 focus:border-red-500'
+                        : 'border-input focus:border-[#ff7b00]'
+                        }`}
+                    />
+                    {!trpg2d6BotAccountIdError && <FieldError field="trpg2d6BotAccountId" />}
+                    {trpg2d6BotAccountIdError ? (
+                      <p id="trpg2d6BotAccountId-error" role="alert" className="text-[12px] text-red-600">{trpg2d6BotAccountIdError.message}</p>
                     ) : (
                       <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
                     )}

@@ -538,20 +538,20 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       });
     }
 
-    // 메인 봇 선택 (CoC 봇 단독 신청도 허용)
-    if (data.mainBot === null && !data.cocBot) {
+    // 메인 봇 선택 (D100 / 2D6 3종세트 타입 단독 신청도 허용)
+    if (data.mainBot === null && !data.cocBot && !data.trpg2d6Bot) {
       errors.push({
         field: 'mainBot',
-        message: '메인 봇 종류를 선택해 주세요. (CoC 봇만 단독 신청도 가능합니다)',
+        message: '메인 봇 종류를 선택해 주세요. (D100 타입, 2D6 3종세트 타입은 단독 신청도 가능합니다)',
       });
     }
 
-    // CoC 봇은 기능이 겹치는 '기본' 봇과 함께 신청할 수 없다 (기본+상점 이상은 허용)
-    if (data.cocBot && data.mainBot === 'basic') {
+    // TRPG 봇은 기능이 겹치는 '기본' 봇과 함께 신청할 수 없다 (기본+상점 이상은 허용)
+    if ((data.cocBot || data.trpg2d6Bot) && data.mainBot === 'basic') {
       errors.push({
         field: 'mainBot',
         message:
-          'CoC 봇은 기본 봇과 기능이 겹쳐 함께 신청할 수 없습니다. CoC 봇 단독으로 신청하시거나, 메인 봇을 기본+상점 이상으로 선택해 주세요.',
+          'D100 타입, 2D6 3종세트 타입은 기본 봇과 기능이 겹쳐 함께 신청할 수 없습니다. 단독으로 신청하시거나, 메인 봇을 기본+상점 이상으로 선택해 주세요.',
       });
     }
 
@@ -592,19 +592,19 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       }
     }
 
-    // CoC 봇 계정 길이 + 아이디 규칙 검증 (입력된 경우)
+    // D100 봇 계정 길이 + 아이디 규칙 검증 (입력된 경우)
     if (data.cocBotAccountId && data.cocBotAccountId.trim() !== '') {
       const cocAccountError = validateAccountId(
         data.cocBotAccountId,
         'cocBotAccountId',
-        'CoC 봇 계정 ID'
+        'D100 봇 계정 ID'
       );
       if (cocAccountError) {
         errors.push(cocAccountError);
       } else if (data.cocBotAccountId.length > INPUT_LIMITS.cocBotAccountId) {
         errors.push({
           field: 'cocBotAccountId',
-          message: `CoC 봇 계정은 ${INPUT_LIMITS.cocBotAccountId}자 이하여야 합니다.`,
+          message: `D100 봇 계정은 ${INPUT_LIMITS.cocBotAccountId}자 이하여야 합니다.`,
         });
       }
     }
@@ -628,7 +628,9 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       }
     }
 
-    // CoC 봇이 메인 봇과 함께 신청된 경우 분리된 계정 입력 필수
+    errors.push(...validateTrpg2d6BotAccount(data));
+
+    // D100 봇이 메인 봇과 함께 신청된 경우 분리된 계정 입력 필수
     if (
       data.cocBot &&
       data.mainBot &&
@@ -637,7 +639,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
     ) {
       errors.push({
         field: 'cocBotAccountId',
-        message: 'CoC 봇은 별도 계정으로 운영되므로 CoC 봇 전용 계정 ID를 입력해 주세요.',
+        message: 'D100 봇은 별도 계정으로 운영되므로 D100 봇 전용 계정 ID를 입력해 주세요.',
       });
     }
     if (
@@ -649,7 +651,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
     ) {
       errors.push({
         field: 'cocBotAccountId',
-        message: '기본 자동봇과 CoC 봇은 서로 다른 계정 ID를 사용해야 합니다.',
+        message: '기본 자동봇과 D100 봇은 서로 다른 계정 ID를 사용해야 합니다.',
       });
     }
 
@@ -687,7 +689,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
     ) {
       errors.push({
         field: 'investigationBotAccountId',
-        message: 'CoC 봇과 조사 자동봇은 서로 다른 계정 ID를 사용해야 합니다.',
+        message: 'D100 봇과 조사 자동봇은 서로 다른 계정 ID를 사용해야 합니다.',
       });
     }
 
@@ -829,6 +831,68 @@ export function calculateServerPrice(
 }
 
 /**
+ * 2D6 3종세트 타입이 다른 봇과 함께 신청된 경우, 별도의 기본 다이스봇 아이디를 받는다.
+ * (2D6 단독이면 봇 계정 ID 칸이 곧 기본 다이스봇 아이디)
+ */
+export function isTrpg2d6AccountSeparate(data: Step3Data): boolean {
+  return data.trpg2d6Bot && (data.mainBot !== null || data.cocBot);
+}
+
+/**
+ * 첫 번째 봇 계정 칸(botAccountId)의 이름.
+ * 메인 봇 → D100 → 2D6 순으로 그 칸의 주인이 되며, 2D6 단독이면 기본 다이스봇 아이디가 된다.
+ */
+export function getPrimaryBotAccountLabel(data: Step3Data): string {
+  if (data.mainBot !== null) {
+    const hasSeparate = data.cocBot || data.investigationBot || data.trpg2d6Bot;
+    return hasSeparate ? '메인 봇 계정' : '봇 계정';
+  }
+  if (data.cocBot) return data.trpg2d6Bot ? 'D100 봇 계정' : '봇 계정';
+  if (data.trpg2d6Bot) return '기본 다이스봇 아이디';
+  return '봇 계정';
+}
+
+function validateTrpg2d6BotAccount(data: Step3Data): ValidationError[] {
+  const accountId = data.trpg2d6BotAccountId.trim();
+  if (accountId !== '') {
+    const formatError = validateAccountId(
+      data.trpg2d6BotAccountId,
+      'trpg2d6BotAccountId',
+      '2D6 기본 다이스봇 아이디'
+    );
+    if (formatError) return [formatError];
+    if (data.trpg2d6BotAccountId.length > INPUT_LIMITS.trpg2d6BotAccountId) {
+      return [{
+        field: 'trpg2d6BotAccountId',
+        message: `2D6 기본 다이스봇 아이디는 ${INPUT_LIMITS.trpg2d6BotAccountId}자 이하여야 합니다.`,
+      }];
+    }
+  }
+
+  if (!isTrpg2d6AccountSeparate(data) || data.botAccountId.trim() === '') return [];
+
+  if (accountId === '') {
+    return [{
+      field: 'trpg2d6BotAccountId',
+      message: '2D6 3종세트 타입은 별도 계정으로 운영되므로 기본 다이스봇 아이디를 입력해 주세요.',
+    }];
+  }
+
+  const otherAccounts = [
+    data.botAccountId,
+    data.cocBot && data.mainBot !== null ? data.cocBotAccountId : '',
+    data.investigationBot && data.mainBot !== null ? data.investigationBotAccountId : '',
+  ].filter((id) => id.trim() !== '');
+  if (otherAccounts.some((id) => isSameAccountId(id, data.trpg2d6BotAccountId))) {
+    return [{
+      field: 'trpg2d6BotAccountId',
+      message: '2D6 기본 다이스봇 아이디는 다른 봇과 서로 다른 계정 ID를 사용해야 합니다.',
+    }];
+  }
+  return [];
+}
+
+/**
  * 봇 파트 견적 계산
  */
 export function calculateBotPrice(
@@ -849,6 +913,7 @@ export function calculateBotPrice(
 
   // 추가 옵션
   if (data.cocBot) botCost += bot.addons.cocBot;
+  if (data.trpg2d6Bot) botCost += bot.addons.trpg2d6Bot;
   if (data.customCommandUpgrade) botCost += bot.addons.customCommandUpgrade;
   if (data.reservationToot) botCost += bot.addons.reservationToot;
   if (data.autoProfileImage) botCost += bot.addons.autoProfileImage;
@@ -1029,7 +1094,8 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       text += `${mainBotNames[step3.mainBot]}\n`;
     }
 
-    if (step3.cocBot) text += '+ CoC 봇\n';
+    if (step3.cocBot) text += '+ D100 타입\n';
+    if (step3.trpg2d6Bot) text += '+ 2D6 3종세트 타입\n';
     if (step3.investigationBot && step3.mainBot !== null) text += '+ 조사 자동봇\n';
     if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null) {
       const countLabel = step3.investigationDailyLimitCount > 0
@@ -1078,14 +1144,19 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     const cocAccountActive = step3.cocBot && step3.mainBot !== null;
     const investigationAccountActive =
       step3.investigationBot && step3.mainBot !== null;
-    const hasSeparateBotAccounts = cocAccountActive || investigationAccountActive;
+    const trpg2d6AccountActive = isTrpg2d6AccountSeparate(step3);
+    const hasSeparateBotAccounts =
+      cocAccountActive || investigationAccountActive || trpg2d6AccountActive;
 
     if (hasSeparateBotAccounts) {
       if (step3.botAccountId) {
-        text += `메인 봇 계정 : ${step3.botAccountId}\n`;
+        text += `${getPrimaryBotAccountLabel(step3)} : ${step3.botAccountId}\n`;
       }
       if (cocAccountActive && step3.cocBotAccountId) {
-        text += `CoC 봇 계정 : ${step3.cocBotAccountId}\n`;
+        text += `D100 봇 계정 : ${step3.cocBotAccountId}\n`;
+      }
+      if (trpg2d6AccountActive && step3.trpg2d6BotAccountId) {
+        text += `2D6 기본 다이스봇 아이디 : ${step3.trpg2d6BotAccountId}\n`;
       }
       if (investigationAccountActive && step3.investigationBotAccountId) {
         text += `조사 자동봇 계정 : ${step3.investigationBotAccountId}\n`;
@@ -1093,12 +1164,13 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       if (
         step3.botAccountId ||
         (cocAccountActive && step3.cocBotAccountId) ||
+        (trpg2d6AccountActive && step3.trpg2d6BotAccountId) ||
         (investigationAccountActive && step3.investigationBotAccountId)
       ) {
         text += '\n';
       }
     } else if (step3.botAccountId) {
-      text += `봇 계정 : ${step3.botAccountId}\n\n`;
+      text += `${getPrimaryBotAccountLabel(step3)} : ${step3.botAccountId}\n\n`;
     }
     if (step3.botSymbol && step3.botSymbol !== '✶') text += `봇 기호 : ${step3.botSymbol}\n\n`;
     if (step3.setupDeadline) text += `희망 마감일 : ${step3.setupDeadline}\n\n`;
@@ -1168,7 +1240,10 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       text += `${mainBotNames[step3.mainBot]} ${bot.mainTypes[step3.mainBot as keyof typeof bot.mainTypes].toLocaleString()}\n`;
     }
     if (step3.cocBot) {
-      text += `CoC 봇 ${bot.addons.cocBot.toLocaleString()}\n`;
+      text += `D100 타입 ${bot.addons.cocBot.toLocaleString()}\n`;
+    }
+    if (step3.trpg2d6Bot) {
+      text += `2D6 3종세트 타입 ${bot.addons.trpg2d6Bot.toLocaleString()}\n`;
     }
     if (step3.investigationBot && step3.mainBot !== null) {
       text += `조사 자동봇 ${bot.addons.investigationBot.toLocaleString()}\n`;

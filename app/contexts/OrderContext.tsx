@@ -63,6 +63,7 @@ const initialStep3Data: Step3Data = {
   botEndDate: '',
   mainBot: null,
   cocBot: false,
+  trpg2d6Bot: false,
   omakaseBot: false,
   investigationBot: false,
   investigationDailyLimit: false,
@@ -86,6 +87,7 @@ const initialStep3Data: Step3Data = {
   botSymbol: '✶',
   botAccountId: '',
   cocBotAccountId: '',
+  trpg2d6BotAccountId: '',
   investigationBotAccountId: '',
 };
 
@@ -127,11 +129,11 @@ function migrateStep3(rawStep3: unknown): Partial<Step3Data> {
 }
 
 /**
- * 불변식: CoC 봇은 기능이 겹치는 '기본' 봇과 공존 불가. (기본+상점 이상은 허용)
+ * 불변식: TRPG 봇(D100 / 2D6 3종세트)은 기능이 겹치는 '기본' 봇과 공존 불가. (기본+상점 이상은 허용)
  * 두 값이 동시에 들어오면 기본 봇 선택을 해제하고, 메인 봇에 딸린 옵션도 함께 정리한다.
  */
 function applyCocBotExclusivity(step3: Step3Data): Step3Data {
-  if (!step3.cocBot || step3.mainBot !== 'basic') return step3;
+  if (!(step3.cocBot || step3.trpg2d6Bot) || step3.mainBot !== 'basic') return step3;
   return {
     ...step3,
     mainBot: null,
@@ -198,7 +200,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       return {
         ...prev,
         step2: mergedStep2,
-        // 불변식 유지: 장바구니에 기본 봇 + CoC 봇이 함께 담겨 있어도 기본 봇을 해제한다.
+        // 불변식 유지: 장바구니에 기본 봇 + TRPG 봇이 함께 담겨 있어도 기본 봇을 해제한다.
         step3: applyCocBotExclusivity({ ...prev.step3, ...step3 }),
       };
     });
@@ -275,7 +277,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         if (mergedFormData.step1.isLongTermCommunity) {
           mergedFormData.step2.searchOption = false;
         }
-        // 불변식 유지: 예전 저장본에 기본 봇 + CoC 봇이 함께 담겨 있어도 기본 봇을 해제한다.
+        // 불변식 유지: 예전 저장본에 기본 봇 + TRPG 봇이 함께 담겨 있어도 기본 봇을 해제한다.
         mergedFormData.step3 = applyCocBotExclusivity(mergedFormData.step3);
         setFormData(mergedFormData);
         setCurrentStep(parsed.currentStep);
