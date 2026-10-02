@@ -113,7 +113,7 @@ function buildHtml(template, route, appHtml, { forceNoindex = false } = {}) {
   const indexable = route.indexable && !forceNoindex;
 
   let html = template
-    .replace(/<title>[\s\S]*?<\/title>/, `<title>${route.title}</title>`)
+    .replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
     .replace(/<meta name="description" content="[^"]*"\s*\/>/, `<meta name="description" content="${description}" />`)
     .replace(/<link rel="canonical" href="[^"]*"\s*\/>/, `<link rel="canonical" href="${url}" />`)
     .replace(/<meta property="og:title" content="[^"]*"\s*\/>/, `<meta property="og:title" content="${title}" />`)

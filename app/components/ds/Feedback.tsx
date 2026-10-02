@@ -34,8 +34,9 @@ export function Toast({ message, actionLabel, onAction, onClose, icon, floating 
       role="status"
       aria-live="polite"
       className={clsx(
-        'flex min-h-[60px] w-fit max-w-full items-center justify-between gap-4 rounded-button bg-background-inverse p-5 text-text-inverse lg:gap-10',
-        floating && FLOAT_CLASS[floatAlign],
+        'flex min-h-[60px] max-w-full items-center justify-between gap-4 rounded-button bg-background-inverse p-5 text-text-inverse lg:gap-10',
+        // 폭은 한 곳에서만 정한다 (w-fit 과 w-[calc] 가 함께 붙어 CSS 순서에 따라 결과가 달라졌다)
+        floating ? FLOAT_CLASS[floatAlign] : 'w-fit',
         className,
       )}
     >

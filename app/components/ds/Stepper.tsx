@@ -88,7 +88,8 @@ export function Stepper({ steps, current, className, onStepClick, isStepEnabled 
                 type="button"
                 onClick={() => onStepClick(index)}
                 aria-current={index === current ? 'step' : undefined}
-                disabled={!enabled}
+                // disabled 대신 aria-disabled: 눌렀을 때 '이전 단계를 먼저 완료해 주세요' 안내가 나오도록 클릭은 받는다
+                aria-disabled={enabled ? undefined : true}
                 className={clsx('flex flex-col items-center gap-2.5 rounded-input', focusRing, enabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-60')}
               >
                 {content}

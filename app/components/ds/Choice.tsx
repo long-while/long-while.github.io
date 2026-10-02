@@ -19,7 +19,8 @@ const box = (appearance: 'filled' | 'outline') =>
   clsx(
     'relative flex size-7 shrink-0 items-center justify-center rounded-pill transition-colors duration-150',
     appearance === 'filled' ? 'bg-border-100' : 'bg-background-white border border-border-100',
-    'peer-checked:bg-brand peer-checked:border-transparent',
+    // 테두리형도 체크하면 파란 바탕 + 흰 체크 (회색 체크가 파란 바탕 위에서 안 보였다, 4단계 검토)
+    'peer-checked:bg-brand peer-checked:border-transparent peer-checked:[&_svg]:text-text-inverse',
     'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand',
     'peer-disabled:opacity-40',
   );

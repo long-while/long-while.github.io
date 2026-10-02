@@ -159,8 +159,8 @@ export function StickyEstimateBar({ message, amount, href, onClick, placement = 
       href={href}
       onClick={onClick}
       className={clsx(
-        'group pointer-events-auto flex w-full max-w-[680px] items-center justify-between gap-4 rounded-input border border-background-white bg-brand/22 p-4 shadow-modal backdrop-blur-[12px] lg:p-5',
-        placement === 'fixed' && 'fixed bottom-[calc(16px+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-32px)] -translate-x-1/2',
+        'group pointer-events-auto flex max-w-[680px] items-center justify-between gap-4 rounded-input border border-background-white bg-brand/22 p-4 shadow-modal backdrop-blur-[12px] lg:p-5',
+        placement === 'fixed' ? 'fixed bottom-[calc(16px+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-32px)] -translate-x-1/2' : 'w-full',
         focusRing,
       )}
     >

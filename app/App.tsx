@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense, type ReactNode } from "react";
 import { EstimateProvider } from "@/app/contexts/EstimateContext";
 import { SiteFooter, SiteHeader } from "@/app/components/ds";
 import { HomePage } from "@/app/components/home/HomePage";
@@ -64,6 +64,24 @@ function AppContent({ initialPage }: AppProps) {
     // 페이지 이동 시 즉시 스크롤을 맨 위로 이동
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
+
+  // 페이지를 옮기면 키보드·스크린리더 포커스를 새 페이지 본문으로 (눌렀던 링크가 사라져 포커스가 문서 맨 앞으로 떨어졌다, 4단계 검토).
+  // 페이지가 늦게 불러와질 수 있어 잠깐 기다리고, 페이지가 이미 포커스를 옮겼으면(견적함 '수정' 강조 등) 건드리지 않는다
+  // 처음 연 페이지는 그대로 (StrictMode 의 효과 두 번 실행에도 안전하게 '이전 페이지와 다를 때만')
+  const shownPage = useRef(currentPage);
+  useEffect(() => {
+    if (shownPage.current === currentPage) return;
+    shownPage.current = currentPage;
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      const main = document.getElementById('main');
+      const active = document.activeElement;
+      const pageHasFocus = active && active !== document.body && main?.contains(active);
+      if (main && !pageHasFocus) main.focus({ preventScroll: true });
+      if (main || ++tries > 20) window.clearInterval(timer);
+    }, 50);
+    return () => window.clearInterval(timer);
+  }, [currentPage]);
 
   // 최초 진입 처리: 구버전 해시 링크(#server, #faq 등)를 새 경로로 1회 치환한다 (색인/공유 링크 호환)
   useEffect(() => {

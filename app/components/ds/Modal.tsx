@@ -6,7 +6,7 @@
  *       닫히면 열기 전 포커스로 되돌리기. 닫힌 상태에서는 아무것도 그리지 않아 SSR 에 안전하다.
  */
 import clsx from 'clsx';
-import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
 import { focusRing } from './shared';
@@ -30,6 +30,9 @@ interface ModalProps {
   className?: string;
 }
 
+// 프리렌더(서버)에서는 layout effect 가 경고만 내므로 effect 로 대신한다
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
 const WIDTH = { md: 'max-w-[532px]', xl: 'max-w-[1320px]' } as const;
 
 const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -42,16 +45,25 @@ function useModalBehavior(open: boolean, onClose: () => void, dialogRef: RefObje
     onCloseRef.current = onClose;
   }, [onClose]);
 
+  // 열리기 직전에 포커스가 있던 곳. 자식의 효과(예: 복사 실패 상자의 글 선택)보다 먼저 기록해야 해서 layout effect 에서 잡는다
+  const previousRef = useRef<HTMLElement | null>(null);
+  useIsomorphicLayoutEffect(() => {
+    if (open) previousRef.current = document.activeElement as HTMLElement | null;
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
-    const previous = document.activeElement as HTMLElement | null;
+    const previous = previousRef.current;
     const { overflow, paddingRight } = document.body.style;
     const scrollbar = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = 'hidden';
     if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
-    const focusables = dialogRef.current ? Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)) : [];
-    const target = initialFocus === 'last' ? focusables[focusables.length - 1] : focusables[0];
-    (target ?? dialogRef.current)?.focus();
+    // 자식이 이미 안쪽으로 포커스를 옮겼으면(복사 실패 시 원문 선택) 그대로 둔다. 닫기 버튼으로 옮기면 Ctrl+C 가 안 됐다 (4단계 검토)
+    if (!dialogRef.current?.contains(document.activeElement)) {
+      const focusables = dialogRef.current ? Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)) : [];
+      const target = initialFocus === 'last' ? focusables[focusables.length - 1] : focusables[0];
+      (target ?? dialogRef.current)?.focus();
+    }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -63,7 +75,9 @@ function useModalBehavior(open: boolean, onClose: () => void, dialogRef: RefObje
       const nodes = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
       if (nodes.length === 0) return;
       const [head, tail] = [nodes[0], nodes[nodes.length - 1]];
-      if (event.shiftKey && document.activeElement === head) { event.preventDefault(); tail.focus(); }
+      // 누른 버튼이 사라지는 등으로 포커스가 창 밖(body)에 있으면 창 안으로 되돌린다
+      if (!dialogRef.current.contains(document.activeElement)) { event.preventDefault(); (event.shiftKey ? tail : head).focus(); }
+      else if (event.shiftKey && document.activeElement === head) { event.preventDefault(); tail.focus(); }
       else if (!event.shiftKey && document.activeElement === tail) { event.preventDefault(); head.focus(); }
     };
     document.addEventListener('keydown', onKeyDown);
@@ -81,7 +95,8 @@ export function Modal({ open, onClose, title, subtitle, icon, children, actions,
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
   useEffect(() => setMounted(true), []);
-  useModalBehavior(open, onClose, dialogRef, initialFocus);
+  // 마운트 전에는 창이 없으니 open && mounted 로 넘긴다 (처음부터 열린 채 마운트되면 포커스·가둠이 안 걸리던 문제)
+  useModalBehavior(open && mounted, onClose, dialogRef, initialFocus);
   if (!open || !mounted) return null;
 
   return createPortal(

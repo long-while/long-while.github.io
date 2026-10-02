@@ -55,10 +55,15 @@ export function useEditTargetHighlight(): string | null {
 
     setHighlighted(editTargetName);
     setEditTargetName(null);
+  }, [editTargetName, setEditTargetName]);
 
+  // 강조를 잠시 뒤 끈다. 위 효과 안에서 타이머를 걸면 setEditTargetName(null) 로 효과가 다시 돌며
+  // 정리 함수가 타이머를 지워 강조 테두리가 영영 남았다 (4단계 검토) → 강조 값에만 묶인 효과로 분리
+  useEffect(() => {
+    if (!highlighted) return;
     const timer = setTimeout(() => setHighlighted(null), HIGHLIGHT_DURATION_MS);
     return () => clearTimeout(timer);
-  }, [editTargetName, setEditTargetName]);
+  }, [highlighted]);
 
   return highlighted;
 }

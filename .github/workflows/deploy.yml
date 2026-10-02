@@ -29,6 +29,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 타입 오류나 가격 검증 실패가 있으면 배포하지 않는다
+      - name: Typecheck and test
+        run: npm run typecheck && npm test
+
       - name: Build
         run: npm run build
 

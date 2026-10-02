@@ -13,7 +13,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'reac
 import { focusRing, focusRingInverse } from './shared';
 
 export type ButtonVariant = 'primary' | 'gray' | 'white' | 'outline' | 'dark' | 'black';
-export type ButtonSize = 'lg' | 'md' | 'sm';
+export type ButtonSize = 'lg' | 'md' | 'sm' | 'lgEmphasis';
 
 interface CommonProps {
   variant?: ButtonVariant;
@@ -42,6 +42,8 @@ const SIZE: Record<ButtonSize, string> = {
   lg: 'min-h-16 px-5 py-5 text-caption1',
   md: 'min-h-11 px-7 py-3 text-caption2',
   sm: 'min-h-[42px] px-5 py-2.5 text-caption2',
+  // 서버 페이지 '견적에 추가'처럼 금액 옆에 놓이는 큰 버튼: 64px, title4 글자, 입력칸 모서리
+  lgEmphasis: 'min-h-16 px-5 py-5 text-title4',
 };
 
 const DISABLED =
@@ -60,7 +62,7 @@ interface ClassOptions extends Pick<CommonProps, 'variant' | 'size' | 'pill' | '
 export function buttonClassName({ variant = 'primary', size = 'lg', pill = false, fullWidth = false, onDark = false }: ClassOptions) {
   return clsx(
     'inline-flex items-center justify-center gap-2.5 text-center transition-colors duration-200',
-    pill ? 'rounded-pill' : 'rounded-button',
+    pill ? 'rounded-pill' : size === 'lgEmphasis' ? 'rounded-input' : 'rounded-button',
     fullWidth && 'w-full',
     VARIANT[variant],
     // 알약 중간 크기는 시안 '신청하기' 패딩 12·32

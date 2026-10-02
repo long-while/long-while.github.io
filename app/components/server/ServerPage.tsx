@@ -125,7 +125,7 @@ function BaseOption({ est, highlighted, onNavigate }: { est: ReturnType<typeof u
             data-option-name={INSTALL.name}
             onClick={() => est.toggle(INSTALL.name, INSTALL.price, INSTALL.description)}
             aria-pressed={added}
-            className={clsx(buttonClassName({ variant: added ? 'outline' : 'primary', size: 'lg' }), 'rounded-input text-title4 sm:w-[180px]', highlightRing(highlighted === INSTALL.name))}
+            className={clsx(buttonClassName({ variant: added ? 'outline' : 'primary', size: 'lgEmphasis' }), 'sm:w-[180px]', highlightRing(highlighted === INSTALL.name))}
           >
             {added ? '견적에서 제거' : '견적에 추가'}
           </button>
@@ -133,7 +133,7 @@ function BaseOption({ est, highlighted, onNavigate }: { est: ReturnType<typeof u
       }
     >
       <div className="flex flex-col gap-3">
-        <div className={clsx('flex flex-col gap-4', added && 'rounded-input')}>
+        <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-2">
               <h3 className="text-title2 text-text-primary">{INSTALL.name}</h3>
