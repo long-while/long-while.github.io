@@ -74,7 +74,7 @@ export function OperationSection({ s }: S) {
             description={step3.operationWeeksOption === 'longterm' ? '자동봇이 마스토돈과 동일한 머신에 설치됩니다. 가동 주수에 따른 비용이 없는 대신, 초기 세팅 비용 1만원이 청구됩니다.' : undefined} />
           <OptionCard name="operationWeeksOption" layout="row" checked={step3.operationWeeksOption === 'manual'}
             onChange={() => updateStep3({ operationWeeksOption: 'manual' })}
-            title="자캐 커뮤니티를 위한 자동봇이에요." price={`주당 ${formatManwon(PRICING_CONFIG.bot.operationPerWeek)}`} />
+            title="자캐 커뮤니티를 위한 자동봇이에요." price={`주당 ${PRICING_CONFIG.bot.operationPerWeek.toLocaleString()}원`} />
         </div>
         {step3.operationWeeksOption === 'manual' && <div className="mt-4"><BotPeriodInputs s={s} /></div>}
       </FieldGroupError>

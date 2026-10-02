@@ -76,7 +76,8 @@ function AppContent({ initialPage }: AppProps) {
     const timer = window.setInterval(() => {
       const main = document.getElementById('main');
       const active = document.activeElement;
-      const pageHasFocus = active && active !== document.body && main?.contains(active);
+      // 열린 모달(복원·견적 반영 창 등) 안의 포커스도 페이지가 가진 것으로 본다 (모달에서 포커스를 빼앗던 문제)
+      const pageHasFocus = active && active !== document.body && (main?.contains(active) || active.closest('[aria-modal="true"]'));
       if (main && !pageHasFocus) main.focus({ preventScroll: true });
       if (main || ++tries > 20) window.clearInterval(timer);
     }, 50);

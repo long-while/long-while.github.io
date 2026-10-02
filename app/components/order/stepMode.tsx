@@ -18,7 +18,7 @@ type SummaryStep = 2 | 3;
 const HIDDEN_FIELDS: Record<SummaryStep, string[]> = {
   2: ['additionalOption', 'changeCharacterLimit', 'characterLimitValue', 'searchOption', 'mastoHostMigration', 'fastDeadline'],
   3: ['operationWeeksOption', 'mainBot', 'accountList', 'extraAccountTiers', 'attendanceCurrencyAmount', 'attendanceCommand',
-    'omakaseDetails', 'investigationDailyLimitCount', 'tootPerCurrency'],
+    'omakaseDetails', 'investigationDailyLimitCount', 'tootPerCurrency', 'statList', 'transferOption', 'applyBot'],
 };
 
 interface StepModeValue {

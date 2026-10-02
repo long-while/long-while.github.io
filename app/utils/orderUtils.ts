@@ -491,7 +491,9 @@ export function validateStep1(data: OrderFormData['step1']): ValidationError[] {
     errors.push({ field: 'communityEnglishName', message: '영어 이름을 입력해 주세요.' });
   } else if (data.communityEnglishName.length > INPUT_LIMITS.communityEnglishName) {
     errors.push({ field: 'communityEnglishName', message: `영어 이름은 ${INPUT_LIMITS.communityEnglishName}자 이하여야 합니다.` });
-  } else if (!ENGLISH_NAME_PATTERN.test(data.communityEnglishName.trim()) || !/[A-Za-z]/.test(data.communityEnglishName)) {
+  } else if (ENGLISH_NAME_PATTERN.test(data.communityEnglishName.trim()) && !/[A-Za-z]/.test(data.communityEnglishName)) {
+    errors.push({ field: 'communityEnglishName', message: '영어 이름에는 영문을 한 글자 이상 넣어 주세요.' });
+  } else if (!ENGLISH_NAME_PATTERN.test(data.communityEnglishName.trim())) {
     errors.push({ field: 'communityEnglishName', message: '영어 이름은 영문, 숫자, 띄어쓰기, 하이픈(-)만 쓸 수 있습니다.' });
   }
 

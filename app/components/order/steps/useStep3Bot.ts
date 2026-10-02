@@ -37,6 +37,8 @@ function ymdToMonthDay(date: string): string {
 // 숫자만 치면 2자리 뒤에 '/'를 넣는다 ('0616' → '06/16'). 전각 숫자도 받는다
 export function normalizeMonthDayInput(raw: string): string {
   const value = raw.normalize('NFKC');
+  // '6월 16일'처럼 쓰는 중이면 그대로 둔다 (검사에서 받는 형식)
+  if (/^\s*\d{1,2}\s*월\s*\d{0,2}\s*일?\s*$/.test(value)) return value;
   const typed = value.match(/^\s*(\d{0,2})\s*[/.\-]\s*(\d{0,2})/);
   if (typed) return `${typed[1]}/${typed[2]}`;
   const digits = value.replace(/\D/g, '').slice(0, 4);

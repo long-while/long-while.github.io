@@ -263,10 +263,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     if (!autosaveReady) return;
     try {
       // 아무것도 안 쓴 신청서는 저장하지 않는다 (들어왔다 나가기만 해도 다음에 '작성 중인 내용 발견'이 떴다, 4단계 검토)
-      if (currentStep === 1 && JSON.stringify(formData) === JSON.stringify(initialFormData)) {
-        localStorage.removeItem(ORDER_STORAGE_KEY);
-        return;
-      }
+      // (지우지는 않는다: 빈 탭을 닫을 때 다른 탭의 진짜 저장본을 지울 수 있다)
+      if (currentStep === 1 && JSON.stringify(formData) === JSON.stringify(initialFormData)) return;
       const sanitizedFormData = {
         ...formData,
         step1: {
@@ -317,6 +315,16 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         };
         // 비밀번호는 저장하지 않는다. 예전·조작된 저장본에 들어 있어도 비운다
         mergedFormData.step1.googlePassword = '';
+        // 고르는 값(선택지)은 정해진 값만. 이상한 값이면 선택 전 상태로
+        const pick = <T,>(value: T, allowed: readonly T[]): T | null => (allowed.includes(value) ? value : null);
+        mergedFormData.step1.termsAgreed = pick(mergedFormData.step1.termsAgreed, ['yes', 'no'] as const);
+        mergedFormData.step2.applyServerInstall = pick(mergedFormData.step2.applyServerInstall, ['yes', 'no'] as const);
+        mergedFormData.step2.additionalOption = pick(mergedFormData.step2.additionalOption, ['logo', 'dayTheme', 'nightTheme', 'bothTheme'] as const);
+        mergedFormData.step2.fastDeadlineOption = pick(mergedFormData.step2.fastDeadlineOption, ['basic48h', 'basic24h', 'logo48h', 'theme48h'] as const);
+        mergedFormData.step3.applyBot = pick(mergedFormData.step3.applyBot, ['yes', 'no'] as const);
+        mergedFormData.step3.mainBot = pick(mergedFormData.step3.mainBot, ['basic', 'basicShop', 'basicShopStat'] as const);
+        mergedFormData.step3.operationWeeksOption = pick(mergedFormData.step3.operationWeeksOption, ['longterm', 'manual'] as const);
+        mergedFormData.step3.transferOption = pick(mergedFormData.step3.transferOption, ['itemOnly', 'currencyOnly', 'all'] as const);
         // 불변식 유지: 예전(변경 전) 저장본이 장기 소규모 + 검색을 동시에 담고 있어도 검색을 해제한다.
         if (mergedFormData.step1.isLongTermCommunity) {
           mergedFormData.step2.searchOption = false;
