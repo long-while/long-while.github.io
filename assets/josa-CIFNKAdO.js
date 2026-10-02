@@ -1,0 +1,1 @@
+function l(n){for(let e=n.length-1;e>=0;e--){const t=n.charCodeAt(e);if(t>=44032&&t<=55203)return(t-44032)%28!==0}return null}function c(n,e,t){const u=l(n);return u===null?`${e}(${t})`:u?e:t}const o=n=>c(n,"을","를"),r=n=>c(n,"은","는");export{o as a,r as e};
