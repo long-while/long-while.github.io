@@ -164,6 +164,8 @@ function FilledState({ onNavigate }: { onNavigate: NavigateFunction }) {
             items={[
               // 세 줄을 하나로, 자동봇 구동비 안내는 자동봇 페이지로 옮김 (4단계 문구 정리)
               '최종 금액은 난이도와 일정에 따라 달라질 수 있어, 신청서 확인 후 확정해 드려요.',
+              // '협의' 항목(가격 0)은 합계에 안 들어가므로 알린다 (4단계 검토)
+              ...(items.some((i) => i.price === 0) ? ['‘협의’ 항목은 총 견적 금액에 포함되지 않아요. 상담 후 따로 알려드려요.'] : []),
             ]}
           />
           <EstimateTotal label="총 견적 금액" amount={won(getTotalPrice())} />

@@ -9,7 +9,8 @@ import { useState, useEffect, useCallback, useMemo, useRef, forwardRef } from 'r
 import clsx from 'clsx';
 import { Banner, Button, ErrorSummary, Icon, Stepper } from '@/app/components/ds';
 import { useOrder } from '@/app/contexts/OrderContext';
-import { validateStep1, validateStep2, validateStep3 } from '@/app/utils/orderUtils';
+import { validateOrderConsistency, validateStep1, validateStep2, validateStep3 } from '@/app/utils/orderUtils';
+import { useEstimate } from '@/app/contexts/EstimateContext';
 import { FieldErrorProvider } from '@/app/contexts/FieldErrorContext';
 import type { ValidationError } from '@/app/types/order';
 import Step1Applicant from './steps/Step1Applicant';
@@ -85,20 +86,23 @@ export default function OrderForm() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   /** 잠긴 단계를 눌렀을 때의 안내. 특정 입력칸의 오류가 아니라 별도로 보여준다 */
   const [stepNotice, setStepNotice] = useState<string | null>(null);
+  const { serverCalcResult } = useEstimate();
 
   // 각 스텝의 완료 여부 확인 (통합 검증 함수 사용)
+  // 진행 표시로 앞 단계를 건너뛸 때도 '다음' 과 같은 검사(단계를 넘나드는 검사 포함)를 쓴다
   const isStepComplete = useCallback((step: number): boolean => {
+    const consistency = validateOrderConsistency(formData, serverCalcResult);
     switch (step) {
       case 1:
         return validateStep1(formData.step1).length === 0;
       case 2:
-        return validateStep2(formData.step2).length === 0;
+        return validateStep2(formData.step2).length === 0 && consistency.step2.length === 0;
       case 3:
-        return validateStep3(formData.step3).length === 0;
+        return validateStep3(formData.step3).length === 0 && consistency.step3.length === 0;
       default:
         return false;
     }
-  }, [formData]);
+  }, [formData, serverCalcResult]);
 
   // 특정 스텝으로 이동 가능한지 확인
   const canAccessStep = useCallback((targetStep: number): boolean => {
@@ -134,11 +138,12 @@ export default function OrderForm() {
 
   /** 현재 단계의 검증 결과 */
   const errorsForCurrentStep = useCallback((): ValidationError[] => {
+    const consistency = validateOrderConsistency(formData, serverCalcResult);
     if (currentStep === 1) return validateStep1(formData.step1);
-    if (currentStep === 2) return validateStep2(formData.step2);
-    if (currentStep === 3) return validateStep3(formData.step3);
+    if (currentStep === 2) return [...validateStep2(formData.step2), ...consistency.step2];
+    if (currentStep === 3) return [...validateStep3(formData.step3), ...consistency.step3];
     return [];
-  }, [currentStep, formData]);
+  }, [currentStep, formData, serverCalcResult]);
 
   /**
    * '다음'을 한 번 누른 뒤에는 사용자가 값을 고칠 때마다 오류를 다시 계산한다.
@@ -227,7 +232,7 @@ export default function OrderForm() {
       {(showSyncNotice && cartSyncState) || stepNotice || validationErrors.length > 0 || currentStep === 1 ? (
         <div className="flex flex-col gap-4">
           {currentStep === 1 && <HowToApply />}
-          {showSyncNotice && cartSyncState && (
+          {showSyncNotice && cartSyncState && currentStep < 4 && (
             <Banner
               title="견적 항목이 자동으로 반영되었습니다"
               description={`${cartSyncState.itemCount}개 항목이 신청서에 반영되었습니다. Step 2, Step 3에서 선택된 옵션을 확인해 주세요.`}

@@ -3,6 +3,10 @@
  * name/aliases 는 견적함 항목 이름이라 바꾸면 안 된다 (견적함·신청서 매핑, 수정 강조에 쓰임).
  */
 import { IMAGES } from '@/app/constants/images';
+import { PRICING_CONFIG } from '@/app/constants/form';
+
+/** 가격은 신청서 계산과 같은 PRICING_CONFIG 에서 (한 곳만 고치면 페이지·견적·신청서가 함께 바뀜) */
+const PB = PRICING_CONFIG.bot;
 
 // 메인 봇 타입 (서로 배타적: 기본 / 기본&상점 / 기본&상점&스탯 중 하나만 선택 가능)
 export const MAIN_BOT_TYPES = ['기본 타입', '기본&상점 타입', '기본&상점&스탯 타입'] as const;
@@ -18,7 +22,7 @@ export const TRPG_EXCLUSIVE_PAIRS: Record<string, string[]> = {
   '기본 타입': [D100_BOT_NAME, TRPG_2D6_BOT_NAME],
 };
 
-export const WEEKLY_FEE = 5000;
+export const WEEKLY_FEE = PB.operationPerWeek;
 export const OPERATION_FEE_PREFIX = '기본 가동료';
 export const INVESTIGATION_TYPE = '자동조사 타입';
 export const OMAKASE_TYPE = '오마카세 타입';
@@ -50,7 +54,7 @@ export const COMPARE_ROWS: { feature: string; has: [boolean, boolean, boolean] }
   { feature: '스탯 시스템', has: [false, false, true] },
   { feature: '[사용/아이템명]', has: [false, false, true] },
 ];
-export const COMPARE_PRICES = ['₩15,000', '₩35,000', '₩45,000'];
+export const COMPARE_PRICES = [PB.mainTypes.basic, PB.mainTypes.basicShop, PB.mainTypes.basicShopStat].map((p) => `₩${p.toLocaleString()}`);
 
 /** 커스텀 명령어 예시. {중괄호} 부분은 강조 표시 */
 export const CUSTOM_COMMAND_EXAMPLES = [
@@ -73,7 +77,7 @@ export interface BotType {
 export const BOT_TYPES: BotType[] = [
   {
     name: '기본 타입',
-    price: 15000,
+    price: PB.mainTypes.basic,
     features: [
       '구글 스프레드시트 연동',
       '[nDm] [랜덤/옵션, 옵션, 옵션...]',
@@ -83,7 +87,7 @@ export const BOT_TYPES: BotType[] = [
   },
   {
     name: '기본&상점 타입',
-    price: 35000,
+    price: PB.mainTypes.basicShop,
     features: [
       '기본 타입에 포함된 모든 기능 +@',
       '구글 시트로 캐릭터, 재화, 인벤토리 관리 (운영진 수동 편집 지원)',
@@ -95,7 +99,7 @@ export const BOT_TYPES: BotType[] = [
   },
   {
     name: '기본&상점&스탯 타입',
-    price: 45000,
+    price: PB.mainTypes.basicShopStat,
     features: [
       '기본&상점 타입에 포함된 모든 기능 +@',
       '구글 시트로 캐릭터 스탯 관리 (운영진 수동 편집 지원)',
@@ -105,7 +109,7 @@ export const BOT_TYPES: BotType[] = [
   },
   {
     name: INVESTIGATION_TYPE,
-    price: 20000,
+    price: PB.addons.investigationBot,
     features: [
       // T6: 신청서 규칙과 같게 (메인 봇이 있어야 함)
       '기본 계열 타입과 함께 신청할 수 있어요.',
@@ -116,7 +120,7 @@ export const BOT_TYPES: BotType[] = [
   },
   {
     name: D100_BOT_NAME,
-    price: 30000,
+    price: PB.addons.cocBot,
     features: [
       'D100 롤언더(기능치 이하 성공) 판정을 쓰는 TRPG용 자동봇',
       '봇과 연동된 플레이어, 커스텀, 랜덤표 구글 시트 제공 (편집 가능, 표 내용은 직접 입력)',
@@ -130,7 +134,7 @@ export const BOT_TYPES: BotType[] = [
   },
   {
     name: TRPG_2D6_BOT_NAME,
-    price: 80000,
+    price: PB.addons.trpg2d6Bot,
     features: [
       '2D6 특기표 판정을 쓰는 J룰 TRPG용 자동봇 3종 세트',
       '특기를 체크하는 방식의 플레이어 구글 시트 제공',
@@ -175,13 +179,13 @@ export const SHOP_REQUIRES_LABEL = '기본&상점 또는 기본&상점&스탯 �
 
 // 3단계 사용자 요청으로 뺀 옵션: '특정 상황 DM 전송', '빠른 마감 (48시간 내)', '빠른 마감 (1주일 내)' (EstimateContext 의 판매 중단 목록에도 넣음)
 export const ADDITIONAL_OPTIONS: AdditionalOption[] = [
-  { name: '커스텀 명령어 업그레이드', price: 5000, aliases: ['기본 타입 - 커스텀 명령어 업그레이드', '기본&상점 타입 - 커스텀 명령어 업그레이드', '기본&상점&스탯 타입 - 커스텀 명령어 업그레이드'], requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
-  { name: '재화, 아이템 양도 기능', price: 10000, aliases: ['양도 기능', '기본&상점 타입 - 양도 기능', '기본&상점&스탯 타입 - 양도 기능'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
-  { name: '툿수-재화 자동반영', price: 10000, aliases: ['기본&상점 타입 - 툿수-재화 자동반영', '기본&상점&스탯 타입 - 툿수-재화 자동반영'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
-  { name: '출석 시스템', price: 10000, requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
-  { name: '예약 툿', label: '예약 툿 (시트로 관리)', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
-  { name: '스토리 자동 진행', label: '자동 스진 (시트로 관리)', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
-  { name: '일일 조사 횟수 제한', price: 5000, description: '[조사] 명령어 사용 시 1회 카운트', requires: INVESTIGATION_TYPE },
+  { name: '커스텀 명령어 업그레이드', price: PB.addons.customCommandUpgrade, aliases: ['기본 타입 - 커스텀 명령어 업그레이드', '기본&상점 타입 - 커스텀 명령어 업그레이드', '기본&상점&스탯 타입 - 커스텀 명령어 업그레이드'], requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
+  { name: '재화, 아이템 양도 기능', price: PB.addons.transferFeature, aliases: ['양도 기능', '기본&상점 타입 - 양도 기능', '기본&상점&스탯 타입 - 양도 기능'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
+  { name: '툿수-재화 자동반영', price: PB.addons.tootCurrencyLink, aliases: ['기본&상점 타입 - 툿수-재화 자동반영', '기본&상점&스탯 타입 - 툿수-재화 자동반영'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
+  { name: '출석 시스템', price: PB.addons.attendanceSystem, requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
+  { name: '예약 툿', label: '예약 툿 (시트로 관리)', price: PB.addons.reservationToot, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
+  { name: '스토리 자동 진행', label: '자동 스진 (시트로 관리)', price: PB.addons.autoProfileImage, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
+  { name: '일일 조사 횟수 제한', price: PB.addons.investigationDailyLimit, description: '[조사] 명령어 사용 시 1회 카운트', requires: INVESTIGATION_TYPE },
 ];
 
 export const INVESTIGATION_EXAMPLE = [

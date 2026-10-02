@@ -3,7 +3,9 @@
  * 별도 테스트 러너 없이 `npm run test` (vite SSR 번들 → node 실행)로 돌린다.
  */
 
-import { syncInfraFeeItem, insertRemovedItem } from '@/app/contexts/EstimateContext';
+import { syncInfraFeeItem, insertRemovedItem, sanitizeEstimateItems } from '@/app/contexts/EstimateContext';
+import { catalogPrice } from '@/app/utils/estimateCatalog';
+import { ADDITIONAL_OPTIONS as BOT_OPTIONS, BOT_TYPES } from '@/app/components/bot/botContent';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
 import {
   calculateServerPrice,
@@ -11,7 +13,13 @@ import {
   generateCopyText,
   getDeadlineBlackoutError,
   hasServerInfraFee,
+  asAccount,
   botPeriodWithYears,
+  computeRequiredFastDeadline,
+  extractMonthDay,
+  isPastMonthDay,
+  rushFitsCustomOption,
+  validateOrderConsistency,
   isRealMonthDay,
   MISSING_GOOGLE_EMAIL_MARK,
   MISSING_GOOGLE_PASSWORD_MARK,
@@ -19,6 +27,7 @@ import {
   validateDates,
   validateGoogleAccount,
   validateStep1,
+  validateStep2,
   validateStep3,
 } from '@/app/utils/orderUtils';
 import { syncCartToOrderData } from '@/app/utils/cartOrderSync';
@@ -41,6 +50,10 @@ import {
 } from '@/app/lib/mastodonServerConfig';
 
 let failed = 0;
+
+// 날짜 규칙(지난 폐장일·연도 범위)이 실행하는 해에 따라 달라지지 않게 올해 기준으로 만든다
+const THIS_YEAR = new Date().getFullYear();
+const NEXT_YEAR = THIS_YEAR + 1;
 
 function check(label: string, actual: unknown, expected: unknown): void {
   const passed = JSON.stringify(actual) === JSON.stringify(expected);
@@ -290,10 +303,10 @@ const filledStep1 = {
   communityShortName: '망저',
   communityKoreanName: '망각의 저편',
   communityEnglishName: 'Beyond the Oblivion',
-  // 4단계: 폐장일이 지난 신청은 막으므로 늘 미래 날짜로 (이 검사의 목적은 구글 계정)
-  resultAnnouncementDate: '2099-01-01',
-  openingDate: '2099-01-10',
-  closingDate: '2099-03-10',
+  // 4단계: 폐장일이 지난 신청·먼 연도 오타를 막으므로 늘 내년 날짜로 (이 검사의 목적은 구글 계정)
+  resultAnnouncementDate: `${NEXT_YEAR}-01-01`,
+  openingDate: `${NEXT_YEAR}-01-10`,
+  closingDate: `${NEXT_YEAR}-03-10`,
 };
 check('Step 1 검증은 구글 계정을 요구하지 않는다', validateStep1(filledStep1), []);
 check(
@@ -508,10 +521,64 @@ const englishNameError = (name: string) =>
 check('영어 이름: 영문·숫자·띄어쓰기·하이픈 통과', [englishNameError('Test Community 2'), englishNameError('long-while')], [null, null]);
 check('영어 이름: 한글·특수문자 불가', englishNameError('한글로만입력 !!@@'), '영어 이름은 영문, 숫자, 띄어쓰기, 하이픈(-)만 쓸 수 있습니다.');
 check('폐장일이 지났으면 막음', validateDates('2025-01-01', '2025-01-02', '2025-02-01')?.message, '폐장일이 이미 지났습니다. 날짜를 확인해 주세요.');
-check('발표일·개장일은 지나도 폐장일이 앞이면 통과', validateDates('2025-01-01', '2025-01-02', '2099-02-01'), null);
+check('발표일·개장일은 지나도 폐장일이 앞이면 통과', validateDates(`${THIS_YEAR - 1}-01-01`, `${THIS_YEAR - 1}-01-02`, `${NEXT_YEAR}-02-01`), null);
+check('없는 날짜(2월 31일)는 막음', validateDates(`${NEXT_YEAR}-01-01`, `${NEXT_YEAR}-02-31`, `${NEXT_YEAR}-03-01`)?.message, '유효하지 않은 날짜입니다.');
+check('연도 오타(먼 미래)는 막음', validateDates(`${NEXT_YEAR}-01-01`, `${NEXT_YEAR}-01-02`, '2206-02-01')?.message, '연도를 확인해 주세요.');
 check('자동봇 가동 기간에 연도: 해를 넘기면 시작은 전 해', botPeriodWithYears('11/01', '02/10', '2027-02-10'), '2026-11-01 ~ 2027-02-10');
 check('자동봇 가동 기간에 연도: 같은 해', botPeriodWithYears('3/5', '04/20', '2027-04-20'), '2027-03-05 ~ 2027-04-20');
 check('자동봇 가동 기간: 못 읽으면 null', botPeriodWithYears('13/45', '02/10', '2027-02-10'), null);
+
+// ===== 4단계 검토 반영 =====
+
+// 저장된 견적 정리: 모양이 이상한 항목 제거, 중복 제거, 가격은 현재 판매가로
+const dirty: unknown = [
+  null, 'x', { name: '검색 기능', price: '15000', category: 'server' },
+  { id: 'a', name: '검색 기능', price: 1, category: 'server' },
+  { id: 'b', name: '마스토돈 가이드', price: 5000, category: 'server' },
+  { id: 'c', name: '알 수 없는 옛 항목', price: -3, category: 'bot' },
+  { id: 'd', name: '알 수 없는 옛 항목2', price: 7000, category: 'bot' },
+  { id: 'e', name: '기본 가동료 (3주)', price: 1, category: 'bot' },
+  { id: 'f', name: '기본 타입', price: 1, category: 'weird' },
+];
+check('저장 견적 정리: 이름·가격·분류', sanitizeEstimateItems(dirty).map((i) => [i.name, i.price]), [['검색 기능', PRICING_CONFIG.server.addons.search], ['알 수 없는 옛 항목2', 7000], ['기본 가동료 (3주)', 3 * PRICING_CONFIG.bot.operationPerWeek]]);
+check('저장 견적 정리: 배열이 아니면 빈 견적', sanitizeEstimateItems({ a: 1 }), []);
+
+// 자동봇 페이지 가격 = 신청서 계산 가격 (한쪽만 바뀌면 견적함과 신청서 금액이 어긋난다)
+const botPriceByName = Object.fromEntries(BOT_TYPES.map((t) => [t.name, t.price]));
+check('봇 타입 가격 = PRICING_CONFIG', [botPriceByName['기본 타입'], botPriceByName['기본&상점 타입'], botPriceByName['기본&상점&스탯 타입'], botPriceByName['자동조사 타입'], botPriceByName['D100 룰 대응 TRPG봇'], botPriceByName['2D6 룰 대응 TRPG봇 3종']],
+  [PRICING_CONFIG.bot.mainTypes.basic, PRICING_CONFIG.bot.mainTypes.basicShop, PRICING_CONFIG.bot.mainTypes.basicShopStat, PRICING_CONFIG.bot.addons.investigationBot, PRICING_CONFIG.bot.addons.cocBot, PRICING_CONFIG.bot.addons.trpg2d6Bot]);
+check('봇 추가 옵션 가격 = 카탈로그', BOT_OPTIONS.every((o) => catalogPrice(o.name) === o.price), true);
+
+// 월/일 입력: 정해진 형식만 (숫자만 긁어 모으던 예전 동작 차단)
+check('월/일 형식', ['6/16', '6.16', '0616', '6월 16일', '６/１６'].map((v) => JSON.stringify(extractMonthDay(v))), Array(5).fill(JSON.stringify({ month: 6, day: 16 })));
+check('애매한 입력은 거절', ['6/1~6/3', '121', '약 6/16', '616'].map(extractMonthDay), [null, null, null, null]);
+
+// 지난 마감일: 빠른마감을 강제로 붙이지 않고 오류
+const REF = new Date(2026, 9, 2);
+check('지난 마감일은 빠른마감 강제 없음', computeRequiredFastDeadline('10/01', null, REF), null);
+check('오늘 마감은 24시간 빠른마감', computeRequiredFastDeadline('10/02', null, REF), 'basic24h');
+check('지난 날짜 판정', [isPastMonthDay('10/01', REF), isPastMonthDay('10/02', REF), isPastMonthDay('01/05', REF)], [true, false, false]);
+
+// 빠른마감 ↔ 커스텀 옵션
+check('빠른마감 맞춤', [rushFitsCustomOption('basic24h', null), rushFitsCustomOption('theme48h', null), rushFitsCustomOption('logo48h', 'logo'), rushFitsCustomOption('theme48h', 'nightTheme')], [true, false, true, true]);
+const rushStep2 = { ...createFormData().step2, applyServerInstall: 'yes' as const, desiredDeadline: '12/20', adminAccountId: 'notice', fastDeadline: true, fastDeadlineOption: 'theme48h' as const };
+check('맞지 않는 빠른마감은 오류', validateStep2(rushStep2).some((e) => e.field === 'fastDeadline'), true);
+check('빠른마감 옵션 없이 켜면 오류', validateStep2({ ...rushStep2, fastDeadlineOption: null }).some((e) => e.field === 'fastDeadline'), true);
+check('글자수 변경은 값 필수', validateStep2({ ...rushStep2, fastDeadline: false, fastDeadlineOption: null, changeCharacterLimit: true, characterLimitValue: 0 }).some((e) => e.field === 'characterLimitValue'), true);
+
+// 단계를 넘나드는 검사
+const emptyOrder = createFormData();
+check('서버·자동봇 둘 다 아니오면 오류', validateOrderConsistency({ ...emptyOrder, step2: { ...emptyOrder.step2, applyServerInstall: 'no' }, step3: { ...emptyOrder.step3, applyBot: 'no' } }, null).step3.length, 1);
+check('서버 설치인데 미리보기 미완료면 오류', validateOrderConsistency({ ...emptyOrder, step2: { ...emptyOrder.step2, applyServerInstall: 'yes' } }, null).step2.length, 1);
+
+// 자동봇 가동 기간: 날짜 필수, 1~52주
+const botStep3 = { ...createFormData().step3, applyBot: 'yes' as const, operationWeeksOption: 'manual' as const, mainBot: 'basic' as const, setupDeadline: '12/01', botAccountId: 'bot_one' };
+check('가동 날짜 없으면 오류', validateStep3({ ...botStep3, botStartDate: '', botEndDate: '', manualWeeks: 0 }).some((e) => e.field === 'operationWeeksOption'), true);
+check('가동 0주면 오류', validateStep3({ ...botStep3, botStartDate: '06/01', botEndDate: '06/02', manualWeeks: 0 }).some((e) => e.field === 'operationWeeksOption'), true);
+check('가동 4주는 통과', validateStep3({ ...botStep3, botStartDate: '06/01', botEndDate: '06/28', manualWeeks: 4 }).some((e) => e.field === 'operationWeeksOption'), false);
+
+// 계정 표기
+check('계정 표기 정리', [asAccount(' @@Notice '), asAccount('bot_1'), asAccount('  ')], ['@Notice', '@bot_1', '']);
 
 console.log(failed === 0 ? '\n모든 검증 통과' : `\n${failed}개 실패`);
 if (failed > 0) process.exit(1);

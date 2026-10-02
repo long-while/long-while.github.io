@@ -5,13 +5,13 @@
  *  Q6: 견적함에서 넘어와 값이 채워졌으면 커스텀·기타 옵션 대신 요약('선택하신 서버 사양' + 수정)으로 시작 (stepMode).
  *  검색 연동·Vultr 검색 차단·마감 임박 빠른 마감 강제·글자수 검증·'아니오' 초기화 동작은 기존 그대로.
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Checkbox, FieldLabel, FormSection, Icon, OptionRow, Radio, SelectionSummary } from '@/app/components/ds';
 import { ServerCalculator } from '@/app/components/server/ServerCostPreview';
 import { useOrder } from '@/app/contexts/OrderContext';
 import { FieldError, FieldGroupError, useFieldAria } from '@/app/contexts/FieldErrorContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { calculateTotalEstimate, validateCharacterLimit, computeRequiredFastDeadline, getDeadlineBlackoutError, validateAccountId, DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
+import { calculateTotalEstimate, validateCharacterLimit, computeRequiredFastDeadline, rushFitsCustomOption, getDeadlineBlackoutError, validateAccountId, DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
 import { PRICING_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
 import type { FastDeadlineOption, Step2Data } from '@/app/types/order';
 import { FieldErrorText, FromCartBadge, Pill, useFromCart } from '../fields';
@@ -65,10 +65,20 @@ function useStep2Rules() {
     () => computeRequiredFastDeadline(step2.desiredDeadline, step2.additionalOption),
     [step2.desiredDeadline, step2.additionalOption],
   );
+  // 자동으로 붙인 빠른마감은 기억해 두었다가, 마감일을 고쳐 더 이상 필요 없어지면 다시 뺀다.
+  // 예전에는 '10/25'를 치는 도중 '10/2'(오늘)에서 붙은 유료 옵션이 그대로 남았다 (4단계 검토). 직접 고른 빠른마감은 건드리지 않는다
+  const autoRushRef = useRef<FastDeadlineOption>(null);
   useEffect(() => {
-    if (!requiredFastDeadline) return;
-    if (step2.fastDeadline && step2.fastDeadlineOption === requiredFastDeadline) return;
-    updateStep2({ fastDeadline: true, fastDeadlineOption: requiredFastDeadline });
+    if (requiredFastDeadline) {
+      if (step2.fastDeadline && step2.fastDeadlineOption === requiredFastDeadline) return;
+      autoRushRef.current = requiredFastDeadline;
+      updateStep2({ fastDeadline: true, fastDeadlineOption: requiredFastDeadline });
+      return;
+    }
+    if (autoRushRef.current && step2.fastDeadline && step2.fastDeadlineOption === autoRushRef.current) {
+      updateStep2({ fastDeadline: false, fastDeadlineOption: null });
+    }
+    autoRushRef.current = null;
   }, [requiredFastDeadline, step2.fastDeadline, step2.fastDeadlineOption, updateStep2]);
 
   return { serverCalcResult, isLongTermServer, searchBlockedByVultr, searchLocked, requiredFastDeadline };
@@ -92,7 +102,7 @@ function InstallQuestion() {
     <FormSection
       title={<>서버 설치를 신청하시나요? <span className="text-brand" aria-hidden="true">*</span></>}
       titleAside={fromCart('마스토돈 서버 설치') && step2.applyServerInstall === 'yes' && <FromCartBadge />}
-      description={<>서버 설치 기본 비용: <span className="text-brand">20,000원</span></>}
+      description={<>서버 설치 기본 비용: <span className="text-brand">{PRICING_CONFIG.server.base.toLocaleString()}원</span></>}
     >
       <FieldGroupError field="applyServerInstall">
         <div className="flex flex-wrap gap-6" role="radiogroup" aria-label="서버 설치 신청 여부">
@@ -227,7 +237,10 @@ function FastDeadlineOption({ required }: { required: FastDeadlineOption | null 
   const fromCart = useFromCart();
   const step2 = formData.step2;
   // 강제 적용 시 해당 옵션 외 다른 빠른 마감 옵션은 잠금
-  const isLocked = (option: FastDeadlineOption) => required !== null && required !== option;
+  // 고른 커스텀 옵션에 맞지 않는 빠른마감도 잠근다 (서버 페이지와 같은 규칙, 4단계 검토). 이미 골라져 있으면 풀어 둬서 다른 걸로 바꿀 수 있게
+  const isLocked = (option: FastDeadlineOption) =>
+    (required !== null && required !== option) ||
+    (step2.fastDeadlineOption !== option && !rushFitsCustomOption(option, step2.additionalOption));
   return (
     <FieldGroupError field="fastDeadline">
       <OptionRow

@@ -133,14 +133,17 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
     { step: 2, field: 'fastDeadlineOption', value: 'basic48h' }
   ],
   fastDeadline24h: [
+    { step: 2, field: 'applyServerInstall', value: 'yes' },
     { step: 2, field: 'fastDeadline', value: true },
     { step: 2, field: 'fastDeadlineOption', value: 'basic24h' }
   ],
   fastDeadline48hLogo: [
+    { step: 2, field: 'applyServerInstall', value: 'yes' },
     { step: 2, field: 'fastDeadline', value: true },
     { step: 2, field: 'fastDeadlineOption', value: 'logo48h' }
   ],
   fastDeadline48hTheme: [
+    { step: 2, field: 'applyServerInstall', value: 'yes' },
     { step: 2, field: 'fastDeadline', value: true },
     { step: 2, field: 'fastDeadlineOption', value: 'theme48h' }
   ],
@@ -189,7 +192,7 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   investigationDailyLimit: [
     { step: 3, field: 'investigationDailyLimit', value: true },
   ],
-  dmNotification: [{ step: 3, field: 'dmNotification', value: true }],
+  dmNotification: [], // 판매 중단 (신청서에 해당 칸 없음)
   attendanceSystem: [
     { step: 3, field: 'applyBot', value: 'yes' },
     { step: 3, field: 'attendanceSystem', value: true },

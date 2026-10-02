@@ -54,7 +54,7 @@ function BotPeriodInputs({ s }: S) {
         <input type="text" inputMode="numeric" value={step3.botEndDate} placeholder="MM/DD" aria-label="가동 종료일" className={box}
           onChange={(e) => updateStep3({ botEndDate: normalizeMonthDayInput(e.target.value) })} />
         <span className="text-body2 text-text-primary">
-          ({[botPeriodWithYears(step3.botStartDate, step3.botEndDate, s.step1.closingDate), `${step3.manualWeeks}주`, formatManwon(step3.manualWeeks * 5000)].filter(Boolean).join(', ')})
+          ({[botPeriodWithYears(step3.botStartDate, step3.botEndDate, s.step1.closingDate), `${step3.manualWeeks}주`, formatManwon(step3.manualWeeks * PRICING_CONFIG.bot.operationPerWeek)].filter(Boolean).join(', ')})
         </span>
       </div>
     </SubPanel>
@@ -70,11 +70,11 @@ export function OperationSection({ s }: S) {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6" role="radiogroup" aria-label="자동봇 가동 기간">
           <OptionCard id="operationWeeksOption" name="operationWeeksOption" layout="row" checked={step3.operationWeeksOption === 'longterm'}
             onChange={() => updateStep3({ operationWeeksOption: 'longterm', manualWeeks: 0 })}
-            title="12개월 이상 장기 소규모 서버를 위한 자동봇이에요." price="1만원"
+            title="12개월 이상 장기 소규모 서버를 위한 자동봇이에요." price={formatManwon(PRICING_CONFIG.bot.longTermSetupFee)}
             description={step3.operationWeeksOption === 'longterm' ? '자동봇이 마스토돈과 동일한 머신에 설치됩니다. 가동 주수에 따른 비용이 없는 대신, 초기 세팅 비용 1만원이 청구됩니다.' : undefined} />
           <OptionCard name="operationWeeksOption" layout="row" checked={step3.operationWeeksOption === 'manual'}
             onChange={() => updateStep3({ operationWeeksOption: 'manual' })}
-            title="자캐 커뮤니티를 위한 자동봇이에요." price="주당 5천원" />
+            title="자캐 커뮤니티를 위한 자동봇이에요." price={`주당 ${formatManwon(PRICING_CONFIG.bot.operationPerWeek)}`} />
         </div>
         {step3.operationWeeksOption === 'manual' && <div className="mt-4"><BotPeriodInputs s={s} /></div>}
       </FieldGroupError>
@@ -83,7 +83,7 @@ export function OperationSection({ s }: S) {
 }
 
 export function MainBotSection({ s }: S) {
-  const { step3, updateStep3, fromCart, handleMainBotChange, basicBotBlockedByCoc, blockingTrpgBotNames } = s;
+  const { step3, fromCart, handleMainBotChange, handleTrpgChange, trpgNotice, basicBotBlockedByCoc, blockingTrpgBotNames } = s;
   // 같은 메인 봇을 다시 누르면 선택 해제 (기존 동작)
   const mainBotCard = (value: 'basic' | 'basicShop' | 'basicShopStat', title: string, price: string, badge: ReactNode, extra?: { id?: string; disabled?: boolean }) => (
     <OptionCard key={value} id={extra?.id} name="mainBot" layout="row" checked={step3.mainBot === value} disabled={extra?.disabled}
@@ -100,19 +100,22 @@ export function MainBotSection({ s }: S) {
     >
       <FieldGroupError field="mainBot">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {mainBotCard('basic', '기본', '15,000원', <>
+          {mainBotCard('basic', '기본', won(PRICING_CONFIG.bot.mainTypes.basic).slice(1), <>
             {fromCart.basicBot && step3.mainBot === 'basic' && <FromCartBadge />}
             {basicBotBlockedByCoc && <Pill>{blockingTrpgBotNames}과 중복 불가</Pill>}
           </>, { id: 'mainBot', disabled: basicBotBlockedByCoc })}
-          {mainBotCard('basicShop', '기본&상점', '35,000원', fromCart.basicShopBot && step3.mainBot === 'basicShop' && <FromCartBadge />)}
-          {mainBotCard('basicShopStat', '기본&상점&스탯', '45,000원', fromCart.basicShopStatBot && step3.mainBot === 'basicShopStat' && <FromCartBadge />)}
-          <OptionCard type="checkbox" layout="row" checked={step3.cocBot} onChange={(e) => updateStep3({ cocBot: e.target.checked })}
+          {mainBotCard('basicShop', '기본&상점', won(PRICING_CONFIG.bot.mainTypes.basicShop).slice(1), fromCart.basicShopBot && step3.mainBot === 'basicShop' && <FromCartBadge />)}
+          {mainBotCard('basicShopStat', '기본&상점&스탯', won(PRICING_CONFIG.bot.mainTypes.basicShopStat).slice(1), fromCart.basicShopStatBot && step3.mainBot === 'basicShopStat' && <FromCartBadge />)}
+          <OptionCard type="checkbox" layout="row" checked={step3.cocBot} onChange={(e) => handleTrpgChange('cocBot', e.target.checked)}
             title={<CardTitle badge={fromCart.cocBot && step3.cocBot && <FromCartBadge />}>D100 룰 대응 TRPG봇</CardTitle>} price={won(PRICING_CONFIG.bot.addons.cocBot)} />
-          <OptionCard type="checkbox" layout="row" checked={step3.trpg2d6Bot} onChange={(e) => updateStep3({ trpg2d6Bot: e.target.checked })}
+          <OptionCard type="checkbox" layout="row" checked={step3.trpg2d6Bot} onChange={(e) => handleTrpgChange('trpg2d6Bot', e.target.checked)}
             title={<CardTitle badge={fromCart.trpg2d6Bot && step3.trpg2d6Bot && <FromCartBadge />}>2D6 룰 대응 TRPG봇 3종</CardTitle>} price={won(PRICING_CONFIG.bot.addons.trpg2d6Bot)} />
         </div>
+        {trpgNotice && (
+          <p role="status" className="mt-4 rounded-input border border-warning-200 bg-warning-50 px-5 py-4 text-body3 text-warning-700">{trpgNotice}</p>
+        )}
         {/* TRPG 봇 선택 시 기본 봇 잠금 안내 */}
-        {basicBotBlockedByCoc && (
+        {basicBotBlockedByCoc && !trpgNotice && (
           <p className="mt-4 rounded-input bg-background-brand px-5 py-4 text-body3 text-text-primary">
             {blockingTrpgBotNames}을 선택하셔서 <strong className="font-medium">기본 봇</strong>은 선택할 수 없습니다. 기능이 겹쳐 함께 신청하실 필요가 없어요.
             기본 봇 단독으로 신청하시려면 {blockingTrpgBotNames} 선택을 해제해 주세요. (기본&상점, 기본&상점&스탯은 함께 선택하실 수 있습니다.)
@@ -129,7 +132,7 @@ function InvestigationAddon({ s }: S) {
     <>
       <OptionCard type="checkbox" layout="row" checked={step3.investigationBot} onChange={(e) => handleInvestigationBotChange(e.target.checked)}
         title={<CardTitle badge={fromCart.investigation && step3.investigationBot && <FromCartBadge />}>조사 자동봇</CardTitle>}
-        description="메인 봇(기본 / 기본&상점 / 기본&상점&스탯)과 함께 신청 시 추가 가능" price="+20,000원" />
+        description="메인 봇(기본 / 기본&상점 / 기본&상점&스탯)과 함께 신청 시 추가 가능" price={won(PRICING_CONFIG.bot.addons.investigationBot)} />
       {/* 일일 조사 횟수 제한 (조사 자동봇 선택 시에만) */}
       {step3.investigationBot && (
         <SubPanel className="lg:col-span-2">
@@ -139,7 +142,7 @@ function InvestigationAddon({ s }: S) {
               updateStep3({ investigationDailyLimit: checked });
               if (!checked) updateStep3({ investigationDailyLimitCount: 0 });
             }}
-            title="일일 조사 횟수 제한" description="[조사] 명령어 사용 시 1회 카운트" price="+5,000원" />
+            title="일일 조사 횟수 제한" description="[조사] 명령어 사용 시 1회 카운트" price={won(PRICING_CONFIG.bot.addons.investigationDailyLimit)} />
           {step3.investigationDailyLimit && (
             <div className="flex flex-col gap-3 md:w-[280px]">
               <FieldLabel htmlFor="investigationDailyLimitCount">일일 조사 횟수</FieldLabel>
@@ -280,7 +283,8 @@ function AttendancePanel({ s }: S) {
             <span className="text-title4 text-text-primary" aria-hidden="true">[</span>
             <input id="attendanceCommand" {...fieldAria('attendanceCommand')} type="text" placeholder="출석" className="form-input md:max-w-[200px]"
               value={(step3.attendanceCommand || '[출석]').replace(/^\[|\]$/g, '')}
-              onChange={(e) => updateStep3({ attendanceCommand: `[${e.target.value.replace(/[[\]]/g, '').trim()}]` })}
+              // 입력 중에는 공백을 지우지 않는다 (띄어쓰기가 안 쳐졌다). 앞뒤 공백 정리는 포커스를 벗어날 때
+              onChange={(e) => updateStep3({ attendanceCommand: `[${e.target.value.replace(/[[\]]/g, '')}]` })}
               onBlur={() => {
                 const inner = (step3.attendanceCommand || '').replace(/[[\]]/g, '').trim();
                 updateStep3({ attendanceCommand: `[${inner || '출석'}]` });
@@ -366,7 +370,7 @@ function TootCurrencyAddon({ s }: S) {
   return (
     <>
       <OptionCard type="checkbox" layout="row" checked={step3.tootCurrencyLink} onChange={(e) => updateStep3({ tootCurrencyLink: e.target.checked })}
-        title={<CardTitle badge={fromCart.tootCurrency && step3.tootCurrencyLink && <FromCartBadge />}>툿수-재화 자동반영</CardTitle>} price="+10,000원" />
+        title={<CardTitle badge={fromCart.tootCurrency && step3.tootCurrencyLink && <FromCartBadge />}>툿수-재화 자동반영</CardTitle>} price={won(PRICING_CONFIG.bot.addons.tootCurrencyLink)} />
       {step3.tootCurrencyLink && (
         <SubPanel className="lg:col-span-2">
           <FieldLabel htmlFor="tootPerCurrency">몇 툿당 소지금에 얼마가 추가되어야 하나요?</FieldLabel>
@@ -386,11 +390,11 @@ export function AddonSection({ s }: S) {
         {canHaveInvestigationBot && <InvestigationAddon s={s} />}
         <OptionCard type="checkbox" layout="row" checked={step3.customCommandUpgrade} onChange={(e) => updateStep3({ customCommandUpgrade: e.target.checked })}
           title={<CardTitle badge={fromCart.customCommandUpgrade && step3.customCommandUpgrade && <FromCartBadge />}>커스텀 명령어 업그레이드</CardTitle>}
-          description="유저 이름/은는맞춤/문구 내 다이스 기능 추가" price="+5,000원" />
+          description="유저 이름/은는맞춤/문구 내 다이스 기능 추가" price={won(PRICING_CONFIG.bot.addons.customCommandUpgrade)} />
         <OptionCard type="checkbox" layout="row" checked={step3.reservationToot} onChange={(e) => s.handleReservationTootChange(e.target.checked)}
-          title={<CardTitle badge={fromCart.reservation && step3.reservationToot && <FromCartBadge />}>예약 툿</CardTitle>} price="+5,000원" />
+          title={<CardTitle badge={fromCart.reservation && step3.reservationToot && <FromCartBadge />}>예약 툿 (시트로 관리)</CardTitle>} price={won(PRICING_CONFIG.bot.addons.reservationToot)} />
         <OptionCard type="checkbox" layout="row" checked={step3.autoProfileImage} onChange={(e) => s.handleAutoProfileImageChange(e.target.checked)}
-          title={<CardTitle badge={fromCart.autoProfile && step3.autoProfileImage && <FromCartBadge />}>자동 스진</CardTitle>} price="+5,000원" />
+          title={<CardTitle badge={fromCart.autoProfile && step3.autoProfileImage && <FromCartBadge />}>자동 스진 (시트로 관리)</CardTitle>} price={won(PRICING_CONFIG.bot.addons.autoProfileImage)} />
         {/* 예약 툿 또는 자동 스진 선택 시 계정 목록 입력 */}
         {showAccountList && <AccountListPanel s={s} />}
         {showTransferFeature && <TootCurrencyAddon s={s} />}
@@ -398,14 +402,14 @@ export function AddonSection({ s }: S) {
           <>
             <OptionCard type="checkbox" layout="row" checked={step3.attendanceSystem} onChange={(e) => updateStep3({ attendanceSystem: e.target.checked })}
               title={<CardTitle badge={fromCart.attendance && step3.attendanceSystem && <FromCartBadge />}>출석 시스템</CardTitle>}
-              description="매일 [출석] 혹은 지정한 명령어 사용 시 1회 출석, 운영진이 지정한 재화 획득" price="+10,000원" />
+              description="매일 [출석] 혹은 지정한 명령어 사용 시 1회 출석, 운영진이 지정한 재화 획득" price={won(PRICING_CONFIG.bot.addons.attendanceSystem)} />
             {step3.attendanceSystem && <AttendancePanel s={s} />}
           </>
         )}
         {showTransferFeature && (
           <>
             <OptionCard type="checkbox" layout="row" checked={step3.transferFeature} onChange={(e) => updateStep3({ transferFeature: e.target.checked })}
-              title={<CardTitle badge={fromCart.transfer && step3.transferFeature && <FromCartBadge />}>양도 기능</CardTitle>} price="+10,000원" />
+              title={<CardTitle badge={fromCart.transfer && step3.transferFeature && <FromCartBadge />}>재화, 아이템 양도 기능</CardTitle>} price={won(PRICING_CONFIG.bot.addons.transferFeature)} />
             {step3.transferFeature && <TransferPanel s={s} />}
           </>
         )}

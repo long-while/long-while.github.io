@@ -8,6 +8,7 @@
  */
 import clsx from 'clsx';
 import { BulletList, Icon } from '@/app/components/ds';
+import { PRICING_CONFIG } from '@/app/constants/form';
 import { COMPARE_COLUMNS, COMPARE_PRICES, COMPARE_ROWS, CUSTOM_COMMAND_EXAMPLES } from './botContent';
 
 const cell = 'border border-border-100 px-2 py-3 lg:p-6';
@@ -53,7 +54,7 @@ export function CompareTable() {
         </table>
       </div>
       <p className="text-body3 text-text-secondary">
-        * 자동조사(₩20,000)와 오마카세(협의)는 아래에서 따로 확인해 주세요.
+        * 자동조사(₩{PRICING_CONFIG.bot.addons.investigationBot.toLocaleString()})와 오마카세(협의)는 아래에서 따로 확인해 주세요.
       </p>
     </div>
   );

@@ -21,7 +21,7 @@ interface OrderContextType {
   loadFromLocalStorage: () => boolean;
   // 임시저장 복원 직후 여부 (구글 비밀번호는 저장되지 않아 재입력 안내가 필요)
   restoredFromStorage: boolean;
-  syncFromCart: (cartItems: EstimateItem[]) => void;
+  syncFromCart: (cartItems: EstimateItem[], syncState?: CartSyncState | null) => void;
   cartSyncState: CartSyncState | null;
   clearCartSync: () => void;
   /** 견적함 항목으로 실제 값을 채운 단계 (Q6: 이 단계만 요약 상태로 시작). 직접 들어오거나 기존 신청서를 유지하면 null */
@@ -144,6 +144,30 @@ function applyCocBotExclusivity(step3: Step3Data): Step3Data {
   };
 }
 
+/**
+ * 저장본의 한 단계 값을 초기값 모양에 맞춰 합친다.
+ * 초기값이 null 인 칸(선택 전 상태)은 null·문자열만, 배열은 문자열 배열만, 숫자는 유한수만, 나머지는 같은 타입일 때만 받는다.
+ */
+function mergeSaved<T extends object>(initial: T, raw: unknown): T {
+  const merged = { ...initial } as Record<string, unknown>;
+  if (!raw || typeof raw !== 'object') return merged as T;
+  const source = raw as Record<string, unknown>;
+  for (const [key, initialValue] of Object.entries(initial)) {
+    const value = source[key];
+    if (value === undefined) continue;
+    if (initialValue === null) {
+      if (value === null || typeof value === 'string') merged[key] = value;
+    } else if (Array.isArray(initialValue)) {
+      if (Array.isArray(value)) merged[key] = value.filter((entry) => typeof entry === 'string');
+    } else if (typeof initialValue === 'number') {
+      if (typeof value === 'number' && Number.isFinite(value)) merged[key] = value;
+    } else if (typeof value === typeof initialValue) {
+      merged[key] = value;
+    }
+  }
+  return merged as T;
+}
+
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export function OrderProvider({ children }: { children: ReactNode }) {
@@ -189,8 +213,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // 장바구니에서 데이터 동기화
-  const syncFromCart = useCallback((cartItems: EstimateItem[]) => {
+  const syncFromCart = useCallback((cartItems: EstimateItem[], syncStateArg?: CartSyncState | null) => {
     setAutosaveReady(true);
+    // resetForm 이 저장소의 동기화 표시를 먼저 지우는 경로(견적으로 새로 작성)가 있어 호출하는 쪽에서 받은 값을 우선 쓴다
+    const syncState = syncStateArg !== undefined ? syncStateArg : loadSyncState();
     if (cartItems.length === 0) return;
 
     const { step2, step3 } = syncCartToOrderData(cartItems);
@@ -210,9 +236,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       };
     });
 
-    // 동기화 상태 업데이트
-    const syncState = loadSyncState();
+    // 화면(배너·'견적에서 선택됨' 표시)용으로는 기억하고, 저장소 표시는 지운다.
+    // 남겨 두면 새로고침할 때마다 '견적 데이터 반영' 창이 다시 떠서 '견적으로 새로 작성'으로 작업을 날릴 수 있었다 (4단계 검토)
     setCartSyncState(syncState);
+    clearSyncState();
   }, []);
 
   // 장바구니 동기화 상태 초기화
@@ -235,6 +262,11 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const saveToLocalStorage = useCallback(() => {
     if (!autosaveReady) return;
     try {
+      // 아무것도 안 쓴 신청서는 저장하지 않는다 (들어왔다 나가기만 해도 다음에 '작성 중인 내용 발견'이 떴다, 4단계 검토)
+      if (currentStep === 1 && JSON.stringify(formData) === JSON.stringify(initialFormData)) {
+        localStorage.removeItem(ORDER_STORAGE_KEY);
+        return;
+      }
       const sanitizedFormData = {
         ...formData,
         step1: {
@@ -275,14 +307,16 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      if (parsed.formData && parsed.currentStep) {
-        // 기존 데이터와 초기값을 병합하여 누락된 필드 방지 (v1 → v2 마이그레이션 포함)
+      if (parsed && typeof parsed === 'object' && parsed.formData && typeof parsed.formData === 'object') {
+        // 초기값과 같은 모양인 값만 가져온다 (null·다른 타입·NaN 이 기본값을 덮어 화면이 깨지지 않게, 4단계 검토. v1 → v2 마이그레이션 포함)
         const mergedFormData: OrderFormData = {
-          step1: { ...initialStep1Data, ...parsed.formData.step1 },
-          step2: { ...initialStep2Data, ...parsed.formData.step2 },
-          step3: { ...initialStep3Data, ...migrateStep3(parsed.formData.step3) },
-          step4: { ...initialStep4Data, ...parsed.formData.step4 },
+          step1: mergeSaved(initialStep1Data, parsed.formData.step1),
+          step2: mergeSaved(initialStep2Data, parsed.formData.step2),
+          step3: mergeSaved(initialStep3Data, migrateStep3(parsed.formData.step3)),
+          step4: mergeSaved(initialStep4Data, parsed.formData.step4),
         };
+        // 비밀번호는 저장하지 않는다. 예전·조작된 저장본에 들어 있어도 비운다
+        mergedFormData.step1.googlePassword = '';
         // 불변식 유지: 예전(변경 전) 저장본이 장기 소규모 + 검색을 동시에 담고 있어도 검색을 해제한다.
         if (mergedFormData.step1.isLongTermCommunity) {
           mergedFormData.step2.searchOption = false;
@@ -290,7 +324,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         // 불변식 유지: 예전 저장본에 기본 봇 + TRPG 봇이 함께 담겨 있어도 기본 봇을 해제한다.
         mergedFormData.step3 = applyCocBotExclusivity(mergedFormData.step3);
         setFormData(mergedFormData);
-        setCurrentStep(parsed.currentStep);
+        // 단계는 1~4 만 (범위 밖이면 빈 화면이 됐다)
+        const step = Number(parsed.currentStep);
+        setCurrentStep(Number.isInteger(step) && step >= 1 && step <= 4 ? (step as 1 | 2 | 3 | 4) : 1);
         // 비밀번호는 저장되지 않으므로 복원 시 재입력 안내 플래그 설정
         setRestoredFromStorage(true);
         return true;
@@ -320,12 +356,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     };
   }, [saveToLocalStorage]);
 
-  // 초기 마운트: 동기화 상태 확인, 이어 쓸 저장본이 없으면 바로 자동 저장 시작
+  // 초기 마운트: 이어 쓸 저장본도 견적 반영도 없으면 바로 자동 저장 시작.
+  // 동기화 상태(배너·표시)는 실제로 견적을 반영할 때만 켠다 (예전에는 '기존 신청서 유지'를 골라도 '반영되었습니다'가 떴다)
   useEffect(() => {
     const syncState = loadSyncState();
-    if (syncState?.synced) {
-      setCartSyncState(syncState);
-    }
     if (!syncState?.synced && !localStorage.getItem(ORDER_STORAGE_KEY)) setAutosaveReady(true);
   }, []);
 

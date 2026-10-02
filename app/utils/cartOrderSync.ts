@@ -13,13 +13,16 @@ import {
 } from '@/app/types/estimate-mapping';
 
 // 견적 항목에서 mappingKey 추출
+const hasOwn = (obj: object, key: string) => Object.prototype.hasOwnProperty.call(obj, key);
+
+// 'constructor' 같은 이름·키가 객체 기본 속성으로 잡혀 오류가 나지 않게 자기 속성만 본다 (4단계 검토)
 export function getMappingKeyFromItem(item: EstimateItem): EstimateMappingKey | undefined {
   // 먼저 item에 직접 mappingKey가 있는지 확인
-  if (item.mappingKey) {
+  if (item.mappingKey && hasOwn(MAPPING_KEY_TO_ORDER_FIELD, item.mappingKey)) {
     return item.mappingKey;
   }
   // 없으면 이름으로 매핑
-  return ESTIMATE_NAME_TO_MAPPING_KEY[item.name];
+  return hasOwn(ESTIMATE_NAME_TO_MAPPING_KEY, item.name) ? ESTIMATE_NAME_TO_MAPPING_KEY[item.name] : undefined;
 }
 
 // 가동료 항목에서 주수 추출
@@ -39,6 +42,7 @@ export function syncCartToOrderData(
   const step3Updates: Partial<Step3Data> = {};
 
   cartItems.forEach(item => {
+    if (!item || typeof item.name !== 'string') return;
     // 가동료 특별 처리
     const weeks = extractOperationWeeks(item);
     if (weeks !== null) {

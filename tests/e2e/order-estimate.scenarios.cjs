@@ -67,6 +67,8 @@ const draft = (currentStep, over = {}) => ({
   currentStep,
   savedAt: new Date().toISOString(),
 });
+// 4단계 검토: 서버 설치를 신청하면 서버비 미리보기 결과가 있어야 다음으로 간다 → 초안을 채울 때 함께 넣는다
+const CALC = { type: 'gcp', months: 3, usersKey: 'u10', search: 'no', tier: null };
 const syncState = (items) => ({ synced: true, syncedAt: new Date().toISOString(), itemCount: items.length, syncedItems: items.map((i) => i.name) });
 
 // ── 화면 도우미 (디자인이 바뀌면 여기만 고친다) ─────────────────
@@ -77,6 +79,7 @@ const ui = {
     await locator.evaluate((el) => { if (!el.checked) el.click(); });
   },
   async seed(page, storage) {
+    if (storage[KEY.draft] && !storage[KEY.calc]) storage = { ...storage, [KEY.calc]: CALC };
     await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
     await page.evaluate((s) => {
       localStorage.clear();
@@ -684,6 +687,43 @@ Object.assign(SCENARIOS, {
     expect((await weeksItem()) === '기본 가동료 (10주)', `직접 입력 10주: ${await weeksItem()}`);
   },
 
+  async 'past-deadline-and-bot-dates'(page) {
+    // 4단계 검토: 지난 마감일에 유료 빠른마감이 자동으로 붙던 문제, '6/16'이 '61/6'으로 바뀌어 가동비 0원이 되던 문제
+    const yesterday = new Date(Date.now() - DAY);
+    const past = `${String(yesterday.getMonth() + 1).padStart(2, '0')}/${String(yesterday.getDate()).padStart(2, '0')}`;
+    await ui.seed(page, { [KEY.draft]: draft(2) });
+    await ui.open(page, '/order/');
+    await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
+    await ui.waitStep(page, 2);
+    await page.locator('#desiredDeadline').fill(past);
+    await page.waitForTimeout(600);
+    const saved = await page.evaluate((k) => JSON.parse(localStorage.getItem(k)).formData.step2, KEY.draft);
+    expect(!saved.fastDeadline, '지난 날짜에는 빠른마감을 자동으로 붙이지 않음');
+    await ui.next(page);
+    await expectVisible(page.getByText('이미 지난 날짜예요').first(), '지난 마감일 오류');
+
+    await ui.seed(page, { [KEY.draft]: draft(3, { step2: { applyServerInstall: 'no', desiredDeadline: '', adminAccountId: '' }, step3: { applyBot: 'yes', operationWeeksOption: 'manual', mainBot: 'basic' } }) });
+    await ui.open(page, '/order/');
+    await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
+    await ui.waitStep(page, 3);
+    const start = page.getByLabel('가동 시작일');
+    await start.fill('');
+    await start.pressSequentially('6/16');
+    expect((await start.inputValue()) === '6/16', `가동 시작일 입력 유지: ${await start.inputValue()}`);
+  },
+
+  async 'sync-dialog-once'(page) {
+    // 4단계 검토: 견적을 반영한 뒤 새로고침할 때마다 '견적 데이터 반영' 창이 다시 떠서 작업을 날릴 수 있었다
+    await ui.seed(page, { [KEY.estimate]: ESTIMATE_ITEMS, [KEY.sync]: syncState(ESTIMATE_ITEMS) });
+    await ui.open(page, '/order/');
+    await expectVisible(page.getByText('견적 항목이 자동으로 반영되었습니다'), '처음엔 반영 안내');
+    await ui.fillStep1(page);
+    await page.waitForTimeout(600);
+    await page.reload({ waitUntil: 'networkidle' });
+    expect((await ui.dialog(page, '견적 데이터 반영').count()) === 0, '새로고침해도 견적 반영 창이 다시 뜨지 않음');
+    await expectVisible(ui.dialog(page, '작성 중인 내용 발견'), '대신 이어 쓰기 창');
+  },
+
   async 'no-horizontal-overflow'(page) {
     // 리뷰(4단계): 이용안내가 1218px 에서 가로로 넘쳤다. 실행 너비 + 좁은 PC 너비(1024·1218)에서 모든 경로를 본다
     const base = page.viewportSize();
@@ -718,7 +758,7 @@ Object.assign(SCENARIOS, {
 
   async 'keyboard-full-flow'(page) {
     await page.addInitScript(RECORD_OPEN);
-    await ui.seed(page, {});
+    await ui.seed(page, { [KEY.calc]: CALC });
     await ui.open(page, '/order/');
     await ui.waitStep(page, 1);
     await page.locator('body').focus();
@@ -743,10 +783,12 @@ Object.assign(SCENARIOS, {
     await tabTo(page, focusedText('다음'), '다음 버튼');
     await page.keyboard.press('Enter');
     await ui.waitStep(page, 2);
+    // 4단계 검토: 서버·자동봇 둘 다 '아니오'는 막히므로 서버 설치 '예'로 끝까지 (미리보기 값은 미리 채움)
     await tabTo(page, focusedRadio('applyServerInstall'), '서버 설치 라디오');
-    await page.keyboard.press('ArrowRight'); // 예 → 아니오 (라디오 묶음은 방향키)
-    if (!(await ui.serverNo(page).isChecked())) { await page.keyboard.press('Space'); }
-    expect(await ui.serverNo(page).isChecked(), '키보드로 서버 아니오');
+    if (!(await ui.serverYes(page).isChecked())) { await page.keyboard.press('Space'); }
+    expect(await ui.serverYes(page).isChecked(), '키보드로 서버 예');
+    await typeInto('desiredDeadline', safeDeadline(35));
+    await typeInto('adminAccountId', 'kbadmin');
     await tabTo(page, focusedText('다음'), '다음 버튼');
     await page.keyboard.press('Enter');
     await ui.waitStep(page, 3);

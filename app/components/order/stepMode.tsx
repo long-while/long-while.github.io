@@ -10,6 +10,7 @@ import { useOrder } from '@/app/contexts/OrderContext';
 import type { Step2Data, Step3Data, ValidationError } from '@/app/types/order';
 import { RUSH_LABEL, THEME_CHOICE_LABEL } from '@/app/components/server/serverContent';
 import { botPeriodWithYears } from '@/app/utils/orderUtils';
+import { PRICING_CONFIG } from '@/app/constants/form';
 
 type SummaryStep = 2 | 3;
 
@@ -85,7 +86,7 @@ const MAIN_BOT_LABEL: Record<NonNullable<Step3Data['mainBot']>, string> = { basi
 /** STEP3 요약 줄 (STEP4 '자동봇 커미션' 과 같은 이름) */
 export function botSummaryRows(step3: Step3Data, closingDate: string) {
   const schedule = step3.operationWeeksOption === 'longterm'
-    ? '12개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
+    ? `12개월 이상 장기 소규모 자동봇 (세팅비 ${PRICING_CONFIG.bot.longTermSetupFee.toLocaleString()}원)`
     : step3.botStartDate && step3.botEndDate
       ? `${botPeriodWithYears(step3.botStartDate, step3.botEndDate, closingDate) ?? `${step3.botStartDate} ~ ${step3.botEndDate}`} (${step3.manualWeeks}주)`
       : `${step3.manualWeeks}주`;

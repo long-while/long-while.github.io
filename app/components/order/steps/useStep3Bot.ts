@@ -3,9 +3,10 @@
  *  가동 일정 기본값, 주수 자동 계산, 마감 불가 기간·계정 아이디 즉시 검증, 메인 봇·조사 자동봇·TRPG 봇 의존 초기화,
  *  예약 툿·자동 스진 계정 목록(무료 칸·추가 구매·환불) 규칙.
  */
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import {
+  extractMonthDay,
   getDeadlineBlackoutError,
   getPrimaryBotAccountLabel,
   needsMainBotAccountId,
@@ -32,9 +33,13 @@ function ymdToMonthDay(date: string): string {
   return `${m}/${d}`;
 }
 
-// MM/DD 입력값을 4자리 안으로 정규화 (자동 슬래시 삽입)
+// MM/DD 입력값 정리. '6/16'처럼 구분자를 직접 쓰면 그대로 두고(예전에는 숫자만 모아 '61/6'이 됐다, 4단계 검토),
+// 숫자만 치면 2자리 뒤에 '/'를 넣는다 ('0616' → '06/16'). 전각 숫자도 받는다
 export function normalizeMonthDayInput(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 4);
+  const value = raw.normalize('NFKC');
+  const typed = value.match(/^\s*(\d{0,2})\s*[/.\-]\s*(\d{0,2})/);
+  if (typed) return `${typed[1]}/${typed[2]}`;
+  const digits = value.replace(/\D/g, '').slice(0, 4);
   if (digits.length <= 2) return digits;
   return `${digits.slice(0, 2)}/${digits.slice(2)}`;
 }
@@ -47,23 +52,17 @@ export function formatManwon(won: number): string {
   return `${man.toFixed(1)}만원`;
 }
 
-// MM/DD ~ MM/DD 사이 주수 계산 (종료일이 시작일보다 이르면 다음 해로 가정)
+// MM/DD ~ MM/DD 사이 주수 계산. 종료일은 폐장일 연도(baseYear), 시작일이 더 늦은 날짜면 그 전 해로 본다.
+// 없는 날짜(2/31 등)나 읽을 수 없는 입력은 0 → validateStep3 가 날짜를 다시 묻는다
 function calculateWeeksFromMonthDay(start: string, end: string, baseYear: number): number {
-  const startMatch = start.match(/^(\d{1,2})\/(\d{1,2})$/);
-  const endMatch = end.match(/^(\d{1,2})\/(\d{1,2})$/);
-  if (!startMatch || !endMatch) return 0;
-  const sm = parseInt(startMatch[1], 10);
-  const sd = parseInt(startMatch[2], 10);
-  const em = parseInt(endMatch[1], 10);
-  const ed = parseInt(endMatch[2], 10);
-  if (sm < 1 || sm > 12 || em < 1 || em > 12 || sd < 1 || sd > 31 || ed < 1 || ed > 31) return 0;
-  const startDate = new Date(baseYear, sm - 1, sd);
-  let endDate = new Date(baseYear, em - 1, ed);
-  if (endDate.getTime() < startDate.getTime()) {
-    endDate = new Date(baseYear + 1, em - 1, ed);
-  }
-  const diffMs = endDate.getTime() - startDate.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+  const s = extractMonthDay(start);
+  const e = extractMonthDay(end);
+  if (!s || !e) return 0;
+  const startYear = s.month * 100 + s.day > e.month * 100 + e.day ? baseYear - 1 : baseYear;
+  const startDate = new Date(startYear, s.month - 1, s.day);
+  const endDate = new Date(baseYear, e.month - 1, e.day);
+  if (startDate.getDate() !== s.day || endDate.getDate() !== e.day) return 0;
+  const diffDays = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   return Math.max(0, Math.round(diffDays / 7));
 }
 
@@ -96,24 +95,29 @@ export function useStep3Bot() {
   const omakaseFromCart = isFromCart('오마카세');
   const investigationFromCart = isFromCart('자동조사');
 
-  // 자동봇 신청 시 가동 일정 기본값 채우기 (한 번만)
+  // 자동봇 신청 시 가동 일정 기본값 채우기.
+  // 견적에서 넘어와 이미 'manual'이어도 날짜가 비어 있으면 채운다 (안 그러면 0주로 덮여 가동비가 0원이 됐다, 4단계 검토)
+  // 날짜 자동 채움은 화면이 열린 뒤 한 번만 (지운 칸이 곧바로 다시 채워져 새로 입력할 수 없던 문제)
+  const datesAutoFilled = useRef(false);
   useEffect(() => {
     if (step3.applyBot !== 'yes') return;
-    if (step3.operationWeeksOption !== null) return;
+    if (step3.operationWeeksOption === 'longterm') return;
     // 장기 소규모 서버(Step1 체크)는 일정이 없으므로 장기 자동봇(세팅비)을 기본값으로.
     // 그렇지 않으면 manual + 빈 날짜 → 0주 → 가동비 0원 과소견적 함정에 빠진다.
-    if (step1.isLongTermCommunity) {
+    if (step3.operationWeeksOption === null && step1.isLongTermCommunity) {
       updateStep3({ operationWeeksOption: 'longterm', manualWeeks: 0 });
       return;
     }
-    const updates: Record<string, unknown> = { operationWeeksOption: 'manual' };
-    if (!step3.botStartDate && step1.resultAnnouncementDate) {
+    const updates: Record<string, unknown> = step3.operationWeeksOption === null ? { operationWeeksOption: 'manual' } : {};
+    const fillDates = !datesAutoFilled.current;
+    datesAutoFilled.current = true;
+    if (fillDates && !step3.botStartDate && step1.resultAnnouncementDate) {
       updates.botStartDate = ymdToMonthDay(step1.resultAnnouncementDate);
     }
-    if (!step3.botEndDate && step1.closingDate) {
+    if (fillDates && !step3.botEndDate && step1.closingDate) {
       updates.botEndDate = ymdToMonthDay(step1.closingDate);
     }
-    updateStep3(updates);
+    if (Object.keys(updates).length > 0) updateStep3(updates);
   }, [
     step3.applyBot,
     step3.operationWeeksOption,
@@ -225,6 +229,10 @@ export function useStep3Bot() {
   const handleMainBotChange = (bot: typeof step3.mainBot) => {
     updateStep3({ mainBot: bot });
 
+    // 타입을 바꿔 안 쓰게 된 입력값은 비운다 (남으면 복사문에 '스탯'·'재화 단위'가 그대로 찍혔다, 4단계 검토)
+    if (bot !== 'basicShopStat') updateStep3({ statList: '' });
+    if (bot !== 'basicShop' && bot !== 'basicShopStat') updateStep3({ currencyUnit: '' });
+
     // 기본 봇 선택 시 상점/스탯 의존 옵션 초기화
     if (bot === 'basic') {
       updateStep3({
@@ -256,6 +264,15 @@ export function useStep3Bot() {
         tootPerCurrency: '',
       });
     }
+  };
+
+  // TRPG 봇을 고르면 기능이 겹치는 '기본' 타입 선택이 풀린다 (OrderContext 규칙). 말없이 풀리지 않게 알린다
+  const [trpgNotice, setTrpgNotice] = useState<string | null>(null);
+  const handleTrpgChange = (key: 'cocBot' | 'trpg2d6Bot', checked: boolean) => {
+    setTrpgNotice(checked && step3.mainBot === 'basic'
+      ? '기본 타입은 D100·2D6 TRPG봇과 기능이 겹쳐 선택을 해제했어요. 함께 쓰시려면 기본&상점 이상을 골라 주세요.'
+      : null);
+    updateStep3({ [key]: checked });
   };
 
   // 조사 자동봇 해제 시 일일 횟수 제한 초기화
@@ -363,7 +380,7 @@ export function useStep3Bot() {
     },
     setupDeadlineBlackoutError, botAccountIdError, investigationBotAccountIdError,
     showTransferFeature, showAttendanceSystem, showCurrencyUnit, showStatList,
-    handleBotApplyChange, handleMainBotChange, handleInvestigationBotChange,
+    handleBotApplyChange, handleMainBotChange, handleInvestigationBotChange, handleTrpgChange, trpgNotice,
     canHaveInvestigationBot, basicBotBlockedByCoc, blockingTrpgBotNames,
     showMainBotAccount, showInvestigationBotAccount, primaryAccountLabel,
     showAccountList, hasAdminAccount, accounts, accountTiers, totalRegistered, totalMaxAccounts,

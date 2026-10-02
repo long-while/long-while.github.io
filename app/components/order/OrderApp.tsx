@@ -8,24 +8,11 @@ import { useEffect, useState } from 'react';
 import { OrderProvider, useOrder } from '@/app/contexts/OrderContext';
 import { Button, Modal, SiteFooter, SiteHeader } from '@/app/components/ds';
 import OrderForm from './OrderForm';
-import type { EstimateItem } from '@/app/contexts/EstimateContext';
+import { loadEstimateFromStorage } from '@/app/contexts/EstimateContext';
 import { loadSyncState } from '@/app/utils/cartOrderSync';
 
 interface OrderContentProps {
   onNavigate: (page: string) => void;
-}
-
-// localStorage에서 견적 데이터 불러오기
-function loadEstimateFromStorage(): EstimateItem[] {
-  try {
-    const stored = localStorage.getItem('mas_commission_estimate');
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.error('견적 데이터 불러오기 실패:', error);
-  }
-  return [];
 }
 
 function RestoreDialog({ open, onRestore, onStartNew }: { open: boolean; onRestore: () => void; onStartNew: () => void }) {
@@ -55,7 +42,8 @@ function SyncDialog({ open, onOverwrite, onKeep }: { open: boolean; onOverwrite:
       onClose={onKeep}
       closeOnOverlay={false}
       showClose={false}
-      initialFocus="last"
+      // 처음 포커스는 지우지 않는 쪽(기존 신청서 유지)에. Enter 한 번에 작성 중인 신청서가 사라지지 않게 (4단계 검토)
+      initialFocus="first"
       title="견적 데이터 반영"
       subtitle="견적에서 선택한 항목을 신청서에 반영하시겠습니까?"
       actions={
@@ -71,7 +59,7 @@ function SyncDialog({ open, onOverwrite, onKeep }: { open: boolean; onOverwrite:
 }
 
 function OrderContent({ onNavigate }: OrderContentProps) {
-  const { loadFromLocalStorage, resetForm, syncFromCart } = useOrder();
+  const { loadFromLocalStorage, resetForm, syncFromCart, clearCartSync } = useOrder();
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
   const [showSyncDialog, setShowSyncDialog] = useState(false);
 
@@ -94,8 +82,10 @@ function OrderContent({ onNavigate }: OrderContentProps) {
     }
   }, [syncFromCart]);
 
+  // 저장본이 손상·예전 형식이라 못 불러와도 창이 안 닫히는 일 없게: 새 신청서로 시작하고 닫는다 (4단계 검토)
   const handleRestore = () => {
-    if (loadFromLocalStorage()) setShowRestoreDialog(false);
+    if (!loadFromLocalStorage()) resetForm();
+    setShowRestoreDialog(false);
   };
 
   const handleStartNew = () => {
@@ -105,14 +95,18 @@ function OrderContent({ onNavigate }: OrderContentProps) {
 
   // 장바구니 데이터로 덮어쓰기
   const handleSyncOverwrite = () => {
+    // resetForm 이 저장소의 동기화 표시를 지우므로 먼저 읽어 둔다 (안 그러면 '반영되었습니다' 배너·표시가 사라졌다)
+    const syncState = loadSyncState();
     resetForm();
-    syncFromCart(loadEstimateFromStorage());
+    syncFromCart(loadEstimateFromStorage(), syncState);
     setShowSyncDialog(false);
   };
 
   // 기존 신청서 유지
   const handleKeepExisting = () => {
-    loadFromLocalStorage();
+    if (!loadFromLocalStorage()) resetForm();
+    // 견적을 반영하지 않았으니 동기화 표시도 지운다 (다음 방문에 창이 다시 뜨지 않게)
+    clearCartSync();
     setShowSyncDialog(false);
   };
 

@@ -101,7 +101,7 @@ export function BotReview({ data, onEdit }: { data: OrderFormData; onEdit: Edit 
     rows.push({
       label: '자동봇 가동 기간',
       value: step3.operationWeeksOption === 'longterm'
-        ? '12개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
+        ? `12개월 이상 장기 소규모 자동봇 (세팅비 ${PRICING_CONFIG.bot.longTermSetupFee.toLocaleString()}원)`
         : step3.botStartDate && step3.botEndDate
           ? `${botPeriodWithYears(step3.botStartDate, step3.botEndDate, data.step1.closingDate) ?? `${step3.botStartDate} ~ ${step3.botEndDate}`} (${step3.manualWeeks}주)`
           : `${step3.manualWeeks}주`,
@@ -213,12 +213,12 @@ export function PolicyBox({ confirmed, onConfirm }: { confirmed: boolean; onConf
         <div className="flex flex-col gap-1">
           <p className="font-medium text-text-primary">무료 질문 횟수</p>
           <p>
-            첫 메시지부터 자동봇 세팅 완료 시점까지 <strong className="font-medium text-brand">최대 3회</strong>입니다.<br />
+            첫 메시지부터 최종 작업물 확인 완료까지 <strong className="font-medium text-brand">최대 3회</strong>입니다.<br />
             (하나의 메시지에 여러 질문을 작성해 전송하면 1회로 간주됩니다)
           </p>
           <p>4회차부터는 질문 1개당 <strong className="font-medium text-brand">3,000원</strong>의 추가금이 발생합니다.</p>
         </div>
-        <p className="rounded-input bg-background-white p-3"><span className="font-medium text-text-primary">예외:</span> 자동봇 세팅 완료 후 발생하는 오류나 사용법 관련 질문은 카운트하지 않습니다.</p>
+        {/* 이용안내 03(사용자 수정본)과 같게: 기준은 최종 작업물 확인 완료까지, 예외 문단은 이용안내에서 빠져 여기서도 뺌 */}
         <div className="flex flex-col gap-1">
           <p className="font-medium text-text-primary">복잡한 자동봇 / 요구사항이 많은 경우</p>
           <p>
@@ -284,7 +284,7 @@ export function GoogleAccountFields({ email, password, onChange, errorFor, passw
               aria-required="true" aria-invalid={Boolean(errorFor('googlePassword'))} aria-describedby={errorFor('googlePassword') ? 'googlePassword-error' : 'googlePassword-help'}
               autoComplete="new-password" className="form-input" />
             <GoogleError id="googlePassword-error" message={errorFor('googlePassword')} />
-            <p id="googlePassword-help" className="mt-2 text-body3 text-text-secondary">※ 비밀번호는 브라우저에 저장되지 않으며, 페이지를 떠나면 입력 내용이 삭제됩니다.</p>
+            <p id="googlePassword-help" className="mt-2 text-body3 text-text-secondary">※ 비밀번호는 브라우저에 저장되지 않으며, 페이지를 떠나면 입력 내용이 삭제됩니다. 작업이 끝나면 비밀번호를 바꿔 주세요.</p>
           </div>
         </div>
       </div>

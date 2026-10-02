@@ -1,6 +1,6 @@
 import type { OrderFormData, PriceEstimate, ValidationError, Step2Data, Step3Data, AdditionalOption, FastDeadlineOption } from '@/app/types/order';
 import { DATE_FORMAT_REGEX, GMAIL_REGEX, INPUT_LIMITS } from '@/app/types/order';
-import { PRICING_CONFIG, FORM_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
+import { PRICING_CONFIG, FORM_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM, LONG_TERM_MIN_MONTHS } from '@/app/constants/form';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 /**
@@ -32,7 +32,8 @@ export function isValidDateFormat(date: string): boolean {
  * Gmail 주소 검증
  */
 export function isValidGmail(email: string): boolean {
-  return GMAIL_REGEX.test(email);
+  // 붙여넣기로 딸려온 앞뒤 공백, '@Gmail.com' 같은 대문자도 받는다
+  return GMAIL_REGEX.test(email.trim().toLowerCase());
 }
 
 /**
@@ -59,12 +60,19 @@ export function validateDates(
   const open = new Date(openDate);
   const close = new Date(closeDate);
 
-  // Invalid Date 체크
-  if (isNaN(result.getTime()) || isNaN(open.getTime()) || isNaN(close.getTime())) {
+  // Invalid Date 체크. '2026-02-31'처럼 없는 날짜는 Date 가 3월로 넘겨 버리므로 되돌려 비교한다 (4단계 검토)
+  const isRealDate = (raw: string, date: Date) => !isNaN(date.getTime()) && date.toISOString().slice(0, 10) === raw;
+  if (!isRealDate(resultDate, result) || !isRealDate(openDate, open) || !isRealDate(closeDate, close)) {
     return {
       field: 'dates',
       message: '유효하지 않은 날짜입니다.',
     };
+  }
+
+  // 연도 오타(2206년 등) 방지: 올해 기준 앞뒤 몇 년 안쪽만
+  const thisYear = new Date().getFullYear();
+  if ([result, open, close].some((d) => d.getUTCFullYear() < thisYear - 2 || d.getUTCFullYear() > thisYear + 3)) {
+    return { field: 'dates', message: '연도를 확인해 주세요.' };
   }
 
   if (result > open || open >= close) {
@@ -95,32 +103,25 @@ const DAY_MS = 1000 * 60 * 60 * 24;
 
 /**
  * 마감일 입력에서 월/일을 추출한다.
- * 구분자(/ . -)가 있거나 없는 형식 모두 허용한다.
- * 예: "06/16", "6/16", "6.16", "6-16", "0616"(MMDD), "616"(MDD)
+ * 받는 형식: "06/16", "6/16", "6.16", "6-16", "0616"(숫자 4자리 MMDD), "6월 16일". 전각 숫자도 받는다.
+ * 4단계 검토: 예전에는 숫자만 긁어 모아서 "6/1~6/3"이 6/13, "121"이 1/21 로 읽혔다 → 위 형식만 받는다.
  * 유효 범위를 벗어나거나 파싱 불가하면 null.
  */
-function extractMonthDay(raw: string): { month: number; day: number } | null {
-  const trimmed = raw.trim();
+export function extractMonthDay(raw: string): { month: number; day: number } | null {
+  const trimmed = raw.normalize('NFKC').trim();
   if (!trimmed) return null;
 
   let month: number | null = null;
   let day: number | null = null;
 
-  const separated = trimmed.match(/^(\d{1,2})\s*[/.\-]\s*(\d{1,2})$/);
+  const separated = trimmed.match(/^(\d{1,2})\s*[/.\-]\s*(\d{1,2})\.?$/) ?? trimmed.match(/^(\d{1,2})\s*월\s*(\d{1,2})\s*일?$/);
   if (separated) {
     month = parseInt(separated[1], 10);
     day = parseInt(separated[2], 10);
-  } else {
-    const digits = trimmed.replace(/\D/g, '');
-    if (digits.length === 4) {
-      // MMDD
-      month = parseInt(digits.slice(0, 2), 10);
-      day = parseInt(digits.slice(2), 10);
-    } else if (digits.length === 3) {
-      // MDD (한 자리 월)
-      month = parseInt(digits.slice(0, 1), 10);
-      day = parseInt(digits.slice(1), 10);
-    }
+  } else if (/^\d{4}$/.test(trimmed)) {
+    // MMDD
+    month = parseInt(trimmed.slice(0, 2), 10);
+    day = parseInt(trimmed.slice(2), 10);
   }
 
   if (month === null || day === null) return null;
@@ -135,6 +136,21 @@ function extractMonthDay(raw: string): { month: number; day: number } | null {
  * 파싱 불가 시 null.
  */
 const MONTH_DAY_FORMAT_MESSAGE = '마감일을 실제 있는 날짜로 입력해 주세요. (예: 06/16)';
+const PAST_DEADLINE_MESSAGE = '이미 지난 날짜예요. 마감일을 다시 확인해 주세요.';
+
+/** 월/일 입력이 오늘보다 앞선 날짜인지 (반년 넘게 지난 날짜는 다음 해로 보므로 '지난 날짜'가 아님) */
+export function isPastMonthDay(raw: string, reference: Date = new Date()): boolean {
+  const days = getFullDaysUntilDeadline(raw, reference);
+  return days !== null && days < 0;
+}
+
+/** 빠른마감 옵션이 고른 커스텀 옵션에 맞는지 (서버 페이지 RUSH_OPTIONS.fits 와 같은 규칙) */
+export function rushFitsCustomOption(option: FastDeadlineOption, custom: AdditionalOption): boolean {
+  if (option === null) return true;
+  const kind = custom === null ? 'none' : custom === 'logo' ? 'logo' : 'theme';
+  const fits: Record<NonNullable<FastDeadlineOption>, 'none' | 'logo' | 'theme'> = { basic48h: 'none', basic24h: 'none', logo48h: 'logo', theme48h: 'theme' };
+  return fits[option] === kind;
+}
 
 /** 월/일 마감일 입력이 실제 달력 날짜인지 (13/45, 2/31 같은 값은 false) */
 export function isRealMonthDay(raw: string): boolean {
@@ -246,7 +262,8 @@ export function computeRequiredFastDeadline(
 ): FastDeadlineOption {
   const daysUntil = getFullDaysUntilDeadline(deadline, referenceDate);
   if (daysUntil === null) return null;
-  if (daysUntil > 2) return null;
+  // 이미 지난 날짜는 빠른 마감이 아니라 입력 오류 (validateStep2 가 막는다). 유료 옵션을 강제로 붙이지 않는다
+  if (daysUntil < 0 || daysUntil > 2) return null;
 
   const isTheme =
     additionalOption === 'dayTheme' ||
@@ -329,6 +346,17 @@ export function normalizeAccountId(raw: string): string {
   return raw.trim().replace(/^@+/, '').trim();
 }
 
+/** 복사문·확인 화면용 계정 표기: 앞뒤 공백·여러 개의 @ 를 정리해 '@아이디' 하나로 (4단계 검토) */
+export function asAccount(raw: string): string {
+  const id = normalizeAccountId(raw);
+  return id ? `@${id}` : '';
+}
+
+/** 여러 줄 입력을 한 줄로 (복사문 칸 구분이 줄바꿈이라 붙여넣은 줄바꿈이 섞이면 칸이 깨졌다) */
+function oneLine(value: string): string {
+  return value.trim().replace(/\s*[\r\n]+\s*/g, ' / ');
+}
+
 /**
  * 두 계정 아이디가 같은 계정인지 비교한다. (@ 유무·대소문자 무시)
  */
@@ -385,7 +413,8 @@ export function validateAccountId(
 export function validateBotSymbol(symbol: string): ValidationError | null {
   if (!symbol) return null;
 
-  if (symbol.length > 5) {
+  // 이모지는 글자 하나가 UTF-16 두 칸이라 실제 글자 수로 센다
+  if (Array.from(symbol).length > 5) {
     return {
       field: 'botSymbol',
       message: '봇 기호는 5자 이하여야 합니다.',
@@ -412,7 +441,7 @@ export function validateGoogleAccount(data: OrderFormData['step1']): ValidationE
 
   if (!data.googlePassword.trim()) {
     errors.push({ field: 'googlePassword', message: '구글 비밀번호를 입력해 주세요.' });
-  } else if (data.googlePassword.length < 8) {
+  } else if (data.googlePassword.trim().length < 8) {
     errors.push({ field: 'googlePassword', message: '비밀번호는 최소 8자 이상이어야 합니다.' });
   }
 
@@ -462,7 +491,7 @@ export function validateStep1(data: OrderFormData['step1']): ValidationError[] {
     errors.push({ field: 'communityEnglishName', message: '영어 이름을 입력해 주세요.' });
   } else if (data.communityEnglishName.length > INPUT_LIMITS.communityEnglishName) {
     errors.push({ field: 'communityEnglishName', message: `영어 이름은 ${INPUT_LIMITS.communityEnglishName}자 이하여야 합니다.` });
-  } else if (!ENGLISH_NAME_PATTERN.test(data.communityEnglishName.trim())) {
+  } else if (!ENGLISH_NAME_PATTERN.test(data.communityEnglishName.trim()) || !/[A-Za-z]/.test(data.communityEnglishName)) {
     errors.push({ field: 'communityEnglishName', message: '영어 이름은 영문, 숫자, 띄어쓰기, 하이픈(-)만 쓸 수 있습니다.' });
   }
 
@@ -506,11 +535,13 @@ export function validateStep2(data: Step2Data): ValidationError[] {
     });
   }
 
-  // 글자수 변경 선택 시 검증
-  if (data.changeCharacterLimit && data.characterLimitValue > 0) {
-    const charError = validateCharacterLimit(data.characterLimitValue);
-    if (charError) {
-      errors.push(charError);
+  // 글자수 변경 선택 시 검증 (값 없이 체크만 하면 금액·복사문이 어긋나서 값도 필수, 4단계 검토)
+  if (data.changeCharacterLimit) {
+    if (!Number.isFinite(data.characterLimitValue) || data.characterLimitValue <= 0) {
+      errors.push({ field: 'characterLimitValue', message: '원하는 글자수를 입력해 주세요.' });
+    } else {
+      const charError = validateCharacterLimit(data.characterLimitValue);
+      if (charError) errors.push(charError);
     }
   }
 
@@ -523,6 +554,8 @@ export function validateStep2(data: Step2Data): ValidationError[] {
       });
     } else if (!isRealMonthDay(data.desiredDeadline)) {
       errors.push({ field: 'desiredDeadline', message: MONTH_DAY_FORMAT_MESSAGE });
+    } else if (isPastMonthDay(data.desiredDeadline)) {
+      errors.push({ field: 'desiredDeadline', message: PAST_DEADLINE_MESSAGE });
     } else {
       // 접수 불가 기간(마감 중단/휴가) 검증 → 다음 단계 진행 차단
       const blackoutError = getDeadlineBlackoutError(data.desiredDeadline, 'desiredDeadline');
@@ -543,6 +576,17 @@ export function validateStep2(data: Step2Data): ValidationError[] {
       }
     }
 
+    // 빠른마감을 켰으면 옵션 하나, 그리고 고른 커스텀 옵션에 맞는 것 (서버 페이지와 같은 규칙, 4단계 검토)
+    if (data.fastDeadline && !errors.some((e) => e.field === 'fastDeadline')) {
+      if (!data.fastDeadlineOption) {
+        errors.push({ field: 'fastDeadline', message: '빠른마감 옵션을 하나 골라 주세요.' });
+      } else if (!rushFitsCustomOption(data.fastDeadlineOption, data.additionalOption)) {
+        errors.push({
+          field: 'fastDeadline',
+          message: '고르신 커스텀 옵션에 맞는 빠른마감을 골라 주세요. (기본 → 기본 서버 설치 마감, 로고만 변경 → 로고 변경 마감, 테마 → 테마 커스텀 마감)',
+        });
+      }
+    }
   }
 
   // 총괄 계정 아이디: 빈칸 불가 + 3자 이상 + 예약어(admin/owner/moderator) 불가
@@ -583,6 +627,15 @@ export function validateStep3(data: Step3Data): ValidationError[] {
         field: 'operationWeeksOption',
         message: '운영 기간 설정을 선택해 주세요.',
       });
+    } else if (data.operationWeeksOption === 'manual') {
+      // 날짜가 비거나 잘못되면 가동 주수가 0주(0원)로 계산된 채 넘어가던 문제 (4단계 검토)
+      if (!isRealMonthDay(data.botStartDate) || !isRealMonthDay(data.botEndDate)) {
+        errors.push({ field: 'operationWeeksOption', message: '자동봇 가동 시작일과 종료일을 실제 있는 날짜로 입력해 주세요. (예: 03/01 ~ 05/31)' });
+      } else if (!Number.isFinite(data.manualWeeks) || data.manualWeeks < 1) {
+        errors.push({ field: 'operationWeeksOption', message: '자동봇 가동 기간이 1주 이상이 되도록 날짜를 확인해 주세요.' });
+      } else if (data.manualWeeks > 52) {
+        errors.push({ field: 'operationWeeksOption', message: '자동봇 가동 기간이 1년(52주)을 넘어요. 날짜를 확인해 주시고, 1년 넘게 쓰실 예정이면 따로 문의해 주세요.' });
+      }
     }
 
     // 메인 봇 선택 (D100 / 2D6 3종세트 타입 단독 신청도 허용)
@@ -625,6 +678,8 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       });
     } else if (!isRealMonthDay(data.setupDeadline)) {
       errors.push({ field: 'setupDeadline', message: MONTH_DAY_FORMAT_MESSAGE });
+    } else if (isPastMonthDay(data.setupDeadline)) {
+      errors.push({ field: 'setupDeadline', message: PAST_DEADLINE_MESSAGE });
     } else {
       const blackoutError = getDeadlineBlackoutError(data.setupDeadline, 'setupDeadline');
       if (blackoutError) {
@@ -734,6 +789,27 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       }
     }
 
+    // 돈을 받는 옵션의 세부 내용이 비면 커미션주가 따로 물어봐야 해서 필수 (4단계 검토)
+    const hasShopBot = data.mainBot === 'basicShop' || data.mainBot === 'basicShopStat';
+    if (data.investigationBot && data.investigationDailyLimit && !(data.investigationDailyLimitCount >= 1)) {
+      errors.push({ field: 'investigationDailyLimitCount', message: '일일 조사 횟수를 1 이상으로 입력해 주세요.' });
+    }
+    if (hasShopBot && data.tootCurrencyLink && data.tootPerCurrency.trim() === '') {
+      errors.push({ field: 'tootPerCurrency', message: '몇 툿당 소지금이 얼마나 추가될지 적어 주세요.' });
+    }
+    if (hasShopBot && data.transferFeature && !data.transferOption) {
+      errors.push({ field: 'transferOption', message: '양도 대상을 골라 주세요.' });
+    }
+    if (data.mainBot === 'basicShopStat' && data.statList.trim() === '') {
+      errors.push({ field: 'statList', message: '스탯 목록을 적어 주세요. (예: 체력, 정신력, 행운)' });
+    }
+    if (data.omakaseBot && data.omakaseDetails.trim() === '') {
+      errors.push({ field: 'omakaseDetails', message: '오마카세 시스템을 정리한 문서 링크를 적어 주세요.' });
+    }
+    if ((data.reservationToot || data.autoProfileImage) && data.accountList.some((a) => a.trim() !== '' && !/^@?[A-Za-z0-9_]+$/.test(normalizeAccountId(a)))) {
+      errors.push({ field: 'accountList', message: '계정 목록에는 영문·숫자·밑줄로 된 아이디를 한 칸에 하나씩 적어 주세요. (주소·쉼표 불가)' });
+    }
+
     // 출석 시스템 검증
     if (
       data.attendanceSystem &&
@@ -761,6 +837,43 @@ export function validateStep3(data: Step3Data): ValidationError[] {
   }
 
   return errors;
+}
+
+/**
+ * 단계를 넘나드는 검사 (4단계 검토). 각 단계 검사만으로는 못 잡던 경우:
+ * - STEP2: 서버 설치를 신청했는데 서버비 미리보기를 다 고르지 않음 (복사문에 서버 사양이 빠졌다)
+ * - STEP2: 미리보기는 12개월 이상(장기)인데 STEP1 '장기 소규모 서버'는 체크 안 함 → 견적함과 신청서의 부가비용이 달라졌다
+ * - STEP3: 서버 설치·자동봇 둘 다 '아니오' (0원짜리 빈 신청서가 복사됐다)
+ */
+export function validateOrderConsistency(data: OrderFormData, serverCalc: ServerCalcResult | null): { step2: ValidationError[]; step3: ValidationError[] } {
+  const step2: ValidationError[] = [];
+  const step3: ValidationError[] = [];
+  if (data.step2.applyServerInstall === 'yes') {
+    if (!serverCalc) {
+      step2.push({ field: 'server-months', message: '서버비 미리보기에서 운영 기간·인원·검색·사양을 모두 골라 주세요.' });
+    } else if (serverCalc.months >= LONG_TERM_MIN_MONTHS && !data.step1.isLongTermCommunity) {
+      step2.push({
+        field: 'server-months',
+        message: '운영 기간을 12개월 이상으로 고르셨어요. 장기 소규모 서버라면 Step 1에서 ‘장기 소규모 서버’를 체크해 주시고, 아니라면 운영 기간을 12개월 미만으로 바꿔 주세요.',
+      });
+    }
+  }
+  if (data.step2.applyServerInstall === 'no' && data.step3.applyBot === 'no') {
+    step3.push({ field: 'applyBot', message: '서버 설치와 자동봇 중 하나는 신청해 주세요.' });
+  }
+  return { step2, step3 };
+}
+
+/** 신청서 전체 검사 결과에서 처음 걸리는 단계 (복사 직전·임시저장 복원 뒤 다시 확인용). 문제가 없으면 null */
+export function firstInvalidStep(data: OrderFormData, serverCalc: ServerCalcResult | null): { step: 1 | 2 | 3; errors: ValidationError[] } | null {
+  const consistency = validateOrderConsistency(data, serverCalc);
+  const byStep: Array<[1 | 2 | 3, ValidationError[]]> = [
+    [1, validateStep1(data.step1)],
+    [2, [...validateStep2(data.step2), ...consistency.step2]],
+    [3, [...validateStep3(data.step3), ...consistency.step3]],
+  ];
+  const found = byStep.find(([, errors]) => errors.length > 0);
+  return found ? { step: found[0], errors: found[1] } : null;
 }
 
 /**
@@ -844,14 +957,14 @@ function validateMainBotAccount(data: Step3Data): ValidationError[] {
 export function getBotAccountLines(data: Step3Data): { label: string; value: string }[] {
   const lines: { label: string; value: string }[] = [];
   if (needsMainBotAccountId(data) && data.botAccountId.trim() !== '') {
-    lines.push({ label: getPrimaryBotAccountLabel(data), value: data.botAccountId.trim() });
+    lines.push({ label: getPrimaryBotAccountLabel(data), value: asAccount(data.botAccountId) });
   }
   if (
     data.investigationBot &&
     needsMainBotAccountId(data) &&
     data.investigationBotAccountId.trim() !== ''
   ) {
-    lines.push({ label: '조사 자동봇 계정', value: data.investigationBotAccountId.trim() });
+    lines.push({ label: '조사 자동봇 계정', value: asAccount(data.investigationBotAccountId) });
   }
   return lines;
 }
@@ -901,7 +1014,8 @@ export function calculateBotPrice(
   if (data.operationWeeksOption === 'longterm') {
     operationCost = bot.longTermSetupFee;
   } else {
-    operationCost = Math.max(0, data.manualWeeks) * bot.operationPerWeek;
+    // 손상된 저장본의 NaN·음수가 총액을 NaN 으로 만들지 않게 (4단계 검토)
+    operationCost = (Number.isFinite(data.manualWeeks) ? Math.max(0, Math.floor(data.manualWeeks)) : 0) * bot.operationPerWeek;
   }
 
   return { botCost, operationCost };
@@ -955,7 +1069,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
   let text = divider;
 
   // 커뮤니티 정보
-  text += `${step1.communityKoreanName} / ${step1.communityEnglishName} (약칭 '${step1.communityShortName}')\n\n`;
+  text += `${step1.communityKoreanName.trim()} / ${step1.communityEnglishName.trim().replace(/\s+/g, ' ')} (약칭 '${step1.communityShortName.trim()}')\n\n`;
   if (step1.isLongTermCommunity) {
     text += `장기 소규모 서버\n\n`;
   } else {
@@ -964,7 +1078,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
   // 빈 값이 'abc@gmail.com / ' 처럼 조용히 지나가면 받는 쪽에서 누락을 알아채기 어렵다.
   // 검증에서 걸러지지만, 혹시 빠져나가더라도 눈에 띄도록 표시를 남긴다.
   text += `${step1.googleEmail.trim() || MISSING_GOOGLE_EMAIL_MARK} / ${step1.googlePassword.trim() || MISSING_GOOGLE_PASSWORD_MARK}\n\n`;
-  text += `커미션 신청자명 : ${step1.applicantNickname}\n\n`;
+  text += `커미션 신청자명 : ${step1.applicantNickname.trim()}\n\n`;
 
   text += divider;
 
@@ -1033,7 +1147,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     text += '\n';
 
     // 기타 정보 (각각 별도 줄)
-    if (step2.adminAccountId) text += `총괄 계정 : ${step2.adminAccountId}\n\n`;
+    if (step2.adminAccountId.trim()) text += `총괄 계정 : ${asAccount(step2.adminAccountId)}\n\n`;
     if (step2.desiredDeadline) text += `희망 마감일 : ${step2.desiredDeadline}\n\n`;
 
     text += divider;
@@ -1091,13 +1205,13 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     text += '\n';
 
     // 기타 정보 (각각 별도 줄)
-    if (step3.currencyUnit) text += `재화 단위 : ${step3.currencyUnit}\n`;
-    if (step3.statList) text += `스탯 : ${step3.statList}\n`;
-    if (step3.tootPerCurrency) text += `${step3.tootPerCurrency}\n`;
+    if (step3.currencyUnit.trim()) text += `재화 단위 : ${oneLine(step3.currencyUnit)}\n`;
+    if (step3.statList.trim()) text += `스탯 : ${oneLine(step3.statList)}\n`;
+    if (step3.tootPerCurrency.trim()) text += `${oneLine(step3.tootPerCurrency)}\n`;
     if (step3.reservationToot || step3.autoProfileImage) {
       const accounts: string[] = [];
-      if (step2.adminAccountId.trim()) accounts.push(step2.adminAccountId.trim());
-      accounts.push(...step3.accountList.map((a) => a.trim()).filter(Boolean));
+      if (step2.adminAccountId.trim()) accounts.push(asAccount(step2.adminAccountId));
+      accounts.push(...step3.accountList.filter((a) => a.trim()).map(asAccount));
       if (accounts.length > 0) text += `계정 목록 : ${accounts.join(', ')}\n`;
     }
     if (attendanceEnabled) {
@@ -1111,10 +1225,11 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       text += accountLines.map(({ label, value }) => `${label} : ${value}\n`).join('') + '\n';
     }
     if (step3.botSymbol && step3.botSymbol !== '✶') text += `봇 기호 : ${step3.botSymbol}\n\n`;
-    if (step3.setupDeadline) text += `희망 마감일 : ${step3.setupDeadline}\n\n`;
+    // 자동봇 쪽은 화면 이름과 같게 '세팅 마감일' (서버의 '희망 마감일'과 헷갈렸다)
+    if (step3.setupDeadline) text += `세팅 마감일 : ${step3.setupDeadline}\n\n`;
 
     if (step3.omakaseDetails) {
-      text += `오마카세 상세 : ${step3.omakaseDetails}\n\n`;
+      text += `오마카세 상세 : ${oneLine(step3.omakaseDetails)}\n\n`;
     }
 
     text += divider;

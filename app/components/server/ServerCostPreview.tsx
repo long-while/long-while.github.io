@@ -9,6 +9,7 @@ import { Button, GoogleLogo, InfoBox, PriceCard, Radio, Select, TitledSection } 
 import { TIER_OPTIONS, getMonthOptions } from '@/app/lib/mastodonServerConfig';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 import { useServerCalculator } from './useServerCalculator';
+import { PRICING_CONFIG } from '@/app/constants/form';
 
 type CalcResult = ServerCalcResult & { type: 'gcp' | 'vultr' };
 
@@ -132,7 +133,7 @@ function SearchChoice({ calc, longTerm, layout }: { calc: ReturnType<typeof useS
             onChange={() => !calc.searchLocked && calc.setSearch('yes')} />
           <Radio name="server-search" label="아니오" checked={calc.search === 'no'} disabled={calc.searchLocked}
             onChange={() => !calc.searchLocked && calc.setSearch('no')} />
-          <span className="text-body3 text-text-disabled">(세팅비용 +15,000원)</span>
+          <span className="text-body3 text-text-disabled">(세팅비용 +{PRICING_CONFIG.server.addons.search.toLocaleString()}원)</span>
         </div>
         {/* 신청서(grid)에서는 아래 검색 기능 옵션에 같은 안내가 있어 여기서는 뺀다 (4단계 문구 정리) */}
         {calc.searchLocked && layout === 'rows' && (

@@ -7,7 +7,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { calculateTotalEstimate, generateCopyText, hasServerInfraFee, validateGoogleAccount } from '@/app/utils/orderUtils';
+import { calculateTotalEstimate, firstInvalidStep, generateCopyText, hasServerInfraFee, validateGoogleAccount } from '@/app/utils/orderUtils';
 import { Button } from '@/app/components/ds';
 import { ApplicantReview, BotReview, EstimateReview, GoogleAccountFields, PolicyBox, ServerReview } from './Step4Sections';
 import { CopyDialogs, MoveBanner } from './CopyDialogs';
@@ -48,10 +48,14 @@ export default function Step4Review() {
   );
   const flow = useCopyFlow(copyTextPreview);
   // 확인용 화면에는 비밀번호를 가린다 (복사되는 원문은 그대로). 비밀번호는 검증상 8자 이상이라 다른 글자와 겹칠 일이 거의 없다
-  const maskedCopyText = useMemo(
-    () => (step1.googlePassword.length >= 8 ? copyTextPreview.split(step1.googlePassword).join('••••••••') : copyTextPreview),
-    [copyTextPreview, step1.googlePassword],
-  );
+  // 복사문에는 앞뒤 공백을 뺀 비밀번호가 들어가므로 둘 다 가린다 (공백이 붙은 비밀번호가 그대로 보이던 문제, 4단계 검토)
+  const maskedCopyText = useMemo(() => {
+    const variants = Array.from(new Set([step1.googlePassword, step1.googlePassword.trim()])).filter((v) => v.length >= 8);
+    return variants.reduce((text, secret) => text.split(secret).join('••••••••'), copyTextPreview);
+  }, [copyTextPreview, step1.googlePassword]);
+
+  // 복사 직전 전체 검사: 임시저장을 복원해 바로 4단계로 왔거나, 그사이 마감일이 지나는 등 앞 단계가 틀어진 경우 (4단계 검토)
+  const [stepProblem, setStepProblem] = useState<{ step: 1 | 2 | 3; message: string } | null>(null);
 
   // 구글 계정 검증 (Step 1 에서 이 단계로 옮겨온 항목)
   const googleErrors = useMemo(() => validateGoogleAccount(step1), [step1]);
@@ -65,6 +69,12 @@ export default function Step4Review() {
 
   const handleCopy = useCallback(async () => {
     if (!isCopyEnabled) return;
+    const invalid = firstInvalidStep(formData, serverCalcResult);
+    if (invalid) {
+      setStepProblem({ step: invalid.step, message: invalid.errors[0].message });
+      return;
+    }
+    setStepProblem(null);
     // 구글 계정이 비어 있으면 복사 전에 막고 해당 입력칸으로 보낸다
     if (googleErrors.length > 0) {
       setGoogleErrorsShown(true);
@@ -75,7 +85,7 @@ export default function Step4Review() {
     }
     setGoogleError(null);
     await flow.copy();
-  }, [isCopyEnabled, googleErrors, flow]);
+  }, [isCopyEnabled, googleErrors, flow, formData, serverCalcResult]);
 
   // 수정·이전: 단계만 바꾸면 OrderForm 이 신청서 머리말로 스크롤하고 제목에 포커스를 준다
   const handleEdit = useCallback((step: 1 | 2 | 3) => setCurrentStep(step), [setCurrentStep]);
@@ -98,6 +108,13 @@ export default function Step4Review() {
         errorFor={googleErrorFor}
         passwordNeedsReentry={passwordNeedsReentry}
       />
+
+      {stepProblem && (
+        <div role="alert" className="flex flex-col gap-3 rounded-card border border-error-500 bg-background-white p-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+          <p className="text-body3 text-error-500">Step {stepProblem.step}에 확인할 내용이 있어요: {stepProblem.message}</p>
+          <Button variant="outline" size="md" onClick={() => handleEdit(stepProblem.step)}>Step {stepProblem.step}로 가서 고치기</Button>
+        </div>
+      )}
 
       {(googleError || (isCopyEnabled && !flow.copySuccess)) && (
         <div className="flex flex-col gap-4">

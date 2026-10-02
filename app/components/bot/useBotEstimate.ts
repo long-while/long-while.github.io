@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { eulReul, eunNeun } from '@/app/utils/josa';
 import {
-  ADDITIONAL_OPTIONS, MAIN_BOT_TYPES, OPERATION_FEE_PREFIX, TRPG_EXCLUSIVE_PAIRS, WEEKLY_FEE, type AdditionalOption,
+  ADDITIONAL_OPTIONS, INVESTIGATION_TYPE, MAIN_BOT_TYPES, OPERATION_FEE_PREFIX, TRPG_EXCLUSIVE_PAIRS, WEEKLY_FEE, type AdditionalOption,
 } from './botContent';
 
 const TOAST_MS = 3500;
@@ -49,7 +49,7 @@ export function useBotEstimate() {
         name: `${OPERATION_FEE_PREFIX} (${newWeeks}주)`,
         price: newWeeks * WEEKLY_FEE,
         category: 'bot',
-        description: `1주당 ₩5,000 × ${newWeeks}주`,
+        description: `1주당 ₩${WEEKLY_FEE.toLocaleString()} × ${newWeeks}주`,
       });
     }
   };
@@ -80,6 +80,19 @@ export function useBotEstimate() {
     const existing = items.find((item) => item.name === name);
     if (existing) {
       removeItem(existing.id);
+      // 마지막 메인 타입을 빼면 메인 봇과 함께만 되는 자동조사 타입(과 그 옵션)도 같이 뺀다
+      const isMain = (MAIN_BOT_TYPES as readonly string[]).includes(name);
+      const investigation = items.find((item) => item.name === INVESTIGATION_TYPE);
+      if (isMain && investigation) {
+        removeItem(investigation.id);
+        items.filter((item) => item.name === '일일 조사 횟수 제한').forEach((item) => removeItem(item.id));
+        setToast({ tone: 'info', title: '자동조사 타입도 뺐어요', message: '자동조사 타입은 기본 계열 타입과 함께만 신청할 수 있어요.' });
+      }
+      return;
+    }
+    // 자동조사 타입은 메인 봇과 함께만 신청 가능 (신청서 규칙과 같게. 혼자 담으면 신청서에서 빠져 견적보다 금액이 작아졌다, 4단계 검토)
+    if (name === INVESTIGATION_TYPE && !MAIN_BOT_TYPES.some(has)) {
+      setToast(blocked('자동조사 타입은 기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나를 먼저 고른 뒤 함께 신청할 수 있어요.'));
       return;
     }
     const trpgConflict = TRPG_EXCLUSIVE_PAIRS[name]?.find(has);
