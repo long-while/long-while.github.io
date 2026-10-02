@@ -85,13 +85,9 @@ export function useServerCalculator(longTerm: boolean) {
     setServerCalcResult(result);
   }, [months, usersKey, search, tier, showTier, setServerCalcResult]);
 
-  // 등급 버튼에 표시할 월 서버비 (5인 미만+검색은 경고라 금액 없음)
-  const getTierMonthlyKrw = (t: ServerTier) =>
-    getServerCalcResult(Number(months), usersKey, search ?? 'no', t).monthlyKrw;
-
   return {
     months, setMonths, usersKey, setUsersKey, search, setSearch, tier, setTier,
     isLongTermMonths, usersOptions, showTier, availableTiers, searchLocked,
-    isAllSelected, result, getTierMonthlyKrw,
+    isAllSelected, result,
   };
 }

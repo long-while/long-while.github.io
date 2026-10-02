@@ -11,8 +11,12 @@ import {
   generateCopyText,
   getDeadlineBlackoutError,
   hasServerInfraFee,
+  botPeriodWithYears,
+  isRealMonthDay,
   MISSING_GOOGLE_EMAIL_MARK,
   MISSING_GOOGLE_PASSWORD_MARK,
+  validateAccountId,
+  validateDates,
   validateGoogleAccount,
   validateStep1,
   validateStep3,
@@ -240,13 +244,17 @@ check('장기 소규모 복붙 텍스트 총액', longTermCopyText.trim().endsWi
 
 // ===== 마감 불가 기간 =====
 
-check('10/20은 마감 불가', getDeadlineBlackoutError('10/20', 'desiredDeadline')?.field, 'desiredDeadline');
-check('10/15은 마감 불가 (시작일)', getDeadlineBlackoutError('10/15', 'desiredDeadline') !== null, true);
-check('10/28은 마감 불가 (종료일)', getDeadlineBlackoutError('10/28', 'desiredDeadline') !== null, true);
-check('10/14는 마감 가능', getDeadlineBlackoutError('10/14', 'desiredDeadline'), null);
-check('10/29는 마감 가능', getDeadlineBlackoutError('10/29', 'desiredDeadline'), null);
-check('8/22는 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('8/22', 'desiredDeadline'), null);
-check('10/3은 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('10/3', 'desiredDeadline'), null);
+// 4단계: 접수 불가 기간에 연도(2026)가 붙어, 실행하는 날짜와 상관없이 같은 결과가 나오게 기준일을 고정
+const BLACKOUT_REF = new Date(2026, 8, 1);
+check('10/20은 마감 불가', getDeadlineBlackoutError('10/20', 'desiredDeadline', BLACKOUT_REF)?.field, 'desiredDeadline');
+check('10/15은 마감 불가 (시작일)', getDeadlineBlackoutError('10/15', 'desiredDeadline', BLACKOUT_REF) !== null, true);
+check('10/28은 마감 불가 (종료일)', getDeadlineBlackoutError('10/28', 'desiredDeadline', BLACKOUT_REF) !== null, true);
+check('10/14는 마감 가능', getDeadlineBlackoutError('10/14', 'desiredDeadline', BLACKOUT_REF), null);
+check('10/29는 마감 가능', getDeadlineBlackoutError('10/29', 'desiredDeadline', BLACKOUT_REF), null);
+check('8/22는 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('8/22', 'desiredDeadline', BLACKOUT_REF), null);
+check('10/3은 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('10/3', 'desiredDeadline', BLACKOUT_REF), null);
+check('다음 해 같은 날짜는 막지 않음', getDeadlineBlackoutError('10/20', 'desiredDeadline', new Date(2027, 8, 1)), null);
+check('안내 문구에 연도', getDeadlineBlackoutError('10/20', 'desiredDeadline', BLACKOUT_REF)?.message, '2026년 10/15~10/28 은 마감이 불가능한 기간입니다.');
 
 // ===== 구글 계정 검증 (Step 1 → Step 4 이동) =====
 
@@ -282,9 +290,10 @@ const filledStep1 = {
   communityShortName: '망저',
   communityKoreanName: '망각의 저편',
   communityEnglishName: 'Beyond the Oblivion',
-  resultAnnouncementDate: '2026-01-01',
-  openingDate: '2026-01-10',
-  closingDate: '2026-03-10',
+  // 4단계: 폐장일이 지난 신청은 막으므로 늘 미래 날짜로 (이 검사의 목적은 구글 계정)
+  resultAnnouncementDate: '2099-01-01',
+  openingDate: '2099-01-10',
+  closingDate: '2099-03-10',
 };
 check('Step 1 검증은 구글 계정을 요구하지 않는다', validateStep1(filledStep1), []);
 check(
@@ -451,12 +460,13 @@ check('복붙 텍스트 highmem-4 기간 라벨', highmemText.includes('2개월 
 
 // ===== FAQ 분류 =====
 
-check('FAQ 항목 수', FAQ_ITEMS.length, 15);
+// 4단계: 답변 시간·용어 설명 질문 2개 추가 (15 → 17)
+check('FAQ 항목 수', FAQ_ITEMS.length, 17);
 check('메인 대표 질문 수', FAQ_ITEMS.filter((item) => item.featured).length, 4);
 check(
   '분류별 질문 수',
   FAQ_CATEGORIES.map((category) => FAQ_ITEMS.filter((item) => item.category === category).length),
-  [4, 4, 7]
+  [5, 5, 7]
 );
 check(
   '모든 질문에 유효한 분류가 있다',
@@ -469,7 +479,7 @@ check(
 const faqGroups = groupByCategory(FAQ_ITEMS);
 const faqAll = faqGroups.flatMap((group) => group.entries);
 check('분류별 순번은 1부터', faqGroups.map((group) => group.entries[0].number), [1, 1, 1]);
-check('빈 검색어는 전체', filterEntries(faqAll, '   ').length, 15);
+check('빈 검색어는 전체', filterEntries(faqAll, '   ').length, 17);
 check('검색은 대소문자 무시 (masto.HOST)', filterEntries(faqAll, 'masto.HOST').map((e) => e.item.question), ['masto.host로 설치해주실 수 있나요?']);
 check('검색은 답변도 본다 (질문에 없는 "장기 소규모" 항목 포함)', filterEntries(faqAll, '중국집').map((e) => e.item.category), ['서버와 비용', '서버와 비용']);
 check('정규식 문자 검색어도 하이라이트가 깨지지 않음', splitByQuery('(3개월까진 서버비 무료)', '(3').map((p) => p.match), [true, false]);
@@ -481,6 +491,25 @@ check('받침 있음 → 을', eulReul('기본&상점 또는 기본&상점&스�
 check('끝 괄호·숫자는 건너뜀 (1주 → 를)', eulReul('기본 가동료 (1주)'), '를');
 check('은/는', [eunNeun('커스텀 명령어 업그레이드'), eunNeun('예약 툿')], ['는', '은']);
 check('한글 없음 → 둘 다', eulReul('masto.host'), '을(를)');
+
+// ===== 입력 검사 보강 (4단계 리뷰) =====
+
+check('마감일: 실제 날짜만', ['06/16', '6.16', '0616', '13/45', '2/31', '00/10', 'abc'].map(isRealMonthDay), [true, true, true, false, false, false, false]);
+const accountMessage = (raw: string) => validateAccountId(raw, 'adminAccountId', '총괄 계정 아이디')?.message ?? null;
+check('계정 아이디: 영문·숫자·밑줄은 통과 (@ 무시)', [accountMessage('notice_01'), accountMessage('@Notice')], [null, null]);
+check('계정 아이디: 한글·띄어쓰기·특수문자 불가', accountMessage('공지 계정!'), '총괄 계정 아이디는 영문, 숫자, 밑줄(_)만 쓸 수 있습니다. (띄어쓰기·한글·특수문자 불가)');
+check('계정 아이디: 여러 개 불가', accountMessage('a_one, b_two'), '총괄 계정 아이디는 하나만 입력해 주세요.');
+check('계정 아이디: 30자 초과 불가', accountMessage('a'.repeat(31)), '총괄 계정 아이디는 30자 이하여야 합니다. (@ 제외)');
+check('계정 아이디: 예약어는 그대로 막음', accountMessage('Admin'), '총괄 계정 아이디로 admin, owner, moderator 는 사용할 수 없습니다. (대소문자 무관)');
+const englishNameError = (name: string) =>
+  validateStep1({ ...createFormData().step1, communityEnglishName: name }).find((e) => e.field === 'communityEnglishName')?.message ?? null;
+check('영어 이름: 영문·숫자·띄어쓰기·하이픈 통과', [englishNameError('Test Community 2'), englishNameError('long-while')], [null, null]);
+check('영어 이름: 한글·특수문자 불가', englishNameError('한글로만입력 !!@@'), '영어 이름은 영문, 숫자, 띄어쓰기, 하이픈(-)만 쓸 수 있습니다.');
+check('폐장일이 지났으면 막음', validateDates('2025-01-01', '2025-01-02', '2025-02-01')?.message, '폐장일이 이미 지났습니다. 날짜를 확인해 주세요.');
+check('발표일·개장일은 지나도 폐장일이 앞이면 통과', validateDates('2025-01-01', '2025-01-02', '2099-02-01'), null);
+check('자동봇 가동 기간에 연도: 해를 넘기면 시작은 전 해', botPeriodWithYears('11/01', '02/10', '2027-02-10'), '2026-11-01 ~ 2027-02-10');
+check('자동봇 가동 기간에 연도: 같은 해', botPeriodWithYears('3/5', '04/20', '2027-04-20'), '2027-03-05 ~ 2027-04-20');
+check('자동봇 가동 기간: 못 읽으면 null', botPeriodWithYears('13/45', '02/10', '2027-02-10'), null);
 
 console.log(failed === 0 ? '\n모든 검증 통과' : `\n${failed}개 실패`);
 if (failed > 0) process.exit(1);

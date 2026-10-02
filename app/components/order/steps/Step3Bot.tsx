@@ -19,7 +19,7 @@ function BotSummary() {
     <SelectionSummary
       title="선택하신 자동봇 사양"
       note="※ 견적에서 선택됨"
-      rows={botSummaryRows(formData.step3)}
+      rows={botSummaryRows(formData.step3, formData.step1.closingDate)}
       total={{ label: '자동봇 관련', amount: `${(estimate.botTotal + estimate.operationCost).toLocaleString()}원` }}
       onEdit={() => expand(3)}
       controls="step3-options"

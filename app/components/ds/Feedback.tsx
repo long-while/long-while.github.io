@@ -63,15 +63,20 @@ interface BannerProps {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
+  /** brand: 안내 (기본) / warning: 확인이 필요한 상태 */
+  tone?: 'brand' | 'warning';
   className?: string;
 }
 
-export function Banner({ title, description, actions, className }: BannerProps) {
+const BANNER_TONE = { brand: 'bg-background-brand', warning: 'border border-warning-200 bg-warning-50' } as const;
+
+export function Banner({ title, description, actions, tone = 'brand', className }: BannerProps) {
   return (
     <div
       role="status"
       className={clsx(
-        'flex flex-col gap-4 rounded-card bg-background-brand px-5 py-5 lg:min-h-[104px] lg:flex-row lg:items-center lg:gap-5 lg:px-8',
+        'flex flex-col gap-4 rounded-card px-5 py-5 lg:min-h-[104px] lg:flex-row lg:items-center lg:gap-5 lg:px-8',
+        BANNER_TONE[tone],
         className,
       )}
     >

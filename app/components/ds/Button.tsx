@@ -3,6 +3,7 @@
  *  - primary: #3376E7 / hover #1551B7, 흰 글자
  *  - gray:    #F6F7F8 / hover #EDEDED, #767676 글자
  *  - white:   흰 배경 + #DDDDDD 선 / hover #F6F7F8, #767676 글자
+ *  - outline: 흰 배경 + 파란 선·파란 글자 / hover 연한 파랑 (4단계: '견적에서 제거'처럼 선택을 되돌리는 버튼. 흰 버튼은 꺼진 것처럼 보였다)
  *  - dark:    #111111 (푸터 'DM 바로가기'), #000 (헤더 '신청하기', '수정하기')
  * 크기: lg 64px(패딩 20), md 44px(패딩 12·28), sm 42px(패딩 10·20). pill 모양은 헤더 '신청하기'(패딩 12·32).
  * href 를 주면 <a>, 아니면 <button> 으로 그린다.
@@ -11,7 +12,7 @@ import clsx from 'clsx';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
 import { focusRing, focusRingInverse } from './shared';
 
-export type ButtonVariant = 'primary' | 'gray' | 'white' | 'dark' | 'black';
+export type ButtonVariant = 'primary' | 'gray' | 'white' | 'outline' | 'dark' | 'black';
 export type ButtonSize = 'lg' | 'md' | 'sm';
 
 interface CommonProps {
@@ -32,6 +33,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   primary: 'bg-brand text-text-inverse hover:bg-brand-hover',
   gray: 'bg-background-100 text-text-secondary hover:bg-background-200',
   white: 'bg-background-white text-text-secondary border border-border-100 hover:bg-background-100',
+  outline: 'bg-background-white text-brand border border-brand hover:bg-brand-50',
   dark: 'bg-background-inverse-raised text-text-inverse hover:bg-background-inverse',
   black: 'bg-background-inverse text-text-inverse hover:bg-background-inverse-raised',
 };

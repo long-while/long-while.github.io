@@ -8,13 +8,15 @@
  * StickyEstimateBar — 서버 페이지 하단 고정 바 680×100: 블루 22% 반투명 + 흰 선 + 배경 흐림 12, 모서리 8, 패딩 20.
  */
 import clsx from 'clsx';
-import type { MouseEventHandler, ReactNode } from 'react';
+import { useEffect, type MouseEventHandler, type ReactNode } from 'react';
 import { buttonClassName } from './Button';
 import { Icon } from './Icon';
 import { focusRing } from './shared';
 
 interface PageHeroProps {
   image: string;
+  /** 화면 크기별 파일 (S6: 작은 화면은 작은 파일) */
+  srcSet?: string;
   eyebrow?: string;
   title: ReactNode;
   description?: ReactNode;
@@ -25,14 +27,16 @@ interface PageHeroProps {
 
 const HERO_TITLE_SIZE = { display: 'text-display', 'hero-xl': 'text-hero-xl' } as const;
 
-export function PageHero({ image, eyebrow, title, description, titleSize = 'display', className }: PageHeroProps) {
+export function PageHero({ image, srcSet, eyebrow, title, description, titleSize = 'display', className }: PageHeroProps) {
   return (
-    <section
-      className={clsx('relative flex min-h-[360px] items-end overflow-hidden bg-background-brand bg-cover bg-center lg:min-h-[600px]', className)}
-      style={{ backgroundImage: `url("${image}")` }}
-    >
+    <section className={clsx('relative flex min-h-[360px] items-end overflow-hidden bg-background-brand lg:min-h-[600px]', className)}>
+      {/* 배경 그림: CSS 배경 대신 <img> 라 화면 크기에 맞는 파일만 받는다 (bg-cover·bg-center 와 같은 모양) */}
+      <img src={image} srcSet={srcSet} sizes="100vw" alt="" aria-hidden="true" decoding="async" {...{ fetchpriority: 'high' }}
+        className="absolute inset-0 size-full object-cover object-center" />
       {/* 모바일은 글이 그림 위에 크게 겹쳐서 아래쪽을 흰색으로 살짝 덮어 읽기 쉽게 */}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,color-mix(in_srgb,var(--color-background-white)_85%,transparent)_100%)] lg:hidden" aria-hidden="true" />
+      {/* PC: 글이 놓이는 왼쪽 아래만 옅은 흰 빛을 깔아 그림 선·물체와 겹쳐도 읽히게 (4단계 리뷰: 이용안내·FAQ 설명이 그림과 겹침) */}
+      <div className="absolute inset-0 hidden bg-[radial-gradient(ellipse_50%_60%_at_0%_85%,color-mix(in_srgb,var(--color-background-white)_80%,transparent),transparent_75%)] lg:block" aria-hidden="true" />
       <div className="container-ds relative pb-12 pt-[calc(var(--ds-header-offset)+var(--ds-header-height)+24px)] lg:pb-[60px]">
         <div className="flex max-w-[540px] flex-col gap-6">
           {eyebrow && <p className="font-inter text-eyebrow uppercase text-brand">{eyebrow}</p>}
@@ -48,6 +52,7 @@ export function PageHero({ image, eyebrow, title, description, titleSize = 'disp
 
 interface ServiceCardProps {
   image: string;
+  srcSet?: string;
   imageAlt?: string;
   title: ReactNode;
   description: ReactNode;
@@ -58,10 +63,11 @@ interface ServiceCardProps {
   onCtaClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
-export function ServiceCard({ image, imageAlt = '', title, description, price, ctaLabel, href, onCtaClick }: ServiceCardProps) {
+export function ServiceCard({ image, srcSet, imageAlt = '', title, description, price, ctaLabel, href, onCtaClick }: ServiceCardProps) {
   return (
     <article className="flex w-full max-w-[648px] flex-col items-center gap-5">
-      <img src={image} alt={imageAlt} width={648} height={360} loading="lazy" className="aspect-[648/360] w-full rounded-card object-cover" />
+      <img src={image} srcSet={srcSet} sizes="(min-width: 1024px) 648px, 100vw" alt={imageAlt} width={648} height={360} loading="lazy"
+        className="aspect-[648/360] w-full rounded-card object-cover" />
       <div className="flex w-full max-w-[486px] flex-col items-center gap-7 text-center">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
@@ -81,18 +87,20 @@ export function ServiceCard({ image, imageAlt = '', title, description, price, c
 interface FeatureCardProps {
   icon: ReactNode;
   title: ReactNode;
-  description: ReactNode;
+  /** 4단계: 메인 특징은 이름만 (설명 없음) */
+  description?: ReactNode;
   /** 선은 놓이는 그리드가 그린다 (시안: 5열×2줄 표 모양). 단독으로 쓸 때는 'border border-border-100' 을 넘긴다 */
   className?: string;
 }
 
 export function FeatureCard({ icon, title, description, className }: FeatureCardProps) {
   return (
-    <article className={clsx('flex min-h-[264px] w-full flex-col items-center justify-center gap-6 p-6 text-center', className)}>
+    // 위에서부터 쌓아 같은 줄의 아이콘·제목 높이를 맞춘다 (가운데 정렬이면 설명 길이에 따라 제목이 오르내렸다, 4단계 리뷰)
+    <article className={clsx('flex w-full flex-col items-center justify-start gap-6 p-6 text-center', description ? 'min-h-[264px]' : 'py-10', className)}>
       <div className="flex size-20 items-center justify-center" aria-hidden="true">{icon}</div>
       <div className="flex flex-col gap-2">
         <h3 className="text-title4 text-text-primary">{title}</h3>
-        <p className="text-body3 text-text-secondary">{description}</p>
+        {description && <p className="text-body3 text-text-secondary">{description}</p>}
       </div>
     </article>
   );
@@ -124,7 +132,8 @@ interface StickyEstimateBarProps {
   message: ReactNode;
   amount: ReactNode;
   href: string;
-  onAmountClick?: MouseEventHandler<HTMLAnchorElement>;
+  /** 바 전체가 견적함 링크 (4단계 리뷰: 왼쪽 글자를 눌러도 이동) */
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
   /**
    * fixed: 화면 아래 가운데에 늘 고정 / sticky: 본문을 따라 내려오다 본문이 끝나는 곳에서 멈춤
    * (페이지 본문 마지막 자식으로 두면 푸터를 가리지 않음) / inline: 제자리
@@ -132,26 +141,34 @@ interface StickyEstimateBarProps {
   placement?: 'fixed' | 'sticky' | 'inline';
 }
 
-export function StickyEstimateBar({ message, amount, href, onAmountClick, placement = 'fixed' }: StickyEstimateBarProps) {
+/** 바가 떠 있는 동안 Tab·찾기로 옮겨 간 입력칸이 바 뒤에 숨지 않게 스크롤 아래 여백을 둔다 */
+function useBottomScrollPadding(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const root = document.documentElement;
+    const previous = root.style.scrollPaddingBottom;
+    root.style.scrollPaddingBottom = '140px';
+    return () => { root.style.scrollPaddingBottom = previous; };
+  }, [active]);
+}
+
+export function StickyEstimateBar({ message, amount, href, onClick, placement = 'fixed' }: StickyEstimateBarProps) {
+  useBottomScrollPadding(placement !== 'inline');
   const bar = (
-    <div
+    <a
+      href={href}
+      onClick={onClick}
       className={clsx(
-        'pointer-events-auto flex w-full max-w-[680px] items-center justify-between gap-4 rounded-input border border-background-white bg-brand/22 p-4 shadow-modal backdrop-blur-[12px] lg:p-5',
+        'group pointer-events-auto flex w-full max-w-[680px] items-center justify-between gap-4 rounded-input border border-background-white bg-brand/22 p-4 shadow-modal backdrop-blur-[12px] lg:p-5',
         placement === 'fixed' && 'fixed bottom-[calc(16px+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-32px)] -translate-x-1/2',
+        focusRing,
       )}
     >
-      <p className="text-body2 font-medium text-text-primary lg:text-title4">{message}</p>
-      <a
-        href={href}
-        onClick={onAmountClick}
-        className={clsx(
-          'inline-flex min-h-[60px] shrink-0 items-center justify-center rounded-input bg-brand px-5 py-4 text-title4 text-text-inverse transition-colors hover:bg-brand-hover lg:w-[180px]',
-          focusRing,
-        )}
-      >
+      <span className="text-body2 font-medium text-text-primary lg:text-title4">{message}</span>
+      <span className="inline-flex min-h-[60px] shrink-0 items-center justify-center rounded-input bg-brand px-5 py-4 text-title4 text-text-inverse transition-colors group-hover:bg-brand-hover lg:w-[180px]">
         {amount}
-      </a>
-    </div>
+      </span>
+    </a>
   );
   if (placement !== 'sticky') return bar;
   // 높이 0 인 sticky 기준점 위로 바를 띄운다: 자리를 차지하지 않고, 부모 영역 끝에서 멈춘다

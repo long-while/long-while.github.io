@@ -119,7 +119,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
   return (
     <div className="min-h-screen bg-background-100">
       <SiteHeader currentPage="order" onNavigate={onNavigate} />
-      <main className="pt-header">
+      <main id="main" tabIndex={-1} className="pt-header outline-none">
         <div className="container-ds pb-[60px] pt-6 lg:pb-[120px] lg:pt-[100px]">
           <OrderForm />
         </div>

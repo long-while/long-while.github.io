@@ -46,7 +46,8 @@ const LAYOUT = {
     body: 'flex-col gap-6',
     title: 'text-title3',
     desc: 'text-body2',
-    price: 'text-title4',
+    // 카드를 한 줄에 여러 개 둘 때 설명 길이가 달라도 금액은 카드 맨 아래 같은 높이에 (4단계 리뷰)
+    price: 'mt-auto text-title4',
     priceColor: 'text-text-primary',
   },
   row: {
@@ -62,7 +63,7 @@ const LAYOUT = {
     body: 'flex-col gap-2 lg:gap-6',
     title: 'text-title4 lg:text-title3',
     desc: 'text-body3 lg:text-body2',
-    price: 'text-title5 lg:text-title4',
+    price: 'text-title5 lg:mt-auto lg:text-title4',
     priceColor: 'text-brand lg:text-text-primary',
   },
 } as const;

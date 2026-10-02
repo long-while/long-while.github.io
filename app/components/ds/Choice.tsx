@@ -24,6 +24,17 @@ const box = (appearance: 'filled' | 'outline') =>
     'peer-disabled:opacity-40',
   );
 
+/**
+ * 라디오 동그라미: 미선택은 흰 바탕 + #A6A6A6 테두리 (4단계 리뷰: 회색으로 채운 미선택 라디오와 흐린 라벨이 '누를 수 없는' 것처럼 보였다).
+ * 선택은 시안 그대로 파란 바탕 + 흰 점.
+ */
+const radioBox = clsx(
+  'relative flex size-7 shrink-0 items-center justify-center rounded-pill border-2 border-border-200 bg-background-white transition-colors duration-150',
+  'peer-checked:border-brand peer-checked:bg-brand peer-hover:border-brand',
+  'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand',
+  'peer-disabled:opacity-40',
+);
+
 function ChoiceRow({ children, disabled, htmlFor }: { children: ReactNode; disabled?: boolean; htmlFor: string }) {
   return (
     <label htmlFor={htmlFor} className={clsx('inline-flex items-center gap-2', disabled ? 'cursor-not-allowed' : 'cursor-pointer')}>
@@ -57,12 +68,11 @@ export const Checkbox = forwardRef<HTMLInputElement, ChoiceProps>(function Check
 });
 
 export const Radio = forwardRef<HTMLInputElement, ChoiceProps>(function Radio(
-  { label, appearance = 'filled', labelSize = 'md', id, className, disabled, checked, defaultChecked, ...rest },
+  { label, labelSize = 'md', id, className, disabled, checked, defaultChecked, ...rest },
   ref,
 ) {
   const autoId = useId();
   const inputId = id ?? `radio-${autoId}`;
-  const isUnchecked = checked === false || (checked === undefined && !defaultChecked);
   return (
     <span className={className}>
       <ChoiceRow htmlFor={inputId} disabled={disabled}>
@@ -70,11 +80,10 @@ export const Radio = forwardRef<HTMLInputElement, ChoiceProps>(function Radio(
           ref={ref} id={inputId} type="radio" disabled={disabled} checked={checked} defaultChecked={defaultChecked}
           className="peer sr-only" {...rest}
         />
-        <span className={box(appearance)} aria-hidden="true">
-          <span className="size-3.5 rounded-pill bg-background-white" />
+        <span className={radioBox} aria-hidden="true">
+          <span className="size-3 rounded-pill bg-background-white" />
         </span>
-        {/* 시안: 선택 안 된 라디오의 라벨은 #A6A6A6 */}
-        <span className={clsx(labelClass(labelSize, isUnchecked), 'peer-checked:text-text-primary')}>{label}</span>
+        <span className={labelClass(labelSize, false)}>{label}</span>
       </ChoiceRow>
     </span>
   );

@@ -38,11 +38,12 @@ function TermsPanel({ section, index, active }: { section: TermsSection; index: 
     <div role="tabpanel" id={tabPanelId(TAB_PREFIX, section.id)} aria-labelledby={tabId(TAB_PREFIX, section.id)} hidden={!active}
       className="container-ds">
       <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
-        <TermsSectionText section={section} index={index} className="lg:w-[627px] lg:shrink-0" />
+        {/* 1320 안에서 글 627 · 그림 588. 그보다 좁은 PC 창(1024~1280)에서는 둘 다 비율대로 줄어 가로로 넘치지 않음 */}
+        <TermsSectionText section={section} index={index} className="lg:min-w-0 lg:basis-[627px]" />
         {/* R5: 고른 탭의 그림만 받는다. width·height·비율을 지정해 그림이 오기 전에도 자리가 잡혀 레이아웃이 흔들리지 않음 */}
         {image && active && (
           <img src={image.src} width={image.width} height={image.height} alt="" loading="lazy"
-            className="aspect-[588/340] w-full rounded-card object-cover lg:w-[588px] lg:shrink-0" />
+            className="aspect-[588/340] w-full rounded-card object-cover lg:w-auto lg:min-w-0 lg:basis-[588px]" />
         )}
       </div>
     </div>
@@ -68,8 +69,8 @@ export default function TermsPage({ onNavigate }: TermsPageProps) {
   }, []);
 
   return (
-    <main className="bg-background-white">
-      <PageHero image={IMAGES.termsHero.src} eyebrow="GUIDE" title="이용안내"
+    <main id="main" tabIndex={-1} className="bg-background-white outline-none">
+      <PageHero image={IMAGES.termsHero.src} srcSet={IMAGES.termsHero.srcSet} eyebrow="GUIDE" title="이용안내"
         description="커미션 진행에 적용되는 안내 사항입니다. 추가금이 발생하는 조건이 포함되어 있으니 신청 전에 한 번 읽어 주세요." />
       <div className="flex flex-col gap-10 pb-[60px] pt-[60px] lg:pb-[120px] lg:pt-[100px]">
         <Tabs items={TAB_ITEMS} value={active} onChange={setActive} variant="line" idPrefix={TAB_PREFIX} aria-label="이용안내 항목" />

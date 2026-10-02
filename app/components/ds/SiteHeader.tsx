@@ -3,7 +3,7 @@
  *  3단계 사용자 요청: 왼쪽 '한참' 글자 로고(브랜드색) / 가운데 정렬 메뉴(title5 #767676, 간격 48) / 오른쪽 '신청하기' 브랜드색 알약(44px).
  *  메뉴 'FAQ' 는 접근성을 위해 '자주 묻는 질문'으로 (푸터와 같은 이름).
  * 기존 Navigation 의 동작을 그대로 옮김: <a href> 링크 + SPA 이동, 현재 페이지 표시, '나의 견적' 개수 배지(aria-live),
- * 1024px 미만 햄버거 + 오른쪽 슬라이드 메뉴(dialog), 딤 클릭·링크 클릭 시 닫힘. 추가: Esc 로 메뉴 닫기. (스크롤 그림자는 3단계에 사용자 요청으로 뺌)
+ * 1024px 미만 햄버거 + 오른쪽 슬라이드 메뉴(dialog), 딤 클릭·링크 클릭 시 닫힘. 추가: Esc 로 메뉴 닫기. (스크롤 그림자는 3단계에 사용자 요청으로 뺌. 4단계: 스크롤하면 헤더 위 틈을 흐린 흰 띠로 덮음)
  */
 import clsx from 'clsx';
 import { BrandLogo } from './BrandLogo';
@@ -15,7 +15,9 @@ import { buttonClassName } from './Button';
 import { Icon } from './Icon';
 import { focusRing } from './shared';
 
+// '홈'은 4단계 사용자 요청으로 메뉴 맨 앞에 (모바일 메뉴도 같은 목록)
 const NAV_ITEMS: Array<{ id: PageType; label: string }> = [
+  { id: 'home', label: '홈' },
   { id: 'server', label: '서버 커미션' },
   { id: 'bot', label: '자동봇 커미션' },
   { id: 'terms', label: '이용안내' },
@@ -39,8 +41,21 @@ function CountBadge({ count, onDark = false }: { count: number; onDark?: boolean
   );
 }
 
+/** 스크롤해서 본문이 헤더 위 틈으로 지나가기 시작했는지 */
+function useScrolledPast(offset: number) {
+  const [past, setPast] = useState(false);
+  useEffect(() => {
+    const update = () => setPast(window.scrollY > offset);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, [offset]);
+  return past;
+}
+
 export function SiteHeader({ currentPage, onNavigate }: NavigationProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const scrolled = useScrolledPast(8);
   const { items } = useEstimate();
   const count = items.length;
 
@@ -83,6 +98,25 @@ export function SiteHeader({ currentPage, onNavigate }: NavigationProps) {
 
   return (
     <>
+      {/* 키보드 사용자를 위한 '본문 바로가기' (Tab 첫 번째, 포커스될 때만 보임). 주소의 #를 바꾸지 않고 <main> 으로 포커스만 옮긴다 (4단계 리뷰) */}
+      <a
+        href="#main"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById('main')?.focus();
+        }}
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-button focus:bg-brand focus:px-5 focus:py-3 focus:text-title5 focus:text-text-inverse"
+      >
+        본문 바로가기
+      </a>
+      {/* 헤더 위 24px 틈: 스크롤하면 본문 글자가 반쯤 잘려 비쳐 보여서, 내려간 뒤에는 흐린 흰 띠로 덮는다 (4단계 리뷰, 맨 위에서는 배너가 그대로 보이게 투명) */}
+      <div
+        className={clsx(
+          'pointer-events-none fixed inset-x-0 top-0 z-50 h-[var(--ds-header-offset)] bg-background-white/85 backdrop-blur-sm transition-opacity duration-200',
+          scrolled ? 'opacity-100' : 'opacity-0',
+        )}
+        aria-hidden="true"
+      />
       <header className="fixed inset-x-0 top-[var(--ds-header-offset)] z-50">
         <div className="container-ds">
           <nav
@@ -159,7 +193,8 @@ function MobileMenu({ open, onClose, currentPage, count, linkProps }: MobileMenu
   return (
     <div
       id="site-mobile-menu"
-      className={clsx('fixed inset-0 z-40 transition-opacity duration-300 lg:hidden', open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0')}
+      // 견적 버튼·바(z-40)보다 위: 메뉴를 열면 그 위에 떠 있지 않게 (4단계 리뷰)
+      className={clsx('fixed inset-0 z-[45] transition-opacity duration-300 lg:hidden', open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0')}
       role="dialog"
       aria-modal="true"
       aria-label="네비게이션 메뉴"
@@ -168,7 +203,6 @@ function MobileMenu({ open, onClose, currentPage, count, linkProps }: MobileMenu
       <div className="absolute inset-0 bg-overlay" onClick={onClose} aria-hidden="true" />
       <div className={clsx('absolute bottom-0 right-0 top-0 w-[280px] overflow-y-auto bg-background-white transition-transform duration-300', open ? 'translate-x-0' : 'translate-x-full')}>
         <div className="flex flex-col gap-2 p-6 pb-[calc(32px+env(safe-area-inset-bottom))] pt-[calc(var(--ds-header-offset)+var(--ds-header-height)+16px)]">
-          <a {...linkProps('home')} tabIndex={open ? 0 : -1} className={itemClass('home')}>홈</a>
           {NAV_ITEMS.map((item) => (
             <a key={item.id} {...linkProps(item.id)} tabIndex={open ? 0 : -1} className={itemClass(item.id)}>
               <span>{item.label}</span>

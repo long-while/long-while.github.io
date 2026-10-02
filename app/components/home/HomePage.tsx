@@ -22,10 +22,12 @@ function halfSize(image: SiteImage): CSSProperties {
   return { width: image.width / 2, height: image.height / 2 };
 }
 
-function Img({ image, alt = '', priority = false, className, style }: { image: SiteImage; alt?: string; priority?: boolean; className?: string; style?: CSSProperties }) {
+function Img({ image, alt = '', priority = false, sizes, className, style }: { image: SiteImage; alt?: string; priority?: boolean; sizes?: string; className?: string; style?: CSSProperties }) {
   return (
     <img
       src={image.src}
+      srcSet={image.srcSet}
+      sizes={image.srcSet ? sizes ?? '100vw' : undefined}
       width={image.width}
       height={image.height}
       alt={alt}
@@ -35,6 +37,8 @@ function Img({ image, alt = '', priority = false, className, style }: { image: S
       {...(priority ? { fetchpriority: 'high' } : {})}
       className={className}
       style={style}
+      // 장식 그림(alt 없음)이 못 오면 깨진 그림 표시 대신 숨긴다. 뒤에 같은 색 바탕이 깔려 있어 티가 나지 않음 (4단계 리뷰)
+      onError={alt === '' ? (e) => { e.currentTarget.style.visibility = 'hidden'; } : undefined}
     />
   );
 }
@@ -46,24 +50,27 @@ function scrollToServices() {
 function HomeHero() {
   return (
     <section className="relative flex min-h-[600px] items-end overflow-hidden bg-gradient-brand-hero lg:min-h-[980px]">
-      {/* 시안 scaleMode STRETCH: 원본 전체를 상자에 늘려 채움. 모바일은 비율이 크게 달라 잘라 채움 */}
-      <Img image={IMAGES.homeHero} priority className="absolute inset-0 size-full object-cover lg:object-fill" />
+      {/* 모든 너비에서 비율을 지키며 잘라 채움(다른 페이지 배너처럼 확대). 1920×980 에서는 원본 비율과 같아 잘리는 곳 없음 (사용자 요청: 늘려 채우면 좁은 창에서 찌그러짐) */}
+      <Img image={IMAGES.homeHero} priority className="absolute inset-0 size-full object-cover" />
       {/* 시안 Rectangle 33543: 높이 59.5% 부터 아래로 #4977D3 0→100%. 모바일은 글이 차지하는 비율이 커서 30% 부터 */}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_30%,#4977D3_100%)] lg:bg-[linear-gradient(180deg,transparent_59.5%,#4977D3_100%)]" aria-hidden="true" />
-      <div className="container-ds relative pb-12 lg:pb-[68px]">
+      {/* 글자가 놓이는 왼쪽 아래만 조금 더 어둡게: 밝은 일러스트 위 흰 글자 대비가 낮았다 (4단계 리뷰) */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_15%_100%,rgba(30,64,150,0.55),transparent_70%)]" aria-hidden="true" />
+      <div className="container-ds relative pb-12 [text-shadow:0_1px_12px_rgba(20,45,110,0.35)] lg:pb-[68px]">
         <div className="flex max-w-[621px] flex-col gap-5">
-          <p className="font-inter text-eyebrow uppercase text-text-inverse-muted">LONGWHILE COMMISSION</p>
+          <p className="font-inter text-eyebrow uppercase text-text-inverse">LONGWHILE COMMISSION</p>
           {/* 사용자 제공 '한참 커미션' 글자 로고(흰색). 기존 제목 글자(display 48/모바일 28)와 같은 높이. 읽는 글자는 그대로 */}
           <h1 className="text-text-inverse">
             <BrandWordmark className="block h-7 lg:h-12" />
             <span className="sr-only">한참 커미션</span>
           </h1>
-          <p className="text-body1 text-text-inverse-muted">
+          <p className="text-body1 text-text-inverse">
             마스토돈 자캐커뮤를 위한 최고의 커미션<br />
             서버 설치부터 자동봇까지 한번에
           </p>
           <ul className="flex flex-wrap gap-2">
-            {['3개월 무료 서버비', '무료 유지보수', '1:1 맞춤 설정'].map((badge) => (
+            {/* '3개월 무료 서버비'는 서버비가 계속 무료인 것처럼 읽혀서, 구글 무료 크레딧임을 밝힘 (4단계 리뷰) */}
+            {['첫 3개월 구글 무료 크레딧', '무료 유지보수', '1:1 맞춤 설정'].map((badge) => (
               <li key={badge} className="rounded-pill border border-background-white/20 bg-background-white/10 px-4 py-2 text-body3 text-text-inverse backdrop-blur-sm">
                 {badge}
               </li>
@@ -95,9 +102,9 @@ function Services({ onNavigate }: HomeProps) {
     <section id="services-section" className="container-ds scroll-mt-header flex flex-col items-center gap-10">
       <SectionTitle eyebrow="SERVICE" title="커미션 서비스" />
       <div className="grid w-full grid-cols-1 justify-items-center gap-10 lg:grid-cols-2 lg:gap-6">
-        <ServiceCard image={IMAGES.homeServiceServer.src} title={<>서버 설치 &amp; 테마 커스텀</>}
+        <ServiceCard image={IMAGES.homeServiceServer.src} srcSet={IMAGES.homeServiceServer.srcSet} title={<>서버 설치 &amp; 테마 커스텀</>}
           description="구글 클라우드 플랫폼을 이용한 마스토돈 서버 설치 및 커스텀 테마 제작" ctaLabel="자세히 보기" href={server.href} onCtaClick={server.onClick} />
-        <ServiceCard image={IMAGES.homeServiceBot.src} title="자동봇 커미션"
+        <ServiceCard image={IMAGES.homeServiceBot.src} srcSet={IMAGES.homeServiceBot.srcSet} title="자동봇 커미션"
           description="커뮤니티 운영을 돕는 다양한 타입의 자동봇 제작" ctaLabel="자세히 보기" href={bot.href} onCtaClick={bot.onClick} />
       </div>
     </section>
@@ -113,7 +120,7 @@ function Features() {
         {FEATURES.map((f) => (
           <FeatureCard key={f.title} className="bg-background-white"
             icon={<Img image={IMAGES[f.image]} style={halfSize(IMAGES[f.image])} className="object-contain" />}
-            title={f.title} description={f.description} />
+            title={f.title} />
         ))}
       </div>
     </section>
@@ -225,7 +232,7 @@ function HomeCta({ onNavigate }: HomeProps) {
 
 export function HomePage({ onNavigate }: HomeProps) {
   return (
-    <main className="bg-background-white">
+    <main id="main" tabIndex={-1} className="bg-background-white outline-none">
       <HomeHero />
       <Sections>
         <Services onNavigate={onNavigate} />

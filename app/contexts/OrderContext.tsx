@@ -152,6 +152,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [cartSyncState, setCartSyncState] = useState<CartSyncState | null>(null);
   const [restoredFromStorage, setRestoredFromStorage] = useState(false);
   const [cartApplied, setCartApplied] = useState<{ step2: boolean; step3: boolean } | null>(null);
+  // 저장된 신청서를 이어 쓸지 정하기 전에는 자동 저장을 멈춘다. 멈추지 않으면 복원 창이 떠 있는 동안 빈 신청서가 저장본을 덮어쓴다 (4단계 리뷰)
+  const [autosaveReady, setAutosaveReady] = useState(false);
 
   const updateStep1 = useCallback((data: Partial<Step1Data>) => {
     setFormData(prev => {
@@ -188,6 +190,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   // 장바구니에서 데이터 동기화
   const syncFromCart = useCallback((cartItems: EstimateItem[]) => {
+    setAutosaveReady(true);
     if (cartItems.length === 0) return;
 
     const { step2, step3 } = syncCartToOrderData(cartItems);
@@ -223,12 +226,14 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setCurrentStep(1);
     setRestoredFromStorage(false);
     setCartApplied(null);
+    setAutosaveReady(true);
     localStorage.removeItem(ORDER_STORAGE_KEY);
     clearCartSync();
   }, [clearCartSync]);
 
   // localStorage 저장 (비밀번호는 보안상 저장하지 않음)
   const saveToLocalStorage = useCallback(() => {
+    if (!autosaveReady) return;
     try {
       const sanitizedFormData = {
         ...formData,
@@ -251,12 +256,14 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         console.error('Failed to save to localStorage:', error);
       }
     }
-  }, [formData, currentStep]);
+  }, [formData, currentStep, autosaveReady]);
 
   // localStorage 로드 (스키마 버전 검증 및 필드 병합)
   const loadFromLocalStorage = useCallback((): boolean => {
     try {
       const saved = localStorage.getItem(ORDER_STORAGE_KEY);
+      // 저장본이 없거나 못 읽어도 '기존 유지'를 고른 것이므로 그 뒤부터는 저장한다
+      setAutosaveReady(true);
       if (!saved) return false;
 
       const parsed = JSON.parse(saved);
@@ -297,31 +304,29 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // 자동 저장
+  // 자동 저장: 입력이 멈추고 잠깐 뒤(디바운스) 저장. 칸을 떠나지 않고 바로 새로고침해도 남도록 (4단계 리뷰)
   useEffect(() => {
-    const interval = setInterval(() => {
-      saveToLocalStorage();
-    }, FORM_CONFIG.autosave.intervalMs);
-
-    return () => clearInterval(interval);
+    const timer = setTimeout(saveToLocalStorage, FORM_CONFIG.autosave.debounceMs);
+    return () => clearTimeout(timer);
   }, [saveToLocalStorage]);
 
-  // 페이지 떠날 때 저장
+  // 페이지 떠날 때 저장 (모바일 사파리는 beforeunload 대신 pagehide 만 오는 경우가 있어 둘 다)
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      saveToLocalStorage();
+    window.addEventListener('beforeunload', saveToLocalStorage);
+    window.addEventListener('pagehide', saveToLocalStorage);
+    return () => {
+      window.removeEventListener('beforeunload', saveToLocalStorage);
+      window.removeEventListener('pagehide', saveToLocalStorage);
     };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [saveToLocalStorage]);
 
-  // 초기 마운트 시 동기화 상태 확인
+  // 초기 마운트: 동기화 상태 확인, 이어 쓸 저장본이 없으면 바로 자동 저장 시작
   useEffect(() => {
     const syncState = loadSyncState();
     if (syncState?.synced) {
       setCartSyncState(syncState);
     }
+    if (!syncState?.synced && !localStorage.getItem(ORDER_STORAGE_KEY)) setAutosaveReady(true);
   }, []);
 
   return (

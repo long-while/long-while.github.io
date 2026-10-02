@@ -8,8 +8,10 @@
  */
 import { useCallback, useEffect } from 'react';
 import {
-  BulletList, EstimateGroup, EstimateItemRow, EstimateTotal, Icon, LinkCard, Toast, buttonClassName,
+  Banner, BulletList, Button, EstimateGroup, EstimateItemRow, EstimateTotal, Icon, LinkCard, Toast, buttonClassName,
 } from '@/app/components/ds';
+import { SERVER_INSTALL_ITEM_NAME } from '@/app/constants/form';
+import { ServerFeeNote } from '@/app/components/server/ServerFeeNote';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
 import { navLinkProps } from '@/app/lib/navLink';
@@ -107,8 +109,26 @@ function ItemGroup({ title, items, onRemove, onEdit }: {
   );
 }
 
+/**
+ * 서버 설치를 빼고 서버 옵션(테마·빠른마감·검색 등)만 남은 견적이면 알린다 (4단계 리뷰).
+ * 자동으로 지우지 않고, 함께 빼거나 서버 설치를 다시 담을 수 있게 고르게 한다.
+ */
+function OrphanServerOptions({ items, onRemoveAll, onAddInstall }: { items: EstimateItem[]; onRemoveAll: () => void; onAddInstall: () => void }) {
+  return (
+    <Banner
+      tone="warning"
+      title="서버 설치 없이 담긴 서버 옵션이 있어요"
+      description={`${items.map((i) => i.name).join(', ')}${eunNeun(items[items.length - 1].name)} 마스토돈 서버 설치와 함께 신청하는 옵션입니다.`}
+      actions={<>
+        <Button variant="white" size="md" onClick={onRemoveAll}>서버 옵션 모두 빼기</Button>
+        <Button size="md" onClick={onAddInstall}>서버 설치 담으러 가기</Button>
+      </>}
+    />
+  );
+}
+
 function FilledState({ onNavigate }: { onNavigate: NavigateFunction }) {
-  const { items, removeItem, getTotalPrice, proceedToOrder, setEditTargetName } = useEstimate();
+  const { items, removeItem, getTotalPrice, proceedToOrder, setEditTargetName, serverCalcResult } = useEstimate();
   const order = navLinkProps('order', onNavigate);
 
   /** 항목 수정: 해당 상품 페이지로 이동하면서 어떤 옵션을 고치려는지 넘긴다 (상품 페이지가 스크롤·강조) */
@@ -117,6 +137,14 @@ function FilledState({ onNavigate }: { onNavigate: NavigateFunction }) {
     onNavigate(item.category === 'bot' ? 'bot' : 'server');
   }, [onNavigate, setEditTargetName]);
   const handleRemove = (item: EstimateItem) => removeItem(item.id, { trackUndo: true });
+
+  const hasInstall = items.some((i) => i.name === SERVER_INSTALL_ITEM_NAME);
+  const orphanServerItems = hasInstall ? [] : items.filter((i) => i.category === 'server' && !i.locked);
+  const removeOrphans = () => orphanServerItems.forEach((i) => removeItem(i.id));
+  const addInstall = () => {
+    setEditTargetName(SERVER_INSTALL_ITEM_NAME);
+    onNavigate('server');
+  };
 
   const groups = [
     { title: '서버 설치', items: items.filter((i) => i.category === 'server') },
@@ -127,6 +155,7 @@ function FilledState({ onNavigate }: { onNavigate: NavigateFunction }) {
   return (
     <div className="flex w-full flex-col items-center gap-10 lg:gap-[60px]">
       <div className="flex w-full flex-col gap-8">
+        {orphanServerItems.length > 0 && <OrphanServerOptions items={orphanServerItems} onRemoveAll={removeOrphans} onAddInstall={addInstall} />}
         <div className="flex flex-col gap-10 lg:gap-[60px]">
           {groups.map((g) => <ItemGroup key={g.title} title={g.title} items={g.items} onRemove={handleRemove} onEdit={handleEdit} />)}
         </div>
@@ -139,6 +168,7 @@ function FilledState({ onNavigate }: { onNavigate: NavigateFunction }) {
             ]}
           />
           <EstimateTotal label="총 견적 금액" amount={won(getTotalPrice())} />
+          {hasInstall && <ServerFeeNote result={serverCalcResult} />}
         </div>
       </div>
       <div className="flex flex-col items-center gap-3">
@@ -165,7 +195,7 @@ export default function EstimatePage({ onNavigate }: EstimatePageProps) {
   useEffect(() => dismissLastRemoved, [dismissLastRemoved]);
 
   return (
-    <main className="bg-background-white">
+    <main id="main" tabIndex={-1} className="bg-background-white outline-none">
       {lastRemoved && (
         <UndoToast itemId={lastRemoved.item.id} name={lastRemoved.item.name} onUndo={undoRemove} onDismiss={dismissLastRemoved} />
       )}

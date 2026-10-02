@@ -37,7 +37,7 @@ const TAB_CLASS = {
     ),
   line: (selected: boolean) =>
     clsx(
-      'flex min-h-[70px] shrink-0 items-center justify-center gap-1 border-b-2 px-5 py-5 text-caption1 transition-colors duration-150 lg:w-[220px]',
+      'flex min-h-[70px] shrink-0 items-center justify-center gap-1 border-b-2 px-5 py-5 text-caption1 transition-colors duration-150 lg:w-[220px] lg:shrink lg:px-3 xl:px-5',
       selected ? 'border-brand text-brand' : 'border-transparent text-text-disabled hover:text-text-secondary',
     ),
 };
@@ -81,7 +81,7 @@ export function Tabs({ items, value, onChange, variant = 'box', idPrefix, classN
       aria-label={ariaLabel}
       className={clsx(
         'flex max-w-full overflow-x-auto',
-        variant === 'box' ? 'w-full gap-2 rounded-input bg-background-100 p-2 sm:w-fit' : 'border-b border-border-100 lg:justify-center',
+        variant === 'box' ? 'w-full gap-2 rounded-input bg-background-100 p-2 sm:w-fit' : 'border-b border-border-100 lg:justify-center-safe',
         className,
       )}
     >

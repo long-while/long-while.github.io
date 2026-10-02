@@ -1,14 +1,14 @@
 /**
  * STEP3 자동봇 화면 조각 — 시안 '신청서 - STEP03-편집상태' / '-아니오' (280:1868, 280:2850, file.json 실측).
- *  STEP 01 신청 여부 → 운영 기간 설정(카드 2개) → 메인 봇 종류(작은 카드) → 추가 기능 선택(2열 카드)
- *  → 봇 설정 정보 → STEP 03 기타 정보(2열). 카드는 ds OptionCard(row), 고른 카드 아래에 입력 상자(SubPanel)가 펼쳐진다.
+ *  신청 여부 → 운영 기간 설정(카드 2개) → 메인 봇 종류(작은 카드) → 추가 기능 선택(2열 카드)
+ *  → 봇 설정 정보 → 기타 정보(2열). 카드는 ds OptionCard(row), 고른 카드 아래에 입력 상자(SubPanel)가 펼쳐진다.
  *  문구·동작은 기존 Step3Bot 그대로 (상태·규칙은 useStep3Bot).
  */
 import type { ReactNode } from 'react';
 import { FieldLabel, FormSection, Icon, OptionCard, Radio } from '@/app/components/ds';
 import { FieldError, FieldGroupError, useFieldAria } from '@/app/contexts/FieldErrorContext';
 import { INPUT_LIMITS } from '@/app/types/order';
-import { DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
+import { DEADLINE_BLACKOUT_LABEL, botPeriodWithYears } from '@/app/utils/orderUtils';
 import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
 import { FieldErrorText, FromCartBadge, Pill, SubPanel } from '../fields';
 import { SLOTS_PER_TIER, formatManwon, normalizeMonthDayInput, type Step3State } from './useStep3Bot';
@@ -26,7 +26,6 @@ export function ApplyBotQuestion({ s }: S) {
   const anyFromCart = fromCart.basicBot || fromCart.basicShopBot || fromCart.basicShopStatBot || fromCart.cocBot || fromCart.trpg2d6Bot || fromCart.omakase || fromCart.investigation;
   return (
     <FormSection
-      eyebrow="STEP 01"
       title={<>자동봇을 신청하시나요? <span className="text-brand" aria-hidden="true">*</span></>}
       titleAside={step3.applyBot === 'yes' && anyFromCart && <FromCartBadge />}
     >
@@ -54,7 +53,9 @@ function BotPeriodInputs({ s }: S) {
         <span className="text-body2 text-text-secondary">~</span>
         <input type="text" inputMode="numeric" value={step3.botEndDate} placeholder="MM/DD" aria-label="가동 종료일" className={box}
           onChange={(e) => updateStep3({ botEndDate: normalizeMonthDayInput(e.target.value) })} />
-        <span className="text-body2 text-text-primary">({step3.manualWeeks}주, {formatManwon(step3.manualWeeks * 5000)})</span>
+        <span className="text-body2 text-text-primary">
+          ({[botPeriodWithYears(step3.botStartDate, step3.botEndDate, s.step1.closingDate), `${step3.manualWeeks}주`, formatManwon(step3.manualWeeks * 5000)].filter(Boolean).join(', ')})
+        </span>
       </div>
     </SubPanel>
   );
@@ -63,9 +64,10 @@ function BotPeriodInputs({ s }: S) {
 export function OperationSection({ s }: S) {
   const { step3, updateStep3 } = s;
   return (
-    <FormSection title={<>운영 기간 설정 <span className="text-brand" aria-hidden="true">*</span></>}>
+    // '운영 기간'은 STEP4 의 커뮤 운영 일정(개장~폐장)과 헷갈려서 '자동봇 가동 기간'으로 (4단계 리뷰)
+    <FormSection title={<>자동봇 가동 기간 설정 <span className="text-brand" aria-hidden="true">*</span></>}>
       <FieldGroupError field="operationWeeksOption">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6" role="radiogroup" aria-label="운영 기간">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6" role="radiogroup" aria-label="자동봇 가동 기간">
           <OptionCard id="operationWeeksOption" name="operationWeeksOption" layout="row" checked={step3.operationWeeksOption === 'longterm'}
             onChange={() => updateStep3({ operationWeeksOption: 'longterm', manualWeeks: 0 })}
             title="6개월 이상 장기 소규모 서버를 위한 자동봇이에요." price="1만원"
@@ -472,7 +474,7 @@ export function ExtraInfoSection({ s }: S) {
   const { step3, updateStep3, showMainBotAccount, showInvestigationBotAccount, primaryAccountLabel, botAccountIdError, investigationBotAccountIdError, setupDeadlineBlackoutError } = s;
   const fieldAria = useFieldAria();
   return (
-    <FormSection eyebrow="STEP 03" title={<>기타 정보 <span className="text-brand" aria-hidden="true">*</span></>}>
+    <FormSection title={<>기타 정보 <span className="text-brand" aria-hidden="true">*</span></>}>
       {showInvestigationBotAccount && (
         <div className="flex items-start gap-2 rounded-card border border-warning-200 bg-warning-50 p-5 text-body3 text-warning-700">
           <Icon name="warning" size={18} className="mt-0.5 shrink-0" />

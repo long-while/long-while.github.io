@@ -1,7 +1,7 @@
 /**
  * STEP2 서버 설치 옵션 — 시안 '신청서 - STEP02-편집 상태' / '-아니오' (269:5181, 257:3848, file.json 실측).
- *  STEP 01 설치 여부(라디오, 기본 비용) → 서버비 계산기(서버 페이지와 같은 useServerCalculator + ds 입력, 2열)
- *  → 커스텀 옵션(OptionRow 택1) → 기타 옵션(OptionRow) → 노션 가이드 안내 → STEP 02 기타 정보(희망 마감일·총괄 계정 2열).
+ *  설치 여부(라디오, 기본 비용) → 서버비 계산기(서버 페이지와 같은 useServerCalculator + ds 입력, 2열)
+ *  → 커스텀 옵션(OptionRow 택1) → 기타 옵션(OptionRow) → 노션 가이드 안내 → 기타 정보(희망 마감일·총괄 계정 2열).
  *  Q6: 견적함에서 넘어와 값이 채워졌으면 커스텀·기타 옵션 대신 요약('선택하신 서버 사양' + 수정)으로 시작 (stepMode).
  *  검색 연동·Vultr 검색 차단·마감 임박 빠른 마감 강제·글자수 검증·'아니오' 초기화 동작은 기존 그대로.
  */
@@ -12,25 +12,25 @@ import { useOrder } from '@/app/contexts/OrderContext';
 import { FieldError, FieldGroupError, useFieldAria } from '@/app/contexts/FieldErrorContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { calculateTotalEstimate, validateCharacterLimit, computeRequiredFastDeadline, getDeadlineBlackoutError, validateAccountId, DEADLINE_BLACKOUT_LABEL } from '@/app/utils/orderUtils';
-import { SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
+import { PRICING_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
 import type { FastDeadlineOption, Step2Data } from '@/app/types/order';
 import { FieldErrorText, FromCartBadge, Pill, useFromCart } from '../fields';
 import { serverSummaryRows, useStepMode } from '../stepMode';
+import { RUSH_OPTIONS, THEME_CHOICE_LABEL } from '@/app/components/server/serverContent';
 
+const plus = (price: number) => `+${price.toLocaleString()}원`;
+const THEME_PRICE = PRICING_CONFIG.server.options;
+
+// 이름·가격은 서버 커미션 페이지와 같은 곳(serverContent·PRICING_CONFIG)에서 가져온다 (4단계 리뷰)
 const CUSTOM_OPTIONS: { value: Step2Data['additionalOption']; title: string; price?: string; description?: string }[] = [
   { value: null, title: '기본', description: '무료 — 기본 트위터 테마' },
-  { value: 'logo', title: '로고 변경', price: '+5,000원' },
-  { value: 'dayTheme', title: '낮 테마', price: '+20,000원' },
-  { value: 'nightTheme', title: '밤 테마', price: '+20,000원' },
-  { value: 'bothTheme', title: '커스텀 테마 2종', price: '+30,000원' },
+  ...(['logo', 'dayTheme', 'nightTheme', 'bothTheme'] as const).map((value) => ({ value, title: THEME_CHOICE_LABEL[value], price: plus(THEME_PRICE[value]) })),
 ];
 
-const FAST_OPTIONS: { value: FastDeadlineOption; title: string; price: string }[] = [
-  { value: 'basic48h', title: '48시간 내 기본 서버 설치 마감', price: '+5,000원' },
-  { value: 'basic24h', title: '24시간 내 기본 서버 설치 마감', price: '+10,000원' },
-  { value: 'logo48h', title: '48시간 내 로고 변경된 서버 설치 마감', price: '+15,000원' },
-  { value: 'theme48h', title: '48시간 내 테마 커스텀된 서버 설치 마감', price: '+20,000원' },
-];
+const FAST_OPTIONS: { value: FastDeadlineOption; title: string; price: string }[] = RUSH_OPTIONS.map((o) => ({
+  value: o.orderValue, title: o.displayName, price: plus(o.price),
+}));
+const FAST_MIN_PRICE = Math.min(...RUSH_OPTIONS.map((o) => o.price));
 
 /** 검색 연동·Vultr 차단·빠른 마감 강제 등 STEP2 규칙 (기존과 같은 효과들) */
 function useStep2Rules() {
@@ -90,7 +90,6 @@ function InstallQuestion() {
   };
   return (
     <FormSection
-      eyebrow="STEP 01"
       title={<>서버 설치를 신청하시나요? <span className="text-brand" aria-hidden="true">*</span></>}
       titleAside={fromCart('마스토돈 서버 설치') && step2.applyServerInstall === 'yes' && <FromCartBadge />}
       description={<>서버 설치 기본 비용: <span className="text-brand">20,000원</span></>}
@@ -171,10 +170,10 @@ function CharacterLimitOption() {
           setCharacterLimitError(null);
         }
       }}
-      title="글자수 제한 변경"
+      title="툿 글자수 제한 변경"
       badge={fromCart('글자수') && step2.changeCharacterLimit && <FromCartBadge />}
       description="기본 공백 포함 1000자. 원하는 글자수 제한을 설정합니다."
-      price="+5,000원"
+      price={plus(PRICING_CONFIG.server.addons.characterLimit)}
     >
       <div className="flex flex-col gap-3 md:w-[280px]">
         <FieldLabel htmlFor="characterLimitValue">원하는 글자수</FieldLabel>
@@ -201,7 +200,7 @@ function SearchOption({ rules }: { rules: ReturnType<typeof useStep2Rules> }) {
         checked={step2.searchOption}
         disabled={searchLocked}
         onChange={(e) => { if (!searchLocked) updateStep2({ searchOption: e.target.checked }); }}
-        title="검색 옵션"
+        title="검색 기능"
         badge={<>
           {fromCart('검색') && step2.searchOption && <FromCartBadge />}
           {searchBlockedByVultr && <Pill>장기·소규모(Vultr) 서버 선택 불가</Pill>}
@@ -209,7 +208,7 @@ function SearchOption({ rules }: { rules: ReturnType<typeof useStep2Rules> }) {
           {!searchBlockedByVultr && serverCalcResult?.search === 'no' && <Pill>계산기에서 제외됨</Pill>}
         </>}
         description="서버에 검색 기능을 추가합니다. 위 계산기의 ‘검색 기능 추가 여부’와 연동됩니다."
-        price="+15,000원"
+        price={plus(PRICING_CONFIG.server.addons.search)}
       />
       {/* Vultr(장기·소규모) 서버: 검색 기능 추가 불가 안내 */}
       {searchBlockedByVultr && (
@@ -239,7 +238,8 @@ function FastDeadlineOption({ required }: { required: FastDeadlineOption | null 
           updateStep2({ fastDeadline: e.target.checked });
           if (!e.target.checked) updateStep2({ fastDeadlineOption: null });
         }}
-        title="48시간 이내 빠른 마감"
+        title="빠른마감 옵션"
+        price={`${plus(FAST_MIN_PRICE)}부터`}
         badge={<>
           {fromCart('빠른마감') && step2.fastDeadline && <FromCartBadge />}
           {required && <Pill tone="brand">마감 임박 필수</Pill>}
@@ -278,7 +278,7 @@ function OtherOptions({ rules }: { rules: ReturnType<typeof useStep2Rules> }) {
           title="masto.host 에서 서버 데이터 이전"
           badge={fromCart('masto.host') && step2.mastoHostMigration && <FromCartBadge />}
           description="팔로우 관계, 텍스트 데이터, 이미지 등 모든 정보를 기존 서버에서 새로운 서버로 옮겨드립니다."
-          price="+20,000원"
+          price={plus(PRICING_CONFIG.server.addons.mastoHostMigration)}
         />
         <FastDeadlineOption required={rules.requiredFastDeadline} />
       </div>
@@ -355,7 +355,7 @@ function AdminAccountField() {
 
 function ExtraInfo() {
   return (
-    <FormSection eyebrow="STEP 02" title="기타 정보">
+    <FormSection title="기타 정보">
       <div className="grid grid-cols-1 gap-x-5 gap-y-6 md:grid-cols-2">
         <DeadlineField />
         <AdminAccountField />

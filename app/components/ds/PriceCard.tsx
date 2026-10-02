@@ -22,8 +22,18 @@ interface PriceCardProps {
   price: ReactNode;
   logo?: ReactNode;
   logoLabel?: ReactNode;
+  /**
+   * form: 서버 페이지 계산기처럼 '이름 140 + 간격 70 ↔ 입력 580' 줄 아래에 놓일 때.
+   * 로고가 이름 칸을 차지하고(162 + 48 = 210), 글은 위 입력칸과 같은 자리·같은 폭에서 시작한다 (4단계 사용자 요청)
+   */
+  align?: 'default' | 'form';
   className?: string;
 }
+
+const ALIGN = {
+  default: { root: 'gap-6', body: '' },
+  form: { root: 'gap-6 lg:gap-12', body: 'lg:max-w-[580px]' },
+} as const;
 
 function LogoBox({ logo, label }: { logo?: ReactNode; label?: ReactNode }) {
   return (
@@ -34,13 +44,17 @@ function LogoBox({ logo, label }: { logo?: ReactNode; label?: ReactNode }) {
   );
 }
 
-export function PriceCard({ title, highlights = [], specs, price, logo, logoLabel = '구글 클라우드 플랫폼', className }: PriceCardProps) {
+export function PriceCard({ title, highlights = [], specs, price, logo, logoLabel = '구글 클라우드 플랫폼', align = 'default', className }: PriceCardProps) {
   return (
-    <div className={clsx('flex flex-col gap-6 rounded-card sm:flex-row sm:items-stretch', className)}>
+    <div className={clsx('flex flex-col rounded-card sm:flex-row sm:items-stretch', ALIGN[align].root, className)}>
       <LogoBox logo={logo} label={logoLabel} />
-      <div className="flex min-w-0 flex-1 flex-col gap-4">
+      <div className={clsx('flex min-w-0 flex-1 flex-col gap-4', ALIGN[align].body)}>
         <div className="flex flex-col gap-1 border-b border-border-100 pb-4">
-          <h3 className="text-title3 text-text-primary">{title}</h3>
+          {/* 금액은 제목 바로 옆에 굵은 파란 글자로 (오른쪽 끝에 있어 잘 안 보였다, 4단계 사용자 요청) */}
+          <h3 className="flex flex-wrap items-baseline gap-x-3 text-title3 text-text-primary">
+            {title}
+            <span className="text-title2 font-bold text-brand">{price}</span>
+          </h3>
           {highlights.length > 0 && (
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
               {highlights.map((h, i) => (
@@ -53,19 +67,14 @@ export function PriceCard({ title, highlights = [], specs, price, logo, logoLabe
             </div>
           )}
         </div>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <dl className="grid grid-cols-[100px_1fr] gap-x-8 gap-y-2">
-            {specs.map((s, i) => (
-              <Fragment key={i}>
-                <dt className="text-body3 text-text-secondary">{s.label}</dt>
-                <dd className="text-caption2 text-text-primary">{s.value}</dd>
-              </Fragment>
-            ))}
-          </dl>
-          <div className="flex min-h-[54px] w-full items-center justify-center rounded-input bg-brand px-5 py-3 text-title3 text-text-inverse lg:w-[180px]">
-            {price}
-          </div>
-        </div>
+        <dl className="grid grid-cols-[100px_1fr] gap-x-8 gap-y-2">
+          {specs.map((s, i) => (
+            <Fragment key={i}>
+              <dt className="text-body3 text-text-secondary">{s.label}</dt>
+              <dd className="text-caption2 text-text-primary">{s.value}</dd>
+            </Fragment>
+          ))}
+        </dl>
       </div>
     </div>
   );

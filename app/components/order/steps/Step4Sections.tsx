@@ -6,16 +6,17 @@ import { useId, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { Checkbox, EstimateTotal, FieldLabel, Icon, ReviewSection } from '@/app/components/ds';
 import type { OrderFormData, PriceEstimate } from '@/app/types/order';
-import { getBotAccountLines } from '@/app/utils/orderUtils';
+import { botPeriodWithYears, getBotAccountLines } from '@/app/utils/orderUtils';
 import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
 import { Pill } from '../fields';
+import { RUSH_LABEL, THEME_CHOICE_LABEL } from '@/app/components/server/serverContent';
+import { ServerFeeNote } from '@/app/components/server/ServerFeeNote';
+import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 type Edit = (step: 1 | 2 | 3) => void;
 
 const missing = (text: string) => <span className="text-error-500">{text}</span>;
 
-const CUSTOM_LABEL = { logo: '로고 변경', dayTheme: '낮 테마', nightTheme: '밤 테마', bothTheme: '테마 2종' } as const;
-const FAST_LABEL = { basic48h: '48시간/기본', basic24h: '24시간/기본', logo48h: '48시간/로고', theme48h: '48시간/테마' } as const;
 const MAIN_BOT_LABEL = { basic: '기본', basicShop: '기본+상점', basicShopStat: '기본+상점+스탯' } as const;
 const MAIN_BOT_PRICE_LABEL = { basic: '기본봇', basicShop: '기본+상점봇', basicShopStat: '기본+상점+스탯봇' } as const;
 const transferLabel = (o: OrderFormData['step3']['transferOption']) => (o === 'itemOnly' ? '아이템만' : o === 'currencyOnly' ? '재화만' : '모두');
@@ -25,13 +26,13 @@ export function ApplicantReview({ data, onEdit }: { data: OrderFormData; onEdit:
   const { step1 } = data;
   return (
     <ReviewSection
-      title="신청자 닉네임"
+      title="신청자 및 커뮤니티 정보"
       onEdit={() => onEdit(1)}
       rows={[
         { label: '신청자 닉네임', value: step1.applicantNickname || '-' },
         { label: '구글 계정', value: <>{step1.googleEmail || missing('이메일 미입력')}{' / '}{step1.googlePassword ? '비밀번호 입력됨' : missing('비밀번호 미입력')}</> },
         { label: '커뮤니티', value: `${step1.communityKoreanName} / ${step1.communityEnglishName} (약칭 '${step1.communityShortName}')` },
-        { label: '운영 일정', value: step1.isLongTermCommunity ? '장기 소규모 서버' : `${step1.openingDate} ~ ${step1.closingDate} (${step1.operationWeeks}주)` },
+        { label: '커뮤 운영 일정 (개장~폐장)', value: step1.isLongTermCommunity ? '장기 소규모 서버' : `${step1.openingDate} ~ ${step1.closingDate} (${step1.operationWeeks}주)` },
       ]}
     />
   );
@@ -41,15 +42,15 @@ export function ServerReview({ data, onEdit }: { data: OrderFormData; onEdit: Ed
   const { step2 } = data;
   const rows: { label: string; value: ReactNode }[] = [{ label: '신청 여부', value: step2.applyServerInstall === 'yes' ? '예' : '아니오' }];
   if (step2.applyServerInstall === 'yes') {
-    if (step2.additionalOption) rows.push({ label: '커스텀 옵션', value: CUSTOM_LABEL[step2.additionalOption] });
+    if (step2.additionalOption) rows.push({ label: '커스텀 옵션', value: THEME_CHOICE_LABEL[step2.additionalOption] });
     if (step2.changeCharacterLimit || step2.searchOption || step2.mastoHostMigration || step2.fastDeadline) {
       rows.push({
         label: '추가 옵션',
         value: [
-          step2.changeCharacterLimit && `글자수 ${step2.characterLimitValue}자`,
-          step2.searchOption && '검색 옵션',
-          step2.mastoHostMigration && 'masto.host 데이터 이전',
-          step2.fastDeadline && '빠른 마감',
+          step2.changeCharacterLimit && `툿 글자수 제한 변경 (${step2.characterLimitValue}자)`,
+          step2.searchOption && '검색 기능',
+          step2.mastoHostMigration && 'masto.host 에서 서버 데이터 이전',
+          step2.fastDeadline && (step2.fastDeadlineOption ? RUSH_LABEL[step2.fastDeadlineOption] : '빠른마감'),
         ].filter(Boolean).join(', ') || '-',
       });
     }
@@ -98,10 +99,12 @@ export function BotReview({ data, onEdit }: { data: OrderFormData; onEdit: Edit 
   const rows: { label: string; value: ReactNode }[] = [{ label: '신청 여부', value: step3.applyBot === 'yes' ? '예' : '아니오' }];
   if (step3.applyBot === 'yes') {
     rows.push({
-      label: '가동 일정',
+      label: '자동봇 가동 기간',
       value: step3.operationWeeksOption === 'longterm'
         ? '6개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
-        : step3.botStartDate && step3.botEndDate ? `${step3.botStartDate} ~ ${step3.botEndDate} (${step3.manualWeeks}주)` : `${step3.manualWeeks}주`,
+        : step3.botStartDate && step3.botEndDate
+          ? `${botPeriodWithYears(step3.botStartDate, step3.botEndDate, data.step1.closingDate) ?? `${step3.botStartDate} ~ ${step3.botEndDate}`} (${step3.manualWeeks}주)`
+          : `${step3.manualWeeks}주`,
     });
     if (step3.mainBot) rows.push({ label: '메인 봇', value: MAIN_BOT_LABEL[step3.mainBot] });
     const addons = botAddonText(step3);
@@ -139,12 +142,12 @@ function serverPriceLines(data: OrderFormData, infraFeeApplied: boolean) {
   const { step2 } = data;
   const lines: { label: ReactNode; price: ReactNode }[] = [{ label: '서버 설치', price: won(PRICING_CONFIG.server.base) }];
   if (infraFeeApplied) lines.push({ label: <span className="inline-flex items-center gap-1.5">{SERVER_INFRA_FEE_ITEM.name}<Pill tone="brand">필수 포함</Pill></span>, price: won(PRICING_CONFIG.server.infraFee) });
-  if (step2.additionalOption) lines.push({ label: CUSTOM_LABEL[step2.additionalOption], price: won(PRICING_CONFIG.server.options[step2.additionalOption]) });
+  if (step2.additionalOption) lines.push({ label: THEME_CHOICE_LABEL[step2.additionalOption], price: won(PRICING_CONFIG.server.options[step2.additionalOption]) });
   if (step2.changeCharacterLimit && step2.characterLimitValue > 0) lines.push({ label: `글자수 변경 (${step2.characterLimitValue}자)`, price: won(PRICING_CONFIG.server.addons.characterLimit) });
   if (step2.searchOption) lines.push({ label: '검색 옵션', price: won(PRICING_CONFIG.server.addons.search) });
   if (step2.mastoHostMigration) lines.push({ label: 'masto.host 데이터 이전', price: won(PRICING_CONFIG.server.addons.mastoHostMigration) });
   if (step2.fastDeadline && step2.fastDeadlineOption) {
-    lines.push({ label: `빠른 마감 (${FAST_LABEL[step2.fastDeadlineOption]})`, price: won(PRICING_CONFIG.server.addons.fastDeadline[step2.fastDeadlineOption]) });
+    lines.push({ label: `빠른마감: ${RUSH_LABEL[step2.fastDeadlineOption]}`, price: won(PRICING_CONFIG.server.addons.fastDeadline[step2.fastDeadlineOption]) });
   }
   return lines;
 }
@@ -177,7 +180,7 @@ function botPriceLines(data: OrderFormData, estimate: PriceEstimate) {
   return lines.filter((l): l is { label: ReactNode; price: ReactNode } => Boolean(l));
 }
 
-export function EstimateReview({ data, estimate, infraFeeApplied }: { data: OrderFormData; estimate: PriceEstimate; infraFeeApplied: boolean }) {
+export function EstimateReview({ data, estimate, infraFeeApplied, serverCalc }: { data: OrderFormData; estimate: PriceEstimate; infraFeeApplied: boolean; serverCalc: ServerCalcResult | null }) {
   return (
     <section className="flex flex-col gap-5">
       <h3 className="border-b border-border-strong pb-4 text-headline2 text-text-primary lg:pb-5">최종 견적</h3>
@@ -188,6 +191,7 @@ export function EstimateReview({ data, estimate, infraFeeApplied }: { data: Orde
         {estimate.hasVariablePrice && (
           <p className="text-body3 text-text-secondary">* {estimate.variableItems.join(', ')} 비용은 별도 협의됩니다.</p>
         )}
+        {data.step2.applyServerInstall === 'yes' && <ServerFeeNote result={serverCalc} />}
       </div>
     </section>
   );

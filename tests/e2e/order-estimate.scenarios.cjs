@@ -89,6 +89,11 @@ const ui = {
   async waitStep(page, n) {
     const titles = { 1: /Step 1\./, 2: /Step 2\./, 3: /Step 3\./, 4: /Step 4\./ };
     await page.getByRole('heading', { name: titles[n] }).first().waitFor({ timeout: 5000 });
+    // 4단계: 단계가 바뀌면 머리말로 부드럽게 스크롤한다. 스크롤이 멈춘 뒤에 눌러야 좌표가 어긋나지 않는다
+    await page.waitForFunction(() => new Promise((resolve) => {
+      const y = window.scrollY;
+      setTimeout(() => resolve(window.scrollY === y), 120);
+    }), null, { timeout: 5000 });
   },
   dialog: (page, title) => page.getByRole('dialog').filter({ hasText: title }),
   errorSummary: (page) => page.getByText('입력 내용을 확인해 주세요'),
@@ -236,7 +241,8 @@ const SCENARIOS = {
     await expectVisible(page.getByText('※ 견적에서 선택됨'), '견적에서 선택됨 표시');
     await ui.summaryEdit(page).click();
     await expectVisible(page.getByRole('heading', { name: '커스텀 옵션 선택' }), '수정 → 편집 상태');
-    expect(await page.getByRole('checkbox', { name: /검색 옵션/ }).isChecked(), '검색 옵션이 채워져야 함');
+    // 4단계: 신청서 옵션 이름을 서버 페이지와 맞춤 ('검색 옵션' → '검색 기능')
+    expect(await page.getByRole('checkbox', { name: /검색 기능/ }).isChecked(), '검색 기능이 채워져야 함');
   },
 
   async 'q6-step3-summary-and-validation'(page) {
@@ -315,6 +321,21 @@ const SCENARIOS = {
     expect(await ui.serverYes(page).isChecked(), '저장된 STEP2 값 복원');
   },
 
+  async 'draft-typed-reload-wait-restore'(page) {
+    // 리뷰(4단계): 입력 → 새로고침 → 복원 창을 띄운 채 몇 초 → '이어서 작성'이면 입력이 사라졌다 (자동 저장이 빈 신청서로 덮어씀)
+    await ui.seed(page, {});
+    await ui.open(page, '/order/');
+    await page.locator('#applicantNickname').fill('복원테스트');
+    await page.waitForTimeout(800); // 입력 중 저장(짧은 지연) 확인: 칸을 떠나지 않고 바로 새로고침
+    await page.reload({ waitUntil: 'networkidle' });
+    const dlg = ui.dialog(page, '작성 중인 내용 발견');
+    await expectVisible(dlg, '초안 복원 다이얼로그');
+    await page.waitForTimeout(6000); // 예전 자동 저장 간격(5초)보다 길게 창을 띄워 둠
+    await dlg.getByRole('button', { name: '이어서 작성' }).click();
+    await expectHidden(dlg, '한 번 눌러 닫힘');
+    expect((await page.locator('#applicantNickname').inputValue()) === '복원테스트', '입력한 닉네임 복원');
+  },
+
   async 'draft-restore-new'(page) {
     await ui.seed(page, { [KEY.draft]: draft(2) });
     await ui.open(page, '/order/');
@@ -362,6 +383,32 @@ const SCENARIOS = {
     await expectVisible(page.getByText('서버 설치를 신청하지 않으셨습니다. 다음 단계로 이동해 주세요.'), '아니오 안내');
     await ui.next(page);
     await ui.waitStep(page, 3);
+  },
+
+  async 'step-change-scroll-and-focus'(page) {
+    // 리뷰(4단계): '다음'을 누르면 단계마다 멈추는 위치가 달랐다 → 항상 새 단계 제목이 화면에 보이고 포커스가 간다
+    const titleInView = async (n) => {
+      await ui.waitStep(page, n);
+      await page.waitForFunction((re) => {
+        const h = [...document.querySelectorAll('h2')].find((el) => new RegExp(re).test(el.textContent));
+        if (!h) return false;
+        const r = h.getBoundingClientRect();
+        return document.activeElement === h && r.top >= 0 && r.bottom <= window.innerHeight;
+      }, `Step ${n}\.`, { timeout: 4000 });
+    };
+    await ui.seed(page, {});
+    await ui.open(page, '/order/');
+    await ui.fillStep1(page);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await ui.next(page);
+    await titleInView(2);
+    await ui.serverNo(page).check({ force: true });
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await ui.next(page);
+    await titleInView(3);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.getByRole('button', { name: /이전/ }).click();
+    await titleInView(2);
   },
 
   async 'step3-yes-no'(page) {
@@ -496,6 +543,154 @@ async function trapCheck(page, dialog, label) {
 }
 
 Object.assign(SCENARIOS, {
+  async 'bot-main-type-switch'(page) {
+    // 리뷰(4단계): 기본 계열 타입은 하나만 고를 수 있으니 다른 것을 누르면 바로 바뀌어야 한다. 새 타입에서 못 쓰는 옵션은 함께 빠지고 알림
+    await ui.seed(page, { [KEY.estimate]: [item('기본&상점 타입', 35000, 'bot'), item('출석 시스템', 10000, 'bot'), item('예약 툿', 5000, 'bot')] });
+    await ui.open(page, '/bot/');
+    await page.locator('[data-option-name="기본 타입"]').first().click();
+    const toast = page.getByRole('status').filter({ hasText: '기본 타입으로 바꿨어요' });
+    await expectVisible(toast, '바꿈 알림');
+    await page.waitForTimeout(300);
+    const box = await toast.boundingBox();
+    const vw = page.viewportSize().width;
+    expect(box.x >= 0 && box.x + box.width <= vw, `알림이 화면 안에 있어야 함: ${box.x}+${box.width} / ${vw}`);
+    const names = await page.evaluate((k) => JSON.parse(localStorage.getItem(k)).map((i) => i.name), KEY.estimate);
+    expect(names.includes('기본 타입') && !names.includes('기본&상점 타입'), `메인 타입 교체: ${names}`);
+    expect(!names.includes('출석 시스템') && names.includes('예약 툿'), `기본 타입에서 못 쓰는 옵션만 빠짐: ${names}`);
+  },
+
+  async 'estimate-bar-footer-and-menu'(page) {
+    // 리뷰(4단계): 고정 바는 왼쪽 글자를 눌러도 이동, 플로팅 버튼은 푸터가 보이면 숨김, 모바일 메뉴를 열면 메뉴가 위
+    const mobile = page.viewportSize().width < 768;
+    await ui.seed(page, { [KEY.estimate]: [item('테마 1종 커스텀', 20000, 'server')] });
+    await ui.open(page, '/faq/');
+    const floating = page.locator(mobile ? 'button[aria-label^="견적 보기"]' : 'button[aria-label^="견적 확인하기"]');
+    await expectVisible(floating, '플로팅 견적 버튼');
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expectHidden(floating, '푸터가 보이면 숨김');
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expectVisible(floating, '푸터에서 벗어나면 다시 보임');
+    if (mobile) {
+      await page.getByRole('button', { name: '메뉴' }).click();
+      await page.waitForTimeout(400);
+      const box = await floating.boundingBox();
+      const onTop = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('#site-mobile-menu'), [box.x + box.width / 2, box.y + box.height / 2]);
+      expect(onTop, '메뉴를 열면 견적 버튼 위를 메뉴가 덮어야 함');
+      await page.keyboard.press('Escape');
+    }
+    await ui.open(page, '/server/');
+    await page.locator('main a[href="/estimate/"]').filter({ hasText: '견적 확인 (1개)' }).getByText('견적 확인 (1개)').click();
+    await page.waitForURL('**/estimate/');
+  },
+
+  async 'server-rush-single-and-theme-fit'(page) {
+    // 리뷰(4단계): 빠른마감 48시간·24시간을 함께 담을 수 있었다 → 택1, 고른 테마에 맞는 것만
+    const names = () => page.evaluate((k) => JSON.parse(localStorage.getItem(k) || '[]').map((i) => i.name), KEY.estimate);
+    const rush = (name) => page.locator(`[data-option-name="${name}"]`).first();
+    await ui.seed(page, {});
+    await ui.open(page, '/server/');
+    await rush('빠른마감: 48시간 내 기본 서버 설치').click({ force: true });
+    await rush('빠른마감: 24시간 내 기본 서버 설치').click({ force: true });
+    let list = await names();
+    expect(list.includes('빠른마감: 24시간 내 기본 서버 설치') && !list.includes('빠른마감: 48시간 내 기본 서버 설치'), `빠른마감은 하나만: ${list}`);
+    expect(await rush('빠른마감: 48시간 내 테마 커스텀 서버 설치').isDisabled(), '테마 없이 테마 마감은 못 고름');
+    await page.locator('[data-option-name="테마 1종 커스텀"]').first().click({ force: true });
+    await expectVisible(page.getByRole('status').filter({ hasText: '테마 선택이 바뀌어' }), '맞지 않게 된 빠른마감을 뺐다는 안내');
+    list = await names();
+    expect(list.includes('테마 1종 커스텀') && !list.some((n) => n.startsWith('빠른마감')), `테마를 고르면 기본 마감은 빠짐: ${list}`);
+    expect(await rush('빠른마감: 24시간 내 기본 서버 설치').isDisabled(), '테마를 고르면 기본 마감은 잠김');
+    await rush('빠른마감: 48시간 내 테마 커스텀 서버 설치').click({ force: true });
+    expect((await names()).includes('빠른마감: 48시간 내 테마 커스텀 서버 설치'), '테마 마감은 고를 수 있음');
+  },
+
+  async 'server-search-linked'(page) {
+    // 리뷰(4단계): 서버비 미리보기의 검색 예/아니오와 추가 옵션 '검색 기능'이 따로 놀았다 → 미리보기를 따라 담기·빼기, 카드는 잠금
+    const pick = async (id, re) => {
+      const el = page.locator('#' + id);
+      if ((await el.evaluate((e) => e.tagName)) === 'SELECT') {
+        await el.selectOption(await el.evaluate((e, r) => [...e.options].find((o) => new RegExp(r).test(o.text)).value, re));
+      } else {
+        await el.click();
+        await page.getByRole('option', { name: new RegExp(re) }).first().click();
+      }
+    };
+    const hasSearch = () => page.evaluate((k) => JSON.parse(localStorage.getItem(k) || '[]').some((i) => i.name === '검색 기능'), KEY.estimate);
+    await ui.seed(page, {});
+    await ui.open(page, '/server/');
+    await pick('server-months', '^6개월');
+    await pick('server-users', '^11');
+    const search = page.getByRole('radiogroup', { name: '검색 기능 추가 여부' });
+    await search.getByText('예', { exact: true }).click();
+    await page.getByRole('radiogroup', { name: '서버 사양' }).getByText('쾌적').click();
+    await page.waitForFunction((k) => (localStorage.getItem(k) || '').includes('검색 기능'), KEY.estimate, { timeout: 3000 });
+    expect(await page.locator('[data-option-name="검색 기능"]').first().isDisabled(), '미리보기에서 정했으면 카드는 잠김');
+    await search.getByText('아니오', { exact: true }).click();
+    await page.waitForTimeout(300);
+    expect(!(await hasSearch()), '미리보기에서 아니오 → 견적에서 빠짐');
+  },
+
+  async 'server-fee-note'(page) {
+    // 리뷰(4단계): 견적 총액에 매달 나가는 서버비가 빠져 있다는 표시가 없었다
+    await ui.seed(page, { [KEY.estimate]: [item('마스토돈 서버 설치', 20000, 'server')] });
+    await ui.open(page, '/estimate/');
+    await expectVisible(page.getByText(/서버비.*이 금액에 포함되지 않/), '서버비 별도 안내');
+    await ui.seed(page, { [KEY.estimate]: [item('기본 타입', 15000, 'bot')] });
+    await ui.open(page, '/estimate/');
+    expect((await page.getByText(/서버비.*이 금액에 포함되지 않/).count()) === 0, '서버 설치가 없으면 안내 없음');
+  },
+
+  async 'estimate-orphan-server-options'(page) {
+    // 리뷰(4단계): 서버 설치를 지워도 서버 옵션만 남아 신청서로 갈 수 있었다 → 알리고 함께 빼거나 다시 담게
+    await ui.seed(page, { [KEY.estimate]: [item('테마 1종 커스텀', 20000, 'server'), item('검색 기능', 15000, 'server'), item('기본 타입', 15000, 'bot')] });
+    await ui.open(page, '/estimate/');
+    const banner = page.getByRole('status').filter({ hasText: '서버 설치 없이 담긴 서버 옵션이 있어요' });
+    await expectVisible(banner, '서버 옵션만 남은 경고');
+    await banner.getByRole('button', { name: '서버 옵션 모두 빼기' }).click();
+    await expectHidden(banner, '모두 빼면 경고 사라짐');
+    const names = await page.evaluate((k) => JSON.parse(localStorage.getItem(k)).map((i) => i.name), KEY.estimate);
+    expect(JSON.stringify(names) === JSON.stringify(['기본 타입']), `서버 옵션만 빠짐: ${names}`);
+  },
+
+  async 'skip-link-and-terms-name'(page) {
+    // 리뷰(4단계): 본문 바로가기 링크가 없었고, 약관 체크박스 이름이 '를 확인했으며…'로 앞이 잘려 읽혔다
+    await ui.seed(page, {});
+    await ui.open(page, '/faq/');
+    await page.keyboard.press('Tab');
+    const skip = page.getByRole('link', { name: '본문 바로가기' });
+    expect(await skip.evaluate((el) => el === document.activeElement), '첫 Tab 은 본문 바로가기');
+    await page.keyboard.press('Enter');
+    expect(await page.evaluate(() => document.activeElement?.id === 'main'), 'Enter → 본문으로 포커스');
+    await ui.open(page, '/order/');
+    await expectVisible(page.getByRole('checkbox', { name: '이용안내를 확인했으며, 내용에 동의합니다.' }), '약관 체크박스 이름');
+  },
+
+  async 'bot-weeks-input'(page) {
+    // 리뷰(4단계): 가동 주수를 +/- 로만 바꿀 수 있었다 → 직접 입력·빠른 선택. 다시 들어와도 견적의 주수가 보여야 함
+    const weeksItem = () => page.evaluate((k) => JSON.parse(localStorage.getItem(k)).find((i) => i.name.startsWith('기본 가동료'))?.name ?? null, KEY.estimate);
+    await ui.seed(page, { [KEY.estimate]: [item('기본 가동료 (2주)', 10000, 'bot')] });
+    await ui.open(page, '/bot/');
+    const input = page.getByRole('spinbutton', { name: '가동 주수 직접 입력' });
+    expect((await input.inputValue()) === '2', '견적의 2주가 보여야 함');
+    await page.getByRole('group', { name: '가동 주수 빠른 선택' }).getByRole('button', { name: '26주' }).click();
+    expect((await weeksItem()) === '기본 가동료 (26주)', `빠른 선택 26주: ${await weeksItem()}`);
+    await input.fill('10');
+    expect((await weeksItem()) === '기본 가동료 (10주)', `직접 입력 10주: ${await weeksItem()}`);
+  },
+
+  async 'no-horizontal-overflow'(page) {
+    // 리뷰(4단계): 이용안내가 1218px 에서 가로로 넘쳤다. 실행 너비 + 좁은 PC 너비(1024·1218)에서 모든 경로를 본다
+    const base = page.viewportSize();
+    const widths = base.width >= 1024 ? [base.width, 1024, 1218] : [base.width];
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: base.height });
+      for (const path of ['/', '/server/', '/bot/', '/terms/', '/faq/', '/estimate/', '/order/']) {
+        await ui.open(page, path);
+        const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+        expect(scroll <= client, `${width}px ${path} 가로 넘침 ${scroll}/${client}`);
+      }
+    }
+  },
+
   async 'mobile-menu-focus-and-esc'(page) {
     // 모바일 헤더 메뉴(1024px 미만에만 있음): 포커스가 메뉴 안에서 돌고 Esc 로 닫히면 메뉴 버튼으로 돌아온다
     if ((page.viewportSize()?.width ?? 0) >= 1024) return;

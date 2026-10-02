@@ -77,16 +77,9 @@ export default function Step4Review() {
     await flow.copy();
   }, [isCopyEnabled, googleErrors, flow]);
 
-  // 수정 버튼 핸들러
-  const handleEdit = useCallback((step: 1 | 2 | 3) => {
-    setCurrentStep(step);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [setCurrentStep]);
-
-  const goPrevious = () => {
-    setCurrentStep(3);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  // 수정·이전: 단계만 바꾸면 OrderForm 이 신청서 머리말로 스크롤하고 제목에 포커스를 준다
+  const handleEdit = useCallback((step: 1 | 2 | 3) => setCurrentStep(step), [setCurrentStep]);
+  const goPrevious = () => setCurrentStep(3);
 
   return (
     <div className="flex flex-col gap-12 lg:gap-[70px]">
@@ -96,7 +89,7 @@ export default function Step4Review() {
       <ApplicantReview data={formData} onEdit={handleEdit} />
       <ServerReview data={formData} onEdit={handleEdit} />
       <BotReview data={formData} onEdit={handleEdit} />
-      <EstimateReview data={formData} estimate={estimate} infraFeeApplied={infraFeeApplied} />
+      <EstimateReview data={formData} estimate={estimate} infraFeeApplied={infraFeeApplied} serverCalc={serverCalcResult} />
       <PolicyBox confirmed={policyConfirmed} onConfirm={setPolicyConfirmed} />
       <GoogleAccountFields
         email={step1.googleEmail}

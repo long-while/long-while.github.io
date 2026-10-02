@@ -77,7 +77,7 @@ function ScheduleSection({ step1, updateStep1 }: { step1: Step1Data; updateStep1
     }
   };
   return (
-    <FormSection eyebrow="STEP 03" title="커뮤니티 일정">
+    <FormSection title="커뮤니티 일정">
       <Checkbox
         appearance="outline"
         checked={step1.isLongTermCommunity}
@@ -138,13 +138,13 @@ export default function Step1Applicant() {
 
   return (
     <div className="flex flex-col gap-12 lg:gap-[70px]">
-      <FormSection eyebrow="STEP 01" title="신청자 닉네임">
+      <FormSection title="신청자 닉네임">
         <div className="lg:w-[580px]">
           <TextInput field="applicantNickname" label="신청자의 크레페 닉네임" placeholder="예: 한참" step1={step1} onChange={setText} />
         </div>
       </FormSection>
 
-      <FormSection eyebrow="STEP 02" title="커뮤니티 정보">
+      <FormSection title="커뮤니티 정보">
         <div className="grid grid-cols-1 gap-x-5 gap-y-6 md:grid-cols-2">
           <TextInput field="communityShortName" label="커뮤니티 약칭" helper="커미션주의 편의를 위해 작성하는 항목입니다." placeholder="예: 망저" step1={step1} onChange={setText} />
           <TextInput field="communityKoreanName" label="한글 이름" helper="커미션주의 편의를 위해 작성하는 항목입니다." placeholder="예: 망각의 저편" step1={step1} onChange={setText} />
@@ -154,7 +154,7 @@ export default function Step1Applicant() {
 
       <ScheduleSection step1={step1} updateStep1={updateStep1} />
 
-      <FormSection eyebrow="STEP 04" title="약관 동의" titleAside={<span className="sr-only">(필수)</span>}>
+      <FormSection title="약관 동의" titleAside={<span className="sr-only">(필수)</span>}>
         <FieldGroupError field="termsAgreed">
           <div className="rounded-input border border-border-100 px-5 py-6 lg:px-6 lg:py-8">
             <Checkbox
@@ -164,6 +164,8 @@ export default function Step1Applicant() {
               checked={step1.termsAgreed === 'yes'}
               onChange={(e) => updateStep1({ termsAgreed: e.target.checked ? 'yes' : 'no' })}
               aria-required="true"
+              // 라벨 안의 '이용안내' 버튼이 이름에서 빠져 '를 확인했으며…'로 읽혀서 이름을 직접 준다 (4단계 리뷰)
+              aria-label="이용안내를 확인했으며, 내용에 동의합니다."
               {...fieldAria('termsAgreed')}
               label={
                 <>
@@ -178,6 +180,11 @@ export default function Step1Applicant() {
                 </>
               }
             />
+            {/* 동의하기 전에 꼭 알아야 할 규칙(환불·추가금)을 탭 안에 숨기지 않고 여기서 먼저 요약 (4단계 리뷰) */}
+            <ul className="mt-5 flex list-disc flex-col gap-1.5 pl-5 text-body3 text-text-secondary lg:ml-9">
+              <li>환불: 작업이 끝난 커미션은 커뮤니티 개장이 취소되어도 환불되지 않으며, 작업 중 취소하시면 그때까지 작업한 금액이 청구됩니다. 커미션주가 개장일까지 작업을 마무리하지 못한 경우에만 환불해 드립니다.</li>
+              <li>추가금: 기획서 수령 후 취소 시 견적비 2만원, 무료 3회를 넘는 질문 1개당 3천원, 테마 이미지 교체 1회당 5천원, 빠른 마감 추가금이 있습니다.</li>
+            </ul>
           </div>
         </FieldGroupError>
       </FormSection>

@@ -74,7 +74,21 @@ export function validateDates(
     };
   }
 
+  // 이미 운영 중인 커뮤니티도 신청할 수 있어 발표일·개장일은 지나도 되지만, 이미 끝난 커뮤니티는 받을 수 없다 (4단계 리뷰)
+  if (closeDate < localIsoDate(new Date())) {
+    return {
+      field: 'dates',
+      message: '폐장일이 이미 지났습니다. 날짜를 확인해 주세요.',
+    };
+  }
+
   return null;
+}
+
+/** 이 기기 시간대 기준 yyyy-mm-dd */
+function localIsoDate(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 const DAY_MS = 1000 * 60 * 60 * 24;
@@ -120,6 +134,28 @@ function extractMonthDay(raw: string): { month: number; day: number } | null {
  * 연말에 작성하며 연초 마감을 적는 경우를 대비해, 반년 이상 과거가 되면 다음 해로 보정한다.
  * 파싱 불가 시 null.
  */
+const MONTH_DAY_FORMAT_MESSAGE = '마감일을 실제 있는 날짜로 입력해 주세요. (예: 06/16)';
+
+/** 월/일 마감일 입력이 실제 달력 날짜인지 (13/45, 2/31 같은 값은 false) */
+export function isRealMonthDay(raw: string): boolean {
+  return parseMonthDayToDate(raw, new Date()) !== null;
+}
+
+/**
+ * 자동봇 가동 기간(MM/DD ~ MM/DD)에 연도를 붙여 'yyyy-mm-dd ~ yyyy-mm-dd' 로.
+ * 종료일은 폐장일 연도(없으면 올해), 시작일이 종료일보다 늦은 날짜면 그 전 해로 본다.
+ * 같은 신청서 안의 커뮤 운영 일정(yyyy-mm-dd)과 나란히 보여도 헷갈리지 않게 (4단계 리뷰). 못 읽으면 null.
+ */
+export function botPeriodWithYears(start: string, end: string, closingDate: string, today: Date = new Date()): string | null {
+  const s = extractMonthDay(start);
+  const e = extractMonthDay(end);
+  if (!s || !e) return null;
+  const endYear = /^\d{4}-/.test(closingDate) ? Number(closingDate.slice(0, 4)) : today.getFullYear();
+  const startYear = s.month * 100 + s.day > e.month * 100 + e.day ? endYear - 1 : endYear;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${startYear}-${pad(s.month)}-${pad(s.day)} ~ ${endYear}-${pad(e.month)}-${pad(e.day)}`;
+}
+
 function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
   const parsed = extractMonthDay(mmdd);
   if (!parsed) return null;
@@ -137,33 +173,36 @@ function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
 
 /**
  * 마감일이 운영 정책상 접수 불가 기간인지 검사한다.
- * - 10/15 ~ 10/28: 휴식기 (접수 불가)
+ * - 2026년 10/15 ~ 10/28: 휴식기 (접수 불가)
+ * 연도를 함께 두어, 기간이 지나면 다음 해 같은 날짜는 막지 않는다 (4단계: 안내 문구에 연도가 없다는 리뷰).
  * 접수 가능하거나 파싱 불가하면 null.
  */
 type DeadlineBlackoutRange = {
+  year: number;
   month: number;
   startDay: number;
   endDay: number;
 };
 
 export const DEADLINE_BLACKOUT_RANGES: DeadlineBlackoutRange[] = [
-  { month: 10, startDay: 15, endDay: 28 },
+  { year: 2026, month: 10, startDay: 15, endDay: 28 },
 ];
 
-function formatBlackoutRange({ month, startDay, endDay }: DeadlineBlackoutRange): string {
-  return `${month}/${startDay}~${month}/${endDay}`;
+function formatBlackoutRange({ year, month, startDay, endDay }: DeadlineBlackoutRange): string {
+  return `${year}년 ${month}/${startDay}~${month}/${endDay}`;
 }
 
-/** 안내 문구용 전체 접수 불가 기간 라벨 (예: '10/15~10/28') */
+/** 안내 문구용 전체 접수 불가 기간 라벨 (예: '2026년 10/15~10/28') */
 export const DEADLINE_BLACKOUT_LABEL = DEADLINE_BLACKOUT_RANGES.map(formatBlackoutRange).join(', ');
 
-export function getDeadlineBlackoutError(deadline: string, field: string): ValidationError | null {
-  const parsed = extractMonthDay(deadline);
-  if (!parsed) return null;
-  const { month, day } = parsed;
+export function getDeadlineBlackoutError(deadline: string, field: string, reference: Date = new Date()): ValidationError | null {
+  // 다른 마감일 계산과 같은 규칙으로 연도를 정한다 (반년 넘게 지난 날짜는 다음 해)
+  const date = parseMonthDayToDate(deadline, reference);
+  if (!date) return null;
+  const [year, month, day] = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
 
   const blocked = DEADLINE_BLACKOUT_RANGES.find(
-    (range) => month === range.month && day >= range.startDay && day <= range.endDay
+    (range) => year === range.year && month === range.month && day >= range.startDay && day <= range.endDay
   );
   if (blocked) {
     return { field, message: `${formatBlackoutRange(blocked)} 은 마감이 불가능한 기간입니다.` };
@@ -271,6 +310,15 @@ export function validateCharacterLimit(value: number): ValidationError | null {
 /** 계정 아이디 최소 길이 (@ 제외) */
 export const ACCOUNT_ID_MIN_LENGTH = 3;
 
+/** 마스토돈 아이디 최대 길이 (@ 제외) */
+export const ACCOUNT_ID_MAX_LENGTH = 30;
+
+/** 마스토돈 아이디에 쓸 수 있는 글자: 영문, 숫자, 밑줄 */
+const ACCOUNT_ID_PATTERN = /^[A-Za-z0-9_]+$/;
+
+/** 커뮤니티 영어 이름(도메인 후보)에 쓸 수 있는 글자: 영문, 숫자, 띄어쓰기, 하이픈 */
+const ENGLISH_NAME_PATTERN = /^[A-Za-z0-9 -]+$/;
+
 /** 마스토돈 예약어라 계정 아이디로 쓸 수 없는 값 (대소문자 무관) */
 const RESERVED_ACCOUNT_IDS = ['admin', 'owner', 'moderator'];
 
@@ -291,7 +339,8 @@ export function isSameAccountId(a: string, b: string): boolean {
 /**
  * 봇/총괄 계정 아이디 검증.
  * - 빈칸 불가
- * - @ 를 뺀 실제 아이디가 3자 이상
+ * - 하나만 (쉼표·빗금으로 여러 개 적지 않기)
+ * - @ 를 뺀 실제 아이디가 영문·숫자·밑줄만, 3자 이상 30자 이하 (마스토돈 아이디 규칙)
  * - admin / owner / moderator 는 대소문자 무관 사용 불가
  * 문제가 없으면 null.
  */
@@ -304,6 +353,15 @@ export function validateAccountId(
 
   if (id === '') {
     return { field, message: `${label}를 입력해 주세요.` };
+  }
+  if (/[,/]/.test(id)) {
+    return { field, message: `${label}는 하나만 입력해 주세요.` };
+  }
+  if (!ACCOUNT_ID_PATTERN.test(id)) {
+    return { field, message: `${label}는 영문, 숫자, 밑줄(_)만 쓸 수 있습니다. (띄어쓰기·한글·특수문자 불가)` };
+  }
+  if (id.length > ACCOUNT_ID_MAX_LENGTH) {
+    return { field, message: `${label}는 ${ACCOUNT_ID_MAX_LENGTH}자 이하여야 합니다. (@ 제외)` };
   }
   if (id.length < ACCOUNT_ID_MIN_LENGTH) {
     return {
@@ -404,6 +462,8 @@ export function validateStep1(data: OrderFormData['step1']): ValidationError[] {
     errors.push({ field: 'communityEnglishName', message: '영어 이름을 입력해 주세요.' });
   } else if (data.communityEnglishName.length > INPUT_LIMITS.communityEnglishName) {
     errors.push({ field: 'communityEnglishName', message: `영어 이름은 ${INPUT_LIMITS.communityEnglishName}자 이하여야 합니다.` });
+  } else if (!ENGLISH_NAME_PATTERN.test(data.communityEnglishName.trim())) {
+    errors.push({ field: 'communityEnglishName', message: '영어 이름은 영문, 숫자, 띄어쓰기, 하이픈(-)만 쓸 수 있습니다.' });
   }
 
   // 장기 소규모 서버 체크 시 안내 확인('확인했습니다') 필수
@@ -461,6 +521,8 @@ export function validateStep2(data: Step2Data): ValidationError[] {
         field: 'desiredDeadline',
         message: '희망 마감일을 입력해 주세요.',
       });
+    } else if (!isRealMonthDay(data.desiredDeadline)) {
+      errors.push({ field: 'desiredDeadline', message: MONTH_DAY_FORMAT_MESSAGE });
     } else {
       // 접수 불가 기간(마감 중단/휴가) 검증 → 다음 단계 진행 차단
       const blackoutError = getDeadlineBlackoutError(data.desiredDeadline, 'desiredDeadline');
@@ -496,21 +558,6 @@ export function validateStep2(data: Step2Data): ValidationError[] {
     }
   }
 
-  // 총괄 계정 길이 검증
-  if (data.adminAccountId && data.adminAccountId.length > INPUT_LIMITS.adminAccountId) {
-    errors.push({
-      field: 'adminAccountId',
-      message: `총괄 계정은 ${INPUT_LIMITS.adminAccountId}자 이하여야 합니다.`,
-    });
-  }
-
-  // 총괄 계정 복수 입력 검증
-  if (data.adminAccountId && /[,\/]/.test(data.adminAccountId)) {
-    errors.push({
-      field: 'adminAccountId',
-      message: '총괄 계정은 하나만 입력해 주세요.',
-    });
-  }
 
   return errors;
 }
@@ -576,6 +623,8 @@ export function validateStep3(data: Step3Data): ValidationError[] {
         field: 'setupDeadline',
         message: '세팅 마감일을 입력해 주세요.',
       });
+    } else if (!isRealMonthDay(data.setupDeadline)) {
+      errors.push({ field: 'setupDeadline', message: MONTH_DAY_FORMAT_MESSAGE });
     } else {
       const blackoutError = getDeadlineBlackoutError(data.setupDeadline, 'setupDeadline');
       if (blackoutError) {

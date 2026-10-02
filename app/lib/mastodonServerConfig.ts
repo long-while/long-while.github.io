@@ -62,10 +62,10 @@ function formatKrw(krw: number): string {
 
 export type ServerTier = 'min' | 'mid' | 'max';
 
-export const TIER_OPTIONS: { value: ServerTier; label: string; description: string }[] = [
-  { value: 'min', label: '최소', description: '유저가 몰리면 무조건 렉이 걸립니다.' },
-  { value: 'mid', label: '타협', description: '유저가 몰리면 심하지 않은 렉이 걸릴 수도 있습니다.' },
-  { value: 'max', label: '쾌적', description: '유저가 몰리는 시간대에도 서버가 느려지지 않습니다.' },
+export const TIER_OPTIONS: { value: ServerTier; label: string }[] = [
+  { value: 'min', label: '최소' },
+  { value: 'mid', label: '타협' },
+  { value: 'max', label: '쾌적' },
 ];
 
 export function isValidTier(tier: unknown): tier is ServerTier {

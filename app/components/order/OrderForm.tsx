@@ -5,7 +5,7 @@
  *  아래: 가운데 버튼 220×64 — STEP1 은 다음만, STEP2·3 은 이전(흰) + 다음(파랑) 간격 12, STEP4 는 Step4Review 가 이전 + 복사를 그림.
  *  검증·이동·잠긴 단계 안내·오류 목록 클릭 이동 동작은 기존과 같다.
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, forwardRef } from 'react';
 import clsx from 'clsx';
 import { Banner, Button, ErrorSummary, Icon, Stepper } from '@/app/components/ds';
 import { useOrder } from '@/app/contexts/OrderContext';
@@ -53,13 +53,14 @@ function HowToApply() {
   );
 }
 
-function OrderHead({ step }: { step: StepNumber }) {
+// 단계가 바뀌면 이 머리말로 스크롤하고 단계 제목(h2)에 포커스를 둔다 (떠 있는 헤더 아래로 오게 scroll-margin)
+const OrderHead = forwardRef<HTMLDivElement, { step: StepNumber }>(function OrderHead({ step }, ref) {
   const head = STEP_HEAD[step];
   return (
-    <div className="flex flex-col items-center gap-3 text-center">
+    <div ref={ref} className="flex scroll-mt-[calc(var(--ds-header-offset)+var(--ds-header-height)+24px)] flex-col items-center gap-3 text-center">
       <h1 className="text-title3 text-brand">커미션 신청서 작성</h1>
       <div className="flex flex-col gap-4">
-        <h2 className="text-headline1 text-text-primary">{head.title}</h2>
+        <h2 tabIndex={-1} data-step-title className="text-headline1 text-text-primary focus:outline-none">{head.title}</h2>
         <p className="text-body1 text-text-secondary">{head.description}</p>
       </div>
       <p className="flex items-center gap-1 text-body3 text-text-secondary">
@@ -68,7 +69,7 @@ function OrderHead({ step }: { step: StepNumber }) {
       </p>
     </div>
   );
-}
+});
 
 function StepNotice({ message, onClose }: { message: string; onClose: () => void }) {
   return (
@@ -161,14 +162,27 @@ export default function OrderForm() {
     setValidationErrors(errorsForCurrentStep());
   }, [submitAttempted, errorsForCurrentStep]);
 
-  const goToStep = (step: StepNumber, scroll: boolean) => {
+  const goToStep = (step: StepNumber) => {
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentStep(step);
       setIsTransitioning(false);
-      if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 200);
   };
+
+  /**
+   * 단계가 바뀌면(다음·이전·진행 표시·STEP4 '수정' 모두) 새 단계가 그려진 뒤 신청서 머리말로 스크롤하고 단계 제목에 포커스.
+   * 예전에는 버튼마다 바뀌기 직전에 맨 위로 스크롤해서, 내용 높이가 바뀌며 단계마다 멈추는 위치가 달랐다 (4단계 리뷰).
+   * 처음 열 때는 움직이지 않는다.
+   */
+  const headRef = useRef<HTMLDivElement>(null);
+  const shownStep = useRef(currentStep);
+  useEffect(() => {
+    if (shownStep.current === currentStep) return;
+    shownStep.current = currentStep;
+    headRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    headRef.current?.querySelector<HTMLElement>('[data-step-title]')?.focus({ preventScroll: true });
+  }, [currentStep]);
 
   const handleNext = () => {
     const errors = errorsForCurrentStep();
@@ -183,11 +197,11 @@ export default function OrderForm() {
 
     setSubmitAttempted(false);
     setValidationErrors([]);
-    if (currentStep < 4) goToStep((currentStep + 1) as StepNumber, true);
+    if (currentStep < 4) goToStep((currentStep + 1) as StepNumber);
   };
 
   const handlePrevious = () => {
-    if (currentStep > 1) goToStep((currentStep - 1) as StepNumber, true);
+    if (currentStep > 1) goToStep((currentStep - 1) as StepNumber);
   };
 
   const handleStepClick = (index: number) => {
@@ -196,7 +210,7 @@ export default function OrderForm() {
       setStepNotice('이전 단계를 먼저 완료해 주세요.');
       return;
     }
-    goToStep(step, false);
+    goToStep(step);
   };
 
   // 스텝 변경 시 에러 초기화
@@ -214,7 +228,7 @@ export default function OrderForm() {
   return (
     <div className="flex flex-col gap-10 rounded-card-lg bg-background-white px-5 py-8 shadow-card sm:p-10 lg:gap-[60px] lg:p-[70px]">
       <div className="flex flex-col gap-8 lg:gap-[60px]">
-        <OrderHead step={currentStep} />
+        <OrderHead ref={headRef} step={currentStep} />
         <Stepper
           steps={STEP_LABELS}
           current={currentStep - 1}

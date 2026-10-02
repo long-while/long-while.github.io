@@ -5,6 +5,7 @@
  *  견적 담기·빼기·택1·충돌 토스트·선행 조건·수정 강조 동작은 기존 BotCommission 과 같다 (useBotEstimate).
  *  하단 고정 바: 견적이 있으면 StickyEstimateBar (P8, 이 페이지에서는 플로팅 버튼 숨김).
  */
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { BulletList, Icon, OptionCard, PageHero, StickyEstimateBar, TitledSection } from '@/app/components/ds';
 import { useEditTargetHighlight } from '@/app/hooks/useEditTargetHighlight';
@@ -14,7 +15,7 @@ import type { NavigateFunction } from '@/app/types/navigation';
 import { ADDITIONAL_OPTIONS, BOT_TYPES, OPERATION_FEE_PREFIX, OPERATION_NOTES, SHEET_LINKS, WEEKLY_FEE } from './botContent';
 import { BotTypeCards } from './BotTypeCards';
 import { CommandTable, CompareTable } from './BotTables';
-import { useBotEstimate, type BotEstimate } from './useBotEstimate';
+import { MAX_WEEKS, useBotEstimate, type BotEstimate, type BotToast } from './useBotEstimate';
 import { eulReul } from '@/app/utils/josa';
 
 interface BotPageProps {
@@ -25,14 +26,18 @@ interface BotPageProps {
 const won = (n: number) => `₩${n.toLocaleString()}`;
 const highlightRing = (on: boolean) => (on ? 'outline outline-[3px] outline-brand outline-offset-2' : '');
 
-function WarningToast({ message, onClose }: { message: string; onClose: () => void }) {
+// 화면 밖에서 밀려 들어오던 효과(오른쪽 밖 100%에서 시작)는 잘려 보여서 제자리 페이드로 (4단계 리뷰). 폭은 화면 안쪽 여백 16 을 남긴다
+function BotToastView({ toast, onClose }: { toast: BotToast; onClose: () => void }) {
   return (
-    <div role="alert" aria-live="polite"
-      className="fixed right-4 top-below-header z-50 flex max-w-[calc(100%-32px)] items-start gap-3 rounded-button bg-warning-700 px-5 py-4 text-text-inverse shadow-modal animate-slideInRight sm:max-w-sm">
-      <Icon name="warning" size={20} className="mt-0.5 shrink-0" />
-      <div className="flex-1">
-        <p className="text-body3 font-bold">선택할 수 없는 옵션이에요</p>
-        <p className="mt-0.5 text-caption1">{message}</p>
+    <div role={toast.tone === 'warning' ? 'alert' : 'status'} aria-live="polite"
+      className={clsx(
+        'fixed right-4 top-below-header z-50 flex w-max max-w-[calc(100vw-32px)] items-start gap-3 rounded-button px-5 py-4 text-text-inverse shadow-modal animate-in fade-in duration-200 motion-reduce:animate-none sm:max-w-sm',
+        toast.tone === 'warning' ? 'bg-warning-700' : 'bg-text-primary',
+      )}>
+      <Icon name={toast.tone === 'warning' ? 'warning' : 'check'} size={20} className="mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <p className="text-body3 font-bold">{toast.title}</p>
+        <p className="mt-0.5 text-caption1">{toast.message}</p>
       </div>
       <button type="button" onClick={onClose} aria-label="알림 닫기"
         className="flex size-6 shrink-0 items-center justify-center text-text-inverse/80 hover:text-text-inverse focus-visible:outline-2 focus-visible:outline-text-inverse">
@@ -87,6 +92,27 @@ function SheetPreview() {
   );
 }
 
+const QUICK_WEEKS = [4, 8, 12, 26];
+
+/** 주수 직접 입력: 입력 중(빈 칸 등)에는 견적을 건드리지 않고, 0~52 정수일 때만 반영 */
+function WeeksInput({ weeks, onChange }: { weeks: number; onChange: (weeks: number) => void }) {
+  const [draft, setDraft] = useState(String(weeks));
+  useEffect(() => setDraft(String(weeks)), [weeks]);
+  return (
+    <label className="flex items-center gap-1 text-body2 font-medium text-text-primary">
+      <input type="number" inputMode="numeric" min={0} max={MAX_WEEKS} value={draft} aria-label="가동 주수 직접 입력"
+        onChange={(e) => {
+          setDraft(e.target.value);
+          const n = Number(e.target.value);
+          if (e.target.value !== '' && Number.isInteger(n) && n >= 0 && n <= MAX_WEEKS) onChange(n);
+        }}
+        onBlur={() => setDraft(String(weeks))}
+        className="w-14 rounded-input border border-border-100 bg-background-white px-2 py-1.5 text-center focus:border-border-strong focus:outline-none" />
+      주
+    </label>
+  );
+}
+
 /** 가동 주수 줄 (Frame 1707484723): #F7F7FB(Q15 → background-100), 모서리 10, 패딩 32·24, 이름 title4 ↔ 금액 title3 #3376E7 + 카운터 */
 function OperationWeeks({ est, highlighted }: { est: BotEstimate; highlighted: string | null }) {
   const weeks = est.operationWeeks;
@@ -104,11 +130,21 @@ function OperationWeeks({ est, highlighted }: { est: BotEstimate; highlighted: s
               <button type="button" className={stepBtn} onClick={() => est.changeWeeks(Math.max(0, weeks - 1))} disabled={weeks === 0} aria-label="1주 감소">
                 <Icon name="minus" />
               </button>
-              <span className="w-[50px] text-center text-body2 font-medium text-text-primary" aria-live="polite">{weeks}주</span>
-              <button type="button" className={stepBtn} onClick={() => est.changeWeeks(weeks + 1)} aria-label="1주 추가">
+              {/* 4단계 리뷰: +/- 만 있어 26주면 26번 눌러야 했다 → 직접 입력 + 빠른 선택 */}
+              <WeeksInput weeks={weeks} onChange={est.changeWeeks} />
+              <button type="button" className={stepBtn} onClick={() => est.changeWeeks(weeks + 1)} disabled={weeks >= MAX_WEEKS} aria-label="1주 추가">
                 <Icon name="plus" />
               </button>
             </div>
+          </div>
+          <div className="flex w-full flex-wrap items-center gap-2" role="group" aria-label="가동 주수 빠른 선택">
+            {QUICK_WEEKS.map((n) => (
+              <button key={n} type="button" onClick={() => est.changeWeeks(n)} aria-pressed={weeks === n}
+                className={clsx('rounded-pill border px-4 py-1.5 text-body3 transition-colors focus-visible:outline-2 focus-visible:outline-brand',
+                  weeks === n ? 'border-brand bg-brand-50 text-brand' : 'border-border-100 bg-background-white text-text-secondary hover:border-brand hover:text-brand')}>
+                {n}주
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -149,10 +185,10 @@ export default function BotPage({ onNavigate }: BotPageProps) {
   const total = est.items.reduce((sum, item) => sum + item.price, 0);
   const estimate = navLinkProps('estimate', onNavigate);
   return (
-    <main className="bg-background-white">
-      {est.toastMessage && <WarningToast message={est.toastMessage} onClose={() => est.setToastMessage(null)} />}
-      <PageHero image={IMAGES.botHero.src} eyebrow="SERVICE" title="자동봇 커미션" />
-      <div className="container-ds flex flex-col gap-20 pb-[60px] pt-10 lg:gap-[100px] lg:pb-[120px] lg:pt-20">
+    <main id="main" tabIndex={-1} className="bg-background-white outline-none">
+      {est.toast && <BotToastView toast={est.toast} onClose={() => est.setToast(null)} />}
+      <PageHero image={IMAGES.botHero.src} srcSet={IMAGES.botHero.srcSet} eyebrow="SERVICE" title="자동봇 커미션" />
+      <div className="container-ds flex flex-col gap-20 pb-[120px] pt-10 lg:gap-[100px] lg:pt-20">
         <BasicInfo onNavigate={onNavigate} />
         <SheetPreview />
         <OperationWeeks est={est} highlighted={highlighted} />
@@ -167,7 +203,7 @@ export default function BotPage({ onNavigate }: BotPageProps) {
         <AdditionalOptions est={est} highlighted={highlighted} />
       </div>
       {est.items.length > 0 && (
-        <StickyEstimateBar placement="sticky" message={`견적 확인 (${est.items.length}개)`} amount={won(total)} href={estimate.href} onAmountClick={estimate.onClick} />
+        <StickyEstimateBar placement="sticky" message={`견적 확인 (${est.items.length}개)`} amount={won(total)} href={estimate.href} onClick={estimate.onClick} />
       )}
     </main>
   );

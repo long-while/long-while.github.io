@@ -8,6 +8,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import type { Step2Data, Step3Data, ValidationError } from '@/app/types/order';
+import { RUSH_LABEL, THEME_CHOICE_LABEL } from '@/app/components/server/serverContent';
+import { botPeriodWithYears } from '@/app/utils/orderUtils';
 
 type SummaryStep = 2 | 3;
 
@@ -63,20 +65,17 @@ export function StepModeProvider({ errors, currentStep, children }: { errors: Va
 
 export const useStepMode = () => useContext(StepModeContext);
 
-const CUSTOM_LABEL: Record<NonNullable<Step2Data['additionalOption']>, string> = {
-  logo: '로고 변경', dayTheme: '낮 테마', nightTheme: '밤 테마', bothTheme: '테마 2종',
-};
 
 /** STEP2 요약 줄 (STEP4 '서버 설치 옵션' 과 같은 이름) */
 export function serverSummaryRows(step2: Step2Data) {
   const extras = [
-    step2.changeCharacterLimit && `글자수 ${step2.characterLimitValue}자`,
-    step2.searchOption && '검색 옵션',
-    step2.mastoHostMigration && 'masto.host 데이터 이전',
-    step2.fastDeadline && '빠른 마감',
+    step2.changeCharacterLimit && `툿 글자수 제한 변경 (${step2.characterLimitValue}자)`,
+    step2.searchOption && '검색 기능',
+    step2.mastoHostMigration && 'masto.host 에서 서버 데이터 이전',
+    step2.fastDeadline && (step2.fastDeadlineOption ? RUSH_LABEL[step2.fastDeadlineOption] : '빠른마감'),
   ].filter(Boolean).join(', ');
   return [
-    { label: '커스텀 옵션', value: step2.additionalOption ? CUSTOM_LABEL[step2.additionalOption] : '기본' },
+    { label: '커스텀 옵션', value: step2.additionalOption ? THEME_CHOICE_LABEL[step2.additionalOption] : '기본' },
     { label: '추가 옵션', value: extras || '-' },
   ];
 }
@@ -84,11 +83,11 @@ export function serverSummaryRows(step2: Step2Data) {
 const MAIN_BOT_LABEL: Record<NonNullable<Step3Data['mainBot']>, string> = { basic: '기본', basicShop: '기본+상점', basicShopStat: '기본+상점+스탯' };
 
 /** STEP3 요약 줄 (STEP4 '자동봇 커미션' 과 같은 이름) */
-export function botSummaryRows(step3: Step3Data) {
+export function botSummaryRows(step3: Step3Data, closingDate: string) {
   const schedule = step3.operationWeeksOption === 'longterm'
     ? '6개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
     : step3.botStartDate && step3.botEndDate
-      ? `${step3.botStartDate} ~ ${step3.botEndDate} (${step3.manualWeeks}주)`
+      ? `${botPeriodWithYears(step3.botStartDate, step3.botEndDate, closingDate) ?? `${step3.botStartDate} ~ ${step3.botEndDate}`} (${step3.manualWeeks}주)`
       : `${step3.manualWeeks}주`;
   const addons = [
     step3.cocBot && 'D100 타입',
@@ -103,7 +102,7 @@ export function botSummaryRows(step3: Step3Data) {
     step3.omakaseBot && '오마카세',
   ].filter(Boolean).join(', ');
   return [
-    { label: '가동 일정', value: step3.operationWeeksOption ? schedule : '-' },
+    { label: '자동봇 가동 기간', value: step3.operationWeeksOption ? schedule : '-' },
     { label: '메인 봇', value: step3.mainBot ? MAIN_BOT_LABEL[step3.mainBot] : '-' },
     { label: '추가 옵션', value: addons || '-' },
   ];

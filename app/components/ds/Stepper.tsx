@@ -43,18 +43,23 @@ interface StepperProps {
   isStepEnabled?: (index: number) => boolean;
 }
 
-function StepCircle({ done }: { done: boolean }) {
+type StepState = 'done' | 'current' | 'todo';
+
+const CIRCLE_STATE: Record<StepState, string> = {
+  done: 'bg-brand text-text-inverse',
+  current: 'border-2 border-brand bg-background-white text-brand',
+  todo: 'border border-border-100 bg-background-white text-text-disabled',
+};
+
+/** 완료: 파란 원 + 체크 / 현재: 파란 테두리 + 번호 / 남음: 회색 테두리 + 번호 (4단계 리뷰: 현재 단계가 완료와 똑같이 보였다) */
+function StepCircle({ state, number }: { state: StepState; number: number }) {
   return (
-    <span
-      className={clsx(
-        'flex size-9 items-center justify-center rounded-pill sm:size-[46px]',
-        done ? 'bg-brand text-text-inverse' : 'border border-border-100 bg-background-white text-text-disabled',
-      )}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 46 46" fill="none" className="size-full">
-        <path d="M15.73 23L21.18 28.45L30.27 17.54" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+    <span className={clsx('flex size-9 items-center justify-center rounded-pill text-title5 sm:size-[46px]', CIRCLE_STATE[state])} aria-hidden="true">
+      {state === 'done' ? (
+        <svg viewBox="0 0 46 46" fill="none" className="size-full">
+          <path d="M15.73 23L21.18 28.45L30.27 17.54" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ) : number}
     </span>
   );
 }
@@ -64,12 +69,13 @@ export function Stepper({ steps, current, className, onStepClick, isStepEnabled 
     <ol className={clsx('flex items-start justify-center gap-1 sm:gap-2 lg:gap-4', className)}>
       {steps.map((label, index) => {
         const reached = index <= current;
+        const state: StepState = index < current ? 'done' : index === current ? 'current' : 'todo';
         const barValue = index < current ? 100 : index === current ? 50 : 0;
         const enabled = isStepEnabled ? isStepEnabled(index) : true;
         const content = (
           <>
-            <StepCircle done={reached} />
-            <span className={clsx('whitespace-nowrap text-caption2 lg:text-title5', reached ? 'text-text-primary' : 'text-text-disabled')}>
+            <StepCircle state={state} number={index + 1} />
+            <span className={clsx('whitespace-nowrap text-caption2 lg:text-title5', state === 'current' ? 'font-semibold text-brand' : reached ? 'text-text-primary' : 'text-text-disabled')}>
               {label}
               <span className="sr-only">{index < current ? ' (완료)' : index === current ? ' (현재 단계)' : ''}</span>
             </span>

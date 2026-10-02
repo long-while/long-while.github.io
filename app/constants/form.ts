@@ -6,8 +6,7 @@
 export const FORM_CONFIG = {
   // 자동 저장 설정
   autosave: {
-    intervalMs: 5000, // 5초마다 자동 저장
-    debounceMs: 300,  // 입력 디바운스
+    debounceMs: 300,  // 입력이 멈추고 이만큼 뒤 자동 저장
   },
 
   // 애니메이션 설정

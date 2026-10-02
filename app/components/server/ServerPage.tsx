@@ -4,7 +4,7 @@
  *  견적 담기·빼기·택1·검색 차단·수정 강조 동작은 기존 ServerCommission 과 같다 (로직 그대로 옮김).
  *  하단 고정 바: 견적이 있으면 StickyEstimateBar (P8, 이 페이지에서는 플로팅 버튼 숨김).
  */
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import {
   AccordionItem, BulletList, InfoBox, NoticeBox, OptionCard, PageHero, SectionTitle, StickyEstimateBar, TitledSection, buttonClassName,
@@ -26,6 +26,8 @@ interface ServerPageProps {
 
 const won = (n: number) => `₩${n.toLocaleString()}`;
 
+type RushFit = (typeof RUSH_OPTIONS)[number]['fits'];
+
 /** 견적함 '수정'으로 넘어왔을 때 잠시 표시하는 테두리 (기존과 같은 동작) */
 const highlightRing = (on: boolean) => (on ? 'outline outline-[3px] outline-brand outline-offset-2' : '');
 
@@ -41,24 +43,69 @@ function useServerEstimate() {
     if (searchItem) removeItem(searchItem.id);
   }, [searchBlocked, items, removeItem]);
 
+  // 서버비 미리보기의 '검색 기능 추가 여부'를 바꾸면 견적의 '검색 기능'도 같이 담기·빼기 (신청서 STEP2 와 같은 연결, 4단계 리뷰).
+  // 페이지를 열 때 이미 정해져 있던 값으로는 건드리지 않고, 바뀔 때만 따라간다
+  const calcSearch = serverCalcResult?.search ?? null;
+  const shownCalcSearch = useRef(calcSearch);
+  useEffect(() => {
+    if (shownCalcSearch.current === calcSearch) return;
+    shownCalcSearch.current = calcSearch;
+    const searchItem = items.find((item) => item.name === SEARCH_ITEM_NAME);
+    const option = ADDITIONAL_OPTIONS.find((o) => o.name === SEARCH_ITEM_NAME);
+    if (calcSearch === 'yes' && !searchItem && !searchBlocked && option) {
+      addItem({ name: option.name, price: option.price, category: 'server', description: option.description });
+    } else if (calcSearch === 'no' && searchItem) {
+      removeItem(searchItem.id);
+    }
+  }, [calcSearch, items, searchBlocked, addItem, removeItem]);
+  const searchDecidedByCalc = calcSearch === 'yes' || calcSearch === 'no';
+
   const toggle = (name: string, price: number, description?: string) => {
     const existing = items.find((item) => item.name === name);
     if (existing) removeItem(existing.id);
     else addItem({ name, price, category: 'server', description });
   };
 
-  // 테마는 택1: 기존 테마를 모두 빼고, 같은 것을 다시 누르면 해제만
+  // 빠른마감이 맞아야 하는 테마 종류: 테마 없음 none / 로고만 logo / 테마 커스텀 theme (신청서 마감 임박 규칙과 같다)
+  const themeKind = (THEME_OPTIONS.find((o) => has(o.name))?.kind ?? 'none') as RushFit;
+  const [rushNotice, setRushNotice] = useState<string | null>(null);
+
+  const removeRush = (keep?: string) => {
+    RUSH_OPTIONS.forEach((o) => {
+      const existing = items.find((item) => item.name === o.estimateName);
+      if (existing && o.estimateName !== keep) removeItem(existing.id);
+    });
+  };
+
+  // 테마는 택1: 기존 테마를 모두 빼고, 같은 것을 다시 누르면 해제만. 새 테마에 맞지 않는 빠른마감은 함께 뺀다 (4단계 리뷰)
   const selectTheme = (name: string, price: number, description: string) => {
     const selected = THEME_OPTIONS.find((o) => has(o.name))?.name;
     THEME_OPTIONS.forEach((o) => {
       const existing = items.find((item) => item.name === o.name);
       if (existing) removeItem(existing.id);
     });
+    const nextKind: RushFit = selected === name ? 'none' : THEME_OPTIONS.find((o) => o.name === name)?.kind ?? 'none';
+    const misfit = RUSH_OPTIONS.find((o) => has(o.estimateName) && o.fits !== nextKind);
+    if (misfit) {
+      removeRush();
+      setRushNotice(`테마 선택이 바뀌어 '${misfit.displayName}'을 견적에서 뺐어요. 아래에서 맞는 빠른마감을 다시 골라 주세요.`);
+    }
     if (selected === name) return;
     addItem({ name, price, category: 'server', description });
   };
 
-  return { items, has, toggle, selectTheme, searchBlocked };
+  // 빠른마감은 택1 (48시간·24시간을 함께 담지 않게, 4단계 리뷰). 같은 것을 다시 누르면 해제
+  const selectRush = (option: (typeof RUSH_OPTIONS)[number]) => {
+    setRushNotice(null);
+    if (has(option.estimateName)) {
+      removeRush();
+      return;
+    }
+    removeRush();
+    addItem({ name: option.estimateName, price: option.price, category: 'server', description: option.description });
+  };
+
+  return { items, has, toggle, selectTheme, selectRush, themeKind, rushNotice, searchBlocked, searchDecidedByCalc };
 }
 
 function BaseOption({ est, highlighted, onNavigate }: { est: ReturnType<typeof useServerEstimate>; highlighted: string | null; onNavigate: NavigateFunction }) {
@@ -70,15 +117,16 @@ function BaseOption({ est, highlighted, onNavigate }: { est: ReturnType<typeof u
       title="기본 옵션"
       footer={
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-          <span className="flex min-h-[60px] items-center justify-center rounded-input bg-brand-100 px-5 text-title4 text-brand sm:w-[180px]">
-            {won(INSTALL.price + SERVER_INFRA_FEE_ITEM.price)}
-          </span>
+          {/* 금액은 버튼처럼 보이지 않게 상자 없이 글자로 (4단계 리뷰) */}
+          <p className="flex min-h-[60px] items-center justify-center gap-2 text-title4 text-text-secondary sm:justify-end">
+            합계 <span className="text-title3 text-brand">{won(INSTALL.price + SERVER_INFRA_FEE_ITEM.price)}</span>
+          </p>
           <button
             type="button"
             data-option-name={INSTALL.name}
             onClick={() => est.toggle(INSTALL.name, INSTALL.price, INSTALL.description)}
             aria-pressed={added}
-            className={clsx(buttonClassName({ variant: added ? 'white' : 'primary', size: 'lg' }), 'rounded-input text-title4 sm:w-[180px]', highlightRing(highlighted === INSTALL.name))}
+            className={clsx(buttonClassName({ variant: added ? 'outline' : 'primary', size: 'lg' }), 'rounded-input text-title4 sm:w-[180px]', highlightRing(highlighted === INSTALL.name))}
           >
             {added ? '견적에서 제거' : '견적에 추가'}
           </button>
@@ -140,18 +188,24 @@ function AdditionalSection({ est, highlighted }: { est: ReturnType<typeof useSer
     <TitledSection title="추가 옵션">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {ADDITIONAL_OPTIONS.map((o) => {
-          const blocked = o.name === SEARCH_ITEM_NAME && est.searchBlocked;
+          const isSearch = o.name === SEARCH_ITEM_NAME;
+          const blocked = isSearch && est.searchBlocked;
+          // 계산기에서 검색 예/아니오를 정했으면 그 값을 따른다 (여기서 바꾸면 두 곳이 어긋나므로 잠금)
+          const followsCalc = isSearch && !blocked && est.searchDecidedByCalc;
           return (
             <div key={o.name} className="flex flex-col gap-2">
               <OptionCard
-                type="checkbox" checked={est.has(o.name)} disabled={blocked} data-option-name={o.name}
-                onChange={() => !blocked && est.toggle(o.name, o.price, o.description)}
+                type="checkbox" checked={est.has(o.name)} disabled={blocked || followsCalc} data-option-name={o.name}
+                onChange={() => !blocked && !followsCalc && est.toggle(o.name, o.price, o.description)}
                 layout="responsive" title={o.name} description={o.description} price={won(o.price)} className={clsx('h-full', highlightRing(highlighted === o.name))}
               />
               {blocked && (
                 <p className="text-body3 text-brand-700">
                   위 계산기에서 장기·소규모(Vultr) 서버로 판정되어 검색 기능을 추가할 수 없습니다. 검색이 필요하시면 운영 기간을 12개월 미만(GCP 사양)으로 선택해 주세요.
                 </p>
+              )}
+              {followsCalc && (
+                <p className="text-body3 text-text-secondary">위 서버비 미리보기의 ‘검색 기능 추가 여부’와 연결되어 있어요. 바꾸시려면 위에서 예/아니오를 골라 주세요.</p>
               )}
             </div>
           );
@@ -161,14 +215,26 @@ function AdditionalSection({ est, highlighted }: { est: ReturnType<typeof useSer
   );
 }
 
+const RUSH_HINT: Record<RushFit, string> = {
+  none: '테마를 고르지 않으셨다면 기본 서버 설치 마감(48시간·24시간) 중 하나를 고를 수 있어요.',
+  logo: "'로고만 변경'을 고르셨다면 '48시간 내 로고 변경된 서버 설치 마감'을 고를 수 있어요.",
+  theme: "테마 커스텀을 고르셨다면 '48시간 내 테마 커스텀된 서버 설치 마감'을 고를 수 있어요.",
+};
+
 function RushSection({ est, highlighted }: { est: ReturnType<typeof useServerEstimate>; highlighted: string | null }) {
   return (
     <TitledSection title="빠른마감 옵션">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <InfoBox title="택1 옵션">
+        <p>빠른마감은 하나만 선택할 수 있고, 위에서 고른 테마에 맞는 옵션만 고를 수 있습니다. {RUSH_HINT[est.themeKind]}</p>
+      </InfoBox>
+      {est.rushNotice && <p role="status" className="rounded-input bg-warning-50 px-5 py-4 text-body3 text-warning-700">{est.rushNotice}</p>}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" role="radiogroup" aria-label="빠른마감 옵션">
         {RUSH_OPTIONS.map((o) => (
           <OptionCard
-            key={o.estimateName} type="checkbox" checked={est.has(o.estimateName)} data-option-name={o.estimateName}
-            onChange={() => est.toggle(o.estimateName, o.price)}
+            key={o.estimateName} name="server-rush" value={o.estimateName} checked={est.has(o.estimateName)} data-option-name={o.estimateName}
+            disabled={o.fits !== est.themeKind && !est.has(o.estimateName)}
+            // 테마처럼 다시 누르면 해제되도록 click 으로 받는다
+            onClick={() => est.selectRush(o)} onChange={() => undefined}
             layout="responsive" title={o.displayName} description={o.description} price={won(o.price)} className={highlightRing(highlighted === o.estimateName)}
           />
         ))}
@@ -224,9 +290,9 @@ export default function ServerPage({ onNavigate }: ServerPageProps) {
   const total = est.items.reduce((sum, item) => sum + item.price, 0);
   const estimate = navLinkProps('estimate', onNavigate);
   return (
-    <main className="bg-background-white">
-      <PageHero image={IMAGES.serverHero.src} eyebrow="SERVICE" title="서버 설치 & 테마 커미션" />
-      <div className="container-ds flex flex-col gap-20 pb-[60px] pt-10 lg:gap-[100px] lg:pb-[120px] lg:pt-20">
+    <main id="main" tabIndex={-1} className="bg-background-white outline-none">
+      <PageHero image={IMAGES.serverHero.src} srcSet={IMAGES.serverHero.srcSet} eyebrow="SERVICE" title="서버 설치 & 테마 커미션" />
+      <div className="container-ds flex flex-col gap-20 pb-[120px] pt-10 lg:gap-[100px] lg:pt-20">
         <ServerCostPreview />
         <BaseOption est={est} highlighted={highlighted} onNavigate={onNavigate} />
         <ThemeSection est={est} highlighted={highlighted} />
@@ -236,7 +302,7 @@ export default function ServerPage({ onNavigate }: ServerPageProps) {
         <ServerFaq />
       </div>
       {est.items.length > 0 && (
-        <StickyEstimateBar placement="sticky" message={`견적 확인 (${est.items.length}개)`} amount={won(total)} href={estimate.href} onAmountClick={estimate.onClick} />
+        <StickyEstimateBar placement="sticky" message={`견적 확인 (${est.items.length}개)`} amount={won(total)} href={estimate.href} onClick={estimate.onClick} />
       )}
     </main>
   );

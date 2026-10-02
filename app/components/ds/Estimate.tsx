@@ -47,6 +47,8 @@ const iconButton = clsx(
   focusRing,
 );
 
+const actionsArea = '-mr-2 flex w-[92px] shrink-0 items-center justify-end gap-1 lg:w-[78px] lg:gap-1.5';
+
 export function EstimateItemRow({
   name, description, price, badge, locked, lockedLabel, lockedTitle, editLabel, removeLabel, editTitle, onEdit, onRemove,
 }: EstimateItemRowProps) {
@@ -61,13 +63,16 @@ export function EstimateItemRow({
       </div>
       <div className="flex items-center justify-between gap-4 sm:contents">
         <span className="shrink-0 text-body2 text-text-primary">{price}</span>
+        {/* 잠긴 줄도 버튼 두 개 자리만큼 비워 금액 열이 다른 줄과 맞게 (4단계 리뷰) */}
         {locked ? (
-          <span className="flex size-11 shrink-0 items-center justify-center text-border-200 lg:size-9" title={lockedTitle}>
-            <Icon name="lock" size={20} />
-            {lockedLabel && <span className="sr-only">{lockedLabel}</span>}
+          <span className={actionsArea}>
+            <span className="flex size-11 items-center justify-center text-border-200 lg:size-9" title={lockedTitle}>
+              <Icon name="lock" size={20} />
+              {lockedLabel && <span className="sr-only">{lockedLabel}</span>}
+            </span>
           </span>
         ) : (
-          <span className="-mr-2 flex shrink-0 items-center gap-1 lg:gap-1.5">
+          <span className={actionsArea}>
             <button type="button" onClick={onEdit} aria-label={editLabel} title={editTitle} className={clsx(iconButton, 'hover:text-brand')}>
               <Icon name="pencil" />
             </button>

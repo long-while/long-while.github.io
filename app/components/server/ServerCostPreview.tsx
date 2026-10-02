@@ -1,11 +1,11 @@
 /**
  * 서버비 미리보기 (시안 Frame 2095589789). 상태·판정은 useServerCalculator (기존 계산기와 같은 로직, Q4).
  *  줄: 이름(title4, 140px) ↔ 입력(580px), 간격 70. 줄 간격 60(모바일 28).
- *  시안에 없는 '서버 사양'(최소/타협/쾌적, 4개월 이상)은 OptionCard 3개로 디자인 (Q4).
+ *  시안에 없는 '서버 사양'(최소/타협/쾌적, 4개월 이상)은 검색 예/아니오와 같은 라디오로, 등급 이름만 (4단계 사용자 요청. 금액은 아래 결과 상자).
  *  결과는 PriceCard, 지불 방식·규모와 예산은 InfoBox. 문구는 기존 계산기 그대로 (Q9).
  */
 import type { ReactNode } from 'react';
-import { Button, GoogleLogo, InfoBox, OptionCard, PriceCard, Radio, Select, TitledSection } from '@/app/components/ds';
+import { Button, GoogleLogo, InfoBox, PriceCard, Radio, Select, TitledSection } from '@/app/components/ds';
 import { TIER_OPTIONS, getMonthOptions } from '@/app/lib/mastodonServerConfig';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 import { useServerCalculator } from './useServerCalculator';
@@ -47,10 +47,11 @@ function priceHighlights(r: CalcResult) {
   ];
 }
 
-function ResultCard({ result }: { result: CalcResult }) {
+function ResultCard({ result, layout }: { result: CalcResult; layout: CalcLayout }) {
   const isMonthly = result.months >= 12;
   return (
     <PriceCard
+      align={layout === 'rows' ? 'form' : 'default'}
       title={isMonthly ? '월별 서버비' : `${result.monthsLabel} 총 서버비`}
       highlights={priceHighlights(result)}
       logo={result.type === 'gcp' ? <GoogleLogo size={56} /> : <span className="font-inter text-title2 text-text-primary">Vultr</span>}
@@ -113,15 +114,11 @@ function PaymentInfo({ result }: { result: CalcResult }) {
 function TierChoice({ calc, layout }: { calc: ReturnType<typeof useServerCalculator>; layout: CalcLayout }) {
   return (
     <Row label="서버 사양" layout={layout}>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="radiogroup" aria-label="서버 사양">
-        {TIER_OPTIONS.filter((o) => calc.availableTiers.includes(o.value)).map((o) => {
-          const monthly = calc.getTierMonthlyKrw(o.value);
-          return (
-            <OptionCard key={o.value} name="server-tier" value={o.value} checked={calc.tier === o.value}
-              onChange={() => calc.setTier(o.value)} title={o.label} description={o.description}
-              price={monthly ? `월 ${monthly}` : undefined} layout="responsive" className="lg:p-5" />
-          );
-        })}
+      {/* 사용자 요청(4단계): 검색 예/아니오처럼 라디오로 등급 이름(최소/타협/쾌적)만. 고른 등급의 금액은 바로 아래 결과 상자에 나온다 */}
+      <div className="flex flex-wrap items-center gap-5" role="radiogroup" aria-label="서버 사양">
+        {TIER_OPTIONS.filter((o) => calc.availableTiers.includes(o.value)).map((o) => (
+          <Radio key={o.value} name="server-tier" label={o.label} checked={calc.tier === o.value} onChange={() => calc.setTier(o.value)} />
+        ))}
       </div>
     </Row>
   );
@@ -200,7 +197,7 @@ export function ServerCalculator({ longTerm = false, layout = 'rows' }: { longTe
         )}
         {isAllSelected && result && (result.type === 'warn'
           ? <WarnCard notes={result.warnNotes} onSearchNo={() => calc.setSearch('no')} />
-          : <ResultCard result={result as CalcResult} />)}
+          : <ResultCard result={result as CalcResult} layout={layout} />)}
       </div>
       <div className="flex flex-col gap-4">
         {isAllSelected && result && result.type !== 'warn' && <PaymentInfo result={result as CalcResult} />}
@@ -223,9 +220,8 @@ export function ServerCostPreview() {
       title="서버비 미리보기"
       description={
         <>
-          서버 설치를 신청하기 전, 예상 서버비와 설치 사양을 먼저 확인해보세요.<br />
-          마스토돈 서버 설치 및 테마 커미션 = 인테리어 비용, 서버비 = 집주인에게 납부하는 월세라고 생각해주시면 됩니다.<br />
-          커뮤니티 운영 기간과 규모에 따라 지출하시는 서버비가 달라집니다.
+          예상 서버비와 설치 사양을 미리 확인해 보세요.<br />
+          3개월 이하 + 30인 이하 커뮤니티라면 대부분 0원의 서버비로 커뮤 운영이 가능해요.
         </>
       }
     >

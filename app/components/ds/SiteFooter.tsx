@@ -34,7 +34,8 @@ interface SiteFooterProps extends FooterProps {
 
 export function SiteFooter({ onNavigate, flush = false }: SiteFooterProps) {
   return (
-    <footer className={clsx('bg-background-inverse py-[60px] text-text-inverse lg:py-[120px]', !flush && 'mt-8')}>
+    // 아래 여백은 위보다 짧게: 저작권 문구 아래 검은 빈 공간이 길었다 (4단계 리뷰)
+    <footer className={clsx('bg-background-inverse pb-10 pt-[60px] text-text-inverse lg:pb-[60px] lg:pt-[120px]', !flush && 'mt-8')}>
       <div className="container-ds flex flex-col gap-12">
         <div className="flex flex-col gap-10 lg:flex-row lg:justify-between">
           <div className="flex flex-col gap-5">
@@ -63,7 +64,7 @@ export function SiteFooter({ onNavigate, flush = false }: SiteFooterProps) {
             <div className="col-span-2 flex flex-col gap-5">
               <h3 className="text-body3 text-text-inverse-muted">문의하기</h3>
               <div className="flex flex-col gap-1 text-body3">
-                <p className="text-text-inverse">운영: 평일 10:00 - 22:00</p>
+                <p className="text-text-inverse">운영: 평일 10:00 - 22:00 (한국 시간)</p>
                 <p className="text-text-inverse-muted">답변은 평일 기준 1~2일 내에 드립니다.</p>
               </div>
             </div>

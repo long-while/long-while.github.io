@@ -1,11 +1,11 @@
 /**
  * FAQ (/faq/) — 시안 '자주묻는질문-신청과일정 / 서비스 범위 / 서버와 비용' (205:1228 등, file.json 실측). 문구는 기존 사이트 그대로 (Q9).
- *  배너 600 (헤더가 위에 뜸, P1) → 100 → 섹션 제목(FAQ) → 40 → 탭 상자 416×72 → 28 → 질문 목록(위 선 #DDDDDD) → 120 → 푸터.
+ *  배너 600 (헤더가 위에 뜸, P1) → 100 → 안내 문장 → 40 → 탭 상자 416×72 → 28 → 질문 목록(위 선 #DDDDDD) → 120 → 푸터.
  *  탭 = 분류 3개. 패널 3개를 모두 그려 두고 고르지 않은 것은 hidden (프리렌더 HTML 에 모든 답변이 들어가게).
  *  검색은 기존 기능 유지 (Q8): 모든 분류에서 찾고, 검색 중에는 탭 패널을 숨기고 결과를 펼쳐서 보여준다. 탭을 누르면 검색을 지운다.
  */
 import { useMemo, useState, type ReactNode } from 'react';
-import { AccordionItem, Icon, PageHero, SectionTitle, Tabs, tabId, tabPanelId } from '@/app/components/ds';
+import { AccordionItem, Icon, PageHero, Tabs, tabId, tabPanelId } from '@/app/components/ds';
 import { fieldBoxClassName } from '@/app/components/ds/TextField';
 import { IMAGES } from '@/app/constants/images';
 import { CONTACT_URL } from '@/app/constants/seo';
@@ -137,18 +137,17 @@ export default function FaqPage({ onNavigate }: FaqPageProps) {
     setQuery('');
   };
   return (
-    <main className="bg-background-white">
+    <main id="main" tabIndex={-1} className="bg-background-white outline-none">
       <PageHero
-        image={IMAGES.faqHero.src} eyebrow="FAQ" title="자주 묻는 질문" titleSize="hero-xl"
+        image={IMAGES.faqHero.src} srcSet={IMAGES.faqHero.srcSet} eyebrow="FAQ" title="자주 묻는 질문" titleSize="hero-xl"
         description="커미션 신청 전에 많이 주시는 질문을 모았습니다."
       />
       <div className="container-ds flex flex-col items-center gap-10 pb-[60px] pt-[60px] lg:pb-[120px] lg:pt-[100px]">
-        {/* 기존 안내 문장의 뒷부분. 시안의 섹션 설명 자리에 둔다 (문구는 그대로) */}
-        <SectionTitle
-          eyebrow="FAQ" title="자주 묻는 질문"
-          description={<>찾는 내용이 없다면{' '}
-            <a href={CONTACT_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">크레페 DM</a>으로 문의해 주세요.</>}
-        />
+        {/* 히어로 제목과 같은 'FAQ / 자주 묻는 질문' 제목이 한 번 더 나와서 빼고 안내 문장만 (4단계 리뷰) */}
+        <p className="text-center text-body1 text-text-secondary">
+          찾는 내용이 없다면{' '}
+          <a href={CONTACT_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">크레페 DM</a>으로 문의해 주세요.
+        </p>
         <div className="flex w-full flex-col items-center gap-7">
           <div className="flex w-full flex-col items-center gap-4">
             <Tabs items={TAB_ITEMS} value={active} onChange={selectTab} idPrefix={TAB_PREFIX} aria-label="질문 분류" />

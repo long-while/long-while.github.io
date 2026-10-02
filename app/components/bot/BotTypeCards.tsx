@@ -142,8 +142,9 @@ function TypeCard({ type, est, highlighted }: { type: BotType; est: BotEstimate;
 }
 
 export function BotTypeCards({ types, est, highlighted }: { types: BotType[]; est: BotEstimate; highlighted: string | null }) {
+  // 카드는 내용 높이만큼만 (옆 카드에 맞춰 늘어나 아래가 크게 비던 문제, 4단계 리뷰)
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
       {types.map((type) => <TypeCard key={type.name} type={type} est={est} highlighted={highlighted} />)}
     </div>
   );
