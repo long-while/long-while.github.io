@@ -1,7 +1,7 @@
 /**
  * 서버비 계산기 상태와 판정 로직.
- * MastodonServerCalculator(신청서 STEP2) 와 서버 커미션 페이지의 새 화면이 같이 쓴다.
- * 내용은 MastodonServerCalculator 에 있던 로직을 그대로 옮긴 것 (2단계, 동작 변경 없음).
+ * 서버 커미션 페이지와 신청서 STEP2 의 계산기(ServerCalculator)가 같이 쓴다.
+ * 내용은 옛 MastodonServerCalculator 에 있던 로직을 그대로 옮긴 것 (2단계, 동작 변경 없음. 옛 화면은 3단계에 삭제).
  */
 import { useState, useEffect, useMemo } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';

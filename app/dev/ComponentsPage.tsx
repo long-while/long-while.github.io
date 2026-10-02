@@ -7,7 +7,7 @@
 import { useState, type ReactNode } from 'react';
 import { EstimateProvider } from '@/app/contexts/EstimateContext';
 import {
-  AccordionItem, Banner, BulletList, Button, Checkbox, FeatureCard, Icon, InfoBox, LevelBar, LinkCard, Modal, NoticeBox, OptionCard, PageHero, PriceCard,
+  AccordionItem, Banner, BulletList, Button, Checkbox, ErrorSummary, EstimateGroup, EstimateItemRow, EstimateTotal, FeatureCard, Icon, InfoBox, LevelBar, LinkCard, Modal, NoticeBox, OptionCard, PageHero, PriceCard,
   ProcessStep, Radio, SectionTitle, Select, ServiceCard, SiteFooter, SiteHeader, StickyEstimateBar, Stepper, Tabs,
   TextField, TitledSection, Toast, tabPanelId, type IconName,
 } from '@/app/components/ds';
@@ -18,7 +18,7 @@ const HERO = IMG('f5c662525a55253b8832d20cb5beee7da9636814');
 const SERVICE = IMG('a3da49215a01ec44e3f6e73fa9ccd81ac0c32252');
 const FEATURE = IMG('55229bf0c91be7e839ea69c6a32056aae30bb86b');
 const STEP = IMG('de20de2860ca6e4633d28001d45a4b4b4acc2d13');
-const ICONS: IconName[] = ['chevron-down', 'chevron-up', 'chevron-right', 'check', 'close', 'plus', 'minus', 'search', 'calendar', 'pencil', 'trash', 'bell', 'info', 'warning'];
+const ICONS: IconName[] = ['chevron-down', 'chevron-up', 'chevron-right', 'check', 'close', 'plus', 'minus', 'search', 'calendar', 'pencil', 'trash', 'bell', 'info', 'warning', 'lock', 'cart', 'menu', 'external-link'];
 const noop = () => undefined;
 
 function Block({ title, children }: { title: string; children: ReactNode }) {
@@ -196,10 +196,30 @@ function Overlays({ modalOpen, setModalOpen }: { modalOpen: boolean; setModalOpe
           <p className="whitespace-pre-line">{'[한참 커미션 신청서]\n신청자 닉네임: 한참'}</p>
         </div>
       </Modal>
-      <Toast message="'기본&상점&스탯 타입'을(를) 삭제했습니다." actionLabel="되돌리기" onAction={noop} onClose={noop} />
+      <Toast message="'기본&상점&스탯 타입'을 삭제했습니다." actionLabel="되돌리기" onAction={noop} onClose={noop} />
+      <ErrorSummary title="입력 내용을 확인해 주세요" errors={[{ key: 'a', message: '신청자 닉네임을 입력해 주세요.', onSelect: noop }, { key: 'b', message: '모든 날짜를 입력해 주세요.', onSelect: noop }]} />
+      <Stepper steps={['신청자 정보', '서버 설치', '자동봇', '최종 확인']} current={1} onStepClick={noop} isStepEnabled={(i) => i <= 2} />
       <Banner title="복사가 완료되었습니다" description="아직 크레페로 이동하지 않으셨다면, 오른쪽 버튼을 눌러 이동해 주세요."
         actions={<><Button variant="white">복사한 내용 다시 보기</Button><Button>크레페로 이동하기</Button></>} />
       <StickyEstimateBar placement="inline" message="견적이 궁금하다면 가볍게 확인해보세요!" amount="₩10,000" href="#" />
+    </Block>
+  );
+}
+
+function EstimateDemo() {
+  return (
+    <Block title="EstimateGroup · EstimateItemRow · EstimateTotal (견적함)">
+      <EstimateGroup title="서버 설치" aside="소계 ₩55,000">
+        <EstimateItemRow name="테마 전체 커스텀" description="낮/밤 2종의 전반적인 색상테마+로고+배경 변경." price="₩30,000"
+          editLabel="테마 전체 커스텀 수정하러 가기" removeLabel="테마 전체 커스텀 삭제" onEdit={noop} onRemove={noop} />
+        <EstimateItemRow name="도메인·SMTP 실비" price="₩5,000" locked lockedLabel="삭제할 수 없는 필수 항목"
+          badge={<span className="rounded-pill bg-brand-50 px-2 py-0.5 text-body3 text-brand">필수 포함</span>} />
+      </EstimateGroup>
+      <EstimateTotal label="총 견적 금액" amount="₩55,000" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <LinkCard tone="gray" eyebrow="SERVER" title="서버 설치 커미션" href="#" />
+        <LinkCard tone="gray" eyebrow="BOT" title="자동봇 커미션" href="#" />
+      </div>
     </Block>
   );
 }
@@ -245,6 +265,7 @@ export function ComponentsPage() {
           <TabsDemo />
           <Progress />
           <Cards />
+          <EstimateDemo />
           <Overlays modalOpen={modalOpen} setModalOpen={setModalOpen} />
           <Marketing />
         </div>

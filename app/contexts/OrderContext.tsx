@@ -24,6 +24,8 @@ interface OrderContextType {
   syncFromCart: (cartItems: EstimateItem[]) => void;
   cartSyncState: CartSyncState | null;
   clearCartSync: () => void;
+  /** 견적함 항목으로 실제 값을 채운 단계 (Q6: 이 단계만 요약 상태로 시작). 직접 들어오거나 기존 신청서를 유지하면 null */
+  cartApplied: { step2: boolean; step3: boolean } | null;
 }
 
 const initialStep1Data: Step1Data = {
@@ -149,6 +151,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [cartSyncState, setCartSyncState] = useState<CartSyncState | null>(null);
   const [restoredFromStorage, setRestoredFromStorage] = useState(false);
+  const [cartApplied, setCartApplied] = useState<{ step2: boolean; step3: boolean } | null>(null);
 
   const updateStep1 = useCallback((data: Partial<Step1Data>) => {
     setFormData(prev => {
@@ -188,6 +191,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     if (cartItems.length === 0) return;
 
     const { step2, step3 } = syncCartToOrderData(cartItems);
+    setCartApplied({ step2: Object.keys(step2).length > 0, step3: Object.keys(step3).length > 0 });
 
     setFormData(prev => {
       const mergedStep2 = { ...prev.step2, ...step2 };
@@ -218,6 +222,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setFormData(initialFormData);
     setCurrentStep(1);
     setRestoredFromStorage(false);
+    setCartApplied(null);
     localStorage.removeItem(ORDER_STORAGE_KEY);
     clearCartSync();
   }, [clearCartSync]);
@@ -336,6 +341,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         syncFromCart,
         cartSyncState,
         clearCartSync,
+        cartApplied,
       }}
     >
       {children}

@@ -1,0 +1,291 @@
+/**
+ * STEP4 최종 확인 화면 조각 — 시안 '신청서 - STEP04' (286:2988, file.json 실측). 문구·조건은 기존 Step4Review 그대로.
+ *  확인 묶음 3개(ds ReviewSection) → 최종 견적 줄 + 총 합계 상자 → 질문 정책 안내(회색 접기 상자 + 동의 체크) → 커뮤니티 구글 계정(2열).
+ */
+import { useId, useState, type ReactNode } from 'react';
+import clsx from 'clsx';
+import { Checkbox, EstimateTotal, FieldLabel, Icon, ReviewSection } from '@/app/components/ds';
+import type { OrderFormData, PriceEstimate } from '@/app/types/order';
+import { getBotAccountLines } from '@/app/utils/orderUtils';
+import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
+import { Pill } from '../fields';
+
+type Edit = (step: 1 | 2 | 3) => void;
+
+const missing = (text: string) => <span className="text-error-500">{text}</span>;
+
+const CUSTOM_LABEL = { logo: '로고 변경', dayTheme: '낮 테마', nightTheme: '밤 테마', bothTheme: '테마 2종' } as const;
+const FAST_LABEL = { basic48h: '48시간/기본', basic24h: '24시간/기본', logo48h: '48시간/로고', theme48h: '48시간/테마' } as const;
+const MAIN_BOT_LABEL = { basic: '기본', basicShop: '기본+상점', basicShopStat: '기본+상점+스탯' } as const;
+const MAIN_BOT_PRICE_LABEL = { basic: '기본봇', basicShop: '기본+상점봇', basicShopStat: '기본+상점+스탯봇' } as const;
+const transferLabel = (o: OrderFormData['step3']['transferOption']) => (o === 'itemOnly' ? '아이템만' : o === 'currencyOnly' ? '재화만' : '모두');
+const won = (n: number) => `${n.toLocaleString()}원`;
+
+export function ApplicantReview({ data, onEdit }: { data: OrderFormData; onEdit: Edit }) {
+  const { step1 } = data;
+  return (
+    <ReviewSection
+      title="신청자 닉네임"
+      onEdit={() => onEdit(1)}
+      rows={[
+        { label: '신청자 닉네임', value: step1.applicantNickname || '-' },
+        { label: '구글 계정', value: <>{step1.googleEmail || missing('이메일 미입력')}{' / '}{step1.googlePassword ? '비밀번호 입력됨' : missing('비밀번호 미입력')}</> },
+        { label: '커뮤니티', value: `${step1.communityKoreanName} / ${step1.communityEnglishName} (약칭 '${step1.communityShortName}')` },
+        { label: '운영 일정', value: step1.isLongTermCommunity ? '장기 소규모 서버' : `${step1.openingDate} ~ ${step1.closingDate} (${step1.operationWeeks}주)` },
+      ]}
+    />
+  );
+}
+
+export function ServerReview({ data, onEdit }: { data: OrderFormData; onEdit: Edit }) {
+  const { step2 } = data;
+  const rows: { label: string; value: ReactNode }[] = [{ label: '신청 여부', value: step2.applyServerInstall === 'yes' ? '예' : '아니오' }];
+  if (step2.applyServerInstall === 'yes') {
+    if (step2.additionalOption) rows.push({ label: '커스텀 옵션', value: CUSTOM_LABEL[step2.additionalOption] });
+    if (step2.changeCharacterLimit || step2.searchOption || step2.mastoHostMigration || step2.fastDeadline) {
+      rows.push({
+        label: '추가 옵션',
+        value: [
+          step2.changeCharacterLimit && `글자수 ${step2.characterLimitValue}자`,
+          step2.searchOption && '검색 옵션',
+          step2.mastoHostMigration && 'masto.host 데이터 이전',
+          step2.fastDeadline && '빠른 마감',
+        ].filter(Boolean).join(', ') || '-',
+      });
+    }
+    if (step2.adminAccountId) rows.push({ label: '총괄 계정', value: step2.adminAccountId });
+  }
+  return <ReviewSection title="서버 설치 옵션" onEdit={() => onEdit(2)} rows={rows} />;
+}
+
+function botAddonText(step3: OrderFormData['step3']) {
+  return [
+    step3.cocBot && 'D100 타입',
+    step3.trpg2d6Bot && '2D6 3종세트 타입',
+    step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
+    step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null &&
+      `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`,
+    step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
+    step3.reservationToot && '예약 툿',
+    step3.autoProfileImage && '자동 스진',
+    step3.tootCurrencyLink && '툿-재화 연동',
+    step3.transferFeature && `양도 기능 (${transferLabel(step3.transferOption)})`,
+    step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') &&
+      `출석 시스템 (${step3.attendanceCommand || '[출석]'} / +${step3.attendanceCurrencyAmount || 0})`,
+    step3.omakaseBot && '오마카세',
+  ].filter(Boolean).join(', ');
+}
+
+function botExtraSettings(data: OrderFormData): ReactNode | null {
+  const { step2, step3 } = data;
+  const accountListActive = step3.reservationToot || step3.autoProfileImage;
+  const accounts = accountListActive
+    ? [...(step2.adminAccountId.trim() ? [step2.adminAccountId.trim()] : []), ...step3.accountList.map((a) => a.trim()).filter(Boolean)]
+    : [];
+  if (!step3.currencyUnit && !step3.statList && !step3.tootPerCurrency && accounts.length === 0) return null;
+  return (
+    <span className="flex flex-col gap-1">
+      {step3.currencyUnit && <span>재화 단위: {step3.currencyUnit}</span>}
+      {step3.statList && <span>스탯: {step3.statList}</span>}
+      {step3.tootPerCurrency && <span>툿-재화 비율: {step3.tootPerCurrency}</span>}
+      {accounts.length > 0 && <span>계정 목록: {accounts.join(', ')}</span>}
+    </span>
+  );
+}
+
+export function BotReview({ data, onEdit }: { data: OrderFormData; onEdit: Edit }) {
+  const { step3 } = data;
+  const rows: { label: string; value: ReactNode }[] = [{ label: '신청 여부', value: step3.applyBot === 'yes' ? '예' : '아니오' }];
+  if (step3.applyBot === 'yes') {
+    rows.push({
+      label: '가동 일정',
+      value: step3.operationWeeksOption === 'longterm'
+        ? '6개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
+        : step3.botStartDate && step3.botEndDate ? `${step3.botStartDate} ~ ${step3.botEndDate} (${step3.manualWeeks}주)` : `${step3.manualWeeks}주`,
+    });
+    if (step3.mainBot) rows.push({ label: '메인 봇', value: MAIN_BOT_LABEL[step3.mainBot] });
+    const addons = botAddonText(step3);
+    if (addons) rows.push({ label: '추가 옵션', value: addons });
+    const accountLines = getBotAccountLines(step3);
+    if (accountLines.length === 1) rows.push({ label: accountLines[0].label, value: accountLines[0].value });
+    if (accountLines.length > 1) {
+      rows.push({ label: '봇 계정 (분리)', value: <span className="flex flex-col gap-1">{accountLines.map(({ label, value }) => <span key={label}>{label}: {value}</span>)}</span> });
+    }
+    if (step3.botSymbol) rows.push({ label: '봇 기호', value: step3.botSymbol });
+    if (step3.setupDeadline) rows.push({ label: '세팅 마감일', value: step3.setupDeadline });
+    const extra = botExtraSettings(data);
+    if (extra) rows.push({ label: '기타 설정', value: extra });
+  }
+  return <ReviewSection title="자동봇 커미션" onEdit={() => onEdit(3)} rows={rows} />;
+}
+
+function PriceLines({ title, lines }: { title: string; lines: { label: ReactNode; price: ReactNode }[] }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-title5 text-text-primary">{title}</p>
+      <ul className="flex flex-col gap-2 border-t border-border-100 pt-3">
+        {lines.map((line, i) => (
+          <li key={i} className="flex items-start justify-between gap-4 text-body3">
+            <span className="text-text-secondary">{line.label}</span>
+            <span className="shrink-0 text-text-primary">{line.price}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function serverPriceLines(data: OrderFormData, infraFeeApplied: boolean) {
+  const { step2 } = data;
+  const lines: { label: ReactNode; price: ReactNode }[] = [{ label: '서버 설치', price: won(PRICING_CONFIG.server.base) }];
+  if (infraFeeApplied) lines.push({ label: <span className="inline-flex items-center gap-1.5">{SERVER_INFRA_FEE_ITEM.name}<Pill tone="brand">필수 포함</Pill></span>, price: won(PRICING_CONFIG.server.infraFee) });
+  if (step2.additionalOption) lines.push({ label: CUSTOM_LABEL[step2.additionalOption], price: won(PRICING_CONFIG.server.options[step2.additionalOption]) });
+  if (step2.changeCharacterLimit && step2.characterLimitValue > 0) lines.push({ label: `글자수 변경 (${step2.characterLimitValue}자)`, price: won(PRICING_CONFIG.server.addons.characterLimit) });
+  if (step2.searchOption) lines.push({ label: '검색 옵션', price: won(PRICING_CONFIG.server.addons.search) });
+  if (step2.mastoHostMigration) lines.push({ label: 'masto.host 데이터 이전', price: won(PRICING_CONFIG.server.addons.mastoHostMigration) });
+  if (step2.fastDeadline && step2.fastDeadlineOption) {
+    lines.push({ label: `빠른 마감 (${FAST_LABEL[step2.fastDeadlineOption]})`, price: won(PRICING_CONFIG.server.addons.fastDeadline[step2.fastDeadlineOption]) });
+  }
+  return lines;
+}
+
+function botPriceLines(data: OrderFormData, estimate: PriceEstimate) {
+  const { step3 } = data;
+  const a = PRICING_CONFIG.bot.addons;
+  const shopOrStat = step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat';
+  const tiers = Math.min(ACCOUNT_LIST_CONFIG.maxTiers, step3.extraAccountTiers);
+  const lines: ({ label: ReactNode; price: ReactNode } | false)[] = [
+    { label: step3.operationWeeksOption === 'longterm' ? '장기 자동봇 세팅비' : `가동 비용 (${step3.manualWeeks}주)`, price: won(estimate.operationCost) },
+    !!step3.mainBot && { label: MAIN_BOT_PRICE_LABEL[step3.mainBot!], price: won(PRICING_CONFIG.bot.mainTypes[step3.mainBot!]) },
+    step3.cocBot && { label: 'D100 타입', price: won(a.cocBot) },
+    step3.trpg2d6Bot && { label: '2D6 3종세트 타입', price: won(a.trpg2d6Bot) },
+    step3.investigationBot && step3.mainBot !== null && { label: '조사 자동봇', price: won(a.investigationBot) },
+    step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null && {
+      label: `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`, price: won(a.investigationDailyLimit),
+    },
+    step3.customCommandUpgrade && { label: '커스텀 명령어 업그레이드', price: won(a.customCommandUpgrade) },
+    step3.reservationToot && { label: '예약 툿', price: won(a.reservationToot) },
+    step3.autoProfileImage && { label: '자동 스진', price: won(a.autoProfileImage) },
+    (step3.reservationToot || step3.autoProfileImage) && step3.extraAccountTiers > 0 && {
+      label: `추가 계정 ${tiers * ACCOUNT_LIST_CONFIG.slotsPerTier}칸`, price: won(tiers * a.extraAccountTier),
+    },
+    step3.tootCurrencyLink && { label: '툿-재화 연동', price: won(a.tootCurrencyLink) },
+    step3.transferFeature && { label: `양도 기능 (${transferLabel(step3.transferOption)})`, price: won(a.transferFeature) },
+    step3.attendanceSystem && shopOrStat && { label: `출석 시스템 (${step3.attendanceCommand || '[출석]'} / +${step3.attendanceCurrencyAmount || 0})`, price: won(a.attendanceSystem) },
+    step3.omakaseBot && { label: '오마카세', price: <span className="text-text-secondary">별도 협의</span> },
+  ];
+  return lines.filter((l): l is { label: ReactNode; price: ReactNode } => Boolean(l));
+}
+
+export function EstimateReview({ data, estimate, infraFeeApplied }: { data: OrderFormData; estimate: PriceEstimate; infraFeeApplied: boolean }) {
+  return (
+    <section className="flex flex-col gap-5">
+      <h3 className="border-b border-border-strong pb-4 text-headline2 text-text-primary lg:pb-5">최종 견적</h3>
+      {data.step2.applyServerInstall === 'yes' && <PriceLines title="서버 관련" lines={serverPriceLines(data, infraFeeApplied)} />}
+      {data.step3.applyBot === 'yes' && <PriceLines title="자동봇 관련" lines={botPriceLines(data, estimate)} />}
+      <div className="flex flex-col gap-2">
+        <EstimateTotal label="총 합계" amount={won(estimate.grandTotal)} />
+        {estimate.hasVariablePrice && (
+          <p className="text-body3 text-text-secondary">* {estimate.variableItems.join(', ')} 비용은 별도 협의됩니다.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function PolicyBox({ confirmed, onConfirm }: { confirmed: boolean; onConfirm: (v: boolean) => void }) {
+  const [open, setOpen] = useState(true);
+  const panelId = useId();
+  return (
+    <section className="flex flex-col gap-4 rounded-card bg-background-100 p-5 lg:p-6">
+      <h3>
+        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={panelId}
+          className="flex w-full items-center justify-between gap-3 text-left text-title5 text-text-primary focus-visible:outline-2 focus-visible:outline-brand">
+          <span className="flex items-center gap-1"><Icon name="info" className="shrink-0 text-text-disabled" />질문 정책 안내</span>
+          <Icon name="chevron-up" className={clsx('shrink-0 text-text-disabled transition-transform', !open && 'rotate-180')} />
+        </button>
+      </h3>
+      <div id={panelId} hidden={!open} className="flex flex-col gap-4 text-body3 text-text-secondary">
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-text-primary">무료 질문 횟수</p>
+          <p>
+            첫 메시지부터 자동봇 세팅 완료 시점까지 <strong className="font-medium text-brand">최대 3회</strong>입니다.<br />
+            (하나의 메시지에 여러 질문을 작성해 전송하면 1회로 간주됩니다)
+          </p>
+          <p>4회차부터는 질문 1개당 <strong className="font-medium text-brand">3,000원</strong>의 추가금이 발생합니다.</p>
+        </div>
+        <p className="rounded-input bg-background-white p-3"><span className="font-medium text-text-primary">예외:</span> 자동봇 세팅 완료 후 발생하는 오류나 사용법 관련 질문은 카운트하지 않습니다.</p>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-text-primary">복잡한 자동봇 / 요구사항이 많은 경우</p>
+          <p>
+            구현을 원하시는 내용을 자세히 기재한 문서를 전달해 주시면, 추가로 필요한 정보를 정리해서 안내드립니다.<br />
+            보통 신청자님께서 질문하시는 것보다 제가 질문하는 쪽이 효율이 좋습니다.
+          </p>
+        </div>
+        <p className="rounded-input border border-warning-200 bg-warning-50 p-3 text-warning-700">
+          해외 거주 중이어서 바로 답변해드리기 어렵습니다. <strong className="font-medium">중요한 질문만 모아서</strong> 전달해 주세요.
+        </p>
+      </div>
+      <Checkbox appearance="outline" labelSize="lg" checked={confirmed} onChange={(e) => onConfirm(e.target.checked)}
+        label={<>위 질문 정책 안내를 읽고 이해했습니다. <span className="text-brand" aria-hidden="true">*</span></>} />
+    </section>
+  );
+}
+
+interface GoogleFieldsProps {
+  email: string;
+  password: string;
+  onChange: (data: { googleEmail?: string; googlePassword?: string }) => void;
+  errorFor: (field: string) => string | null;
+  passwordNeedsReentry: boolean;
+}
+
+function GoogleError({ id, message }: { id: string; message: string | null }) {
+  if (!message) return null;
+  return (
+    <p id={id} role="alert" className="field-error">
+      <span aria-hidden="true">⚠</span>
+      <span>{message}</span>
+    </p>
+  );
+}
+
+export function GoogleAccountFields({ email, password, onChange, errorFor, passwordNeedsReentry }: GoogleFieldsProps) {
+  return (
+    <section id="googleAccount" className="flex scroll-mt-header flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <h3 className="text-headline2 text-text-primary">커뮤니티 구글 계정 <span className="text-brand" aria-hidden="true">*</span></h3>
+        <p className="text-body3 text-text-secondary">
+          서버 설치와 자동봇 운영을 위해 커뮤니티의 구글 계정이 필요합니다.<br />
+          개인 구글계정을 사용하셔도 상관은 없으나, 개인정보 보호를 위해 새로운 계정을 개설하시는 걸 추천드립니다.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-x-5 gap-y-6 md:grid-cols-2">
+        <div className="flex flex-col gap-3">
+          <FieldLabel htmlFor="googleEmail" required>커뮤니티 구글 이메일 주소</FieldLabel>
+          <div>
+            <input id="googleEmail" type="email" value={email} onChange={(e) => onChange({ googleEmail: e.target.value })} placeholder="example@gmail.com"
+              aria-required="true" aria-invalid={Boolean(errorFor('googleEmail'))} aria-describedby={errorFor('googleEmail') ? 'googleEmail-error' : undefined} className="form-input" />
+            <GoogleError id="googleEmail-error" message={errorFor('googleEmail')} />
+          </div>
+        </div>
+        <div className="flex flex-col gap-3">
+          <FieldLabel htmlFor="googlePassword" required>구글 비밀번호</FieldLabel>
+          <div>
+            {passwordNeedsReentry && (
+              <p role="alert" className="mb-2 flex items-start gap-1.5 rounded-input border border-error-500 bg-background-white p-3 text-body3 text-error-500">
+                <span aria-hidden="true">⚠</span>
+                <span>저장된 신청서를 불러왔어요. 비밀번호는 보안상 저장되지 않으니, <strong className="font-medium">여기부터 다시 입력</strong>해 주세요.</span>
+              </p>
+            )}
+            <input id="googlePassword" type="password" value={password} onChange={(e) => onChange({ googlePassword: e.target.value })} placeholder="비밀번호 입력"
+              aria-required="true" aria-invalid={Boolean(errorFor('googlePassword'))} aria-describedby={errorFor('googlePassword') ? 'googlePassword-error' : 'googlePassword-help'}
+              autoComplete="new-password" className="form-input" />
+            <GoogleError id="googlePassword-error" message={errorFor('googlePassword')} />
+            <p id="googlePassword-help" className="mt-2 text-body3 text-text-secondary">※ 비밀번호는 브라우저에 저장되지 않으며, 페이지를 떠나면 입력 내용이 삭제됩니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

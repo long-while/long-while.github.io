@@ -1,6 +1,6 @@
 /**
  * 이용안내 6항목 (기존 Terms.tsx 의 문구 그대로, Q9).
- * 이용안내 페이지(/terms/)와 신청서 이용안내 모달(Terms.tsx)이 함께 쓴다.
+ * 이용안내 페이지(/terms/)와 신청서 이용안내 모달(TermsModal)이 함께 쓴다.
  */
 export interface TermsSection {
   id: string;

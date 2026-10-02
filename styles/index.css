@@ -34,12 +34,3 @@ select:focus:not(:focus-visible),
 textarea:focus:not(:focus-visible) {
   outline: none;
 }
-
-/* 색상 대비 개선 */
-.text-foreground\/60 {
-  color: rgba(0, 0, 0, 0.7);
-}
-
-.text-foreground\/50 {
-  color: rgba(0, 0, 0, 0.6);
-}

@@ -1,4 +1,13 @@
+/**
+ * 신청서 공통 틀 — 시안 '신청서 - STEP01~04' (file.json 실측).
+ *  흰 카드 1320: 모서리 20, 패딩 70(모바일 20), shadow/card. 안쪽 1180, 간격 60.
+ *  머리: '커미션 신청서 작성'(title3 #3376E7) → 12 → 단계 제목(headline1) → 16 → 설명(body1 #767676) → 60 → Stepper.
+ *  아래: 가운데 버튼 220×64 — STEP1 은 다음만, STEP2·3 은 이전(흰) + 다음(파랑) 간격 12, STEP4 는 Step4Review 가 이전 + 복사를 그림.
+ *  검증·이동·잠긴 단계 안내·오류 목록 클릭 이동 동작은 기존과 같다.
+ */
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import clsx from 'clsx';
+import { Banner, Button, ErrorSummary, Icon, Stepper } from '@/app/components/ds';
 import { useOrder } from '@/app/contexts/OrderContext';
 import { validateStep1, validateStep2, validateStep3 } from '@/app/utils/orderUtils';
 import { FieldErrorProvider } from '@/app/contexts/FieldErrorContext';
@@ -7,8 +16,70 @@ import Step1Applicant from './steps/Step1Applicant';
 import Step2Server from './steps/Step2Server';
 import Step3Bot from './steps/Step3Bot';
 import Step4Review from './steps/Step4Review';
-import { CheckCircle, X } from 'lucide-react';
-import { AlertTriangle } from 'griddy-icons';
+import { StepModeProvider } from './stepMode';
+
+type StepNumber = 1 | 2 | 3 | 4;
+
+const STEP_LABELS = ['신청자 정보', '서버 설치', '자동봇', '최종 확인'];
+
+/** 단계 제목·설명 (기존 각 Step 머리의 문구 그대로) */
+const STEP_HEAD: Record<StepNumber, { title: string; description: string }> = {
+  1: { title: 'Step 1. 신청자 및 커뮤니티 정보', description: '커미션 신청에 필요한 기본 정보를 입력해 주세요.' },
+  2: { title: 'Step 2. 서버 설치 옵션', description: '마스토돈 서버 설치가 필요하신가요? 필요하지 않으시다면 "아니오"를 선택해 주세요.' },
+  3: { title: 'Step 3. 자동봇 커미션', description: '자동봇 기능이 필요하신가요? 필요하지 않으시다면 "아니오"를 선택해 주세요.' },
+  4: { title: 'Step 4. 최종 확인 및 견적', description: '입력하신 내용을 확인하고 최종 견적을 확인해 주세요.' },
+};
+
+/** 신청 순서 안내 (기존 신청서 머리의 3단계 안내 문구 그대로). 시안에는 없어 STEP1 에서만 작게 보여준다 */
+const HOW_TO = [
+  { title: '아래 신청서 작성하기', description: '신청자 정보, 서버 설치, 자동봇 옵션을 입력해요.' },
+  { title: '4단계에서 신청서 복사하기', description: '최종 확인 후 신청서 내용을 클립보드에 복사해요.' },
+  { title: '크레페 신청서 제출하기', description: '크레페로 이동한 후, 신청하기 버튼을 누르고 복사한 내용을 제출해요.' },
+];
+
+function HowToApply() {
+  return (
+    <ol className="grid grid-cols-1 gap-3 rounded-card bg-background-100 p-5 lg:grid-cols-3 lg:gap-6 lg:p-6">
+      {HOW_TO.map((step, index) => (
+        <li key={step.title} className="flex items-start gap-3">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-pill bg-brand text-caption2 text-text-inverse">{index + 1}</span>
+          <span className="flex flex-col gap-0.5">
+            <span className="text-title5 text-text-primary">{step.title}</span>
+            <span className="text-body3 text-text-secondary">{step.description}</span>
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function OrderHead({ step }: { step: StepNumber }) {
+  const head = STEP_HEAD[step];
+  return (
+    <div className="flex flex-col items-center gap-3 text-center">
+      <h1 className="text-title3 text-brand">커미션 신청서 작성</h1>
+      <div className="flex flex-col gap-4">
+        <h2 className="text-headline1 text-text-primary">{head.title}</h2>
+        <p className="text-body1 text-text-secondary">{head.description}</p>
+      </div>
+      <p className="flex items-center gap-1 text-body3 text-text-secondary">
+        <Icon name="info" size={20} className="shrink-0 text-text-disabled" />
+        작성 중인 내용은 자동으로 저장됩니다
+      </p>
+    </div>
+  );
+}
+
+function StepNotice({ message, onClose }: { message: string; onClose: () => void }) {
+  return (
+    <div role="status" className="flex items-center justify-between gap-4 rounded-card border border-warning-200 bg-warning-50 px-5 py-4">
+      <p className="text-body3 text-warning-700">{message}</p>
+      <button type="button" onClick={onClose} aria-label="알림 닫기" className="flex size-8 shrink-0 items-center justify-center rounded-pill text-warning-700 hover:bg-warning-200 focus-visible:outline-2 focus-visible:outline-warning-700">
+        <Icon name="close" />
+      </button>
+    </div>
+  );
+}
 
 export default function OrderForm() {
   const { formData, currentStep, setCurrentStep, cartSyncState, clearCartSync } = useOrder();
@@ -44,14 +115,12 @@ export default function OrderForm() {
   // 특정 스텝으로 이동 가능한지 확인
   const canAccessStep = useCallback((targetStep: number): boolean => {
     if (targetStep <= currentStep) return true; // 이전 스텝은 항상 접근 가능
-    // 각 이전 스텝이 완료되었는지 확인
     for (let i = 1; i < targetStep; i++) {
       if (!isStepComplete(i)) return false;
     }
     return true;
   }, [currentStep, isStepComplete]);
 
-  // 각 스텝 접근 가능 여부 메모이제이션
   const stepAccessibility = useMemo(() => ({
     1: true,
     2: canAccessStep(2),
@@ -92,6 +161,15 @@ export default function OrderForm() {
     setValidationErrors(errorsForCurrentStep());
   }, [submitAttempted, errorsForCurrentStep]);
 
+  const goToStep = (step: StepNumber, scroll: boolean) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentStep(step);
+      setIsTransitioning(false);
+      if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 200);
+  };
+
   const handleNext = () => {
     const errors = errorsForCurrentStep();
     setStepNotice(null);
@@ -105,26 +183,20 @@ export default function OrderForm() {
 
     setSubmitAttempted(false);
     setValidationErrors([]);
-
-    if (currentStep < 4) {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentStep((currentStep + 1) as 1 | 2 | 3 | 4);
-        setIsTransitioning(false);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 200);
-    }
+    if (currentStep < 4) goToStep((currentStep + 1) as StepNumber, true);
   };
 
   const handlePrevious = () => {
-    if (currentStep > 1) {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentStep((currentStep - 1) as 1 | 2 | 3 | 4);
-        setIsTransitioning(false);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 200);
+    if (currentStep > 1) goToStep((currentStep - 1) as StepNumber, true);
+  };
+
+  const handleStepClick = (index: number) => {
+    const step = (index + 1) as StepNumber;
+    if (!stepAccessibility[step]) {
+      setStepNotice('이전 단계를 먼저 완료해 주세요.');
+      return;
     }
+    goToStep(step, false);
   };
 
   // 스텝 변경 시 에러 초기화
@@ -134,229 +206,63 @@ export default function OrderForm() {
     setStepNotice(null);
   }, [currentStep]);
 
-  const renderProgressBar = () => {
-    const steps = [
-      { num: 1, label: '신청자 정보' },
-      { num: 2, label: '서버 설치' },
-      { num: 3, label: '자동봇' },
-      { num: 4, label: '최종 확인' },
-    ];
-
-    const currentStepData = steps.find(s => s.num === currentStep);
-
-    return (
-      <div className="mb-8">
-        {/* 모바일: 현재 스텝만 표시 */}
-        <div className="md:hidden">
-          <div className="flex items-center justify-between bg-background-100 rounded-lg p-4 border border-border-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-brand text-text-inverse flex items-center justify-center font-medium text-[14px] shadow-md">
-                {currentStep}
-              </div>
-              <div>
-                <p className="text-[14px] font-medium text-text-primary">{currentStepData?.label}</p>
-                <p className="text-[12px] text-foreground/60">Step {currentStep} / 4</p>
-              </div>
-            </div>
-            {/* 미니 진행률 바 */}
-            <div className="w-20 h-2 bg-background-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-brand transition-all duration-500"
-                style={{ width: `${(currentStep / 4) * 100}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 데스크톱: 전체 프로그레스 바 */}
-        <div className="hidden md:block">
-          <div className="flex items-center justify-between relative">
-            {/* 프로그레스 라인 */}
-            <div className="absolute left-0 right-0 h-1 bg-background-200 top-1/2 -translate-y-1/2 -z-10">
-              <div
-                className="h-full bg-brand transition-all duration-500"
-                style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
-              />
-            </div>
-
-            {steps.map((step) => {
-              const isAccessible = stepAccessibility[step.num as 1 | 2 | 3 | 4];
-              return (
-                <button
-                  key={step.num}
-                  onClick={() => {
-                    if (!isAccessible) {
-                      setStepNotice('이전 단계를 먼저 완료해 주세요.');
-                      return;
-                    }
-                    setIsTransitioning(true);
-                    setTimeout(() => {
-                      setCurrentStep(step.num as 1 | 2 | 3 | 4);
-                      setIsTransitioning(false);
-                    }, 200);
-                  }}
-                  disabled={!isAccessible}
-                  className={`flex flex-col items-center gap-2 bg-background-white px-2 group ${
-                    !isAccessible ? 'cursor-not-allowed opacity-50' : ''
-                  }`}
-                >
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-[14px] border-2 transition-all duration-300 ${
-                      currentStep >= step.num
-                        ? 'bg-brand text-text-inverse border-brand shadow-md'
-                        : isAccessible
-                          ? 'bg-background-white text-text-disabled border-border-100 group-hover:border-brand group-hover:text-brand'
-                          : 'bg-background-100 text-text-disabled border-border-100'
-                    }`}
-                  >
-                    {step.num}
-                  </div>
-                  <span
-                    className={`text-[14px] whitespace-nowrap transition-all duration-300 ${
-                      currentStep >= step.num
-                        ? 'text-brand font-medium'
-                        : isAccessible
-                          ? 'text-text-disabled group-hover:text-brand'
-                          : 'text-text-disabled'
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const handleDismissSyncNotice = () => {
     setShowSyncNotice(false);
     clearCartSync();
   };
 
   return (
-    <div className="max-w-[900px] mx-auto px-4 py-8">
-      {/* 프로그레스 바 */}
-      {renderProgressBar()}
+    <div className="flex flex-col gap-10 rounded-card-lg bg-background-white px-5 py-8 shadow-card sm:p-10 lg:gap-[60px] lg:p-[70px]">
+      <div className="flex flex-col gap-8 lg:gap-[60px]">
+        <OrderHead step={currentStep} />
+        <Stepper
+          steps={STEP_LABELS}
+          current={currentStep - 1}
+          onStepClick={handleStepClick}
+          isStepEnabled={(index) => stepAccessibility[(index + 1) as StepNumber]}
+        />
+      </div>
 
-      {/* 장바구니 동기화 알림 */}
-      {showSyncNotice && cartSyncState && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-500 rounded-md animate-fadeIn flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
-            <div>
-              <h3 className="text-[15px] font-medium text-green-800 mb-1">
-                견적 항목이 자동으로 반영되었습니다
-              </h3>
-              <p className="text-[13px] text-green-700">
-                {cartSyncState.itemCount}개 항목이 신청서에 반영되었습니다. 
-                Step 2, Step 3에서 선택된 옵션을 확인해 주세요.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleDismissSyncNotice}
-            className="p-1 hover:bg-green-100 rounded-full transition-colors shrink-0"
-            aria-label="알림 닫기"
-          >
-            <X className="w-4 h-4 text-green-600" />
-          </button>
-        </div>
-      )}
-
-      {/* 잠긴 단계를 눌렀을 때의 안내 */}
-      {stepNotice && (
-        <div role="status" className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-md flex items-center justify-between gap-4">
-          <p className="text-[14px] text-warning-700">{stepNotice}</p>
-          <button
-            onClick={() => setStepNotice(null)}
-            className="p-1 hover:bg-warning-200 rounded-full transition-colors shrink-0"
-            aria-label="알림 닫기"
-          >
-            <X className="w-4 h-4 text-warning-700" />
-          </button>
-        </div>
-      )}
-
-      {/* 검증 에러 표시 - 애니메이션 추가 */}
-      {validationErrors.length > 0 && (
-        <div 
-          className="mb-6 p-4 bg-red-50 border border-red-500 rounded-md animate-shake"
-          style={{
-            animation: 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both'
-          }}
-        >
-          <h3 className="text-[16px] font-medium text-red-700 mb-2 flex items-center gap-2">
-            <AlertTriangle size={18} color="currentColor" />
-            입력 내용을 확인해 주세요
-          </h3>
-          <ul className="list-disc list-inside space-y-1">
-            {validationErrors.map((error, idx) => (
-              <li
-                key={`${error.field}-${idx}`}
-                className="text-[14px] text-red-600"
-                style={{
-                  animation: `fadeInUp 0.3s ease-out ${idx * 0.1}s both`
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => focusField(error.field)}
-                  className="text-left underline decoration-red-300 underline-offset-2 hover:decoration-red-600 focus-visible:outline-2 focus-visible:outline-red-500 focus-visible:outline-offset-2 rounded"
-                >
-                  {error.message}
+      {(showSyncNotice && cartSyncState) || stepNotice || validationErrors.length > 0 || currentStep === 1 ? (
+        <div className="flex flex-col gap-4">
+          {currentStep === 1 && <HowToApply />}
+          {showSyncNotice && cartSyncState && (
+            <Banner
+              title="견적 항목이 자동으로 반영되었습니다"
+              description={`${cartSyncState.itemCount}개 항목이 신청서에 반영되었습니다. Step 2, Step 3에서 선택된 옵션을 확인해 주세요.`}
+              actions={
+                <button type="button" onClick={handleDismissSyncNotice} aria-label="알림 닫기" className="flex size-11 items-center justify-center rounded-pill text-text-secondary hover:bg-background-white focus-visible:outline-2 focus-visible:outline-brand">
+                  <Icon name="close" />
                 </button>
-              </li>
-            ))}
-          </ul>
+              }
+            />
+          )}
+          {stepNotice && <StepNotice message={stepNotice} onClose={() => setStepNotice(null)} />}
+          {validationErrors.length > 0 && (
+            <ErrorSummary
+              title="입력 내용을 확인해 주세요"
+              errors={validationErrors.map((error, idx) => ({ key: `${error.field}-${idx}`, message: error.message, onSelect: () => focusField(error.field) }))}
+            />
+          )}
         </div>
-      )}
+      ) : null}
 
-      {/* Step 컨텐츠 카드 - 트랜지션 효과 추가 */}
-      <div 
-        className={`bg-background-white border border-border rounded-lg p-8 shadow-sm mb-8 transition-all duration-300 ${
-          isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
-        }`}
-      >
+      <div className={clsx('transition-all duration-300', isTransitioning ? 'translate-y-4 opacity-0' : 'translate-y-0 opacity-100')}>
         <FieldErrorProvider errors={validationErrors}>
-          {currentStep === 1 && <Step1Applicant />}
-          {currentStep === 2 && <Step2Server />}
-          {currentStep === 3 && <Step3Bot />}
-          {currentStep === 4 && <Step4Review />}
+          <StepModeProvider errors={validationErrors} currentStep={currentStep}>
+            {currentStep === 1 && <Step1Applicant />}
+            {currentStep === 2 && <Step2Server />}
+            {currentStep === 3 && <Step3Bot />}
+            {currentStep === 4 && <Step4Review />}
+          </StepModeProvider>
         </FieldErrorProvider>
       </div>
 
-      {/* 네비게이션 버튼 */}
+      {/* STEP4 는 이전·복사 버튼을 Step4Review 가 직접 그린다 (시안: 복사 버튼이 이전 옆) */}
       {currentStep < 4 && (
-        <div className="flex justify-between items-center">
-          <button
-            onClick={handlePrevious}
-            disabled={currentStep === 1}
-            className="px-6 py-3 border border-border bg-background-white hover:bg-background-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-sm active:scale-[0.98]"
-          >
-            ← 이전
-          </button>
-
-          <button
-            onClick={handleNext}
-            className="px-6 py-3 border border-transparent bg-brand text-text-inverse transition-all duration-200 text-[14px] font-medium rounded-md shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
-          >
-            다음 →
-          </button>
-        </div>
-      )}
-
-      {/* Step 4에서는 이전 버튼만 표시 (복사 버튼은 Step4Review 내부에) */}
-      {currentStep === 4 && (
-        <div className="flex justify-start">
-          <button
-            onClick={handlePrevious}
-            className="px-6 py-3 border border-border bg-background-white hover:bg-background-100 transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-sm active:scale-[0.98]"
-          >
-            ← 이전
-          </button>
+        <div className="flex flex-col-reverse justify-center gap-3 sm:flex-row">
+          {currentStep > 1 && <Button variant="white" size="lg" onClick={handlePrevious} className="sm:w-[220px]">← 이전</Button>}
+          <Button size="lg" onClick={handleNext} className="sm:w-[220px]">다음 →</Button>
         </div>
       )}
     </div>

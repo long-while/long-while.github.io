@@ -20,6 +20,7 @@ import {
 import { syncCartToOrderData } from '@/app/utils/cartOrderSync';
 import { FAQ_ITEMS, FAQ_CATEGORIES } from '@/app/components/faq/faqContent';
 import { filterEntries, groupByCategory, splitByQuery } from '@/app/components/faq/faqSearch';
+import { eulReul, eunNeun } from '@/app/utils/josa';
 import {
   PRICING_CONFIG,
   SERVER_INFRA_FEE_ITEM,
@@ -472,6 +473,14 @@ check('빈 검색어는 전체', filterEntries(faqAll, '   ').length, 15);
 check('검색은 대소문자 무시 (masto.HOST)', filterEntries(faqAll, 'masto.HOST').map((e) => e.item.question), ['masto.host로 설치해주실 수 있나요?']);
 check('검색은 답변도 본다 (질문에 없는 "장기 소규모" 항목 포함)', filterEntries(faqAll, '중국집').map((e) => e.item.category), ['서버와 비용', '서버와 비용']);
 check('정규식 문자 검색어도 하이라이트가 깨지지 않음', splitByQuery('(3개월까진 서버비 무료)', '(3').map((p) => p.match), [true, false]);
+
+// ===== 조사 고르기 (R3) =====
+
+check('받침 없음 → 를', eulReul('기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나'), '를');
+check('받침 있음 → 을', eulReul('기본&상점 또는 기본&상점&스탯 타입'), '을');
+check('끝 괄호·숫자는 건너뜀 (1주 → 를)', eulReul('기본 가동료 (1주)'), '를');
+check('은/는', [eunNeun('커스텀 명령어 업그레이드'), eunNeun('예약 툿')], ['는', '은']);
+check('한글 없음 → 둘 다', eulReul('masto.host'), '을(를)');
 
 console.log(failed === 0 ? '\n모든 검증 통과' : `\n${failed}개 실패`);
 if (failed > 0) process.exit(1);

@@ -15,6 +15,7 @@ import { ADDITIONAL_OPTIONS, BOT_TYPES, OPERATION_FEE_PREFIX, OPERATION_NOTES, S
 import { BotTypeCards } from './BotTypeCards';
 import { CommandTable, CompareTable } from './BotTables';
 import { useBotEstimate, type BotEstimate } from './useBotEstimate';
+import { eulReul } from '@/app/utils/josa';
 
 interface BotPageProps {
   onBack?: () => void;
@@ -118,7 +119,8 @@ function OperationWeeks({ est, highlighted }: { est: BotEstimate; highlighted: s
 function AdditionalOptions({ est, highlighted }: { est: BotEstimate; highlighted: string | null }) {
   return (
     <TitledSection title="추가 옵션">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {/* PC 한 줄에 4개 (3단계 사용자 요청) */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {ADDITIONAL_OPTIONS.map((option) => {
           const { selected, disabled, requiresLabel } = est.optionState(option);
           return (
@@ -127,12 +129,12 @@ function AdditionalOptions({ est, highlighted }: { est: BotEstimate; highlighted
               <OptionCard
                 type="checkbox" checked={selected} disabled={disabled} onChange={() => est.toggleOption(option)}
                 data-option-name={option.name} data-option-aliases={option.aliases?.join('|')}
-                aria-label={disabled ? `${option.name} — ${requiresLabel} 선택 필요` : undefined}
-                layout="responsive" title={option.name} description={option.description}
+                aria-label={disabled ? `${option.label ?? option.name} — ${requiresLabel} 선택 필요` : undefined}
+                layout="responsive" title={option.label ?? option.name} description={option.description}
                 price={option.priceLabel ?? (option.price === 0 ? '협의' : won(option.price))}
                 className={clsx('h-full', highlightRing(highlighted === option.name))}
               />
-              {disabled && <p className="text-body3 text-text-secondary">* {requiresLabel}을(를) 먼저 선택해 주세요.</p>}
+              {disabled && <p className="text-body3 text-text-secondary">* {requiresLabel}{eulReul(requiresLabel)} 먼저 선택해 주세요.</p>}
             </div>
           );
         })}

@@ -57,7 +57,8 @@ const SERVER_CALC_KEY = 'mas_commission_server_calc_v2';
  * 이전에 담아둔 장바구니가 localStorage 에 남아 있으면 사라진 옵션이 계속 견적에 잡히므로
  * 불러오는 시점에 걸러낸다. ('마스토돈 가이드'는 서버 설치 시 무료 제공으로 전환)
  */
-const RETIRED_ITEM_NAMES = ['마스토돈 가이드'];
+// 3단계: 자동봇 '특정 상황 DM 전송'·'빠른 마감' 2종 판매 중단 (사용자 요청)
+const RETIRED_ITEM_NAMES = ['마스토돈 가이드', '특정 상황 DM 전송', '빠른 마감 (48시간 내)', '빠른 마감 (1주일 내)'];
 
 // localStorage에서 견적 데이터 불러오기
 function loadEstimateFromStorage(): EstimateItem[] {

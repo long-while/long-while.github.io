@@ -19,7 +19,11 @@ export type IconName =
   | 'trash'
   | 'bell'
   | 'info'
-  | 'warning';
+  | 'warning'
+  | 'lock'
+  | 'cart'
+  | 'menu'
+  | 'external-link';
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   name: IconName;
@@ -44,6 +48,10 @@ const DEFAULT_SIZE: Record<IconName, number> = {
   bell: 20,
   info: 30,
   warning: 28,
+  'external-link': 12,
+  menu: 24,
+  cart: 24,
+  lock: 16,
 };
 
 const VIEWBOX: Record<IconName, string> = {
@@ -61,6 +69,10 @@ const VIEWBOX: Record<IconName, string> = {
   bell: '0 0 20 20',
   info: '0 0 30 30',
   warning: '0 0 28 25',
+  'external-link': '0 0 16 16',
+  menu: '0 0 24 24',
+  cart: '0 0 24 24',
+  lock: '0 0 24 24',
 };
 
 const stroke = { stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
@@ -126,6 +138,30 @@ function morePaths(name: IconName) {
           <rect x="9.33" y="4.67" width="9.33" height="3.5" strokeWidth={1.5} {...stroke} />
           <rect x="7" y="8.17" width="14" height="15.17" strokeWidth={1.5} {...stroke} />
           <path d="M4.67 8.17H23.33M11.67 14V17.5M16.33 14V17.5" strokeWidth={1.5} {...stroke} />
+        </>
+      );
+    case 'lock':
+      return (
+        <>
+          <rect x="5" y="11" width="14" height="10" rx="2" strokeWidth={1.5} {...stroke} /><path d="M8 11V7.5a4 4 0 0 1 8 0V11" strokeWidth={1.5} {...stroke} />
+        </>
+      );
+    case 'cart':
+      return (
+        <>
+          <path d="M3 4H5.2L7.4 15H18.2L20.4 7.5H6.1" strokeWidth={1.5} {...stroke} /><circle cx="9" cy="19" r="1.5" strokeWidth={1.5} {...stroke} /><circle cx="17" cy="19" r="1.5" strokeWidth={1.5} {...stroke} />
+        </>
+      );
+    case 'menu':
+      return (
+        <>
+          <path d="M4 6H20M4 12H20M4 18H20" strokeWidth={1.5} {...stroke} />
+        </>
+      );
+    case 'external-link':
+      return (
+        <>
+          <path d="M9.5 2.5H13.5V6.5M13.5 2.5L7.5 8.5M11.5 9.5V13.5H2.5V4.5H6.5" strokeWidth={1.5} {...stroke} />
         </>
       );
     case 'bell':

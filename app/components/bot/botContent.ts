@@ -160,7 +160,10 @@ export const BOT_TYPES: BotType[] = [
 ];
 
 export interface AdditionalOption {
+  /** 견적함 항목 이름(신청서 매핑 키). 화면 이름만 바꿀 때는 label 을 쓴다 */
   name: string;
+  /** 자동봇 페이지 카드에 보일 이름 (없으면 name). 3단계 사용자 요청: '(시트로 관리)' 표기 */
+  label?: string;
   price: number;
   description?: string;
   aliases?: string[];
@@ -173,17 +176,15 @@ export interface AdditionalOption {
 const MAIN_LABEL = '기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나';
 const SHOP_LABEL = '기본&상점 또는 기본&상점&스탯 타입';
 
+// 3단계 사용자 요청으로 뺀 옵션: '특정 상황 DM 전송', '빠른 마감 (48시간 내)', '빠른 마감 (1주일 내)' (EstimateContext 의 판매 중단 목록에도 넣음)
 export const ADDITIONAL_OPTIONS: AdditionalOption[] = [
   { name: '커스텀 명령어 업그레이드', price: 5000, aliases: ['기본 타입 - 커스텀 명령어 업그레이드', '기본&상점 타입 - 커스텀 명령어 업그레이드', '기본&상점&스탯 타입 - 커스텀 명령어 업그레이드'], requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_LABEL },
   { name: '재화, 아이템 양도 기능', price: 10000, aliases: ['양도 기능', '기본&상점 타입 - 양도 기능', '기본&상점&스탯 타입 - 양도 기능'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_LABEL },
   { name: '툿수-재화 자동반영', price: 10000, aliases: ['기본&상점 타입 - 툿수-재화 자동반영', '기본&상점&스탯 타입 - 툿수-재화 자동반영'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_LABEL },
-  { name: '출석 시스템', price: 10000, description: '매일 [출석] 혹은 지정한 명령어를 사용하여 1회 출석 후 운영진이 지정한 재화 획득', requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_LABEL },
-  { name: '예약 툿', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_LABEL },
-  { name: '스토리 자동 진행', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_LABEL },
+  { name: '출석 시스템', price: 10000, requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_LABEL },
+  { name: '예약 툿', label: '예약 툿 (시트로 관리)', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_LABEL },
+  { name: '스토리 자동 진행', label: '자동 스진 (시트로 관리)', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_LABEL },
   { name: '일일 조사 횟수 제한', price: 5000, description: '[조사] 명령어 사용 시 1회 카운트', requires: INVESTIGATION_TYPE },
-  { name: '특정 상황 DM 전송', price: 20000, description: '특정 상황에서 봇이 DM 전송 (ex. 체력이 50 이하로 떨어짐)' },
-  { name: '빠른 마감 (48시간 내)', price: 0, priceLabel: '+200%', description: '총 금액의 200% 추가' },
-  { name: '빠른 마감 (1주일 내)', price: 0, priceLabel: '+100%', description: '총 금액의 100% 추가' },
 ];
 
 export const INVESTIGATION_EXAMPLE = [

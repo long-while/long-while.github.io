@@ -1,38 +1,28 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+/**
+ * STEP4 최종 확인 및 견적 — 시안 '신청서 - STEP04' (286:2988). 화면 조각은 Step4Sections.
+ *  아래 버튼 줄: 이전(흰) + 신청서 복사하기(파랑) 220×64 가운데 (시안처럼 복사 버튼이 이전 옆).
+ *  복사 → 크레페 이동은 Q7 흐름(useCopyFlow): 완료 모달 + 5초 후 이동 + 이동 후 안내띠, 실패 시 경고 모달.
+ *  복사 직전 구글 계정 검사(비어 있으면 막고 입력칸으로 이동)는 기존 그대로.
+ */
+import { useState, useMemo, useCallback } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import {
-  calculateTotalEstimate,
-  generateCopyText,
-  getBotAccountLines,
-  hasServerInfraFee,
-  validateGoogleAccount,
-} from '@/app/utils/orderUtils';
-import { copyToClipboard } from '@/app/utils/clipboard';
-import { PRICING_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM } from '@/app/constants/form';
-import { CheckCircle as CheckCircleIcon } from 'griddy-icons';
-
-const CREPE_URL = 'https://crepe.cm/@longwhile/lw5w0ofg';
+import { calculateTotalEstimate, generateCopyText, hasServerInfraFee, validateGoogleAccount } from '@/app/utils/orderUtils';
+import { Button } from '@/app/components/ds';
+import { ApplicantReview, BotReview, EstimateReview, GoogleAccountFields, PolicyBox, ServerReview } from './Step4Sections';
+import { CopyDialogs, MoveBanner } from './CopyDialogs';
+import { useCopyFlow } from './useCopyFlow';
 
 export default function Step4Review() {
   const { formData, setCurrentStep, updateStep1, restoredFromStorage } = useOrder();
   const { serverCalcResult } = useEstimate();
-  const { step1, step2, step3 } = formData;
+  const { step1 } = formData;
   // 임시저장 복원 시 비밀번호는 저장되지 않아 비어 있으므로 재입력 안내
   const passwordNeedsReentry = restoredFromStorage && step1.googlePassword.trim() === '';
   const [policyConfirmed, setPolicyConfirmed] = useState(false);
   // 구글 계정 오류는 복사를 한 번 시도한 뒤부터 보여준다 (입력 전부터 빨갛게 두지 않도록)
   const [googleErrorsShown, setGoogleErrorsShown] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState(false);
-  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // 클립보드 복사가 실패했을 때 직접 선택해 복사할 수 있도록 원문을 보여준다
-  const [copyFailed, setCopyFailed] = useState(false);
-  const [showCopyText, setShowCopyText] = useState(false);
-  const copyTextAreaRef = useRef<HTMLTextAreaElement>(null);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
   // 실시간 견적 계산
   const estimate = useMemo(() => {
@@ -40,14 +30,7 @@ export default function Step4Review() {
       return calculateTotalEstimate(formData);
     } catch (err) {
       console.error('견적 계산 실패:', err);
-      return {
-        serverTotal: 0,
-        botTotal: 0,
-        operationCost: 0,
-        grandTotal: 0,
-        hasVariablePrice: false,
-        variableItems: [],
-      };
+      return { serverTotal: 0, botTotal: 0, operationCost: 0, grandTotal: 0, hasVariablePrice: false, variableItems: [] };
     }
   }, [formData]);
 
@@ -61,108 +44,38 @@ export default function Step4Review() {
    */
   const copyTextPreview = useMemo(
     () => generateCopyText(formData, estimate, serverCalcResult),
-    [formData, estimate, serverCalcResult]
+    [formData, estimate, serverCalcResult],
+  );
+  const flow = useCopyFlow(copyTextPreview);
+  // 확인용 화면에는 비밀번호를 가린다 (복사되는 원문은 그대로). 비밀번호는 검증상 8자 이상이라 다른 글자와 겹칠 일이 거의 없다
+  const maskedCopyText = useMemo(
+    () => (step1.googlePassword.length >= 8 ? copyTextPreview.split(step1.googlePassword).join('••••••••') : copyTextPreview),
+    [copyTextPreview, step1.googlePassword],
   );
 
   // 구글 계정 검증 (Step 1 에서 이 단계로 옮겨온 항목)
   const googleErrors = useMemo(() => validateGoogleAccount(step1), [step1]);
-
   const googleErrorFor = useCallback(
-    (field: string) =>
-      googleErrorsShown ? googleErrors.find((e) => e.field === field)?.message ?? null : null,
-    [googleErrors, googleErrorsShown]
+    (field: string) => (googleErrorsShown ? googleErrors.find((e) => e.field === field)?.message ?? null : null),
+    [googleErrors, googleErrorsShown],
   );
 
   // 복사 버튼 활성화 조건: 정책 동의 체크
-  const isCopyEnabled = policyConfirmed && !isCopying;
+  const isCopyEnabled = policyConfirmed && !flow.isCopying;
 
-  // 카운트다운 정리
-  useEffect(() => {
-    return () => {
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
-    };
-  }, []);
-
-  // 크레페 이동 취소
-  const cancelRedirect = useCallback(() => {
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-      countdownRef.current = null;
-    }
-    setRedirectCountdown(null);
-  }, []);
-
-  // 크레페로 바로 이동
-  const goToCrepe = useCallback(() => {
-    cancelRedirect();
-    window.open(CREPE_URL, '_blank', 'noopener,noreferrer');
-  }, [cancelRedirect]);
-
-  // 클립보드 복사 함수
   const handleCopy = useCallback(async () => {
     if (!isCopyEnabled) return;
-
     // 구글 계정이 비어 있으면 복사 전에 막고 해당 입력칸으로 보낸다
     if (googleErrors.length > 0) {
       setGoogleErrorsShown(true);
-      setError('커뮤니티 구글 계정을 입력해 주세요.');
+      setGoogleError('커뮤니티 구글 계정을 입력해 주세요.');
       document.getElementById('googleAccount')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       document.getElementById(googleErrors[0].field)?.focus({ preventScroll: true });
       return;
     }
-
-    setIsCopying(true);
-    setError(null);
-
-    const result = await copyToClipboard(copyTextPreview);
-
-    if (result.success) {
-      setCopyFailed(false);
-      setShowCopyText(false);
-      setCopySuccess(true);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-
-      // 3초 카운트다운 시작
-      setRedirectCountdown(3);
-      countdownRef.current = setInterval(() => {
-        setRedirectCountdown(prev => {
-          if (prev === null || prev <= 1) {
-            if (countdownRef.current) {
-              clearInterval(countdownRef.current);
-              countdownRef.current = null;
-            }
-            // 카운트다운 완료 시 자동 이동
-            window.open(CREPE_URL, '_blank', 'noopener,noreferrer');
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      setError(result.error);
-      // 복사에 실패하면 원문을 바로 펼쳐서 직접 선택할 수 있게 한다
-      setCopyFailed(true);
-      setShowCopyText(true);
-    }
-
-    setIsCopying(false);
-  }, [copyTextPreview, isCopyEnabled, googleErrors]);
-
-  /** 복사 실패 시 원문 전체를 선택해 준다 (사용자는 Ctrl+C 만 누르면 된다) */
-  const selectCopyText = useCallback(() => {
-    const textarea = copyTextAreaRef.current;
-    if (!textarea) return;
-    textarea.focus();
-    textarea.select();
-  }, []);
-
-  // 복사 원문이 펼쳐지면 바로 선택해 둔다
-  useEffect(() => {
-    if (showCopyText && copyFailed) selectCopyText();
-  }, [showCopyText, copyFailed, selectCopyText]);
+    setGoogleError(null);
+    await flow.copy();
+  }, [isCopyEnabled, googleErrors, flow]);
 
   // 수정 버튼 핸들러
   const handleEdit = useCallback((step: 1 | 2 | 3) => {
@@ -170,694 +83,48 @@ export default function Step4Review() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [setCurrentStep]);
 
+  const goPrevious = () => {
+    setCurrentStep(3);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="space-y-8">
-      {/* 헤더 */}
-      <div className="pb-6 border-b border-border animate-fadeInDown">
-        <h2 className="text-[25px] font-semibold mb-2 bg-gradient-to-r from-brand to-brand-400 bg-clip-text text-transparent">
-          Step 4. 최종 확인 및 견적
-        </h2>
-        <p className="text-[14px] text-text-secondary">
-          입력하신 내용을 확인하고 최종 견적을 확인해 주세요.
-        </p>
-      </div>
+    <div className="flex flex-col gap-12 lg:gap-[70px]">
+      <MoveBanner flow={flow} />
+      <CopyDialogs flow={flow} text={copyTextPreview} maskedText={maskedCopyText} />
 
-      {/* 토스트 알림 */}
-      {showToast && (
-        <div
-          className="fixed top-below-header right-4 z-50 bg-green-500 text-text-inverse px-6 py-4 rounded-lg shadow-xl border border-border flex items-center gap-3 max-w-sm animate-slideInRight"
-          role="alert"
-          aria-live="polite"
-        >
-          <CheckCircleIcon size={24} color="currentColor" aria-hidden="true" />
-          <div>
-            <p className="font-bold text-[15px]">복사 완료!</p>
-            <p className="text-[13px] text-green-100">신청서가 클립보드에 복사되었습니다</p>
-          </div>
-        </div>
-      )}
+      <ApplicantReview data={formData} onEdit={handleEdit} />
+      <ServerReview data={formData} onEdit={handleEdit} />
+      <BotReview data={formData} onEdit={handleEdit} />
+      <EstimateReview data={formData} estimate={estimate} infraFeeApplied={infraFeeApplied} />
+      <PolicyBox confirmed={policyConfirmed} onConfirm={setPolicyConfirmed} />
+      <GoogleAccountFields
+        email={step1.googleEmail}
+        password={step1.googlePassword}
+        onChange={updateStep1}
+        errorFor={googleErrorFor}
+        passwordNeedsReentry={passwordNeedsReentry}
+      />
 
-      {/* Step 1 요약 */}
-      <div className="border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
-        <div className="bg-background-100 px-6 py-4 border-b border-border flex items-center justify-between">
-          <h3 className="text-[18px] font-semibold">신청자 닉네임</h3>
-          <button
-            onClick={() => handleEdit(1)}
-            className="text-[14px] text-brand hover:text-brand-hover font-medium transition-all duration-300 hover:underline"
-          >
-            수정 →
-          </button>
-        </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <p className="text-[13px] text-text-secondary mb-1">신청자 닉네임</p>
-            <p className="text-[15px]">{step1.applicantNickname || '-'}</p>
-          </div>
-          <div>
-            <p className="text-[13px] text-text-secondary mb-1">구글 계정</p>
-            <p className="text-[15px]">
-              {step1.googleEmail || <span className="text-red-600 font-medium">이메일 미입력</span>}
-              {' / '}
-              {step1.googlePassword
-                ? '비밀번호 입력됨'
-                : <span className="text-red-600 font-medium">비밀번호 미입력</span>}
-            </p>
-          </div>
-          <div>
-            <p className="text-[13px] text-text-secondary mb-1">커뮤니티</p>
-            <p className="text-[15px]">
-              {step1.communityKoreanName} / {step1.communityEnglishName} (약칭 '{step1.communityShortName}')
-            </p>
-          </div>
-          <div>
-            <p className="text-[13px] text-text-secondary mb-1">운영 일정</p>
-            <p className="text-[15px]">
-              {step1.isLongTermCommunity
-                ? '장기 소규모 서버'
-                : `${step1.openingDate} ~ ${step1.closingDate} (${step1.operationWeeks}주)`}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Step 2 요약 */}
-      <div className="border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
-        <div className="bg-background-100 px-6 py-4 border-b border-border flex items-center justify-between">
-          <h3 className="text-[18px] font-semibold">서버 설치 옵션</h3>
-          <button
-            onClick={() => handleEdit(2)}
-            className="text-[14px] text-brand hover:text-brand-hover font-medium transition-all duration-300 hover:underline"
-          >
-            수정 →
-          </button>
-        </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <p className="text-[13px] text-text-secondary mb-1">신청 여부</p>
-            <p className="text-[15px]">
-              {step2.applyServerInstall === 'yes' ? '예' : '아니오'}
-            </p>
-          </div>
-          {step2.applyServerInstall === 'yes' && (
-            <>
-              {step2.additionalOption && (
-                <div>
-                  <p className="text-[13px] text-text-secondary mb-1">커스텀 옵션</p>
-                  <p className="text-[15px]">
-                    {step2.additionalOption === 'logo' && '로고 변경'}
-                    {step2.additionalOption === 'dayTheme' && '낮 테마'}
-                    {step2.additionalOption === 'nightTheme' && '밤 테마'}
-                    {step2.additionalOption === 'bothTheme' && '테마 2종'}
-                  </p>
-                </div>
-              )}
-              {(step2.changeCharacterLimit || step2.searchOption || step2.mastoHostMigration || step2.fastDeadline) && (
-                <div>
-                  <p className="text-[13px] text-text-secondary mb-1">추가 옵션</p>
-                  <p className="text-[15px]">
-                    {[
-                      step2.changeCharacterLimit && `글자수 ${step2.characterLimitValue}자`,
-                      step2.searchOption && '검색 옵션',
-                      step2.mastoHostMigration && 'masto.host 데이터 이전',
-                      step2.fastDeadline && '빠른 마감',
-                    ].filter(Boolean).join(', ') || '-'}
-                  </p>
-                </div>
-              )}
-              {step2.adminAccountId && (
-                <div>
-                  <p className="text-[13px] text-text-secondary mb-1">총괄 계정</p>
-                  <p className="text-[15px]">{step2.adminAccountId}</p>
-                </div>
-              )}
-            </>
+      {(googleError || (isCopyEnabled && !flow.copySuccess)) && (
+        <div className="flex flex-col gap-4">
+          {googleError && (
+            <p className="rounded-card border border-error-500 bg-background-white p-4 text-center text-body3 text-error-500">{googleError}</p>
           )}
-        </div>
-      </div>
-
-      {/* Step 3 요약 */}
-      <div className="border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md">
-        <div className="bg-background-100 px-6 py-4 border-b border-border flex items-center justify-between">
-          <h3 className="text-[18px] font-semibold">자동봇 커미션</h3>
-          <button
-            onClick={() => handleEdit(3)}
-            className="text-[14px] text-brand hover:text-brand-hover font-medium transition-all duration-300 hover:underline"
-          >
-            수정 →
-          </button>
-        </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <p className="text-[13px] text-text-secondary mb-1">신청 여부</p>
-            <p className="text-[15px]">
-              {step3.applyBot === 'yes' ? '예' : '아니오'}
+          {isCopyEnabled && !flow.copySuccess && (
+            <p className="rounded-card bg-background-brand p-5 text-body2 text-brand">
+              <strong className="font-medium">다음 단계:</strong> 복사하기 버튼을 통해 신청서를 복사한 후, 크레페로 이동해서 신청서에 내용을 붙여넣습니다.
             </p>
-          </div>
-          {step3.applyBot === 'yes' && (
-            <>
-              <div>
-                <p className="text-[13px] text-text-secondary mb-1">가동 일정</p>
-                <p className="text-[15px]">
-                  {step3.operationWeeksOption === 'longterm'
-                    ? '6개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
-                    : step3.botStartDate && step3.botEndDate
-                      ? `${step3.botStartDate} ~ ${step3.botEndDate} (${step3.manualWeeks}주)`
-                      : `${step3.manualWeeks}주`}
-                </p>
-              </div>
-              {step3.mainBot && (
-                <div>
-                  <p className="text-[13px] text-text-secondary mb-1">메인 봇</p>
-                  <p className="text-[15px]">
-                    {step3.mainBot === 'basic' && '기본'}
-                    {step3.mainBot === 'basicShop' && '기본+상점'}
-                    {step3.mainBot === 'basicShopStat' && '기본+상점+스탯'}
-                  </p>
-                </div>
-              )}
-              {(step3.cocBot || step3.trpg2d6Bot || step3.customCommandUpgrade || step3.reservationToot || step3.autoProfileImage ||
-                step3.tootCurrencyLink || step3.transferFeature || step3.omakaseBot ||
-                (step3.investigationBot && step3.mainBot !== null) ||
-                (step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat'))) && (
-                  <div>
-                    <p className="text-[13px] text-text-secondary mb-1">추가 옵션</p>
-                    <p className="text-[15px]">
-                      {[
-                        step3.cocBot && 'D100 타입',
-                        step3.trpg2d6Bot && '2D6 3종세트 타입',
-                        step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
-                        step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null &&
-                        `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`,
-                        step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
-                        step3.reservationToot && '예약 툿',
-                        step3.autoProfileImage && '자동 스진',
-                        step3.tootCurrencyLink && '툿-재화 연동',
-                        step3.transferFeature && `양도 기능 (${step3.transferOption === 'itemOnly' ? '아이템만' :
-                          step3.transferOption === 'currencyOnly' ? '재화만' : '모두'
-                        })`,
-                        step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') &&
-                        `출석 시스템 (${step3.attendanceCommand || '[출석]'} / +${step3.attendanceCurrencyAmount || 0})`,
-                        step3.omakaseBot && '오마카세',
-                      ].filter(Boolean).join(', ')}
-                    </p>
-                  </div>
-                )}
-              {(() => {
-                const accountLines = getBotAccountLines(step3);
-                if (accountLines.length === 0) return null;
-
-                if (accountLines.length === 1) {
-                  return (
-                    <div>
-                      <p className="text-[13px] text-text-secondary mb-1">{accountLines[0].label}</p>
-                      <p className="text-[15px]">{accountLines[0].value}</p>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div>
-                    <p className="text-[13px] text-text-secondary mb-1">봇 계정 (분리)</p>
-                    <div className="text-[15px] space-y-1">
-                      {accountLines.map(({ label, value }) => (
-                        <p key={label}>{label}: {value}</p>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-              {step3.botSymbol && (
-                <div>
-                  <p className="text-[13px] text-text-secondary mb-1">봇 기호</p>
-                  <p className="text-[15px] font-mono">{step3.botSymbol}</p>
-                </div>
-              )}
-              {step3.setupDeadline && (
-                <div>
-                  <p className="text-[13px] text-text-secondary mb-1">세팅 마감일</p>
-                  <p className="text-[15px]">{step3.setupDeadline}</p>
-                </div>
-              )}
-              {(() => {
-                const accountListActive = step3.reservationToot || step3.autoProfileImage;
-                const accounts = accountListActive
-                  ? [
-                      ...(step2.adminAccountId.trim() ? [step2.adminAccountId.trim()] : []),
-                      ...step3.accountList.map((a) => a.trim()).filter(Boolean),
-                    ]
-                  : [];
-                if (
-                  !step3.currencyUnit &&
-                  !step3.statList &&
-                  !step3.tootPerCurrency &&
-                  accounts.length === 0
-                ) {
-                  return null;
-                }
-                return (
-                  <div>
-                    <p className="text-[13px] text-text-secondary mb-1">기타 설정</p>
-                    <div className="text-[15px] space-y-1">
-                      {step3.currencyUnit && <p>재화 단위: {step3.currencyUnit}</p>}
-                      {step3.statList && <p>스탯: {step3.statList}</p>}
-                      {step3.tootPerCurrency && <p>툿-재화 비율: {step3.tootPerCurrency}</p>}
-                      {accounts.length > 0 && <p>계정 목록: {accounts.join(', ')}</p>}
-                    </div>
-                  </div>
-                );
-              })()}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* 최종 견적 */}
-      <div className="border border-border rounded-lg overflow-hidden bg-gradient-to-br from-brand-50 to-white">
-        <div className="bg-brand px-6 py-4 border-b border-border">
-          <h3 className="text-[18px] font-semibold text-text-inverse">최종 견적</h3>
-        </div>
-        <div className="p-6 space-y-6">
-          {/* 서버 관련 */}
-          {step2.applyServerInstall === 'yes' && (
-            <div className="space-y-2">
-              <p className="text-[15px] font-medium text-text-primary border-b border-border-100 pb-1">서버 관련</p>
-              <div className="space-y-1 text-[14px]">
-                <div className="flex justify-between">
-                  <span>서버 설치</span>
-                  <span>{PRICING_CONFIG.server.base.toLocaleString()}원</span>
-                </div>
-                {infraFeeApplied && (
-                  <div className="flex justify-between">
-                    <span>
-                      {SERVER_INFRA_FEE_ITEM.name}
-                      <span className="ml-1.5 text-[11px] text-brand bg-brand-50 rounded-full px-1.5 py-0.5">
-                        필수 포함
-                      </span>
-                    </span>
-                    <span>{PRICING_CONFIG.server.infraFee.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step2.additionalOption && (
-                  <div className="flex justify-between">
-                    <span>
-                      {step2.additionalOption === 'logo' && '로고 변경'}
-                      {step2.additionalOption === 'dayTheme' && '낮 테마'}
-                      {step2.additionalOption === 'nightTheme' && '밤 테마'}
-                      {step2.additionalOption === 'bothTheme' && '테마 2종'}
-                    </span>
-                    <span>{PRICING_CONFIG.server.options[step2.additionalOption].toLocaleString()}원</span>
-                  </div>
-                )}
-                {step2.changeCharacterLimit && step2.characterLimitValue > 0 && (
-                  <div className="flex justify-between">
-                    <span>글자수 변경 ({step2.characterLimitValue}자)</span>
-                    <span>{PRICING_CONFIG.server.addons.characterLimit.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step2.searchOption && (
-                  <div className="flex justify-between">
-                    <span>검색 옵션</span>
-                    <span>{PRICING_CONFIG.server.addons.search.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step2.mastoHostMigration && (
-                  <div className="flex justify-between">
-                    <span>masto.host 데이터 이전</span>
-                    <span>{PRICING_CONFIG.server.addons.mastoHostMigration.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step2.fastDeadline && step2.fastDeadlineOption && (
-                  <div className="flex justify-between">
-                    <span>
-                      빠른 마감 (
-                      {step2.fastDeadlineOption === 'basic48h' && '48시간/기본'}
-                      {step2.fastDeadlineOption === 'basic24h' && '24시간/기본'}
-                      {step2.fastDeadlineOption === 'logo48h' && '48시간/로고'}
-                      {step2.fastDeadlineOption === 'theme48h' && '48시간/테마'}
-                      )
-                    </span>
-                    <span>
-                      {PRICING_CONFIG.server.addons.fastDeadline[step2.fastDeadlineOption as keyof typeof PRICING_CONFIG.server.addons.fastDeadline].toLocaleString()}원
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 자동봇 관련 */}
-          {step3.applyBot === 'yes' && (
-            <div className="space-y-2">
-              <p className="text-[15px] font-medium text-text-primary border-b border-border-100 pb-1">자동봇 관련</p>
-              <div className="space-y-1 text-[14px]">
-                {/* 가동 비용 / 장기 세팅비 */}
-                <div className="flex justify-between">
-                  <span>
-                    {step3.operationWeeksOption === 'longterm'
-                      ? '장기 자동봇 세팅비'
-                      : `가동 비용 (${step3.manualWeeks}주)`}
-                  </span>
-                  <span>{estimate.operationCost.toLocaleString()}원</span>
-                </div>
-                {/* 메인 봇 */}
-                {step3.mainBot && (
-                  <div className="flex justify-between">
-                    <span>
-                      {step3.mainBot === 'basic' && '기본봇'}
-                      {step3.mainBot === 'basicShop' && '기본+상점봇'}
-                      {step3.mainBot === 'basicShopStat' && '기본+상점+스탯봇'}
-                    </span>
-                    <span>{PRICING_CONFIG.bot.mainTypes[step3.mainBot].toLocaleString()}원</span>
-                  </div>
-                )}
-                {/* 추가 옵션들 */}
-                {step3.cocBot && (
-                  <div className="flex justify-between">
-                    <span>D100 타입</span>
-                    <span>{PRICING_CONFIG.bot.addons.cocBot.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.trpg2d6Bot && (
-                  <div className="flex justify-between">
-                    <span>2D6 3종세트 타입</span>
-                    <span>{PRICING_CONFIG.bot.addons.trpg2d6Bot.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.investigationBot && step3.mainBot !== null && (
-                  <div className="flex justify-between">
-                    <span>조사 자동봇</span>
-                    <span>{PRICING_CONFIG.bot.addons.investigationBot.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null && (
-                  <div className="flex justify-between">
-                    <span>
-                      일일 조사 횟수 제한{step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}
-                    </span>
-                    <span>{PRICING_CONFIG.bot.addons.investigationDailyLimit.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.customCommandUpgrade && (
-                  <div className="flex justify-between">
-                    <span>커스텀 명령어 업그레이드</span>
-                    <span>{PRICING_CONFIG.bot.addons.customCommandUpgrade.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.reservationToot && (
-                  <div className="flex justify-between">
-                    <span>예약 툿</span>
-                    <span>{PRICING_CONFIG.bot.addons.reservationToot.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.autoProfileImage && (
-                  <div className="flex justify-between">
-                    <span>자동 스진</span>
-                    <span>{PRICING_CONFIG.bot.addons.autoProfileImage.toLocaleString()}원</span>
-                  </div>
-                )}
-                {(step3.reservationToot || step3.autoProfileImage) && step3.extraAccountTiers > 0 && (
-                  <div className="flex justify-between">
-                    <span>추가 계정 {Math.min(ACCOUNT_LIST_CONFIG.maxTiers, step3.extraAccountTiers) * ACCOUNT_LIST_CONFIG.slotsPerTier}칸</span>
-                    <span>{(Math.min(ACCOUNT_LIST_CONFIG.maxTiers, step3.extraAccountTiers) * PRICING_CONFIG.bot.addons.extraAccountTier).toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.tootCurrencyLink && (
-                  <div className="flex justify-between">
-                    <span>툿-재화 연동</span>
-                    <span>{PRICING_CONFIG.bot.addons.tootCurrencyLink.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.transferFeature && (
-                  <div className="flex justify-between">
-                    <span>
-                      양도 기능 ({
-                        step3.transferOption === 'itemOnly' ? '아이템만' :
-                          step3.transferOption === 'currencyOnly' ? '재화만' : '모두'
-                      })
-                    </span>
-                    <span>{PRICING_CONFIG.bot.addons.transferFeature.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') && (
-                  <div className="flex justify-between">
-                    <span>
-                      출석 시스템 ({step3.attendanceCommand || '[출석]'} / +{step3.attendanceCurrencyAmount || 0})
-                    </span>
-                    <span>{PRICING_CONFIG.bot.addons.attendanceSystem.toLocaleString()}원</span>
-                  </div>
-                )}
-                {step3.omakaseBot && (
-                  <div className="flex justify-between">
-                    <span>오마카세</span>
-                    <span className="text-text-secondary">별도 협의</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 총 합계 */}
-          <div className="pt-4 border-t border-border">
-            <div className="flex justify-between items-center">
-              <p className="text-[18px] font-semibold">총 합계</p>
-              <p className="text-[24px] font-semibold text-brand">
-                {estimate.grandTotal.toLocaleString()}원
-              </p>
-            </div>
-            {estimate.hasVariablePrice && (
-              <p className="text-[13px] text-text-secondary mt-2">
-                * {estimate.variableItems.join(', ')} 비용은 별도 협의됩니다.
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 질문 정책 안내 */}
-      <div className="border border-border rounded-lg p-6 bg-background-100">
-        <h3 className="text-[16px] font-semibold mb-4">질문 정책 안내</h3>
-
-        <div className="space-y-4 text-[14px] text-text-primary">
-          {/* 무료 질문 횟수 */}
-          <div className="space-y-1">
-            <p className="font-medium">무료 질문 횟수</p>
-            <p className="text-[13px]">
-              첫 메시지부터 자동봇 세팅 완료 시점까지 <strong className="text-brand">최대 3회</strong>입니다.<br />
-              <span className="text-text-secondary">(하나의 메시지에 여러 질문을 작성해 전송하면 1회로 간주됩니다)</span>
-            </p>
-            <p className="text-[13px]">4회차부터는 질문 1개당 <strong className="text-brand">3,000원</strong>의 추가금이 발생합니다.</p>
-          </div>
-
-          {/* 예외 사항 */}
-          <div className="p-3 bg-background-white border border-border-100 rounded-md">
-            <p className="text-[13px]">
-              <span className="font-medium">예외:</span> 자동봇 세팅 완료 후 발생하는 오류나 사용법 관련 질문은 카운트하지 않습니다.
-            </p>
-          </div>
-
-          {/* 복잡한 요구사항 */}
-          <div className="space-y-1">
-            <p className="font-medium">복잡한 자동봇 / 요구사항이 많은 경우</p>
-            <p className="text-[13px]">
-              구현을 원하시는 내용을 자세히 기재한 문서를 전달해 주시면, 추가로 필요한 정보를 정리해서 안내드립니다.<br />
-              <span className="text-text-secondary">보통 신청자님께서 질문하시는 것보다 제가 질문하는 쪽이 효율이 좋습니다.</span>
-            </p>
-          </div>
-
-          {/* 답변 시간 안내 */}
-          <div className="p-3 bg-warning-50 border border-warning-200 rounded-md">
-            <p className="text-[13px] text-warning-700">
-              해외 거주 중이어서 바로 답변해드리기 어렵습니다. <strong>중요한 질문만 모아서</strong> 전달해 주세요.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 pt-4 border-t border-border-100">
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <input
-              type="checkbox"
-              checked={policyConfirmed}
-              onChange={(e) => setPolicyConfirmed(e.target.checked)}
-              className="w-5 h-5 min-w-[20px] min-h-[20px] shrink-0 accent-brand cursor-pointer focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2"
-            />
-            <span className="text-[15px] text-text-primary group-hover:text-text-primary transition-colors">
-              위 질문 정책 안내를 읽고 이해했습니다. <span className="text-red-500">*</span>
-            </span>
-          </label>
-        </div>
-      </div>
-
-      {/* 커뮤니티 구글 계정 (제출 직전에 받는다 — 비밀번호는 저장되지 않기 때문) */}
-      <div id="googleAccount" className="p-6 bg-background-white border border-border rounded-lg scroll-mt-header">
-        <h3 className="text-[18px] font-semibold mb-2">
-          커뮤니티 구글 계정 <span className="text-red-500" aria-hidden="true">*</span>
-        </h3>
-        <p className="text-[13px] text-text-secondary mb-4">
-          서버 설치와 자동봇 운영을 위해 커뮤니티의 구글 계정이 필요합니다.<br />
-          개인 구글계정을 사용하셔도 상관은 없으나, 개인정보 보호를 위해 새로운 계정을 개설하시는 걸 추천드립니다.
-        </p>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="googleEmail" className="block text-[14px] font-medium">
-              커뮤니티 구글 이메일 주소 <span className="text-red-500" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="googleEmail"
-              type="email"
-              value={step1.googleEmail}
-              onChange={(e) => updateStep1({ googleEmail: e.target.value })}
-              placeholder="example@gmail.com"
-              aria-required="true"
-              aria-invalid={Boolean(googleErrorFor('googleEmail'))}
-              aria-describedby={googleErrorFor('googleEmail') ? 'googleEmail-error' : undefined}
-              className="form-input"
-            />
-            {googleErrorFor('googleEmail') && (
-              <p id="googleEmail-error" role="alert" className="field-error">
-                <span aria-hidden="true">⚠</span>
-                <span>{googleErrorFor('googleEmail')}</span>
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="googlePassword" className="block text-[14px] font-medium">
-              구글 비밀번호 <span className="text-red-500" aria-hidden="true">*</span>
-            </label>
-            <p className="text-[12px] text-warning-700 bg-warning-50 p-2 rounded-md mb-2">
-              비밀번호는 브라우저에 저장되지 않으며, 페이지를 떠나면 입력 내용이 삭제됩니다.
-            </p>
-            {passwordNeedsReentry && (
-              <p
-                role="alert"
-                className="text-[12px] text-red-600 bg-red-50 border border-red-300 p-2 rounded-md mb-2 flex items-start gap-1.5"
-              >
-                <span aria-hidden="true">⚠</span>
-                <span>저장된 신청서를 불러왔어요. 비밀번호는 보안상 저장되지 않으니, <strong>여기부터 다시 입력</strong>해 주세요.</span>
-              </p>
-            )}
-            <input
-              id="googlePassword"
-              type="password"
-              value={step1.googlePassword}
-              onChange={(e) => updateStep1({ googlePassword: e.target.value })}
-              placeholder="비밀번호 입력"
-              aria-required="true"
-              aria-invalid={Boolean(googleErrorFor('googlePassword'))}
-              aria-describedby={googleErrorFor('googlePassword') ? 'googlePassword-error' : undefined}
-              autoComplete="new-password"
-              className="form-input"
-            />
-            {googleErrorFor('googlePassword') && (
-              <p id="googlePassword-error" role="alert" className="field-error">
-                <span aria-hidden="true">⚠</span>
-                <span>{googleErrorFor('googlePassword')}</span>
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 에러 메시지 */}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-500 rounded-lg animate-bounceIn">
-          <p className="text-[14px] text-red-700 text-center">{error}</p>
-        </div>
-      )}
-
-      {/* 복사한 내용 보기
-          복사에 실패하면 '직접 선택해서 복사'하라고 안내하는데, 화면에 그 텍스트가 없으면
-          사용자가 할 수 있는 게 없다. 실패 시에는 펼친 상태로, 성공 후에는 접은 상태로 보여준다. */}
-      {(copyFailed || copySuccess) && (
-        <div className={`border rounded-lg ${copyFailed ? 'border-red-500 bg-red-50/40' : 'border-border'}`}>
-          <button
-            type="button"
-            onClick={() => setShowCopyText((open) => !open)}
-            aria-expanded={showCopyText}
-            className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-background-inverse/[0.02] transition-colors rounded-lg focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2"
-          >
-            <span className="text-[15px] font-medium">
-              {copyFailed ? '아래 내용을 직접 선택해서 복사해 주세요' : '신청서 내용 보기'}
-            </span>
-            <span className="text-[13px] text-text-secondary">{showCopyText ? '접기' : '펼치기'}</span>
-          </button>
-
-          {showCopyText && (
-            <div className="px-5 pb-5 space-y-3">
-              <textarea
-                ref={copyTextAreaRef}
-                readOnly
-                value={copyTextPreview}
-                rows={12}
-                aria-label="신청서 복사 내용"
-                onFocus={(e) => e.currentTarget.select()}
-                className="w-full px-4 py-3 border border-input rounded-md font-mono text-[13px] leading-[1.7] bg-background-white resize-y"
-              />
-              <button
-                type="button"
-                onClick={selectCopyText}
-                className="px-4 py-2 border border-brand text-brand rounded-md text-[14px] font-medium hover:bg-brand-50 transition-colors focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2"
-              >
-                전체 선택
-              </button>
-            </div>
           )}
         </div>
       )}
 
-      {/* 복사 버튼 */}
-      <div className="pt-6 border-t border-border">
-        <button
-          onClick={handleCopy}
-          disabled={!isCopyEnabled}
-          className={`w-full py-4 rounded-lg font-medium text-[16px] transition-all duration-300 ${isCopyEnabled
-              ? 'bg-brand hover:bg-brand-hover text-text-inverse border border-transparent shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]'
-              : 'bg-background-200 text-text-secondary border border-border-100 cursor-not-allowed'
-            }`}
-        >
-          {isCopying ? '복사 중...' : isCopyEnabled ? '신청서 복사하기' : '정책 동의 후 복사 가능'}
-        </button>
-
-        {copySuccess && redirectCountdown !== null && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-500 rounded-lg animate-bounceIn">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[14px] text-green-700 font-medium">
-                복사 완료! {redirectCountdown}초 후 크레페로 이동합니다...
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={goToCrepe}
-                  className="px-4 py-2 min-h-[44px] text-[14px] bg-green-500 text-text-inverse rounded-md hover:bg-green-600 transition-colors focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
-                >
-                  바로 이동
-                </button>
-                <button
-                  onClick={cancelRedirect}
-                  className="px-4 py-2 min-h-[44px] text-[14px] text-green-700 border border-green-500 rounded-md hover:bg-green-100 transition-colors focus-visible:outline-2 focus-visible:outline-green-500 focus-visible:outline-offset-2"
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {copySuccess && redirectCountdown === null && (
-          <div className="mt-4 p-4 bg-brand-50 border border-brand rounded-lg">
-            <p className="text-[14px] text-brand font-medium">
-              복사에 성공했습니다! <button onClick={goToCrepe} className="underline font-medium hover:text-brand-hover transition-colors">크레페</button>로 이동해서 신청서에 내용을 붙여넣습니다.
-            </p>
-          </div>
-        )}
-
-        {isCopyEnabled && !copySuccess && (
-          <div className="mt-4 p-4 bg-brand-50 border border-brand rounded-lg animate-fadeIn">
-            <p className="text-[14px] text-brand">
-              <strong>다음 단계:</strong> 복사하기 버튼을 통해 신청서를 복사한 후, 크레페로 이동해서 신청서에 내용을 붙여넣습니다.
-            </p>
-          </div>
-        )}
+      {/* 아래 버튼: 이전 + 복사 (시안) */}
+      <div className="flex flex-col-reverse justify-center gap-3 sm:flex-row">
+        <Button variant="white" size="lg" onClick={goPrevious} className="sm:w-[220px]">← 이전</Button>
+        <Button size="lg" onClick={handleCopy} disabled={!isCopyEnabled} className="sm:min-w-[220px]">
+          {flow.isCopying ? '복사 중...' : isCopyEnabled ? '신청서 복사하기' : '정책 동의 후 복사 가능'}
+        </Button>
       </div>
     </div>
   );

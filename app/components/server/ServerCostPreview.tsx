@@ -12,8 +12,20 @@ import { useServerCalculator } from './useServerCalculator';
 
 type CalcResult = ServerCalcResult & { type: 'gcp' | 'vultr' };
 
-function Row({ label, labelFor, children }: { label: ReactNode; labelFor?: string; children: ReactNode }) {
+type CalcLayout = 'rows' | 'grid';
+
+function Row({ label, labelFor, children, layout = 'rows' }: { label: ReactNode; labelFor?: string; children: ReactNode; layout?: CalcLayout }) {
   const Label = labelFor ? 'label' : 'p';
+  if (layout === 'grid') {
+    return (
+      <div className="flex flex-col gap-3">
+        <Label {...(labelFor ? { htmlFor: labelFor } : {})} className="text-title5 text-text-primary">
+          {label}
+        </Label>
+        {children}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-[70px]">
       <Label {...(labelFor ? { htmlFor: labelFor } : {})} className="text-title4 text-text-primary lg:w-[140px] lg:shrink-0">
@@ -98,9 +110,9 @@ function PaymentInfo({ result }: { result: CalcResult }) {
   return <InfoBox title="서버비 지불 방식" items={paymentItems(result)} />;
 }
 
-function TierChoice({ calc }: { calc: ReturnType<typeof useServerCalculator> }) {
+function TierChoice({ calc, layout }: { calc: ReturnType<typeof useServerCalculator>; layout: CalcLayout }) {
   return (
-    <Row label="서버 사양">
+    <Row label="서버 사양" layout={layout}>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="radiogroup" aria-label="서버 사양">
         {TIER_OPTIONS.filter((o) => calc.availableTiers.includes(o.value)).map((o) => {
           const monthly = calc.getTierMonthlyKrw(o.value);
@@ -115,9 +127,9 @@ function TierChoice({ calc }: { calc: ReturnType<typeof useServerCalculator> }) 
   );
 }
 
-function SearchChoice({ calc, longTerm }: { calc: ReturnType<typeof useServerCalculator>; longTerm: boolean }) {
+function SearchChoice({ calc, longTerm, layout }: { calc: ReturnType<typeof useServerCalculator>; longTerm: boolean; layout: CalcLayout }) {
   return (
-    <Row label="검색 기능 추가 여부">
+    <Row label="검색 기능 추가 여부" layout={layout}>
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-5" role="radiogroup" aria-label="검색 기능 추가 여부">
           <Radio name="server-search" label="예" checked={calc.search === 'yes'} disabled={calc.searchLocked}
@@ -140,44 +152,47 @@ function SearchChoice({ calc, longTerm }: { calc: ReturnType<typeof useServerCal
   );
 }
 
-function CalculatorFields({ calc }: { calc: ReturnType<typeof useServerCalculator> }) {
+function CalculatorFields({ calc, longTerm, layout }: { calc: ReturnType<typeof useServerCalculator>; longTerm: boolean; layout: CalcLayout }) {
+  const months = longTerm ? (
+    // 장기 소규모 서버(STEP1 체크): 기간을 12개월 이상으로 고정해 보여만 준다 (기존 신청서 계산기와 같은 문구)
+    <p id="server-months" className="flex min-h-16 items-center rounded-input border border-border-strong bg-background-100 px-4 text-body2 text-text-primary">
+      12개월 이상 · 장기 소규모 서버 (반영구)
+    </p>
+  ) : (
+    <Select id="server-months" value={calc.months} onValueChange={calc.setMonths}
+      options={getMonthOptions(calc.usersKey).map((o) => ({ value: String(o.value), label: o.label }))} />
+  );
+  const users = (
+    <Select id="server-users" value={calc.usersKey} onValueChange={calc.setUsersKey} options={calc.usersOptions}
+      helper={calc.isLongTermMonths ? (
+        <span className="text-brand-700">
+          장기(12개월 이상) 서버는 10인 이하 소규모만 신청하실 수 있어요. 11인 이상이 1년 넘게 운영하실 예정이라면 따로 문의해 주세요.
+        </span>
+      ) : '커뮤니티의 경우 러닝 인원'} />
+  );
   return (
-    <div className="flex flex-col gap-7 lg:gap-[60px]">
-      <Row label="서버 운영 기간" labelFor="server-months">
-        <Select id="server-months" value={calc.months} onValueChange={calc.setMonths}
-          options={getMonthOptions(calc.usersKey).map((o) => ({ value: String(o.value), label: o.label }))} />
-      </Row>
-      <Row label="평균 동시접속자 수" labelFor="server-users">
-        <Select id="server-users" value={calc.usersKey} onValueChange={calc.setUsersKey} options={calc.usersOptions}
-          helper={calc.isLongTermMonths ? (
-            <span className="text-brand-700">
-              장기(12개월 이상) 서버는 10인 이하 소규모만 신청하실 수 있어요. 11인 이상이 1년 넘게 운영하실 예정이라면 따로 문의해 주세요.
-            </span>
-          ) : '커뮤니티의 경우 러닝 인원'} />
-      </Row>
-      <SearchChoice calc={calc} longTerm={false} />
-      {calc.showTier && <TierChoice calc={calc} />}
+    <div className={layout === 'grid' ? 'flex flex-col gap-6' : 'flex flex-col gap-7 lg:gap-[60px]'}>
+      <div className={layout === 'grid' ? 'grid grid-cols-1 gap-5 md:grid-cols-2' : 'contents'}>
+        <Row label="서버 운영 기간" labelFor={longTerm ? undefined : 'server-months'} layout={layout}>{months}</Row>
+        <Row label="평균 동시접속자 수" labelFor="server-users" layout={layout}>{users}</Row>
+      </div>
+      <SearchChoice calc={calc} longTerm={longTerm} layout={layout} />
+      {calc.showTier && <TierChoice calc={calc} layout={layout} />}
     </div>
   );
 }
 
-export function ServerCostPreview() {
-  const calc = useServerCalculator(false);
+/**
+ * 계산기 본문 (입력 → 결과 카드 → 지불 방식·규모와 예산). 서버 커미션 페이지와 신청서 STEP2 가 같이 쓴다.
+ * layout: rows(서버 페이지, 이름 140 ↔ 입력 580) / grid(신청서, 위 라벨 + 2열). longTerm: 기간 12개월 이상 고정(신청서 STEP1 장기 체크).
+ */
+export function ServerCalculator({ longTerm = false, layout = 'rows' }: { longTerm?: boolean; layout?: CalcLayout }) {
+  const calc = useServerCalculator(longTerm);
   const { result, isAllSelected } = calc;
   return (
-    <TitledSection
-      id="server-cost-preview"
-      title="서버비 미리보기"
-      description={
-        <>
-          서버 설치를 신청하기 전, 예상 서버비와 설치 사양을 먼저 확인해보세요.<br />
-          마스토돈 서버 설치 및 테마 커미션 = 인테리어 비용, 서버비 = 집주인에게 납부하는 월세라고 생각해주시면 됩니다.<br />
-          커뮤니티 운영 기간과 규모에 따라 지출하시는 서버비가 달라집니다.
-        </>
-      }
-    >
+    <>
       <div className="flex flex-col gap-10">
-        <CalculatorFields calc={calc} />
+        <CalculatorFields calc={calc} longTerm={longTerm} layout={layout} />
         {!isAllSelected && (
           <p className="text-body3 text-text-secondary">
             위 {calc.showTier ? 4 : 3}가지를 모두 선택하면 예상 서버비와 설치 사양을 확인할 수 있습니다.
@@ -197,6 +212,24 @@ export function ServerCostPreview() {
           </p>
         </InfoBox>
       </div>
+    </>
+  );
+}
+
+export function ServerCostPreview() {
+  return (
+    <TitledSection
+      id="server-cost-preview"
+      title="서버비 미리보기"
+      description={
+        <>
+          서버 설치를 신청하기 전, 예상 서버비와 설치 사양을 먼저 확인해보세요.<br />
+          마스토돈 서버 설치 및 테마 커미션 = 인테리어 비용, 서버비 = 집주인에게 납부하는 월세라고 생각해주시면 됩니다.<br />
+          커뮤니티 운영 기간과 규모에 따라 지출하시는 서버비가 달라집니다.
+        </>
+      }
+    >
+      <ServerCalculator />
     </TitledSection>
   );
 }

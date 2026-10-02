@@ -5,7 +5,7 @@
  */
 import { useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import {
-  AccordionItem, Button, FeatureCard, Icon, LinkCard, ProcessStep, SectionTitle, ServiceCard, buttonClassName,
+  AccordionItem, BrandWordmark, Button, FeatureCard, Icon, LinkCard, ProcessStep, SectionTitle, ServiceCard, buttonClassName,
 } from '@/app/components/ds';
 import { FAQ_ITEMS } from '@/app/components/faq/faqContent';
 import { IMAGES, type SiteImage } from '@/app/constants/images';
@@ -53,7 +53,11 @@ function HomeHero() {
       <div className="container-ds relative pb-12 lg:pb-[68px]">
         <div className="flex max-w-[621px] flex-col gap-5">
           <p className="font-inter text-eyebrow uppercase text-text-inverse-muted">LONGWHILE COMMISSION</p>
-          <h1 className="text-display text-text-inverse">한참 커미션</h1>
+          {/* 사용자 제공 '한참 커미션' 글자 로고(흰색). 기존 제목 글자(display 48/모바일 28)와 같은 높이. 읽는 글자는 그대로 */}
+          <h1 className="text-text-inverse">
+            <BrandWordmark className="block h-7 lg:h-12" />
+            <span className="sr-only">한참 커미션</span>
+          </h1>
           <p className="text-body1 text-text-inverse-muted">
             마스토돈 자캐커뮤를 위한 최고의 커미션<br />
             서버 설치부터 자동봇까지 한번에

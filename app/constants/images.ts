@@ -11,8 +11,8 @@ export interface SiteImage {
 export const IMAGES = {
   homeHero: { src: '/images/home-hero.webp', width: 1672, height: 941 },
   homeCtaBg: { src: '/images/home-cta-bg.webp', width: 1600, height: 617 },
-  homeServiceServer: { src: '/images/home-service-server.webp', width: 1296, height: 720 },
-  homeServiceBot: { src: '/images/home-service-bot.webp', width: 1296, height: 720 },
+  homeServiceServer: { src: '/images/home-service-server.webp', width: 1671, height: 928 },
+  homeServiceBot: { src: '/images/home-service-bot.webp', width: 1670, height: 928 },
   homeFeature01: { src: '/images/home-feature-01.webp', width: 152, height: 80 },
   homeFeature02: { src: '/images/home-feature-02.webp', width: 152, height: 115 },
   homeFeature03: { src: '/images/home-feature-03.webp', width: 140, height: 157 },

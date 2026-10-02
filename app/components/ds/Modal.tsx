@@ -1,6 +1,6 @@
 /**
  * Modal — 시안 모달 (복사 완료 / 복사 실패 / 견적 데이터 반영, file.json 실측).
- *  딤 배경 검정 50%, 상자 흰색·모서리 12·패딩 40(모바일 24)·폭 532, 간격 20.
+ *  딤 배경 검정 50%, 상자 흰색·모서리 12·패딩 40(모바일 24)·폭 532(size=xl 1320), 간격 20.
  *  제목 headline2 #000, 부제 body2 #3376E7, 본문 슬롯, 버튼 영역(가로, 간격 12).
  * 동작: Esc 로 닫기, 바깥(딤) 클릭으로 닫기, Tab 포커스 가두기, 열릴 때 본문 스크롤 잠금,
  *       닫히면 열기 전 포커스로 되돌리기. 닫힌 상태에서는 아무것도 그리지 않아 SSR 에 안전하다.
@@ -23,13 +23,19 @@ interface ModalProps {
   closeOnOverlay?: boolean;
   /** 오른쪽 위 닫기 버튼 (기본 true) */
   showClose?: boolean;
+  /** 열릴 때 포커스: first(기본, 처음 누를 수 있는 요소) / last(마지막 = 오른쪽 주 버튼. 첫 버튼이 되돌릴 수 없는 동작일 때) */
+  initialFocus?: 'first' | 'last';
+  /** md: 532 (확인·선택 모달) / xl: 1320 (신청서 이용안내 전체 보기) */
+  size?: 'md' | 'xl';
   className?: string;
 }
+
+const WIDTH = { md: 'max-w-[532px]', xl: 'max-w-[1320px]' } as const;
 
 const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** Esc·Tab 처리, 스크롤 잠금, 포커스 복원 */
-function useModalBehavior(open: boolean, onClose: () => void, dialogRef: RefObject<HTMLDivElement | null>) {
+function useModalBehavior(open: boolean, onClose: () => void, dialogRef: RefObject<HTMLDivElement | null>, initialFocus: 'first' | 'last') {
   // onClose 가 매 렌더 새 함수여도 효과가 다시 실행되지 않게 ref 로 들고 있는다
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -43,8 +49,9 @@ function useModalBehavior(open: boolean, onClose: () => void, dialogRef: RefObje
     const scrollbar = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = 'hidden';
     if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
-    const first = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE);
-    (first ?? dialogRef.current)?.focus();
+    const focusables = dialogRef.current ? Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)) : [];
+    const target = initialFocus === 'last' ? focusables[focusables.length - 1] : focusables[0];
+    (target ?? dialogRef.current)?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -66,15 +73,15 @@ function useModalBehavior(open: boolean, onClose: () => void, dialogRef: RefObje
       document.body.style.paddingRight = paddingRight;
       previous?.focus?.();
     };
-  }, [open, dialogRef]);
+  }, [open, dialogRef, initialFocus]);
 }
 
-export function Modal({ open, onClose, title, subtitle, icon, children, actions, closeOnOverlay = true, showClose = true, className }: ModalProps) {
+export function Modal({ open, onClose, title, subtitle, icon, children, actions, closeOnOverlay = true, showClose = true, initialFocus = 'first', size = 'md', className }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
   useEffect(() => setMounted(true), []);
-  useModalBehavior(open, onClose, dialogRef);
+  useModalBehavior(open, onClose, dialogRef, initialFocus);
   if (!open || !mounted) return null;
 
   return createPortal(
@@ -86,7 +93,7 @@ export function Modal({ open, onClose, title, subtitle, icon, children, actions,
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={clsx('relative flex max-h-[calc(100dvh-32px)] w-full max-w-[532px] flex-col gap-5 overflow-y-auto rounded-modal bg-background-white p-6 outline-none lg:p-10', className)}
+        className={clsx('relative flex max-h-[calc(100dvh-32px)] w-full flex-col gap-5 overflow-y-auto rounded-modal bg-background-white p-6 outline-none lg:p-10', WIDTH[size], className)}
       >
         {showClose && (
           <button type="button" onClick={onClose} aria-label="닫기" className={clsx('absolute right-4 top-4 flex size-11 items-center justify-center rounded-button text-text-disabled hover:text-text-primary', focusRing)}>

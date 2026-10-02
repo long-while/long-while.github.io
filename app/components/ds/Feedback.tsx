@@ -16,19 +16,26 @@ interface ToastProps {
   onAction?: () => void;
   onClose?: () => void;
   icon?: ReactNode;
-  /** 화면 아래 가운데에 고정 */
+  /** 화면 아래에 고정 */
   floating?: boolean;
+  /** floating 일 때 가로 위치: center(기본) / end(데스크톱에서 본문 오른쪽 끝에 맞춤, 견적함 시안) */
+  floatAlign?: 'center' | 'end';
   className?: string;
 }
 
-export function Toast({ message, actionLabel, onAction, onClose, icon, floating = false, className }: ToastProps) {
+const FLOAT_CLASS = {
+  center: 'fixed bottom-[calc(24px+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] -translate-x-1/2 lg:w-fit',
+  end: 'fixed bottom-[calc(24px+env(safe-area-inset-bottom))] left-4 right-4 z-50 lg:left-auto lg:right-[max(32px,calc((100vw-1320px)/2))] lg:w-fit',
+} as const;
+
+export function Toast({ message, actionLabel, onAction, onClose, icon, floating = false, floatAlign = 'center', className }: ToastProps) {
   return (
     <div
       role="status"
       aria-live="polite"
       className={clsx(
         'flex min-h-[60px] w-fit max-w-full items-center justify-between gap-4 rounded-button bg-background-inverse p-5 text-text-inverse lg:gap-10',
-        floating && 'fixed bottom-[calc(24px+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] -translate-x-1/2 lg:w-fit',
+        floating && FLOAT_CLASS[floatAlign],
         className,
       )}
     >
@@ -73,6 +80,40 @@ export function Banner({ title, description, actions, className }: BannerProps) 
         {description && <p className="text-body3 text-text-secondary">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-col gap-2 sm:flex-row">{actions}</div>}
+    </div>
+  );
+}
+
+interface ErrorSummaryProps {
+  title: ReactNode;
+  errors: { key: string; message: ReactNode; onSelect: () => void }[];
+  className?: string;
+}
+
+/**
+ * ErrorSummary — 신청서 상단 오류 목록 (시안에 없어 Input Guide 오류 상태(#DC0000)로 설계, Q8).
+ *  흰 바탕 + #DC0000 선 1px, 모서리 12, 패딩 20·24. 제목 title5 + 경고 아이콘, 항목은 누르면 해당 입력칸으로 이동하는 링크형 버튼(body3).
+ */
+export function ErrorSummary({ title, errors, className }: ErrorSummaryProps) {
+  return (
+    <div role="alert" className={clsx('flex flex-col gap-3 rounded-card border border-error-500 bg-background-white px-5 py-5 lg:px-6', className)}>
+      <p className="flex items-center gap-2 text-title5 text-error-500">
+        <Icon name="warning" size={20} className="shrink-0" />
+        {title}
+      </p>
+      <ul className="flex flex-col gap-1.5 pl-7">
+        {errors.map((error) => (
+          <li key={error.key} className="list-disc text-body3 text-error-500 marker:text-error-500">
+            <button
+              type="button"
+              onClick={error.onSelect}
+              className="text-left underline decoration-error-500/40 underline-offset-2 hover:decoration-error-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error-500"
+            >
+              {error.message}
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

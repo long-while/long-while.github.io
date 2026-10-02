@@ -1,36 +1,27 @@
 /**
  * SiteHeader — 시안 '헤더' (1320×92, 위에서 24px 떠 있는 흰 바, 모서리 12, 패딩 24, file.json 실측).
- *  로고 Inter 700 30/36 → (24) → 메뉴 title5 #767676, 간격 48 → 오른쪽 '신청하기' 검정 알약 (44px, 패딩 12·32, caption2).
+ *  3단계 사용자 요청: 왼쪽 '한참' 글자 로고(브랜드색) / 가운데 정렬 메뉴(title5 #767676, 간격 48) / 오른쪽 '신청하기' 브랜드색 알약(44px).
+ *  메뉴 'FAQ' 는 접근성을 위해 '자주 묻는 질문'으로 (푸터와 같은 이름).
  * 기존 Navigation 의 동작을 그대로 옮김: <a href> 링크 + SPA 이동, 현재 페이지 표시, '나의 견적' 개수 배지(aria-live),
- * 1024px 미만 햄버거 + 오른쪽 슬라이드 메뉴(dialog), 딤 클릭·링크 클릭 시 닫힘. 추가: Esc 로 메뉴 닫기, 스크롤하면 그림자.
+ * 1024px 미만 햄버거 + 오른쪽 슬라이드 메뉴(dialog), 딤 클릭·링크 클릭 시 닫힘. 추가: Esc 로 메뉴 닫기. (스크롤 그림자는 3단계에 사용자 요청으로 뺌)
  */
 import clsx from 'clsx';
-import { useEffect, useState, type MouseEvent } from 'react';
+import { BrandLogo } from './BrandLogo';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { MenuIcon, CloseIcon } from '@/app/components/icons';
 import { navLinkProps } from '@/app/lib/navLink';
 import type { NavigationProps, PageType } from '@/app/types/navigation';
 import { buttonClassName } from './Button';
+import { Icon } from './Icon';
 import { focusRing } from './shared';
 
 const NAV_ITEMS: Array<{ id: PageType; label: string }> = [
   { id: 'server', label: '서버 커미션' },
   { id: 'bot', label: '자동봇 커미션' },
   { id: 'terms', label: '이용안내' },
-  { id: 'faq', label: 'FAQ' },
+  { id: 'faq', label: '자주 묻는 질문' },
   { id: 'estimate', label: '나의 견적' },
 ];
-
-function useScrolled() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 0);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-  return scrolled;
-}
 
 function CountBadge({ count, onDark = false }: { count: number; onDark?: boolean }) {
   return (
@@ -51,12 +42,29 @@ function CountBadge({ count, onDark = false }: { count: number; onDark?: boolean
 export function SiteHeader({ currentPage, onNavigate }: NavigationProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { items } = useEstimate();
-  const scrolled = useScrolled();
   const count = items.length;
 
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  // 모바일 메뉴: 열면 첫 메뉴로 포커스, Tab 은 메뉴 버튼(닫기)과 메뉴 안에서만 돌고, Esc 로 닫으면 메뉴 버튼으로 포커스를 돌려준다
   useEffect(() => {
     if (!menuOpen) return;
-    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setMenuOpen(false);
+    const menu = document.getElementById('site-mobile-menu');
+    const focusables = () => [toggleRef.current, ...Array.from(menu?.querySelectorAll<HTMLElement>('a[href], button') ?? [])].filter(Boolean) as HTMLElement[];
+    focusables()[1]?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        toggleRef.current?.focus();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const list = focusables();
+      const index = list.indexOf(document.activeElement as HTMLElement);
+      const next = event.shiftKey ? (index <= 0 ? list.length - 1 : index - 1) : (index === -1 || index === list.length - 1 ? 0 : index + 1);
+      event.preventDefault();
+      list[next]?.focus();
+    };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [menuOpen]);
@@ -79,16 +87,14 @@ export function SiteHeader({ currentPage, onNavigate }: NavigationProps) {
         <div className="container-ds">
           <nav
             aria-label="주 메뉴"
-            className={clsx(
-              'flex h-[var(--ds-header-height)] items-center justify-between rounded-card bg-background-white px-4 transition-shadow duration-200 lg:px-6',
-              scrolled && 'shadow-modal',
-            )}
+            // 데스크톱: 3칸 격자(로고 | 가운데 메뉴 | 신청하기)로 메뉴를 바 가운데에 둔다. 스크롤해도 그림자 없음(사용자 요청)
+            className="flex h-[var(--ds-header-height)] items-center justify-between rounded-card bg-background-white px-4 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-6"
           >
-            <div className="flex items-center gap-6">
-              <a {...linkProps('home')} className={clsx('font-inter text-logo text-text-primary', focusRing)}>
-                한참 커미션
-              </a>
-              <ul className="hidden items-center gap-12 lg:flex">
+            {/* 사용자 제공 '한참' 글자 로고 (3단계). 읽는 이름은 그대로 '한참 커미션' */}
+            <a {...linkProps('home')} className={clsx('flex items-center justify-self-start rounded-button', focusRing)}>
+              <BrandLogo className="h-[29px] lg:h-9" />
+            </a>
+            <ul className="hidden items-center gap-12 lg:flex">
                 {NAV_ITEMS.map((item) => (
                   <li key={item.id}>
                     <a
@@ -104,15 +110,15 @@ export function SiteHeader({ currentPage, onNavigate }: NavigationProps) {
                     </a>
                   </li>
                 ))}
-              </ul>
-            </div>
+            </ul>
             {/* 버튼 클래스의 inline-flex 와 hidden 이 부딪히지 않게 감싸는 요소에서 보이기를 정한다 */}
-            <div className="hidden lg:block">
-              <a {...linkProps('order')} className={buttonClassName({ variant: 'black', size: 'md', pill: true })}>
+            <div className="hidden justify-self-end lg:block">
+              <a {...linkProps('order')} className={buttonClassName({ variant: 'primary', size: 'md', pill: true })}>
                 신청하기
               </a>
             </div>
             <button
+              ref={toggleRef}
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
               className={clsx('relative flex size-11 items-center justify-center text-text-primary lg:hidden', focusRing)}
@@ -125,7 +131,7 @@ export function SiteHeader({ currentPage, onNavigate }: NavigationProps) {
                   <CountBadge count={count} />
                 </span>
               )}
-              {menuOpen ? <CloseIcon /> : <MenuIcon />}
+              {menuOpen ? <Icon name="close" size={20} /> : <Icon name="menu" />}
             </button>
           </nav>
         </div>
@@ -170,7 +176,7 @@ function MobileMenu({ open, onClose, currentPage, count, linkProps }: MobileMenu
             </a>
           ))}
           <div className="my-3 h-px bg-border-100" />
-          <a {...linkProps('order')} tabIndex={open ? 0 : -1} className={buttonClassName({ variant: 'black', size: 'md', pill: true, fullWidth: true })}>
+          <a {...linkProps('order')} tabIndex={open ? 0 : -1} className={buttonClassName({ variant: 'primary', size: 'md', pill: true, fullWidth: true })}>
             신청하기
           </a>
         </div>

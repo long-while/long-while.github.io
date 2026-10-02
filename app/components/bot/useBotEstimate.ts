@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
+import { eulReul, eunNeun } from '@/app/utils/josa';
 import {
   MAIN_BOT_TYPES, OPERATION_FEE_PREFIX, TRPG_EXCLUSIVE_PAIRS, WEEKLY_FEE, type AdditionalOption,
 } from './botContent';
@@ -80,7 +81,8 @@ export function useBotEstimate() {
   const toggleOption = (option: AdditionalOption) => {
     const { names, selected, disabled, requiresLabel } = optionState(option);
     if (disabled) {
-      setToastMessage(`'${option.name}'은(는) ${requiresLabel}을(를) 먼저 선택해 주세요.`);
+      const label = option.label ?? option.name;
+      setToastMessage(`'${label}'${eunNeun(label)} ${requiresLabel}${eulReul(requiresLabel)} 먼저 선택해 주세요.`);
       return;
     }
     if (selected) {

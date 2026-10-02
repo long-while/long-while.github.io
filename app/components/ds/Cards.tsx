@@ -168,20 +168,28 @@ interface LinkCardProps {
   description?: ReactNode;
   href: string;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
+  /** white: 메인 CTA(그라디언트 위) / gray: 견적함 빈 상태(흰 바탕 위, #F6F7F8) */
+  tone?: 'white' | 'gray';
 }
+
+const LINK_CARD_TONE = {
+  white: { card: 'bg-background-white', arrow: 'bg-background-100' },
+  gray: { card: 'bg-background-100', arrow: 'bg-background-white' },
+} as const;
 
 /**
  * LinkCard — 메인 하단 CTA 카드 (Frame 2095589744: 648×228, 흰 바탕, 모서리 12, 패딩 40, 간격 32).
  *  위: 영문 소제목(16/24 Medium #000) + 제목(headline2 #3376E7), 간격 8 ↔ 오른쪽 52px 원형 화살표(#F6F7F8, 화살표 #A6A6A6).
  *  아래: 설명 body2 #767676 (없으면 생략). 카드 전체가 링크.
  */
-export function LinkCard({ eyebrow, title, description, href, onClick }: LinkCardProps) {
+export function LinkCard({ eyebrow, title, description, href, onClick, tone = 'white' }: LinkCardProps) {
   return (
     <a
       href={href}
       onClick={onClick}
       className={clsx(
-        'group flex w-full flex-col gap-8 rounded-card bg-background-white p-6 transition-shadow duration-200 hover:shadow-card lg:p-10',
+        'group flex w-full flex-col gap-8 rounded-card p-6 transition-shadow duration-200 hover:shadow-card lg:p-10',
+        LINK_CARD_TONE[tone].card,
         focusRing,
       )}
     >
@@ -190,7 +198,7 @@ export function LinkCard({ eyebrow, title, description, href, onClick }: LinkCar
           <span className="text-caption1 uppercase text-text-primary">{eyebrow}</span>
           <span className="text-headline2 text-brand">{title}</span>
         </span>
-        <span className="flex size-[52px] shrink-0 items-center justify-center rounded-pill bg-background-100 text-text-disabled transition-colors group-hover:bg-brand-50 group-hover:text-brand">
+        <span className={clsx('flex size-[52px] shrink-0 items-center justify-center rounded-pill text-text-disabled transition-colors group-hover:bg-brand-50 group-hover:text-brand', LINK_CARD_TONE[tone].arrow)}>
           <Icon name="chevron-right" />
         </span>
       </span>

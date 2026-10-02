@@ -6,8 +6,8 @@
  * 문구와 링크는 기존 Footer 그대로 (Q9).
  */
 import clsx from 'clsx';
+import { Icon } from './Icon';
 import type { ReactNode } from 'react';
-import { ExternalLinkIcon } from '@/app/components/icons';
 import { navLinkProps } from '@/app/lib/navLink';
 import type { FooterProps } from '@/app/types/navigation';
 import { buttonClassName } from './Button';
@@ -56,7 +56,7 @@ export function SiteFooter({ onNavigate, flush = false }: SiteFooterProps) {
               <li className="flex"><a {...navLinkProps('terms', onNavigate)} className={linkClass}>이용안내</a></li>
               <li className="flex">
                 <a href={CREPE_ORDER_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
-                  크레페 <ExternalLinkIcon className="inline h-3 w-3" />
+                  크레페 <Icon name="external-link" className="inline" />
                 </a>
               </li>
             </Column>

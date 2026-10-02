@@ -28,6 +28,8 @@ interface AppProps {
 
 /** 시안 배너가 있어 화면 맨 위부터 시작하고 헤더가 그 위에 뜨는 페이지 (P1). 나머지는 헤더 높이만큼 비운다 */
 const BANNER_PAGES: ReadonlySet<PageType> = new Set<PageType>(['server', 'bot', 'faq', 'terms']);
+/** 본문이 아래 여백(120)을 직접 갖고 푸터를 바로 붙이는 페이지 (배너 페이지 + 견적함) */
+const FLUSH_FOOTER_PAGES: ReadonlySet<PageType> = new Set<PageType>([...BANNER_PAGES, 'estimate']);
 
 /** 메인 외 하위 페이지의 공통 껍데기 (상단 네비 + 본문 + 푸터) */
 function SubPageLayout({ currentPage, onNavigate, children }: {
@@ -43,7 +45,7 @@ function SubPageLayout({ currentPage, onNavigate, children }: {
         <Suspense fallback={<div className="min-h-screen" />}>
           {children}
         </Suspense>
-        <SiteFooter onNavigate={onNavigate} flush={hasBanner} />
+        <SiteFooter onNavigate={onNavigate} flush={FLUSH_FOOTER_PAGES.has(currentPage)} />
       </div>
       <FloatingEstimateButton onNavigate={onNavigate} currentPage={currentPage} />
     </>
