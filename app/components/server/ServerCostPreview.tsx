@@ -88,22 +88,21 @@ function WarnCard({ notes, onSearchNo }: { notes: string[]; onSearchNo: () => vo
   );
 }
 
+/** 서버비 결제 방식의 기준 문장 (사이트의 '서버비는 따로 결제' 설명은 여기를 기준으로, 4단계 문구 정리) */
+const SERVER_FEE_BILLING = '서버비는 커미션비와 별개로, 호스팅 업체에 등록하신 결제수단에서 매달 초 자동 결제돼요.';
+
 function paymentItems(result: CalcResult): string[] {
-  if (result.type === 'gcp' && result.paidMonths > 0) {
-    return [
-      `첫 ${result.freeMonths}개월은 구글에서 제공하는 무료 크레딧을 소모하며, 이후 매달 약 ${result.monthlyKrw}이 지출됩니다.`,
-      '서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.',
-    ];
-  }
+  // 무료·이후 월 금액은 바로 위 결과 카드에 나오므로 여기서는 결제 방식만
+  if (result.type === 'gcp' && result.paidMonths > 0) return [SERVER_FEE_BILLING];
   if (result.type === 'gcp') {
     return [
-      `서버 설치 후 ${result.freeMonths}개월간은 구글에서 제공하는 무료 크레딧을 소모하여 서버비 없이 사용하실 수 있습니다. 애프터 등을 위해 서버를 ${result.freeMonths}개월 이상 유지하실 경우, 사양을 낮추고 월 3만원 정도의 금액으로 서버를 유지해 드립니다.`,
-      `무료 체험이 끝나도 자동 결제가 진행되지 않습니다. 만약 유료 플랜으로 전환하여 ${result.freeMonths}개월 이상 서버를 사용하실 경우, 서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.`,
+      `애프터 등으로 ${result.freeMonths}개월보다 오래 쓰시면, 사양을 낮춰 월 3만원 정도로 유지해 드려요.`,
+      `무료 기간이 끝나도 자동 결제되지 않아요. 유료로 전환해 계속 쓰시면 ${SERVER_FEE_BILLING}`,
     ];
   }
   return [
-    '장기/소규모 서버의 경우 서버비 절약을 위해 구글이 아닌 Vultr라는 호스팅 업체를 통해 서버 컴퓨터를 대여하게 됩니다. 3개월 무료 크레딧을 지급하지 않는 대신, 월 서버비가 더 적습니다.',
-    '이때 발생하는 서버 비용은 커미션주가 아닌, 호스팅 업체에 가입 시 등록하시는 결제수단으로 월초에 자동 결제됩니다.',
+    '장기 소규모 서버는 서버비를 아끼려고 구글 대신 월 요금이 싼 호스팅 업체를 써요. 무료 크레딧은 없어요.',
+    SERVER_FEE_BILLING,
   ];
 }
 
@@ -135,13 +134,11 @@ function SearchChoice({ calc, longTerm, layout }: { calc: ReturnType<typeof useS
             onChange={() => !calc.searchLocked && calc.setSearch('no')} />
           <span className="text-body3 text-text-disabled">(세팅비용 +15,000원)</span>
         </div>
-        {calc.searchLocked && (
+        {/* 신청서(grid)에서는 아래 검색 기능 옵션에 같은 안내가 있어 여기서는 뺀다 (4단계 문구 정리) */}
+        {calc.searchLocked && layout === 'rows' && (
           <p className="text-body3 text-brand-700">
-            {longTerm
-              ? '장기 소규모 서버(반영구)는 검색 서버가 별도로 필요해 서버비가 크게 올라, 검색을 '
-              : '이 사양은 장기·소규모(Vultr) 서버라 검색 서버 비용이 커, 검색을 '}
-            <strong>‘아니오’로 고정</strong>합니다.
-            {!longTerm && ' 검색이 필요하시면 운영 기간을 12개월 미만(GCP 사양)으로 선택해 주세요.'}
+            장기 소규모 서버는 검색을 넣을 수 없어 <strong>‘아니오’로 고정</strong>돼요.
+            {!longTerm && ' 필요하시면 운영 기간을 12개월 미만으로 골라 주세요.'}
           </p>
         )}
       </div>
@@ -162,16 +159,14 @@ function CalculatorFields({ calc, longTerm, layout }: { calc: ReturnType<typeof 
   const users = (
     <Select id="server-users" value={calc.usersKey} onValueChange={calc.setUsersKey} options={calc.usersOptions}
       helper={calc.isLongTermMonths ? (
-        <span className="text-brand-700">
-          장기(12개월 이상) 서버는 10인 이하 소규모만 신청하실 수 있어요. 11인 이상이 1년 넘게 운영하실 예정이라면 따로 문의해 주세요.
-        </span>
-      ) : '커뮤니티의 경우 러닝 인원'} />
+        <span className="text-brand-700">장기 서버는 10인 이하만 신청할 수 있어요. 11인 이상이라면 따로 문의해 주세요.</span>
+      ) : undefined} />
   );
   return (
     <div className={layout === 'grid' ? 'flex flex-col gap-6' : 'flex flex-col gap-7 lg:gap-[60px]'}>
       <div className={layout === 'grid' ? 'grid grid-cols-1 gap-5 md:grid-cols-2' : 'contents'}>
         <Row label="서버 운영 기간" labelFor={longTerm ? undefined : 'server-months'} layout={layout}>{months}</Row>
-        <Row label="평균 동시접속자 수" labelFor="server-users" layout={layout}>{users}</Row>
+        <Row label={<>평균 동시접속자 수 <span className="text-body3 text-text-secondary">(커뮤는 러닝 인원)</span></>} labelFor="server-users" layout={layout}>{users}</Row>
       </div>
       <SearchChoice calc={calc} longTerm={longTerm} layout={layout} />
       {calc.showTier && <TierChoice calc={calc} layout={layout} />}
@@ -201,13 +196,15 @@ export function ServerCalculator({ longTerm = false, layout = 'rows' }: { longTe
       </div>
       <div className="flex flex-col gap-4">
         {isAllSelected && result && result.type !== 'warn' && <PaymentInfo result={result as CalcResult} />}
-        <InfoBox title="규모와 예산">
-          <p>
-            사양과 서버비는 계단처럼 증가하기 때문에, 19인 규모와 30인 규모가 동일한 사양의 서버를 사용하게 될 수도 있습니다.
-            이 경우, 19인 서버는 널널하지만 30인 서버는 다소 렉이 발생할 수 있습니다. 좁은 공간에 많은 사람이 들어와 있으니까요.
-            이때, 서버비 증가를 감안하시고 더 넓은 서버를 선택하시거나, 렉을 감안하고 예산에 맞추어 사양이 낮은 서버를 설치할 수도 있습니다.
-          </p>
-        </InfoBox>
+        {/* 신청서(grid)에서는 서버 페이지에서 이미 읽고 온 내용이라 뺀다 */}
+        {layout === 'rows' && (
+          <InfoBox title="규모와 예산">
+            <p>
+              서버비는 인원에 따라 계단식으로 올라요. 그래서 19인과 30인이 같은 사양을 쓸 수도 있는데, 이때 30인 쪽은 렉이 생길 수 있어요.
+              예산을 올려 한 단계 높은 사양을 고르거나, 렉을 감수하고 예산에 맞는 사양을 고르시면 됩니다.
+            </p>
+          </InfoBox>
+        )}
       </div>
     </>
   );
@@ -220,8 +217,8 @@ export function ServerCostPreview() {
       title="서버비 미리보기"
       description={
         <>
-          예상 서버비와 설치 사양을 미리 확인해 보세요.<br />
-          3개월 이하 + 30인 이하 커뮤니티라면 대부분 0원의 서버비로 커뮤 운영이 가능해요.
+          예상 서버비와 사양을 확인해 보세요.<br />
+          3개월 이하, 30인 이하 커뮤라면 대부분 서버비는 0원입니다.
         </>
       }
     >

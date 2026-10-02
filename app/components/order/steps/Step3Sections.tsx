@@ -45,7 +45,7 @@ function BotPeriodInputs({ s }: S) {
   return (
     <SubPanel>
       <p className="text-body3 text-text-secondary">
-        기본적으로 합격자 발표일 ~ 폐장일을 기재해 주세요. 애프터 기간에도 자동봇 사용을 원하신다면 종료 일정을 늘리시거나, 이후 가동 기간을 추가하실 수 있습니다.
+        보통 합격자 발표일~폐장일로 적어 주세요. 애프터 기간에도 쓰시려면 종료일을 늘리거나 나중에 추가하시면 돼요.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <input type="text" inputMode="numeric" value={step3.botStartDate} placeholder="MM/DD" aria-label="가동 시작일" className={box}
@@ -70,7 +70,7 @@ export function OperationSection({ s }: S) {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6" role="radiogroup" aria-label="자동봇 가동 기간">
           <OptionCard id="operationWeeksOption" name="operationWeeksOption" layout="row" checked={step3.operationWeeksOption === 'longterm'}
             onChange={() => updateStep3({ operationWeeksOption: 'longterm', manualWeeks: 0 })}
-            title="6개월 이상 장기 소규모 서버를 위한 자동봇이에요." price="1만원"
+            title="12개월 이상 장기 소규모 서버를 위한 자동봇이에요." price="1만원"
             description={step3.operationWeeksOption === 'longterm' ? '자동봇이 마스토돈과 동일한 머신에 설치됩니다. 가동 주수에 따른 비용이 없는 대신, 초기 세팅 비용 1만원이 청구됩니다.' : undefined} />
           <OptionCard name="operationWeeksOption" layout="row" checked={step3.operationWeeksOption === 'manual'}
             onChange={() => updateStep3({ operationWeeksOption: 'manual' })}
@@ -94,9 +94,8 @@ export function MainBotSection({ s }: S) {
     <FormSection
       title={<>메인 봇 종류 <span className="text-brand" aria-hidden="true">*</span></>}
       description={<>
-        기본 계열 봇은 중복 선택할 수 없으며, D100 타입과 2D6 3종세트 타입은 기본+상점 이상 봇과 함께 선택하거나 단독으로 신청할 수 있습니다.
-        <br />
-        <strong className="font-medium text-text-primary">기본 봇은 D100 타입, 2D6 3종세트 타입과 기능이 겹쳐 함께 선택할 수 없습니다.</strong>
+        기본 계열은 하나만 고를 수 있어요. D100, 2D6 TRPG봇은 단독으로 신청하거나 기본&상점 이상과 함께 고를 수 있어요.{' '}
+        <strong className="font-medium text-text-primary">(기본 타입과는 기능이 겹쳐서 함께 고를 수 없어요)</strong>
       </>}
     >
       <FieldGroupError field="mainBot">
@@ -105,18 +104,18 @@ export function MainBotSection({ s }: S) {
             {fromCart.basicBot && step3.mainBot === 'basic' && <FromCartBadge />}
             {basicBotBlockedByCoc && <Pill>{blockingTrpgBotNames}과 중복 불가</Pill>}
           </>, { id: 'mainBot', disabled: basicBotBlockedByCoc })}
-          {mainBotCard('basicShop', '기본+상점', '35,000원', fromCart.basicShopBot && step3.mainBot === 'basicShop' && <FromCartBadge />)}
-          {mainBotCard('basicShopStat', '기본+상점+스탯', '45,000원', fromCart.basicShopStatBot && step3.mainBot === 'basicShopStat' && <FromCartBadge />)}
+          {mainBotCard('basicShop', '기본&상점', '35,000원', fromCart.basicShopBot && step3.mainBot === 'basicShop' && <FromCartBadge />)}
+          {mainBotCard('basicShopStat', '기본&상점&스탯', '45,000원', fromCart.basicShopStatBot && step3.mainBot === 'basicShopStat' && <FromCartBadge />)}
           <OptionCard type="checkbox" layout="row" checked={step3.cocBot} onChange={(e) => updateStep3({ cocBot: e.target.checked })}
-            title={<CardTitle badge={fromCart.cocBot && step3.cocBot && <FromCartBadge />}>D100 타입</CardTitle>} price={won(PRICING_CONFIG.bot.addons.cocBot)} />
+            title={<CardTitle badge={fromCart.cocBot && step3.cocBot && <FromCartBadge />}>D100 룰 대응 TRPG봇</CardTitle>} price={won(PRICING_CONFIG.bot.addons.cocBot)} />
           <OptionCard type="checkbox" layout="row" checked={step3.trpg2d6Bot} onChange={(e) => updateStep3({ trpg2d6Bot: e.target.checked })}
-            title={<CardTitle badge={fromCart.trpg2d6Bot && step3.trpg2d6Bot && <FromCartBadge />}>2D6 3종세트 타입</CardTitle>} price={won(PRICING_CONFIG.bot.addons.trpg2d6Bot)} />
+            title={<CardTitle badge={fromCart.trpg2d6Bot && step3.trpg2d6Bot && <FromCartBadge />}>2D6 룰 대응 TRPG봇 3종</CardTitle>} price={won(PRICING_CONFIG.bot.addons.trpg2d6Bot)} />
         </div>
         {/* TRPG 봇 선택 시 기본 봇 잠금 안내 */}
         {basicBotBlockedByCoc && (
           <p className="mt-4 rounded-input bg-background-brand px-5 py-4 text-body3 text-text-primary">
             {blockingTrpgBotNames}을 선택하셔서 <strong className="font-medium">기본 봇</strong>은 선택할 수 없습니다. 기능이 겹쳐 함께 신청하실 필요가 없어요.
-            기본 봇 단독으로 신청하시려면 {blockingTrpgBotNames} 선택을 해제해 주세요. (기본+상점, 기본+상점+스탯은 함께 선택하실 수 있습니다.)
+            기본 봇 단독으로 신청하시려면 {blockingTrpgBotNames} 선택을 해제해 주세요. (기본&상점, 기본&상점&스탯은 함께 선택하실 수 있습니다.)
           </p>
         )}
       </FieldGroupError>
@@ -130,7 +129,7 @@ function InvestigationAddon({ s }: S) {
     <>
       <OptionCard type="checkbox" layout="row" checked={step3.investigationBot} onChange={(e) => handleInvestigationBotChange(e.target.checked)}
         title={<CardTitle badge={fromCart.investigation && step3.investigationBot && <FromCartBadge />}>조사 자동봇</CardTitle>}
-        description="메인 봇(기본 / 기본+상점 / 기본+상점+스탯)과 함께 신청 시 추가 가능" price="+20,000원" />
+        description="메인 봇(기본 / 기본&상점 / 기본&상점&스탯)과 함께 신청 시 추가 가능" price="+20,000원" />
       {/* 일일 조사 횟수 제한 (조사 자동봇 선택 시에만) */}
       {step3.investigationBot && (
         <SubPanel className="lg:col-span-2">
@@ -367,7 +366,7 @@ function TootCurrencyAddon({ s }: S) {
   return (
     <>
       <OptionCard type="checkbox" layout="row" checked={step3.tootCurrencyLink} onChange={(e) => updateStep3({ tootCurrencyLink: e.target.checked })}
-        title={<CardTitle badge={fromCart.tootCurrency && step3.tootCurrencyLink && <FromCartBadge />}>툿-재화 연동</CardTitle>} price="+10,000원" />
+        title={<CardTitle badge={fromCart.tootCurrency && step3.tootCurrencyLink && <FromCartBadge />}>툿수-재화 자동반영</CardTitle>} price="+10,000원" />
       {step3.tootCurrencyLink && (
         <SubPanel className="lg:col-span-2">
           <FieldLabel htmlFor="tootPerCurrency">몇 툿당 소지금에 얼마가 추가되어야 하나요?</FieldLabel>
@@ -511,9 +510,9 @@ export function ExtraInfoSection({ s }: S) {
               <FieldErrorText id="setupDeadline-error" message={setupDeadlineBlackoutError.message} />
             ) : (
               <p className="mt-2 text-body3 text-text-secondary">
-                ※ 월/일 형식으로 입력해 주세요. 오마카세 자동봇 기능 등의 테스트가 필요한 경우, 테스트 기간까지 고려해서 작성합니다.
+                ※ 월/일 형식으로 적어 주세요. 오마카세처럼 테스트가 필요하면 테스트 기간까지 넣어서 정해 주세요.
                 <br />
-                <strong className="font-medium text-text-primary">{DEADLINE_BLACKOUT_LABEL} 은 마감이 불가능한 기간입니다.</strong>
+                <strong className="font-medium text-text-primary">{DEADLINE_BLACKOUT_LABEL}은 마감이 불가능한 기간입니다.</strong>
               </p>
             )}
           </div>

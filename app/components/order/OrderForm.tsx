@@ -22,34 +22,21 @@ type StepNumber = 1 | 2 | 3 | 4;
 
 const STEP_LABELS = ['신청자 정보', '서버 설치', '자동봇', '최종 확인'];
 
-/** 단계 제목·설명 (기존 각 Step 머리의 문구 그대로) */
-const STEP_HEAD: Record<StepNumber, { title: string; description: string }> = {
-  1: { title: 'Step 1. 신청자 및 커뮤니티 정보', description: '커미션 신청에 필요한 기본 정보를 입력해 주세요.' },
-  2: { title: 'Step 2. 서버 설치 옵션', description: '마스토돈 서버 설치가 필요하신가요? 필요하지 않으시다면 "아니오"를 선택해 주세요.' },
-  3: { title: 'Step 3. 자동봇 커미션', description: '자동봇 기능이 필요하신가요? 필요하지 않으시다면 "아니오"를 선택해 주세요.' },
+/** 단계 제목·설명. STEP1~3 설명은 제목이나 바로 아래 예/아니오 질문과 같은 말이라 뺐다 (4단계 문구 정리) */
+const STEP_HEAD: Record<StepNumber, { title: string; description?: string }> = {
+  1: { title: 'Step 1. 신청자 및 커뮤니티 정보' },
+  2: { title: 'Step 2. 서버 설치 옵션' },
+  3: { title: 'Step 3. 자동봇 커미션' },
   4: { title: 'Step 4. 최종 확인 및 견적', description: '입력하신 내용을 확인하고 최종 견적을 확인해 주세요.' },
 };
 
-/** 신청 순서 안내 (기존 신청서 머리의 3단계 안내 문구 그대로). 시안에는 없어 STEP1 에서만 작게 보여준다 */
-const HOW_TO = [
-  { title: '아래 신청서 작성하기', description: '신청자 정보, 서버 설치, 자동봇 옵션을 입력해요.' },
-  { title: '4단계에서 신청서 복사하기', description: '최종 확인 후 신청서 내용을 클립보드에 복사해요.' },
-  { title: '크레페 신청서 제출하기', description: '크레페로 이동한 후, 신청하기 버튼을 누르고 복사한 내용을 제출해요.' },
-];
-
+/** 신청 순서 안내 (STEP1 에서만). 세 칸 설명은 위 진행 표시와 겹쳐 한 줄로 줄였다 (4단계 문구 정리) */
 function HowToApply() {
   return (
-    <ol className="grid grid-cols-1 gap-3 rounded-card bg-background-100 p-5 lg:grid-cols-3 lg:gap-6 lg:p-6">
-      {HOW_TO.map((step, index) => (
-        <li key={step.title} className="flex items-start gap-3">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-pill bg-brand text-caption2 text-text-inverse">{index + 1}</span>
-          <span className="flex flex-col gap-0.5">
-            <span className="text-title5 text-text-primary">{step.title}</span>
-            <span className="text-body3 text-text-secondary">{step.description}</span>
-          </span>
-        </li>
-      ))}
-    </ol>
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-card bg-background-100 px-5 py-4 text-body2 text-text-secondary lg:px-6">
+      <span className="text-title5 text-text-primary">신청 방법</span>
+      <span>작성 → 4단계에서 복사 → 크레페 ‘신청하기’에 붙여넣어 제출</span>
+    </p>
   );
 }
 
@@ -61,7 +48,7 @@ const OrderHead = forwardRef<HTMLDivElement, { step: StepNumber }>(function Orde
       <h1 className="text-title3 text-brand">커미션 신청서 작성</h1>
       <div className="flex flex-col gap-4">
         <h2 tabIndex={-1} data-step-title className="text-headline1 text-text-primary focus:outline-none">{head.title}</h2>
-        <p className="text-body1 text-text-secondary">{head.description}</p>
+        {head.description && <p className="text-body1 text-text-secondary">{head.description}</p>}
       </div>
       <p className="flex items-center gap-1 text-body3 text-text-secondary">
         <Icon name="info" size={20} className="shrink-0 text-text-disabled" />

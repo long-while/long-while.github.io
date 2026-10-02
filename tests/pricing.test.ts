@@ -254,7 +254,7 @@ check('10/29는 마감 가능', getDeadlineBlackoutError('10/29', 'desiredDeadli
 check('8/22는 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('8/22', 'desiredDeadline', BLACKOUT_REF), null);
 check('10/3은 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('10/3', 'desiredDeadline', BLACKOUT_REF), null);
 check('다음 해 같은 날짜는 막지 않음', getDeadlineBlackoutError('10/20', 'desiredDeadline', new Date(2027, 8, 1)), null);
-check('안내 문구에 연도', getDeadlineBlackoutError('10/20', 'desiredDeadline', BLACKOUT_REF)?.message, '2026년 10/15~10/28 은 마감이 불가능한 기간입니다.');
+check('안내 문구에 연도', getDeadlineBlackoutError('10/20', 'desiredDeadline', BLACKOUT_REF)?.message, '2026년 10/15~10/28은 마감이 불가능한 기간입니다.');
 
 // ===== 구글 계정 검증 (Step 1 → Step 4 이동) =====
 
@@ -460,13 +460,14 @@ check('복붙 텍스트 highmem-4 기간 라벨', highmemText.includes('2개월 
 
 // ===== FAQ 분류 =====
 
-// 4단계: 답변 시간·용어 설명 질문 2개 추가 (15 → 17)
-check('FAQ 항목 수', FAQ_ITEMS.length, 17);
+// 4단계: 답변 시간·용어 설명 추가(17), 문구 정리에서 이미지 3→1·렉 2→1 합침(14), 사용자 요청으로 용어 설명 삭제(13)
+check('FAQ 항목 수', FAQ_ITEMS.length, 13);
+// 사용자 요청으로 '마스토돈 가이드' 문항을 홈에도 (3 → 4)
 check('메인 대표 질문 수', FAQ_ITEMS.filter((item) => item.featured).length, 4);
 check(
   '분류별 질문 수',
   FAQ_CATEGORIES.map((category) => FAQ_ITEMS.filter((item) => item.category === category).length),
-  [5, 5, 7]
+  [3, 4, 6]
 );
 check(
   '모든 질문에 유효한 분류가 있다',
@@ -479,9 +480,10 @@ check(
 const faqGroups = groupByCategory(FAQ_ITEMS);
 const faqAll = faqGroups.flatMap((group) => group.entries);
 check('분류별 순번은 1부터', faqGroups.map((group) => group.entries[0].number), [1, 1, 1]);
-check('빈 검색어는 전체', filterEntries(faqAll, '   ').length, 17);
+check('빈 검색어는 전체', filterEntries(faqAll, '   ').length, 13);
 check('검색은 대소문자 무시 (masto.HOST)', filterEntries(faqAll, 'masto.HOST').map((e) => e.item.question), ['masto.host로 설치해주실 수 있나요?']);
-check('검색은 답변도 본다 (질문에 없는 "장기 소규모" 항목 포함)', filterEntries(faqAll, '중국집').map((e) => e.item.category), ['서버와 비용', '서버와 비용']);
+// 4단계 문구 정리로 '중국집' 비유가 빠져, 답변에만 있는 다른 낱말로 확인
+check('검색은 답변도 본다 (질문에 없는 낱말)', filterEntries(faqAll, '설치비만').map((e) => e.item.question), ['그럼 서버비는 커미션주님께 내면 되나요?']);
 check('정규식 문자 검색어도 하이라이트가 깨지지 않음', splitByQuery('(3개월까진 서버비 무료)', '(3').map((p) => p.match), [true, false]);
 
 // ===== 조사 고르기 (R3) =====

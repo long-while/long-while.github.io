@@ -2,7 +2,7 @@
  * 봇 타입 상세 카드 (시안 Frame 2095589870, file.json 실측).
  *  2열, 간격 24. 카드: 모서리 10(→ card 12), 패딩 28, 간격 16, 선 #E5E5EC(Q15 → border-100).
  *  선택: #F1F6FD 바탕 + #3376E7 선, 이름 #3376E7, 안쪽 상자 흰색. 기본: 흰 바탕, 안쪽 상자 #F6F7F8.
- *  머리: 체크 원 28 + 이름 title3 ↔ 가격 title3 #3376E7. 안쪽 상자: 모서리 12, 패딩 24, '구성요소' 16/26 + 목록 body3 #767676.
+ *  머리: 체크 원 28 + 이름 title3 ↔ 가격 title3 #3376E7. 안쪽 상자: 모서리 12, 패딩 24, 목록 body3 #767676 ('구성요소' 소제목은 4단계 사용자 요청으로 뺌).
  *  자동조사 예시·오마카세 상세는 기존처럼 카드 안 펼치기로 둔다 (시안에 없음).
  */
 import { useId, useState, type ReactNode } from 'react';
@@ -62,8 +62,7 @@ function OmakaseDetail({ note }: { note?: string }) {
   return (
     <Disclosure label="오마카세 기능 상세 설명">
       <p className="text-body2 text-text-secondary">
-        구현을 원하는 시스템을 정리한 <span className="font-medium text-brand">외부 문서 링크</span>를 전달해 주세요.<br />
-        (시스템 문서와는 별도의 문서여야 합니다)
+        (커뮤 시스템 문서와 따로 만든 문서여야 해요)
       </p>
       <div className="flex flex-col gap-2 border-t border-border-100 pt-4">
         <h4 className="text-title5 text-text-primary">문서에 포함되어야 할 내용</h4>
@@ -86,12 +85,11 @@ function OmakaseDetail({ note }: { note?: string }) {
         예시 오마카세 신청서 보기 →
       </a>
       <div className="flex flex-col gap-1 border-t border-border-100 pt-4 text-body3 text-text-secondary">
-        <p>군더더기 없이 깔끔한 언어로 작성해 주세요. 불필요한 부사와 형용사는 사용하지 않습니다.</p>
-        <p>구현을 원하는 시스템만 작성해 주세요.</p>
+        <p>구현할 시스템만 짧고 명확하게 써 주세요.</p>
       </div>
       <p className="flex items-start gap-2 rounded-input border border-error-500 p-4 text-body3 font-medium text-error-500" role="note">
         <Icon name="warning" size={16} className="mt-0.5 shrink-0" />
-        오마카세 신청서를 한번에 이해하기 어려울 시, 신청이 거절될 수 있습니다.
+        한 번에 이해하기 어려우면 신청이 거절될 수 있어요.
       </p>
       {note && <p className="border-t border-border-100 pt-4 text-body3 text-text-secondary">{note}</p>}
     </Disclosure>
@@ -127,7 +125,6 @@ function TypeCard({ type, est, highlighted }: { type: BotType; est: BotEstimate;
         <div data-option-name={type.name} className={clsx('flex', ring)}>{header}</div>
       )}
       <div className={clsx('flex flex-1 flex-col gap-3 rounded-card p-5 lg:p-6', selected ? 'bg-background-white' : 'bg-background-100')}>
-        <p className="text-body2 font-medium text-text-primary">구성요소</p>
         <ul className="flex flex-col gap-1 text-body3 text-text-secondary">
           {type.features.map((feature) => (
             <li key={feature} className="flex gap-2"><span aria-hidden="true">•</span>{feature}</li>

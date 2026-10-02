@@ -140,7 +140,6 @@ export default function FaqPage({ onNavigate }: FaqPageProps) {
     <main id="main" tabIndex={-1} className="bg-background-white outline-none">
       <PageHero
         image={IMAGES.faqHero.src} srcSet={IMAGES.faqHero.srcSet} eyebrow="FAQ" title="자주 묻는 질문" titleSize="hero-xl"
-        description="커미션 신청 전에 많이 주시는 질문을 모았습니다."
       />
       <div className="container-ds flex flex-col items-center gap-10 pb-[60px] pt-[60px] lg:pb-[120px] lg:pt-[100px]">
         {/* 히어로 제목과 같은 'FAQ / 자주 묻는 질문' 제목이 한 번 더 나와서 빼고 안내 문장만 (4단계 리뷰) */}

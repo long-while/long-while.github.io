@@ -53,7 +53,7 @@ export function CompareTable() {
         </table>
       </div>
       <p className="text-body3 text-text-secondary">
-        * 자동조사 타입(₩20,000)과 오마카세 타입(협의)은 특수 목적 봇으로 아래에서 별도 확인해주세요.
+        * 자동조사(₩20,000)와 오마카세(협의)는 아래에서 따로 확인해 주세요.
       </p>
     </div>
   );
@@ -77,9 +77,9 @@ export function CommandTable() {
     <div className="flex flex-col gap-5">
       <BulletList
         items={[
-          <span key="brace">아래 {brace} 항목이 모두 업그레이드로 추가되었습니다.</span>,
-          <span key="what"><strong className="font-semibold text-text-primary">커스텀 명령어란?</strong> 운영진이 시트에 입력해 둔 명령어를 유저가 입력하면, 해당 명령어와 짝지어진 문구 중 하나가 랜덤으로 출력되는 방식입니다.</span>,
-          <span key="ex">만약 <strong className="font-semibold text-text-primary">[허기]</strong>라는 명령어를 사용하면 아래 표에 있는 허기 문구 3개 중 하나가 무작위로 반환됩니다.</span>,
+          // 기본 설명 → 예시 → 업그레이드 순서로 (예전에는 업그레이드 설명이 먼저 나왔다, 4단계 문구 정리)
+          <span key="what"><strong className="font-semibold text-text-primary">커스텀 명령어:</strong> 운영진이 시트에 적은 명령어를 입력하면, 짝지은 문구 중 하나가 랜덤으로 나와요. (예: <strong className="font-semibold text-text-primary">[허기]</strong> 입력 시 아래 허기 문구 3개 중 하나)</span>,
+          <span key="brace">업그레이드하면 아래 {brace}처럼 유저 이름, 은/는 맞춤, 다이스를 문구에 넣을 수 있어요.</span>,
         ]}
       />
       <div className={wrap}>

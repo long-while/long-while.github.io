@@ -17,8 +17,8 @@ type Edit = (step: 1 | 2 | 3) => void;
 
 const missing = (text: string) => <span className="text-error-500">{text}</span>;
 
-const MAIN_BOT_LABEL = { basic: '기본', basicShop: '기본+상점', basicShopStat: '기본+상점+스탯' } as const;
-const MAIN_BOT_PRICE_LABEL = { basic: '기본봇', basicShop: '기본+상점봇', basicShopStat: '기본+상점+스탯봇' } as const;
+const MAIN_BOT_LABEL = { basic: '기본', basicShop: '기본&상점', basicShopStat: '기본&상점&스탯' } as const;
+const MAIN_BOT_PRICE_LABEL = { basic: '기본봇', basicShop: '기본&상점봇', basicShopStat: '기본&상점&스탯봇' } as const;
 const transferLabel = (o: OrderFormData['step3']['transferOption']) => (o === 'itemOnly' ? '아이템만' : o === 'currencyOnly' ? '재화만' : '모두');
 const won = (n: number) => `${n.toLocaleString()}원`;
 
@@ -61,16 +61,16 @@ export function ServerReview({ data, onEdit }: { data: OrderFormData; onEdit: Ed
 
 function botAddonText(step3: OrderFormData['step3']) {
   return [
-    step3.cocBot && 'D100 타입',
-    step3.trpg2d6Bot && '2D6 3종세트 타입',
+    step3.cocBot && 'D100 룰 대응 TRPG봇',
+    step3.trpg2d6Bot && '2D6 룰 대응 TRPG봇 3종',
     step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
     step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null &&
       `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`,
     step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
     step3.reservationToot && '예약 툿',
     step3.autoProfileImage && '자동 스진',
-    step3.tootCurrencyLink && '툿-재화 연동',
-    step3.transferFeature && `양도 기능 (${transferLabel(step3.transferOption)})`,
+    step3.tootCurrencyLink && '툿수-재화 자동반영',
+    step3.transferFeature && `재화, 아이템 양도 기능 (${transferLabel(step3.transferOption)})`,
     step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') &&
       `출석 시스템 (${step3.attendanceCommand || '[출석]'} / +${step3.attendanceCurrencyAmount || 0})`,
     step3.omakaseBot && '오마카세',
@@ -101,7 +101,7 @@ export function BotReview({ data, onEdit }: { data: OrderFormData; onEdit: Edit 
     rows.push({
       label: '자동봇 가동 기간',
       value: step3.operationWeeksOption === 'longterm'
-        ? '6개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
+        ? '12개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
         : step3.botStartDate && step3.botEndDate
           ? `${botPeriodWithYears(step3.botStartDate, step3.botEndDate, data.step1.closingDate) ?? `${step3.botStartDate} ~ ${step3.botEndDate}`} (${step3.manualWeeks}주)`
           : `${step3.manualWeeks}주`,
@@ -160,8 +160,8 @@ function botPriceLines(data: OrderFormData, estimate: PriceEstimate) {
   const lines: ({ label: ReactNode; price: ReactNode } | false)[] = [
     { label: step3.operationWeeksOption === 'longterm' ? '장기 자동봇 세팅비' : `가동 비용 (${step3.manualWeeks}주)`, price: won(estimate.operationCost) },
     !!step3.mainBot && { label: MAIN_BOT_PRICE_LABEL[step3.mainBot!], price: won(PRICING_CONFIG.bot.mainTypes[step3.mainBot!]) },
-    step3.cocBot && { label: 'D100 타입', price: won(a.cocBot) },
-    step3.trpg2d6Bot && { label: '2D6 3종세트 타입', price: won(a.trpg2d6Bot) },
+    step3.cocBot && { label: 'D100 룰 대응 TRPG봇', price: won(a.cocBot) },
+    step3.trpg2d6Bot && { label: '2D6 룰 대응 TRPG봇 3종', price: won(a.trpg2d6Bot) },
     step3.investigationBot && step3.mainBot !== null && { label: '조사 자동봇', price: won(a.investigationBot) },
     step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null && {
       label: `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`, price: won(a.investigationDailyLimit),
@@ -172,8 +172,8 @@ function botPriceLines(data: OrderFormData, estimate: PriceEstimate) {
     (step3.reservationToot || step3.autoProfileImage) && step3.extraAccountTiers > 0 && {
       label: `추가 계정 ${tiers * ACCOUNT_LIST_CONFIG.slotsPerTier}칸`, price: won(tiers * a.extraAccountTier),
     },
-    step3.tootCurrencyLink && { label: '툿-재화 연동', price: won(a.tootCurrencyLink) },
-    step3.transferFeature && { label: `양도 기능 (${transferLabel(step3.transferOption)})`, price: won(a.transferFeature) },
+    step3.tootCurrencyLink && { label: '툿수-재화 자동반영', price: won(a.tootCurrencyLink) },
+    step3.transferFeature && { label: `재화, 아이템 양도 기능 (${transferLabel(step3.transferOption)})`, price: won(a.transferFeature) },
     step3.attendanceSystem && shopOrStat && { label: `출석 시스템 (${step3.attendanceCommand || '[출석]'} / +${step3.attendanceCurrencyAmount || 0})`, price: won(a.attendanceSystem) },
     step3.omakaseBot && { label: '오마카세', price: <span className="text-text-secondary">별도 협의</span> },
   ];
@@ -222,8 +222,7 @@ export function PolicyBox({ confirmed, onConfirm }: { confirmed: boolean; onConf
         <div className="flex flex-col gap-1">
           <p className="font-medium text-text-primary">복잡한 자동봇 / 요구사항이 많은 경우</p>
           <p>
-            구현을 원하시는 내용을 자세히 기재한 문서를 전달해 주시면, 추가로 필요한 정보를 정리해서 안내드립니다.<br />
-            보통 신청자님께서 질문하시는 것보다 제가 질문하는 쪽이 효율이 좋습니다.
+            구현을 원하시는 내용을 자세히 기재한 문서를 전달해 주시면, 추가로 필요한 정보를 정리해서 안내드립니다.
           </p>
         </div>
         <p className="rounded-input border border-warning-200 bg-warning-50 p-3 text-warning-700">
@@ -260,8 +259,7 @@ export function GoogleAccountFields({ email, password, onChange, errorFor, passw
       <div className="flex flex-col gap-2">
         <h3 className="text-headline2 text-text-primary">커뮤니티 구글 계정 <span className="text-brand" aria-hidden="true">*</span></h3>
         <p className="text-body3 text-text-secondary">
-          서버 설치와 자동봇 운영을 위해 커뮤니티의 구글 계정이 필요합니다.<br />
-          개인 구글계정을 사용하셔도 상관은 없으나, 개인정보 보호를 위해 새로운 계정을 개설하시는 걸 추천드립니다.
+          서버와 자동봇 운영에 커뮤 구글 계정이 필요해요. 개인정보 보호를 위해 새 계정을 만드시는 걸 추천해요.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-x-5 gap-y-6 md:grid-cols-2">
@@ -279,7 +277,7 @@ export function GoogleAccountFields({ email, password, onChange, errorFor, passw
             {passwordNeedsReentry && (
               <p role="alert" className="mb-2 flex items-start gap-1.5 rounded-input border border-error-500 bg-background-white p-3 text-body3 text-error-500">
                 <span aria-hidden="true">⚠</span>
-                <span>저장된 신청서를 불러왔어요. 비밀번호는 보안상 저장되지 않으니, <strong className="font-medium">여기부터 다시 입력</strong>해 주세요.</span>
+                <span>비밀번호는 <strong className="font-medium">다시 입력</strong>해 주세요.</span>
               </p>
             )}
             <input id="googlePassword" type="password" value={password} onChange={(e) => onChange({ googlePassword: e.target.value })} placeholder="비밀번호 입력"

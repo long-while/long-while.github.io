@@ -107,7 +107,7 @@ export const SERVER_INFRA_FEE_ITEM = {
   /** 크레페로 보내는 복사 텍스트에서 쓰는 짧은 이름 */
   copyLabel: '부가비용',
   price: PRICING_CONFIG.server.infraFee,
-  description: '도메인 구입과 메일 발송(SMTP) 서비스에 나가는 실비입니다. 서버 설치에 자동 포함되며 따로 해제하실 수 없어요.',
+  description: '도메인 구입과 메일 발송(SMTP)에 드는 실비예요.',
 } as const;
 
 /** 이 개월 수 이상이면 장기 소규모(반영구) 서버로 본다 */

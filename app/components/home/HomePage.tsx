@@ -3,15 +3,15 @@
  *  히어로 980 (헤더가 위에 뜸, P1) → 120 → [서비스 · 특징 · 진행 순서(배경 #F1F6FD) · FAQ · CTA(배경 이미지)], 섹션 간격 160 → 푸터.
  *  모바일(<1024): 섹션 간격 80, 위 여백 60, 진행 순서·CTA 패딩 60·80 (Q1).
  */
-import { useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import {
-  AccordionItem, BrandWordmark, Button, FeatureCard, Icon, LinkCard, ProcessStep, SectionTitle, ServiceCard, buttonClassName,
+  AccordionItem, BrandWordmark, FeatureCard, Icon, LinkCard, ProcessStep, SectionTitle, ServiceCard, buttonClassName,
 } from '@/app/components/ds';
 import { FAQ_ITEMS } from '@/app/components/faq/faqContent';
 import { IMAGES, type SiteImage } from '@/app/constants/images';
 import { navLinkProps } from '@/app/lib/navLink';
 import type { NavigateFunction, PageType } from '@/app/types/navigation';
-import { DETAILED_STEPS, FEATURES, SIMPLE_STEPS } from './homeContent';
+import { FEATURES, SIMPLE_STEPS } from './homeContent';
 
 interface HomeProps {
   onNavigate: NavigateFunction;
@@ -65,7 +65,7 @@ function HomeHero() {
             <span className="sr-only">한참 커미션</span>
           </h1>
           <p className="text-body1 text-text-inverse">
-            마스토돈 자캐커뮤를 위한 최고의 커미션<br />
+            마스토돈 자캐커뮤를 위한 코딩 커미션<br />
             서버 설치부터 자동봇까지 한번에
           </p>
           <ul className="flex flex-wrap gap-2">
@@ -103,9 +103,9 @@ function Services({ onNavigate }: HomeProps) {
       <SectionTitle eyebrow="SERVICE" title="커미션 서비스" />
       <div className="grid w-full grid-cols-1 justify-items-center gap-10 lg:grid-cols-2 lg:gap-6">
         <ServiceCard image={IMAGES.homeServiceServer.src} srcSet={IMAGES.homeServiceServer.srcSet} title={<>서버 설치 &amp; 테마 커스텀</>}
-          description="구글 클라우드 플랫폼을 이용한 마스토돈 서버 설치 및 커스텀 테마 제작" ctaLabel="자세히 보기" href={server.href} onCtaClick={server.onClick} />
+          description="구글 클라우드에 마스토돈 서버를 설치하고 테마를 꾸며 드려요." ctaLabel="자세히 보기" href={server.href} onCtaClick={server.onClick} />
         <ServiceCard image={IMAGES.homeServiceBot.src} srcSet={IMAGES.homeServiceBot.srcSet} title="자동봇 커미션"
-          description="커뮤니티 운영을 돕는 다양한 타입의 자동봇 제작" ctaLabel="자세히 보기" href={bot.href} onCtaClick={bot.onClick} />
+          description="커뮤 운영을 돕는 자동봇을 만들어 드려요." ctaLabel="자세히 보기" href={bot.href} onCtaClick={bot.onClick} />
       </div>
     </section>
   );
@@ -127,33 +127,8 @@ function Features() {
   );
 }
 
-function DetailedSteps() {
-  return (
-    <ol className="flex w-full flex-col gap-6 rounded-card bg-background-white p-6 lg:p-10">
-      {DETAILED_STEPS.map((step) => (
-        <li key={step.number} className="flex items-baseline gap-6">
-          <span className="shrink-0 text-caption2 text-brand">{step.number}</span>
-          <div className="flex flex-col gap-2">
-            <h3 className="text-title4 text-text-primary">{step.title}</h3>
-            {step.details && (
-              <ul className="flex flex-col gap-2">
-                {step.details.map((detail) => (
-                  <li key={detail} className="flex gap-3 text-body2 text-text-secondary">
-                    <span className="shrink-0 text-brand" aria-hidden="true">—</span>
-                    <span>{detail}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
+// '자세한 진행 과정 (8단계)' 펼침은 위 4단계·FAQ 와 겹쳐 뺐다 (4단계 문구 정리 T9)
 function Process({ onNavigate }: HomeProps) {
-  const [open, setOpen] = useState(false);
   const order = navLinkProps('order', onNavigate);
   return (
     <section className="bg-background-brand py-[60px] lg:py-[120px]">
@@ -167,20 +142,9 @@ function Process({ onNavigate }: HomeProps) {
             ))}
           </div>
         </div>
-        <div className="flex w-full flex-col items-center gap-6">
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button variant="white" className="sm:w-[220px]" aria-expanded={open} aria-controls="home-detailed-steps" onClick={() => setOpen(!open)}
-              trailingIcon={<Icon name="chevron-down" size={20} className={open ? 'rotate-180 transition-transform' : 'transition-transform'} />}>
-              자세한 진행 과정 보기 (8단계)
-            </Button>
-            <a {...order} className={buttonClassName({ variant: 'primary', size: 'lg' })}>
-              신청서 작성하기
-            </a>
-          </div>
-          <div id="home-detailed-steps" hidden={!open} className="w-full">
-            <DetailedSteps />
-          </div>
-        </div>
+        <a {...order} className={buttonClassName({ variant: 'primary', size: 'lg' })}>
+          신청서 작성하기
+        </a>
       </div>
     </section>
   );
@@ -217,8 +181,8 @@ function HomeCta({ onNavigate }: HomeProps) {
         <div className="flex flex-col items-center gap-5 text-center">
           <h2 className="text-hero-lg text-text-primary">준비되셨나요?</h2>
           <p className="text-title3 text-text-secondary">
-            원하는 옵션을 골라 예상 금액을 확인해 보세요.<br className="lg:hidden" />{' '}
-            견적을 담아두면 신청서에 그대로 이어집니다.
+            옵션을 골라 예상 금액을 확인해 보세요.<br className="lg:hidden" />{' '}
+            담은 견적은 신청서에 그대로 들어가요.
           </p>
         </div>
         <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-2">

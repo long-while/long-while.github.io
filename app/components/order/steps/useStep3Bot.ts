@@ -273,11 +273,11 @@ export function useStep3Bot() {
   // 조사 자동봇 사용 가능 조건 (메인 봇이 선택된 경우)
   const canHaveInvestigationBot = step3.mainBot !== null;
 
-  // TRPG 봇(D100 / 2D6)은 기본 봇과 기능이 겹쳐 함께 선택 불가 (기본+상점 이상은 허용)
+  // TRPG 봇(D100 / 2D6)은 기본 봇과 기능이 겹쳐 함께 선택 불가 (기본&상점 이상은 허용)
   const basicBotBlockedByCoc = step3.cocBot || step3.trpg2d6Bot;
   const blockingTrpgBotNames = [
-    step3.cocBot && 'D100 타입',
-    step3.trpg2d6Bot && '2D6 3종세트 타입',
+    step3.cocBot && 'D100 룰 대응 TRPG봇',
+    step3.trpg2d6Bot && '2D6 룰 대응 TRPG봇 3종',
   ].filter(Boolean).join(', ');
 
   // 분리 계정 입력 노출 조건

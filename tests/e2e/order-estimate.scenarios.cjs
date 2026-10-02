@@ -71,6 +71,11 @@ const syncState = (items) => ({ synced: true, syncedAt: new Date().toISOString()
 
 // ── 화면 도우미 (디자인이 바뀌면 여기만 고친다) ─────────────────
 const ui = {
+  // 화면에서 숨긴 실제 input(ds Checkbox·Radio)을 고른다. 좌표 클릭(check force)은 단계 이동 뒤 스크롤로 고정 헤더 아래에 깔리면
+  // 헤더를 눌러 버려 가끔 실패했다 → 요소에 직접 click (이미 골라져 있으면 그대로)
+  async pick(locator) {
+    await locator.evaluate((el) => { if (!el.checked) el.click(); });
+  },
   async seed(page, storage) {
     await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
     await page.evaluate((s) => {
@@ -101,7 +106,7 @@ const ui = {
   summary: (page, title) => page.getByRole('heading', { name: title }),
   summaryEdit: (page) => page.getByRole('button', { name: '수정', exact: true }),
   async fillStep1(page) {
-    await page.locator('#termsAgreed').check({ force: true }); // ds Checkbox: 화면에서 숨긴 실제 input
+    await ui.pick(page.locator('#termsAgreed')); // ds Checkbox: 화면에서 숨긴 실제 input
     await page.locator('#applicantNickname').fill('테스트닉');
     await page.locator('#communityShortName').fill('테커');
     await page.locator('#communityKoreanName').fill('테스트 커뮤');
@@ -111,7 +116,8 @@ const ui = {
     await page.locator('#closingDate').fill(iso(plusDays(70)));
   },
   longTermToggle: (page) => page.getByText('장기 소규모 서버입니다.'),
-  longTermConfirm: (page) => page.getByText('위 내용을 이해했으며, 반년 이상 반영구적으로 운영할 장기 소규모 서버가 맞습니다.'),
+  // 4단계 문구 정리로 확인 문장이 짧아짐 (기준 12개월)
+  longTermConfirm: (page) => page.getByText('12개월 이상 운영할 장기 소규모 서버가 맞습니다.'),
   serverYes: (page) => page.locator('input[name="applyServerInstall"]').nth(0),
   serverNo: (page) => page.locator('input[name="applyServerInstall"]').nth(1),
   botYes: (page) => page.locator('input[name="applyBot"]').nth(0),
@@ -129,7 +135,7 @@ const ui = {
     await ui.waitStep(page, 4);
     await page.locator('#googleEmail').fill('test@gmail.com');
     await page.locator('#googlePassword').fill('dummy-password');
-    await ui.policyCheckbox(page).check({ force: true });
+    await ui.pick(ui.policyCheckbox(page));
     await ui.copyButton(page).click();
   },
   copyFailMessage: (page) => page.getByText('클립보드 복사에 실패했습니다. 텍스트를 직접 선택하여 복사해 주세요.'),
@@ -255,7 +261,7 @@ const SCENARIOS = {
     await ui.fillStep1(page);
     await ui.next(page);
     await ui.waitStep(page, 2);
-    await ui.serverNo(page).check({ force: true });
+    await ui.pick(ui.serverNo(page));
     await ui.next(page);
     await ui.waitStep(page, 3);
     await expectVisible(ui.summary(page, '선택하신 자동봇 사양'), 'STEP3 요약 상태');
@@ -377,9 +383,9 @@ const SCENARIOS = {
     await ui.open(page, '/order/');
     await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
     await ui.waitStep(page, 2);
-    await ui.serverYes(page).check({ force: true });
+    await ui.pick(ui.serverYes(page));
     await expectVisible(page.getByRole('heading', { name: '커스텀 옵션 선택' }), '예 → 옵션 보임');
-    await ui.serverNo(page).check({ force: true });
+    await ui.pick(ui.serverNo(page));
     await expectVisible(page.getByText('서버 설치를 신청하지 않으셨습니다. 다음 단계로 이동해 주세요.'), '아니오 안내');
     await ui.next(page);
     await ui.waitStep(page, 3);
@@ -402,7 +408,7 @@ const SCENARIOS = {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await ui.next(page);
     await titleInView(2);
-    await ui.serverNo(page).check({ force: true });
+    await ui.pick(ui.serverNo(page));
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await ui.next(page);
     await titleInView(3);
@@ -416,9 +422,9 @@ const SCENARIOS = {
     await ui.open(page, '/order/');
     await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
     await ui.waitStep(page, 3);
-    await ui.botYes(page).check({ force: true });
+    await ui.pick(ui.botYes(page));
     await expectVisible(page.getByRole('heading', { name: '메인 봇 종류' }), '예 → 메인 봇 보임');
-    await ui.botNo(page).check({ force: true });
+    await ui.pick(ui.botNo(page));
     await expectHidden(page.getByRole('heading', { name: '메인 봇 종류' }), '아니오 → 옵션 숨김');
     await ui.next(page);
     await ui.waitStep(page, 4);
@@ -633,10 +639,11 @@ Object.assign(SCENARIOS, {
     // 리뷰(4단계): 견적 총액에 매달 나가는 서버비가 빠져 있다는 표시가 없었다
     await ui.seed(page, { [KEY.estimate]: [item('마스토돈 서버 설치', 20000, 'server')] });
     await ui.open(page, '/estimate/');
-    await expectVisible(page.getByText(/서버비.*이 금액에 포함되지 않/), '서버비 별도 안내');
+    // 4단계 문구 정리로 '이 금액에 포함되지 않아요' → '이 금액과 별도'
+    await expectVisible(page.getByText(/서버비는 이 금액과 별도/), '서버비 별도 안내');
     await ui.seed(page, { [KEY.estimate]: [item('기본 타입', 15000, 'bot')] });
     await ui.open(page, '/estimate/');
-    expect((await page.getByText(/서버비.*이 금액에 포함되지 않/).count()) === 0, '서버 설치가 없으면 안내 없음');
+    expect((await page.getByText(/서버비는 이 금액과 별도/).count()) === 0, '서버 설치가 없으면 안내 없음');
   },
 
   async 'estimate-orphan-server-options'(page) {

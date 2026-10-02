@@ -63,10 +63,7 @@ export function SiteFooter({ onNavigate, flush = false }: SiteFooterProps) {
             </Column>
             <div className="col-span-2 flex flex-col gap-5">
               <h3 className="text-body3 text-text-inverse-muted">문의하기</h3>
-              <div className="flex flex-col gap-1 text-body3">
-                <p className="text-text-inverse">운영: 평일 10:00 - 22:00 (한국 시간)</p>
-                <p className="text-text-inverse-muted">답변은 평일 기준 1~2일 내에 드립니다.</p>
-              </div>
+              <p className="text-body3 text-text-inverse">문의 답변: 평일 10:00~22:00 (한국 시간), 보통 1~2일 내</p>
             </div>
           </div>
         </div>

@@ -14,11 +14,11 @@ import { INPUT_LIMITS, type Step1Data } from '@/app/types/order';
 
 type TextKey = 'applicantNickname' | 'communityShortName' | 'communityKoreanName' | 'communityEnglishName';
 
+// 4단계 문구 정리: 같은 말이 겹치던 네 줄을 셋으로, 기간 기준은 12개월(T2). 자세한 조건은 FAQ 한 문항이 기준
 const LONG_TERM_NOTES: ReactNode[] = [
-  <>장기 소규모 서버는 <strong>최소 반년(6개월) 이상</strong> 소규모로 (반영구적으로) 운영하려는 경우에만 해당됩니다.</>,
-  <>자관·역극용이더라도 <strong>3개월 이하로 짧게</strong> 쓰실 예정이라면 이 항목을 체크하지 마시고, 아래 일정란에 <strong>아무 날짜나 대략</strong> 적어 주세요.</>,
-  '정말 장기적으로 유지하실 게 아니라면 체크하지 말아 주세요.',
-  <>장기 소규모 서버는 저렴한 월 서버비 유지를 위해 <strong>검색 기능(검색 서버)을 추가할 수 없습니다.</strong> (서버비는 인원수·기간에 따라 달라지며, 검색을 넣으면 검색 서버가 별도로 필요해 월 서버비가 크게 오릅니다.)</>,
+  <><strong>12개월 이상</strong> 소규모로 운영할 때만 체크해 주세요.</>,
+  <>그보다 짧게 쓰신다면 자관·역극용이어도 체크하지 말고, 아래 일정란에 대략적인 날짜를 적어 주세요.</>,
+  <>장기 소규모 서버는 서버비를 낮추기 위해 <strong>검색 기능을 넣을 수 없어요.</strong></>,
 ];
 
 function TextInput({ field, label, helper, placeholder, step1, onChange }: {
@@ -94,7 +94,7 @@ function ScheduleSection({ step1, updateStep1 }: { step1: Step1Data; updateStep1
               appearance="outline"
               checked={step1.longTermConfirmed}
               onChange={(e) => updateStep1({ longTermConfirmed: e.target.checked })}
-              label="위 내용을 이해했으며, 반년 이상 반영구적으로 운영할 장기 소규모 서버가 맞습니다."
+              label="12개월 이상 운영할 장기 소규모 서버가 맞습니다."
             />
             <FieldError field="longTermConfirmed" />
           </div>
@@ -146,9 +146,9 @@ export default function Step1Applicant() {
 
       <FormSection title="커뮤니티 정보">
         <div className="grid grid-cols-1 gap-x-5 gap-y-6 md:grid-cols-2">
-          <TextInput field="communityShortName" label="커뮤니티 약칭" helper="커미션주의 편의를 위해 작성하는 항목입니다." placeholder="예: 망저" step1={step1} onChange={setText} />
-          <TextInput field="communityKoreanName" label="한글 이름" helper="커미션주의 편의를 위해 작성하는 항목입니다." placeholder="예: 망각의 저편" step1={step1} onChange={setText} />
-          <TextInput field="communityEnglishName" label="영어 이름" helper="도메인 선정 시에 사용되니 신중히 작성해 주세요." placeholder="예: Beyond the Oblivion" step1={step1} onChange={setText} />
+          <TextInput field="communityShortName" label="커뮤니티 약칭" placeholder="예: 망저" step1={step1} onChange={setText} />
+          <TextInput field="communityKoreanName" label="한글 이름" placeholder="예: 망각의 저편" step1={step1} onChange={setText} />
+          <TextInput field="communityEnglishName" label="영어 이름" helper="도메인 이름에 쓰여요." placeholder="예: Beyond the Oblivion" step1={step1} onChange={setText} />
         </div>
       </FormSection>
 

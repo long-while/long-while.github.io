@@ -12,11 +12,13 @@ import { useEditTargetHighlight } from '@/app/hooks/useEditTargetHighlight';
 import { IMAGES } from '@/app/constants/images';
 import { navLinkProps } from '@/app/lib/navLink';
 import type { NavigateFunction } from '@/app/types/navigation';
-import { ADDITIONAL_OPTIONS, BOT_TYPES, OPERATION_FEE_PREFIX, OPERATION_NOTES, SHEET_LINKS, WEEKLY_FEE } from './botContent';
+import {
+  ADDITIONAL_OPTIONS, BOT_TYPES, INVESTIGATION_TYPE, MAIN_REQUIRES_LABEL, OPERATION_FEE_PREFIX, OPERATION_NOTES, SHEET_LINKS, SHOP_REQUIRES_LABEL, WEEKLY_FEE,
+  type AdditionalOption,
+} from './botContent';
 import { BotTypeCards } from './BotTypeCards';
 import { CommandTable, CompareTable } from './BotTables';
 import { MAX_WEEKS, useBotEstimate, type BotEstimate, type BotToast } from './useBotEstimate';
-import { eulReul } from '@/app/utils/josa';
 
 interface BotPageProps {
   onBack?: () => void;
@@ -53,12 +55,10 @@ function BasicInfo({ onNavigate }: { onNavigate: NavigateFunction }) {
     <TitledSection title="기본 안내">
       <BulletList
         items={[
-          '마스토돈 자동봇 커미션입니다. 타입에 따라 가격이 달라집니다.',
-          '타입 내에 기재되지 않은 기능도 대부분 구현할 수 있습니다.',
-          '기본 개발 기간은 한달이며, 원하시는 일정과 구현 난이도에 따라 빠르게 마감할 수 있습니다.',
-          <span key="rush"><span className="font-medium text-brand">48시간 내 마감 +200%, 일주일 내 마감 +100%</span> 추가금을 받습니다.</span>,
-          '개발 중에 요청 기능이 늘어나거나 구현 방식이 변경될 경우 추가금이 발생하거나 마감일이 변경될 수 있습니다.',
-          '봇 가동 중 사전에 발견하지 못한 오류가 발생할 경우 무료로 유지보수를 진행합니다.',
+          '마스토돈 서버에서 사용하는 자동봇 커미션입니다. 구글 시트와 연동하여 사용합니다.',
+          '타입 내에 기재되지 않은 기능도 오마카세 자동봇을 통해 대부분 구현해 드립니다.',
+          '개발 중 기능이 늘어나는 등 요청사항이 생기면 추가금이나 마감일이 변경될 수 있습니다.',
+          '자동봇 유지보수는 기간 제한 없이, 작업 완료 후에 전달드리는 오픈채팅에서 진행합니다.',
           <span key="server">서버 설치도 함께 필요하시다면{' '}
             <a {...server} className="text-brand underline-offset-2 hover:underline">서버 설치 커미션 페이지</a>를 확인해주세요.
           </span>,
@@ -152,28 +152,48 @@ function OperationWeeks({ est, highlighted }: { est: BotEstimate; highlighted: s
   );
 }
 
+/**
+ * 추가 옵션은 쓸 수 있는 타입별로 묶고, 묶음 제목에 한 번만 '… 전용'이라고 적는다
+ * (예전에는 카드마다 '* …을 먼저 선택해 주세요'가 반복됐다, 4단계 문구 정리). 막힌 카드를 누르면 이유는 토스트로.
+ */
+const OPTION_GROUPS: Array<{ title: string; requiresLabel: string }> = [
+  { title: '기본 계열 타입 전용', requiresLabel: MAIN_REQUIRES_LABEL },
+  { title: '기본&상점 이상 타입 전용', requiresLabel: SHOP_REQUIRES_LABEL },
+  { title: '자동조사 타입 전용', requiresLabel: INVESTIGATION_TYPE },
+];
+
+function AdditionalOptionCard({ option, est, highlighted }: { option: AdditionalOption; est: BotEstimate; highlighted: string | null }) {
+  const { selected, disabled, requiresLabel } = est.optionState(option);
+  return (
+    // 선행 조건이 없으면 input 이 꺼져 있어 change 가 오지 않는다. 눌렀을 때 이유를 토스트로 알리려고 감싼 쪽에서 click 을 받는다.
+    <div className="flex flex-col" onClick={() => disabled && est.toggleOption(option)}>
+      <OptionCard
+        type="checkbox" checked={selected} disabled={disabled} onChange={() => est.toggleOption(option)}
+        data-option-name={option.name} data-option-aliases={option.aliases?.join('|')}
+        aria-label={disabled ? `${option.label ?? option.name} — ${requiresLabel} 선택 필요` : undefined}
+        layout="responsive" title={option.label ?? option.name} description={option.description}
+        price={option.priceLabel ?? (option.price === 0 ? '협의' : won(option.price))}
+        className={clsx('h-full', highlightRing(highlighted === option.name))}
+      />
+    </div>
+  );
+}
+
 function AdditionalOptions({ est, highlighted }: { est: BotEstimate; highlighted: string | null }) {
   return (
     <TitledSection title="추가 옵션">
-      {/* PC 한 줄에 4개 (3단계 사용자 요청) */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {ADDITIONAL_OPTIONS.map((option) => {
-          const { selected, disabled, requiresLabel } = est.optionState(option);
-          return (
-            // 선행 조건이 없으면 input 이 꺼져 있어 change 가 오지 않는다. 눌렀을 때 이유를 토스트로 알리려고 감싼 쪽에서 click 을 받는다.
-            <div key={option.name} className="flex flex-col gap-2" onClick={() => disabled && est.toggleOption(option)}>
-              <OptionCard
-                type="checkbox" checked={selected} disabled={disabled} onChange={() => est.toggleOption(option)}
-                data-option-name={option.name} data-option-aliases={option.aliases?.join('|')}
-                aria-label={disabled ? `${option.label ?? option.name} — ${requiresLabel} 선택 필요` : undefined}
-                layout="responsive" title={option.label ?? option.name} description={option.description}
-                price={option.priceLabel ?? (option.price === 0 ? '협의' : won(option.price))}
-                className={clsx('h-full', highlightRing(highlighted === option.name))}
-              />
-              {disabled && <p className="text-body3 text-text-secondary">* {requiresLabel}{eulReul(requiresLabel)} 먼저 선택해 주세요.</p>}
+      <div className="flex flex-col gap-10">
+        {OPTION_GROUPS.map((group) => (
+          <div key={group.title} className="flex flex-col gap-4">
+            <h3 className="text-title5 text-text-secondary">{group.title}</h3>
+            {/* PC 한 줄에 4개 (3단계 사용자 요청) */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {ADDITIONAL_OPTIONS.filter((o) => (o.requiresLabel ?? o.requires) === group.requiresLabel).map((option) => (
+                <AdditionalOptionCard key={option.name} option={option} est={est} highlighted={highlighted} />
+              ))}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </TitledSection>
   );
@@ -196,7 +216,7 @@ export default function BotPage({ onNavigate }: BotPageProps) {
         <TitledSection title="커스텀 명령어 업그레이드란?"><CommandTable /></TitledSection>
         <TitledSection title="봇 타입 상세">
           <p className="text-body3 text-text-secondary">
-            * 기본 / 기본&상점 / 기본&상점&스탯 타입은 서로 포함 관계이므로 <span className="font-semibold text-text-primary">하나만</span> 선택할 수 있어요.
+            * 기본 계열 타입은 <span className="font-semibold text-text-primary">하나만</span> 고를 수 있어요.
           </p>
           <BotTypeCards types={BOT_TYPES} est={est} highlighted={highlighted} />
         </TitledSection>

@@ -205,7 +205,7 @@ export function getDeadlineBlackoutError(deadline: string, field: string, refere
     (range) => year === range.year && month === range.month && day >= range.startDay && day <= range.endDay
   );
   if (blocked) {
-    return { field, message: `${formatBlackoutRange(blocked)} 은 마감이 불가능한 기간입니다.` };
+    return { field, message: `${formatBlackoutRange(blocked)}은 마감이 불가능한 기간입니다.` };
   }
   return null;
 }
@@ -589,7 +589,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
     if (data.mainBot === null && !data.cocBot && !data.trpg2d6Bot) {
       errors.push({
         field: 'mainBot',
-        message: '메인 봇 종류를 선택해 주세요. (D100 타입, 2D6 3종세트 타입은 단독 신청도 가능합니다)',
+        message: '메인 봇 종류를 선택해 주세요. (D100 룰 대응 TRPG봇, 2D6 룰 대응 TRPG봇 3종은 단독 신청도 가능합니다)',
       });
     }
 
@@ -598,7 +598,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       errors.push({
         field: 'mainBot',
         message:
-          'D100 타입, 2D6 3종세트 타입은 기본 봇과 기능이 겹쳐 함께 신청할 수 없습니다. 단독으로 신청하시거나, 메인 봇을 기본+상점 이상으로 선택해 주세요.',
+          'D100 룰 대응 TRPG봇, 2D6 룰 대응 TRPG봇 3종은 기본 봇과 기능이 겹쳐 함께 신청할 수 없습니다. 단독으로 신청하시거나, 메인 봇을 기본&상점 이상으로 선택해 주세요.',
       });
     }
 

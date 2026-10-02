@@ -80,24 +80,24 @@ export function serverSummaryRows(step2: Step2Data) {
   ];
 }
 
-const MAIN_BOT_LABEL: Record<NonNullable<Step3Data['mainBot']>, string> = { basic: '기본', basicShop: '기본+상점', basicShopStat: '기본+상점+스탯' };
+const MAIN_BOT_LABEL: Record<NonNullable<Step3Data['mainBot']>, string> = { basic: '기본', basicShop: '기본&상점', basicShopStat: '기본&상점&스탯' };
 
 /** STEP3 요약 줄 (STEP4 '자동봇 커미션' 과 같은 이름) */
 export function botSummaryRows(step3: Step3Data, closingDate: string) {
   const schedule = step3.operationWeeksOption === 'longterm'
-    ? '6개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
+    ? '12개월 이상 장기 소규모 자동봇 (세팅비 10,000원)'
     : step3.botStartDate && step3.botEndDate
       ? `${botPeriodWithYears(step3.botStartDate, step3.botEndDate, closingDate) ?? `${step3.botStartDate} ~ ${step3.botEndDate}`} (${step3.manualWeeks}주)`
       : `${step3.manualWeeks}주`;
   const addons = [
-    step3.cocBot && 'D100 타입',
-    step3.trpg2d6Bot && '2D6 3종세트 타입',
+    step3.cocBot && 'D100 룰 대응 TRPG봇',
+    step3.trpg2d6Bot && '2D6 룰 대응 TRPG봇 3종',
     step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
     step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
     step3.reservationToot && '예약 툿',
     step3.autoProfileImage && '자동 스진',
-    step3.tootCurrencyLink && '툿-재화 연동',
-    step3.transferFeature && '양도 기능',
+    step3.tootCurrencyLink && '툿수-재화 자동반영',
+    step3.transferFeature && '재화, 아이템 양도 기능',
     step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') && '출석 시스템',
     step3.omakaseBot && '오마카세',
   ].filter(Boolean).join(', ');

@@ -70,8 +70,7 @@ export default function TermsPage({ onNavigate }: TermsPageProps) {
 
   return (
     <main id="main" tabIndex={-1} className="bg-background-white outline-none">
-      <PageHero image={IMAGES.termsHero.src} srcSet={IMAGES.termsHero.srcSet} eyebrow="GUIDE" title="이용안내"
-        description="커미션 진행에 적용되는 안내 사항입니다. 추가금이 발생하는 조건이 포함되어 있으니 신청 전에 한 번 읽어 주세요." />
+      <PageHero image={IMAGES.termsHero.src} srcSet={IMAGES.termsHero.srcSet} eyebrow="GUIDE" title="이용안내" />
       <div className="flex flex-col gap-10 pb-[60px] pt-[60px] lg:pb-[120px] lg:pt-[100px]">
         <Tabs items={TAB_ITEMS} value={active} onChange={setActive} variant="line" idPrefix={TAB_PREFIX} aria-label="이용안내 항목" />
         {TERMS_SECTIONS.map((section, index) => (

@@ -7,13 +7,13 @@ import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 function feeSentence(result: ServerCalcResult | null): string {
   if (!result || result.type === 'warn' || !result.totalKrw) {
-    return '서버비(호스팅 비용)는 이 금액에 포함되지 않으며, 호스팅 업체에 직접 결제됩니다. 예상 금액은 서버 커미션 페이지의 ‘서버비 미리보기’에서 확인하실 수 있어요.';
+    return '서버비는 이 금액과 별도로 호스팅 업체에 직접 결제됩니다. 예상 금액은 서버 페이지의 ‘서버비 미리보기’에서 확인하실 수 있어요.';
   }
   const details = [
-    result.freeMonths > 0 && `처음 ${result.freeMonths}개월은 구글 무료 크레딧`,
+    result.freeMonths > 0 && `처음 ${result.freeMonths}개월 무료`,
     result.paidMonths > 0 && result.monthlyKrw && `이후 월 ${result.monthlyKrw}`,
   ].filter(Boolean).join(', ');
-  return `서버비는 이 금액에 포함되지 않아요. ${result.monthsLabel} 기준 총 서버비 ${result.totalKrw}${details ? `(${details})` : ''}은 등록하신 결제수단으로 호스팅 업체에 직접 결제됩니다.`;
+  return `서버비는 이 금액과 별도예요. ${result.monthsLabel} 기준 ${result.totalKrw}${details ? `(${details})` : ''}은 호스팅 업체에 직접 결제됩니다.`;
 }
 
 export function ServerFeeNote({ result }: { result: ServerCalcResult | null }) {

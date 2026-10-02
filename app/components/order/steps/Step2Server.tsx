@@ -134,7 +134,7 @@ function CustomOptions() {
     <FormSection
       title="커스텀 옵션 선택"
       titleAside={themeFromCart && step2.additionalOption && <FromCartBadge />}
-      description="테마 옵션은 전부 로고 변경 옵션이 포함되어 있습니다."
+      description="테마 옵션에는 로고 변경이 포함돼요."
     >
       <div className="flex flex-col gap-1" role="radiogroup" aria-label="커스텀 옵션">
         {CUSTOM_OPTIONS.map((o) => (
@@ -203,19 +203,19 @@ function SearchOption({ rules }: { rules: ReturnType<typeof useStep2Rules> }) {
         title="검색 기능"
         badge={<>
           {fromCart('검색') && step2.searchOption && <FromCartBadge />}
-          {searchBlockedByVultr && <Pill>장기·소규모(Vultr) 서버 선택 불가</Pill>}
           {!searchBlockedByVultr && serverCalcResult?.search === 'yes' && <Pill tone="brand">계산기에서 선택됨</Pill>}
           {!searchBlockedByVultr && serverCalcResult?.search === 'no' && <Pill>계산기에서 제외됨</Pill>}
         </>}
-        description="서버에 검색 기능을 추가합니다. 위 계산기의 ‘검색 기능 추가 여부’와 연동됩니다."
+        description="팔로우한 유저의 툿과 멘션에서 단어로 검색해요."
         price={plus(PRICING_CONFIG.server.addons.search)}
       />
-      {/* Vultr(장기·소규모) 서버: 검색 기능 추가 불가 안내 */}
+      {/* 장기 소규모 서버: 검색 불가 안내는 STEP2 에서 여기 한 번만 (4단계 문구 정리) */}
       {searchBlockedByVultr && (
         <p className="rounded-input bg-background-brand px-5 py-4 text-body3 text-brand-700 animate-slideDown">
+          장기 소규모 서버는 검색을 넣을 수 없어요.{' '}
           {isLongTermServer
-            ? '장기 소규모 서버(반영구)는 검색 서버가 별도로 필요해 월 서버비가 크게 오릅니다. 서버비 절약을 위해 검색 기능을 추가할 수 없어요. 검색이 필요하시면 Step 1에서 ‘장기 소규모 서버’ 체크를 해제해 주세요.'
-            : '이 사양은 장기·소규모(Vultr) 서버라, 검색 서버 비용이 커서 검색 기능을 추가할 수 없습니다. 검색이 필요하시면 위 계산기에서 운영 기간을 12개월 미만(GCP 사양)으로 선택해 주세요.'}
+            ? '필요하시면 Step 1에서 ‘장기 소규모 서버’ 체크를 해제해 주세요.'
+            : '필요하시면 위에서 운영 기간을 12개월 미만으로 골라 주세요.'}
         </p>
       )}
     </div>
@@ -286,7 +286,7 @@ function OtherOptions({ rules }: { rules: ReturnType<typeof useStep2Rules> }) {
       <div className="flex flex-col gap-1 rounded-card border border-border-100 p-5 lg:p-6">
         <p className="text-title5 text-text-primary">노션 마스토돈 가이드 무료 제공</p>
         <p className="text-body3 text-text-secondary">
-          마스토돈 커뮤니티를 처음 러닝하는 러너를 위한 가이드입니다. 서버 설치 커미션을 신청하시면 별도 신청 없이 함께 전달드립니다. 기본 트위터 블루 테마 캡처 화면으로 제작되며, 각 서버 테마가 적용된 가이드는 제공하지 않습니다.
+          따로 신청하지 않아도 함께 드려요.
         </p>
       </div>
     </FormSection>
@@ -313,7 +313,7 @@ function DeadlineField() {
           <p className="mt-2 text-body3 text-text-secondary">
             ※ 월/일 형식으로 입력해 주세요.
             <br />
-            <strong className="font-medium text-text-primary">{DEADLINE_BLACKOUT_LABEL} 은 마감이 불가능한 기간입니다.</strong>
+            <strong className="font-medium text-text-primary">{DEADLINE_BLACKOUT_LABEL}은 마감이 불가능한 기간입니다.</strong>
           </p>
         )}
       </div>
@@ -361,8 +361,8 @@ function ExtraInfo() {
         <AdminAccountField />
       </div>
       <p className="rounded-card bg-background-brand p-5 text-body3 text-text-secondary lg:p-6">
-        <span className="text-title5 text-brand">로고 혹은 테마 옵션을 신청하셨나요?</span>{' '}
-        신청서를 접수하시면 테마와 로고 이미지 규격이 전달됩니다. 신청자님께서는 마감일로부터 <strong className="font-medium text-text-primary">최소 일주일 이전에 9종/12종/13종</strong>의 이미지를 전달해주셔야 합니다. 그때까지 디자인을 완성하고 이미지를 전달하실 수 있는지 생각해보고 마감일을 조정하세요.
+        <span className="text-title5 text-brand">로고나 테마 옵션을 고르셨다면,</span>{' '}
+        접수 후 이미지 규격을 보내 드려요. 이미지(9종/12종/13종)는 마감일 <strong className="font-medium text-text-primary">최소 일주일 전</strong>까지 보내 주셔야 하니, 그 일정에 맞춰 마감일을 정해 주세요.
       </p>
     </FormSection>
   );

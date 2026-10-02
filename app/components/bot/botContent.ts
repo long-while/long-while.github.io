@@ -28,15 +28,13 @@ export const SHEET_LINKS = [
   { title: '예약 툿 시트', href: 'https://docs.google.com/spreadsheets/d/1ui6iVgG-nDLF2RDVd50bz2jVeBU9JRp3f5oCx3a4eQE/edit?usp=sharing', image: IMAGES.botType02 },
   { title: '스토리 자동진행 시트', href: 'https://docs.google.com/spreadsheets/d/1K0mXU2NOQ71HF9Mo6Zs_cFHlpDPeRFm_N8v7Pts58cY/edit?usp=sharing', image: IMAGES.botType03 },
   { title: '조사 자동봇 시트', href: 'https://docs.google.com/spreadsheets/d/1kccCpDwSaQyaNeUxmCfyIrUNM9taJDeyfQfXTMcBQ24/edit?usp=sharing', image: IMAGES.botType04 },
-  { title: 'CoC 자동봇 시트', href: 'https://docs.google.com/spreadsheets/d/1F4mhGtNT3cgkgze5PlZvMMG9XKMNOzeJNaCPH0KhGrs/edit?usp=sharing', image: IMAGES.botType05 },
+  { title: 'D100 TRPG봇 시트', href: 'https://docs.google.com/spreadsheets/d/1F4mhGtNT3cgkgze5PlZvMMG9XKMNOzeJNaCPH0KhGrs/edit?usp=sharing', image: IMAGES.botType05 },
 ];
 
 export const OPERATION_NOTES = [
-  '봇 가동 비용은 1주에 5천원입니다.',
-  '커뮤니티 용도의 자동봇이라면 운영 주수만큼 숫자를 올려주세요.',
-  '만약 6개월 이상의 장기 소규모 서버를 위한 자동봇을 신청하시는 경우, 아래 항목을 2주(1만원)으로 세팅해주시면 됩니다.',
-  '장기 소규모 서버는 가동 주수에 따른 비용을 받지 않는 대신, 초기 세팅 비용이 1만원 청구됩니다.',
-  '종류 불문, 자동봇 유지보수는 무기한 진행하며, 작업 종료 후 전달드리는 오픈채팅에서 진행합니다.',
+  // 4단계 문구 정리: 네 줄을 둘로 합치고(장기 기준 12개월, T2), 유지보수 줄은 기본 안내로 옮김
+  '가동비는 1주 5천원이에요. (테스트 기간 제외) 커뮤 운영 주수만큼 올려 주세요.',
+  '12개월 이상 장기 서버용은 주당 비용 대신 초기 세팅비 1만원만 받으니, 2주(1만원)로 맞춰 주세요.',
   '지난 신청자분들의 자동봇도 지금까지 꾸준히 업데이트해 드리고 있습니다.',
 ];
 
@@ -71,6 +69,7 @@ export interface BotType {
   note?: string;
 }
 
+// 순서: 기본 / 기본&상점 / 기본&상점&스탯 / 자동조사 / D100 / 2D6 / 오마카세 (4단계 사용자 요청)
 export const BOT_TYPES: BotType[] = [
   {
     name: '기본 타입',
@@ -88,8 +87,7 @@ export const BOT_TYPES: BotType[] = [
     features: [
       '기본 타입에 포함된 모든 기능 +@',
       '구글 시트로 캐릭터, 재화, 인벤토리 관리 (운영진 수동 편집 지원)',
-      '[소지금 추가/금액/캐릭터명] (운영진 명령어)',
-      '[소지금 차감/금액/캐릭터명] (운영진 명령어)',
+      '[소지금 추가/금액/캐릭터명] [소지금 차감/금액/캐릭터명] (운영진 명령어)',
       '[상점] 아이템 목록 출력',
       '[구매/아이템명] 아이템 구매 시 재화 차감',
       '[가방] 인벤토리, 재화 확인',
@@ -106,19 +104,28 @@ export const BOT_TYPES: BotType[] = [
     ],
   },
   {
+    name: INVESTIGATION_TYPE,
+    price: 20000,
+    features: [
+      // T6: 신청서 규칙과 같게 (메인 봇이 있어야 함)
+      '기본 계열 타입과 함께 신청할 수 있어요.',
+      '[장소 목록] [진입/장소명] [조사/포인트명]',
+      '장소 목록과 각 장소에서 조사할 수 있는 포인트 관리',
+      '캐릭터 소지품 및 스탯과 연동 (특정 이벤트 발생 시 아이템 획득 / 체력 -5 등)',
+    ],
+  },
+  {
     name: D100_BOT_NAME,
     price: 30000,
     features: [
-      '크툴루 호러 탐사를 위한 필수품!',
       'D100 롤언더(기능치 이하 성공) 판정을 쓰는 TRPG용 자동봇',
-      '봇과 연동된, 편집 가능한 플레이어 구글 시트 제공',
-      '편집 가능한 커스텀 시트 + 랜덤표 시트 제공 (표 내용은 직접 입력)',
+      '봇과 연동된 플레이어, 커스텀, 랜덤표 구글 시트 제공 (편집 가능, 표 내용은 직접 입력)',
       '[nDm±k]',
       '기본 판정 [근력] [설득]',
       '보너스/페널티 다이스 [근력+1] [관찰력-2]',
       '판정, 피해 정산, 치명타가 모두 적용되는 무기 공격',
       '[랜덤/옵션, 옵션, 옵션] 여러 개의 옵션 중 하나를 랜덤 선택',
-      '룰북 내 정보는 제공 X / 판정 기능만 제공 / 광기 목록 등은 직접 입력',
+      '판정 기능만 드려요. 룰북 내용(광기 목록 등)은 직접 입력해 주세요.',
     ],
   },
   {
@@ -133,29 +140,19 @@ export const BOT_TYPES: BotType[] = [
       '보너스/페널티 다이스',
       '명령어를 통한 아이템 관리',
       '[랜덤/옵션, 옵션, 옵션] 여러 개의 옵션 중 하나를 랜덤 선택',
-      '룰북 내 정보는 제공 X / 판정 기능만 제공 / 특기명, 광기표 등은 직접 입력',
+      '판정 기능만 드려요. 룰북 내용(특기명, 광기표 등)은 직접 입력해 주세요.',
       '일부만 선택해 설치 시 룰 당 3만원 (문의 요망)',
-    ],
-  },
-  {
-    name: INVESTIGATION_TYPE,
-    price: 20000,
-    features: [
-      '[장소 목록] [진입/장소명] [조사/포인트명]',
-      '장소 목록과 각 장소에서 조사할 수 있는 포인트 관리',
-      '캐릭터 소지품 및 스탯과 연동 (특정 이벤트 발생 시 아이템 획득 / 체력 -5 등)',
     ],
   },
   {
     name: OMAKASE_TYPE,
     price: 0,
     features: [
-      '복잡한 오마카세 봇의 경우 최대한 일찍 문의를 넣어주세요!',
-      '진행이 가능할지 아닐지 판단한 후 신청서를 받고 있습니다.',
-      '보내주실 내용: 시스템을 자세히 설명한 외부 문서 + 마감일 + 구동기간',
-      '구현 난이도에 따라 여유로운 일정, 원활한 소통, 그리고 추가금이 필요할 수 있습니다.',
+      '신청 전에 먼저 문의해 주세요. 가능 여부를 본 뒤 신청서를 받아요.',
+      '보내실 것: 시스템 설명 문서(외부 링크), 마감일, 가동 기간',
+      '난이도에 따라 일정 여유와 추가금이 필요할 수 있어요.',
     ],
-    note: '진행하지 않아요) 일반 레이드, 마스레이드, 포지션제 전투',
+    note: '진행하지 않는 시스템: 일반 레이드, 마스레이드, 포지션제 전투',
   },
 ];
 
@@ -173,17 +170,17 @@ export interface AdditionalOption {
   requiresLabel?: string;
 }
 
-const MAIN_LABEL = '기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나';
-const SHOP_LABEL = '기본&상점 또는 기본&상점&스탯 타입';
+export const MAIN_REQUIRES_LABEL = '기본 / 기본&상점 / 기본&상점&스탯 타입 중 하나';
+export const SHOP_REQUIRES_LABEL = '기본&상점 또는 기본&상점&스탯 타입';
 
 // 3단계 사용자 요청으로 뺀 옵션: '특정 상황 DM 전송', '빠른 마감 (48시간 내)', '빠른 마감 (1주일 내)' (EstimateContext 의 판매 중단 목록에도 넣음)
 export const ADDITIONAL_OPTIONS: AdditionalOption[] = [
-  { name: '커스텀 명령어 업그레이드', price: 5000, aliases: ['기본 타입 - 커스텀 명령어 업그레이드', '기본&상점 타입 - 커스텀 명령어 업그레이드', '기본&상점&스탯 타입 - 커스텀 명령어 업그레이드'], requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_LABEL },
-  { name: '재화, 아이템 양도 기능', price: 10000, aliases: ['양도 기능', '기본&상점 타입 - 양도 기능', '기본&상점&스탯 타입 - 양도 기능'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_LABEL },
-  { name: '툿수-재화 자동반영', price: 10000, aliases: ['기본&상점 타입 - 툿수-재화 자동반영', '기본&상점&스탯 타입 - 툿수-재화 자동반영'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_LABEL },
-  { name: '출석 시스템', price: 10000, requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_LABEL },
-  { name: '예약 툿', label: '예약 툿 (시트로 관리)', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_LABEL },
-  { name: '스토리 자동 진행', label: '자동 스진 (시트로 관리)', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_LABEL },
+  { name: '커스텀 명령어 업그레이드', price: 5000, aliases: ['기본 타입 - 커스텀 명령어 업그레이드', '기본&상점 타입 - 커스텀 명령어 업그레이드', '기본&상점&스탯 타입 - 커스텀 명령어 업그레이드'], requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
+  { name: '재화, 아이템 양도 기능', price: 10000, aliases: ['양도 기능', '기본&상점 타입 - 양도 기능', '기본&상점&스탯 타입 - 양도 기능'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
+  { name: '툿수-재화 자동반영', price: 10000, aliases: ['기본&상점 타입 - 툿수-재화 자동반영', '기본&상점&스탯 타입 - 툿수-재화 자동반영'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
+  { name: '출석 시스템', price: 10000, requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
+  { name: '예약 툿', label: '예약 툿 (시트로 관리)', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
+  { name: '스토리 자동 진행', label: '자동 스진 (시트로 관리)', price: 5000, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
   { name: '일일 조사 횟수 제한', price: 5000, description: '[조사] 명령어 사용 시 1회 카운트', requires: INVESTIGATION_TYPE },
 ];
 
