@@ -3,7 +3,7 @@
  * 에러 처리 유틸리티
  */
 
-import type { AppError, ErrorSeverity, RecoveryAction } from '@/app/types/errors';
+import type { AppError, ErrorSeverity } from '@/app/types/errors';
 import { ERROR_MESSAGES } from '@/app/types/errors';
 
 /**

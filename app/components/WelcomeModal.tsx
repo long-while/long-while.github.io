@@ -7,7 +7,7 @@ interface WelcomeModalProps {
 
 const WELCOME_SHOWN_KEY = 'longwhile_welcome_shown';
 
-export default function WelcomeModal({ onNavigate }: WelcomeModalProps) {
+export default function WelcomeModal(_props: WelcomeModalProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {

@@ -30,3 +30,18 @@ tmp/
 
 # Windows reserved device names
 nul
+
+# Secrets
+.env
+
+# Redesign source material (kept locally, not in git)
+UIUX개선/
+design/assets/*
+!design/assets/index.md
+design/frames/
+design/figma/file.json
+design/baseline/
+design/shots/
+design/figma/file.prev.json
+design/figma/file.latest.json
+__pycache__/

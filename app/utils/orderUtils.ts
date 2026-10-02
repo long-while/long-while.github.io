@@ -812,7 +812,7 @@ export function getBotAccountLines(data: Step3Data): { label: string; value: str
  */
 export function calculateBotPrice(
   data: OrderFormData['step3'],
-  operationWeeks: number
+  _operationWeeks: number
 ): { botCost: number; operationCost: number } {
   if (data.applyBot !== 'yes') {
     return { botCost: 0, operationCost: 0 };

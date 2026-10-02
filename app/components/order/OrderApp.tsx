@@ -25,7 +25,7 @@ function loadEstimateFromStorage(): EstimateItem[] {
 }
 
 function OrderContent({ onNavigate }: OrderContentProps) {
-  const { loadFromLocalStorage, resetForm, syncFromCart, cartSyncState } = useOrder();
+  const { loadFromLocalStorage, resetForm, syncFromCart } = useOrder();
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
   const [showSyncDialog, setShowSyncDialog] = useState(false);
 

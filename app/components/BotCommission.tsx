@@ -25,7 +25,7 @@ const TRPG_EXCLUSIVE_PAIRS: Record<string, string[]> = {
 
 export default function BotCommission({ onBack, onNavigate }: BotCommissionProps) {
   const { addItem, removeItem, items } = useEstimate();
-  const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
+  const [, setAddedItems] = useState<Set<string>>(new Set());
   const [operationWeeks, setOperationWeeks] = useState(0);
   const [omakaseDetailOpen, setOmakaseDetailOpen] = useState(false);
   const [investigationExampleOpen, setInvestigationExampleOpen] = useState(false);
