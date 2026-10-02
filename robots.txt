@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# 이용자별 화면(견적/신청서)은 색인 대상이 아닙니다
+Disallow: /estimate/
+Disallow: /order/
+
+Sitemap: https://longwhile.site/sitemap.xml
