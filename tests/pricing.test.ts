@@ -18,7 +18,8 @@ import {
   validateStep3,
 } from '@/app/utils/orderUtils';
 import { syncCartToOrderData } from '@/app/utils/cartOrderSync';
-import { FAQ_ITEMS, FAQ_CATEGORIES } from '@/app/components/FAQ';
+import { FAQ_ITEMS, FAQ_CATEGORIES } from '@/app/components/faq/faqContent';
+import { filterEntries, groupByCategory, splitByQuery } from '@/app/components/faq/faqSearch';
 import {
   PRICING_CONFIG,
   SERVER_INFRA_FEE_ITEM,
@@ -461,6 +462,16 @@ check(
   FAQ_ITEMS.every((item) => FAQ_CATEGORIES.includes(item.category)),
   true
 );
+
+// ===== FAQ 검색 (탭 페이지에서도 기존 규칙 유지) =====
+
+const faqGroups = groupByCategory(FAQ_ITEMS);
+const faqAll = faqGroups.flatMap((group) => group.entries);
+check('분류별 순번은 1부터', faqGroups.map((group) => group.entries[0].number), [1, 1, 1]);
+check('빈 검색어는 전체', filterEntries(faqAll, '   ').length, 15);
+check('검색은 대소문자 무시 (masto.HOST)', filterEntries(faqAll, 'masto.HOST').map((e) => e.item.question), ['masto.host로 설치해주실 수 있나요?']);
+check('검색은 답변도 본다 (질문에 없는 "장기 소규모" 항목 포함)', filterEntries(faqAll, '중국집').map((e) => e.item.category), ['서버와 비용', '서버와 비용']);
+check('정규식 문자 검색어도 하이라이트가 깨지지 않음', splitByQuery('(3개월까진 서버비 무료)', '(3').map((p) => p.match), [true, false]);
 
 console.log(failed === 0 ? '\n모든 검증 통과' : `\n${failed}개 실패`);
 if (failed > 0) process.exit(1);

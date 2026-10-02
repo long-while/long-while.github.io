@@ -26,7 +26,7 @@ export default function Step1Applicant() {
         <h2 className="text-[25px] font-semibold mb-2 text-gradient-brand">
           Step 1. 신청자 및 커뮤니티 정보
         </h2>
-        <p className="text-[14px] text-gray-600">
+        <p className="text-[14px] text-text-secondary">
           커미션 신청에 필요한 기본 정보를 입력해 주세요.
         </p>
       </div>
@@ -38,13 +38,13 @@ export default function Step1Applicant() {
           <span className="sr-only">(필수)</span>
         </h3>
         <FieldGroupError field="termsAgreed">
-          <label className="flex items-start gap-3 cursor-pointer min-h-[44px] px-2 -mx-2 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+          <label className="flex items-start gap-3 cursor-pointer min-h-[44px] px-2 -mx-2 py-2 rounded-lg hover:bg-background-100 transition-colors">
             <input
               id="termsAgreed"
               type="checkbox"
               checked={step1.termsAgreed === 'yes'}
               onChange={(e) => updateStep1({ termsAgreed: e.target.checked ? 'yes' : 'no' })}
-              className="w-5 h-5 mt-0.5 shrink-0 accent-[#ff7b00]"
+              className="w-5 h-5 mt-0.5 shrink-0 accent-brand"
               aria-required="true"
               {...fieldAria('termsAgreed')}
             />
@@ -52,7 +52,7 @@ export default function Step1Applicant() {
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); setIsTermsModalOpen(true); }}
-                className="underline font-medium hover:text-[var(--brand-primary)]"
+                className="text-[16px] leading-[1.5] underline font-medium hover:text-brand"
               >
                 이용안내
               </button>
@@ -65,7 +65,7 @@ export default function Step1Applicant() {
       <TermsModal open={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
 
       {/* 2) 신청자 닉네임 */}
-      <div className="pt-6 border-t border-gray-200">
+      <div className="pt-6 border-t border-border-100">
         <h3 className="text-[18px] font-semibold mb-4">2) 신청자 닉네임</h3>
         <div className="space-y-2">
           <label htmlFor="applicantNickname" className="block text-[14px] font-medium">
@@ -87,14 +87,14 @@ export default function Step1Applicant() {
       </div>
 
       {/* 3) 커뮤니티 정보 */}
-      <div className="pt-6 border-t border-gray-200">
+      <div className="pt-6 border-t border-border-100">
         <h3 className="text-[18px] font-semibold mb-4">3) 커뮤니티 정보</h3>
         <div className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="communityShortName" className="block text-[14px] font-medium">
               커뮤니티 약칭 <span className="text-red-500" aria-hidden="true">*</span>
             </label>
-            <p className="text-[13px] text-gray-600 mb-2">
+            <p className="text-[13px] text-text-secondary mb-2">
               커미션주의 편의를 위해 작성하는 항목입니다.
             </p>
             <input
@@ -115,7 +115,7 @@ export default function Step1Applicant() {
             <label htmlFor="communityKoreanName" className="block text-[14px] font-medium">
               한글 이름 <span className="text-red-500" aria-hidden="true">*</span>
             </label>
-            <p className="text-[13px] text-gray-600 mb-2">
+            <p className="text-[13px] text-text-secondary mb-2">
               커미션주의 편의를 위해 작성하는 항목입니다.
             </p>
             <input
@@ -136,7 +136,7 @@ export default function Step1Applicant() {
             <label htmlFor="communityEnglishName" className="block text-[14px] font-medium">
               영어 이름 <span className="text-red-500" aria-hidden="true">*</span>
             </label>
-            <p className="text-[13px] text-gray-600 mb-2">
+            <p className="text-[13px] text-text-secondary mb-2">
               도메인 선정 시에 사용되니 신중히 작성해 주세요.
             </p>
             <input
@@ -156,7 +156,7 @@ export default function Step1Applicant() {
       </div>
 
       {/* 4) 커뮤니티 일정 */}
-      <div className="pt-6 border-t border-gray-200">
+      <div className="pt-6 border-t border-border-100">
         <h3 className="text-[18px] font-semibold mb-4">4) 커뮤니티 일정</h3>
 
         <label className="flex items-start gap-2 cursor-pointer mb-4">
@@ -178,21 +178,21 @@ export default function Step1Applicant() {
                 updateStep1({ isLongTermCommunity: false, longTermConfirmed: false });
               }
             }}
-            className="w-4 h-4 mt-1 shrink-0 accent-[#ff7b00]"
+            className="w-4 h-4 mt-1 shrink-0 accent-brand"
           />
           <span className="text-[14px] leading-[1.6]">
             장기 소규모 서버입니다.
-            <span className="text-gray-500"> (합격자 발표/개장/폐장 일정 없이 운영)</span>
+            <span className="text-text-secondary"> (합격자 발표/개장/폐장 일정 없이 운영)</span>
           </span>
         </label>
 
         {/* 장기 소규모 서버 안내 + '확인했습니다' 게이트 */}
         {step1.isLongTermCommunity && (
-          <div className="mb-4 p-4 bg-amber-50 border border-amber-300 rounded-lg animate-slideDown space-y-3">
-            <p className="text-[14px] font-semibold text-amber-800">
+          <div className="mb-4 p-4 bg-warning-50 border border-warning-200 rounded-lg animate-slideDown space-y-3">
+            <p className="text-[14px] font-semibold text-warning-700">
               ⚠ 장기 소규모 서버가 맞으신지 꼭 확인해 주세요
             </p>
-            <ul className="space-y-1.5 text-[13px] leading-[1.7] text-amber-800">
+            <ul className="space-y-1.5 text-[13px] leading-[1.7] text-warning-700">
               <li className="pl-3 relative before:content-['·'] before:absolute before:left-0">
                 장기 소규모 서버는 <strong>최소 반년(6개월) 이상</strong> 소규모로 (반영구적으로) 운영하려는 경우에만 해당됩니다.
               </li>
@@ -206,14 +206,14 @@ export default function Step1Applicant() {
                 장기 소규모 서버는 저렴한 월 서버비 유지를 위해 <strong>검색 기능(검색 서버)을 추가할 수 없습니다.</strong> (서버비는 인원수·기간에 따라 달라지며, 검색을 넣으면 검색 서버가 별도로 필요해 월 서버비가 크게 오릅니다.)
               </li>
             </ul>
-            <label className="flex items-start gap-2 cursor-pointer pt-1 border-t border-amber-200">
+            <label className="flex items-start gap-2 cursor-pointer pt-1 border-t border-warning-200">
               <input
                 type="checkbox"
                 checked={step1.longTermConfirmed}
                 onChange={(e) => updateStep1({ longTermConfirmed: e.target.checked })}
-                className="w-4 h-4 mt-1 shrink-0 accent-[#ff7b00]"
+                className="w-4 h-4 mt-1 shrink-0 accent-brand"
               />
-              <span className="text-[14px] font-medium text-amber-900 leading-[1.6]">
+              <span className="text-[14px] font-medium text-warning-700 leading-[1.6]">
                 위 내용을 이해했으며, 반년 이상 반영구적으로 운영할 장기 소규모 서버가 맞습니다.
               </span>
             </label>
@@ -269,8 +269,8 @@ export default function Step1Applicant() {
 
             {/* 운영 기간 표시 */}
             {step1.operationWeeks > 0 && (
-              <div className="mt-4 p-3 bg-[var(--brand-bg)] border border-[var(--brand-primary)] rounded-md">
-                <p className="text-[14px] text-[var(--brand-primary)] font-medium">
+              <div className="mt-4 p-3 bg-brand-50 border border-brand rounded-md">
+                <p className="text-[14px] text-brand font-medium">
                   커뮤니티 운영기간: {step1.operationWeeks}주
                 </p>
               </div>

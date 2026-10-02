@@ -1,29 +1,28 @@
-@import './fonts.css';
 @import './tailwind.css';
 @import './tokens.css';
 @import './theme.css';
+@import './design-tokens.css';
 @import './animations.css';
 
 body {
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: var(--font-sans);
   word-break: keep-all;
   overflow-wrap: break-word;
   scrollbar-gutter: stable;
 }
 
 * {
-  font-family: 'Noto Sans KR', sans-serif;
   word-break: keep-all;
   overflow-wrap: break-word;
 }
 
 input, textarea, button, select {
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: inherit;
 }
 
 /* 접근성: 포커스 인디케이터 */
 :focus-visible {
-  outline: 2px solid var(--brand-primary, #ff7b00);
+  outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
 

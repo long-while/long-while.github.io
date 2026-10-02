@@ -17,7 +17,7 @@ import App from '@/app/App';
 import type { PageType } from '@/app/types/navigation';
 
 export { ROUTES, SITE_URL, SITE_NAME, CONTACT_URL, absoluteUrl } from '@/app/constants/seo';
-export { FAQ_ITEMS } from '@/app/components/FAQ';
+export { FAQ_ITEMS } from '@/app/components/faq/faqContent';
 
 const RENDER_TIMEOUT_MS = 20_000;
 

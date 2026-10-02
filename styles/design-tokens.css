@@ -1,0 +1,295 @@
+/**
+ * Design tokens — 리디자인 시안 기준 (Tailwind v4 @theme)
+ * 이름·값·출처: design/prep/tokens.md
+ *
+ * 기존 tokens.css / theme.css 의 이름(--color-error, --color-gray-*, --radius-sm/md/lg/xl,
+ * --color-border 등)과 겹치지 않게 지었다. 겹치면 tokens.css(:root)가 덮어쓰기 때문.
+ */
+
+/* ── 반응형 글자 크기 (1024px 미만은 모바일 값) ─────────────────────────── */
+:root {
+  --ds-display-size: 48px;     --ds-display-lh: 62px;
+  --ds-hero-xl-size: 56px;     --ds-hero-xl-lh: 68px;
+  --ds-hero-lg-size: 52px;     --ds-hero-lg-lh: 62px;
+  --ds-headline1-size: 40px;   --ds-headline1-lh: 52px;
+  --ds-headline2-size: 24px;   --ds-headline2-lh: 36px;
+  --ds-title1-size: 28px;      --ds-title1-lh: 38px;
+  --ds-title2-size: 24px;      --ds-title2-lh: 34px;
+  --ds-title3-size: 20px;      --ds-title3-lh: 30px;
+  --ds-title4-size: 18px;      --ds-title4-lh: 28px;
+  --ds-title5-size: 16px;      --ds-title5-lh: 26px;
+  --ds-body1-size: 18px;       --ds-body1-lh: 26px;
+  --ds-body2-size: 16px;       --ds-body2-lh: 24px;
+  --ds-body3-size: 14px;       --ds-body3-lh: 20px;
+  --ds-caption1-size: 16px;    --ds-caption1-lh: 24px;
+  --ds-caption2-size: 14px;    --ds-caption2-lh: 20px;
+  --ds-logo-size: 30px;        --ds-logo-lh: 36px;
+  --ds-logo-footer-size: 34px; --ds-logo-footer-lh: 41px;
+  --ds-eyebrow-size: 20px;     --ds-eyebrow-lh: 30px;
+
+  /* 페이지 좌우 여백 (Q1: 모바일 16~20px) */
+  --ds-page-x: 20px;
+  /* 레이아웃 (Q14) */
+  --ds-content-width: 1320px;
+  --ds-column: 88px;
+  --ds-gutter: 24px;
+  /* 고정 헤더가 차지하는 높이 (헤더 위 여백 + 헤더 높이) */
+  --ds-header-offset: 24px;
+  --ds-header-height: 92px;
+}
+
+@media (max-width: 1023.98px) {
+  :root {
+    --ds-display-size: 28px;     --ds-display-lh: 38px;
+    --ds-hero-xl-size: 32px;     --ds-hero-xl-lh: 42px;
+    --ds-hero-lg-size: 30px;     --ds-hero-lg-lh: 40px;
+    --ds-headline1-size: 24px;   --ds-headline1-lh: 34px;
+    --ds-headline2-size: 20px;   --ds-headline2-lh: 30px;
+    --ds-title1-size: 22px;      --ds-title1-lh: 32px;
+    --ds-title2-size: 20px;      --ds-title2-lh: 30px;
+    --ds-title3-size: 18px;      --ds-title3-lh: 28px;
+    --ds-title4-size: 16px;      --ds-title4-lh: 26px;
+    --ds-body1-size: 16px;       --ds-body1-lh: 24px;
+    --ds-logo-size: 22px;        --ds-logo-lh: 28px;
+    --ds-logo-footer-size: 26px; --ds-logo-footer-lh: 32px;
+    --ds-eyebrow-size: 16px;     --ds-eyebrow-lh: 24px;
+
+    --ds-header-offset: 12px;
+    --ds-header-height: 64px;
+  }
+}
+
+@media (max-width: 639.98px) {
+  :root {
+    --ds-page-x: 16px;
+  }
+}
+
+@theme {
+  /* ── 색: 브랜드 블루 단계 (Color Guide 시스템 컬러) ── */
+  --color-brand-900: #0D306E; /* 미사용 */
+  --color-brand-800: #114092; /* 미사용 */
+  --color-brand-700: #1551B7; /* 버튼 hover */
+  --color-brand-600: #1A61DB; /* 히어로 그라디언트 끝 */
+  --color-brand-500: #3376E7; /* Primary */
+  --color-brand-400: #5F93EC; /* 히어로 그라디언트 중간 */
+  --color-brand-300: #8DB2F2; /* 히어로 그라디언트 시작 */
+  --color-brand-200: #BBD1F7; /* gradientSoft 끝 */
+  --color-brand-100: #DFE9FB; /* gradientSoft 중간 */
+  --color-brand-50: #F1F6FD;  /* 연한 배경 (Q15 통일값) */
+
+  /* 역할 이름 */
+  --color-brand: #3376E7;
+  --color-brand-hover: #1551B7;
+
+  /* ── 색: 글자 ── */
+  --color-text-primary: #000000;
+  --color-text-secondary: #767676;
+  --color-text-disabled: #A6A6A6; /* Q15: #999999·#AAAAAA 통합 */
+  --color-text-inverse: #FFFFFF;
+  --color-text-inverse-muted: rgb(255 255 255 / 0.6); /* 푸터 보조 글자 #FFFFFF99 */
+
+  /* ── 색: 선 ── */
+  --color-border-100: #DDDDDD;
+  --color-border-200: #A6A6A6; /* Q15: #AAAAAA 통합 */
+  --color-border-strong: #000000; /* 입력칸 hover·focus */
+
+  /* ── 색: 배경 ── */
+  --color-background-white: #FFFFFF;
+  --color-background-100: #F6F7F8;
+  --color-background-200: #EDEDED; /* 회색 버튼 hover, 진행 바 바탕 */
+  --color-background-brand: #F1F6FD; /* Q15: #E9F2FF·#F1F4FF 통합 */
+  --color-background-inverse: #000000; /* 푸터, 헤더 신청하기, 토스트 */
+  --color-background-inverse-raised: #111111; /* 푸터 버튼 */
+
+  /* ── 색: 경고 (P3, 시안에 없어 노랑 계열로 정의. 기존 amber 경고 상자를 대체) ── */
+  --color-warning-50: #FFFBEB;  /* 경고 상자 배경 */
+  --color-warning-200: #FDE68A; /* 경고 상자 선 */
+  --color-warning-500: #F59E0B; /* 경고 아이콘·강조 */
+  --color-warning-700: #B45309; /* 경고 글자, 진한 경고 배경(흰 글자 대비 5.0:1) */
+
+  /* ── 색: 오버레이·오류 ── */
+  --color-overlay: rgb(0 0 0 / 0.5); /* Q15: 40%·50% 통합 */
+  --color-error-500: #DC0000; /* Input Guide Error */
+
+  /* ── 글꼴 ── */
+  --font-pretendard: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-inter: Inter, 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+
+  /* ── 간격 (Spacing 가이드 4~160) → p-ds-24, gap-ds-12 … ── */
+  --spacing-ds-4: 4px;
+  --spacing-ds-8: 8px;
+  --spacing-ds-12: 12px;
+  --spacing-ds-16: 16px;
+  --spacing-ds-20: 20px;
+  --spacing-ds-24: 24px;
+  --spacing-ds-28: 28px;
+  --spacing-ds-32: 32px;
+  --spacing-ds-40: 40px;
+  --spacing-ds-48: 48px;
+  --spacing-ds-60: 60px;
+  --spacing-ds-68: 68px;
+  --spacing-ds-74: 74px;
+  --spacing-ds-80: 80px;
+  --spacing-ds-100: 100px;
+  --spacing-ds-120: 120px;
+  --spacing-ds-160: 160px;
+
+  /* ── 모서리 (Q19) ── */
+  --radius-button: 4px;
+  --radius-input: 8px;
+  --radius-card: 12px;
+  --radius-card-lg: 20px; /* 신청서 큰 카드 */
+  --radius-modal: 12px; /* file.json 모달 3종 모두 12px */
+  --radius-pill: 9999px;
+
+  /* ── 그림자 (Q15: 2종) ── */
+  --shadow-card: 12px 12px 8px 0 rgb(34 51 34 / 0.12); /* 등록 스타일 shadow/card */
+  --shadow-modal: 8px 8px 10px 0 rgb(34 34 34 / 0.12);
+
+  /* ── 브레이크포인트 이름 (Tailwind lg=1024px 와 같음) ── */
+  --breakpoint-ds: 1024px;
+}
+
+/* 글자 토큰: 크기는 위 :root 변수를 참조해 모바일에서 자동으로 줄어든다. 자간은 -2.5% 규칙. */
+@theme inline {
+  --text-hero-xl: var(--ds-hero-xl-size);
+  --text-hero-xl--line-height: var(--ds-hero-xl-lh);
+  --text-hero-xl--letter-spacing: -0.025em;
+  --text-hero-xl--font-weight: 700;
+
+  --text-hero-lg: var(--ds-hero-lg-size);
+  --text-hero-lg--line-height: var(--ds-hero-lg-lh);
+  --text-hero-lg--letter-spacing: -0.025em;
+  --text-hero-lg--font-weight: 700;
+
+  --text-display: var(--ds-display-size);
+  --text-display--line-height: var(--ds-display-lh);
+  --text-display--letter-spacing: -0.025em;
+  --text-display--font-weight: 700;
+
+  --text-headline1: var(--ds-headline1-size);
+  --text-headline1--line-height: var(--ds-headline1-lh);
+  --text-headline1--letter-spacing: -0.025em;
+  --text-headline1--font-weight: 700;
+
+  --text-headline2: var(--ds-headline2-size);
+  --text-headline2--line-height: var(--ds-headline2-lh);
+  --text-headline2--letter-spacing: -0.025em;
+  --text-headline2--font-weight: 700;
+
+  --text-title1: var(--ds-title1-size);
+  --text-title1--line-height: var(--ds-title1-lh);
+  --text-title1--letter-spacing: -0.025em;
+  --text-title1--font-weight: 500;
+
+  --text-title2: var(--ds-title2-size);
+  --text-title2--line-height: var(--ds-title2-lh);
+  --text-title2--letter-spacing: -0.025em;
+  --text-title2--font-weight: 500;
+
+  --text-title3: var(--ds-title3-size);
+  --text-title3--line-height: var(--ds-title3-lh);
+  --text-title3--letter-spacing: -0.025em;
+  --text-title3--font-weight: 500;
+
+  --text-title4: var(--ds-title4-size);
+  --text-title4--line-height: var(--ds-title4-lh);
+  --text-title4--letter-spacing: -0.025em;
+  --text-title4--font-weight: 500;
+
+  --text-title5: var(--ds-title5-size);
+  --text-title5--line-height: var(--ds-title5-lh);
+  --text-title5--letter-spacing: -0.025em;
+  --text-title5--font-weight: 500;
+
+  --text-body1: var(--ds-body1-size);
+  --text-body1--line-height: var(--ds-body1-lh);
+  --text-body1--letter-spacing: -0.025em;
+  --text-body1--font-weight: 400;
+
+  --text-body2: var(--ds-body2-size);
+  --text-body2--line-height: var(--ds-body2-lh);
+  --text-body2--letter-spacing: -0.025em;
+  --text-body2--font-weight: 400;
+
+  --text-body3: var(--ds-body3-size);
+  --text-body3--line-height: var(--ds-body3-lh);
+  --text-body3--letter-spacing: -0.025em;
+  --text-body3--font-weight: 400;
+
+  --text-caption1: var(--ds-caption1-size);
+  --text-caption1--line-height: var(--ds-caption1-lh);
+  --text-caption1--letter-spacing: -0.025em;
+  --text-caption1--font-weight: 500;
+
+  --text-caption2: var(--ds-caption2-size);
+  --text-caption2--line-height: var(--ds-caption2-lh);
+  --text-caption2--letter-spacing: -0.025em;
+  --text-caption2--font-weight: 500;
+
+  /* 로고 (Inter 700): 헤더 30/36, 푸터 34/41 */
+  --text-logo: var(--ds-logo-size);
+  --text-logo--line-height: var(--ds-logo-lh);
+  --text-logo--letter-spacing: -0.025em;
+  --text-logo--font-weight: 700;
+
+  --text-logo-footer: var(--ds-logo-footer-size);
+  --text-logo-footer--line-height: var(--ds-logo-footer-lh);
+  --text-logo-footer--letter-spacing: -0.025em;
+  --text-logo-footer--font-weight: 700;
+
+  /* 영문 소제목 (Inter 500, 대문자, 자간 0) */
+  --text-eyebrow: var(--ds-eyebrow-size);
+  --text-eyebrow--line-height: var(--ds-eyebrow-lh);
+  --text-eyebrow--letter-spacing: 0;
+  --text-eyebrow--font-weight: 500;
+}
+
+/* ── 레이아웃 유틸리티 (Q14) ─────────────────────────────────────────── */
+
+/* 본문 폭 1320px + 좌우 여백. 1920 화면에서 좌우 300px 가 남는다. */
+@utility container-ds {
+  width: 100%;
+  max-width: calc(var(--ds-content-width) + var(--ds-page-x) * 2);
+  margin-inline: auto;
+  padding-inline: var(--ds-page-x);
+}
+
+/* 12열 그리드 (열 88px, 거터 24px). 1024px 미만은 1열. */
+@utility grid-ds {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--ds-gutter);
+
+  @media (max-width: 1023.98px) {
+    grid-template-columns: minmax(0, 1fr);
+
+    & > * {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+/* 시안 그라디언트 */
+@utility bg-gradient-brand-hero {
+  background-image: linear-gradient(180deg, var(--color-brand-300) 0%, var(--color-brand-400) 50%, var(--color-brand-600) 100%);
+}
+
+@utility bg-gradient-brand-soft {
+  background-image: linear-gradient(180deg, var(--color-brand-50) 0%, var(--color-brand-100) 50%, var(--color-brand-200) 100%);
+}
+
+/* 고정 헤더가 차지하는 높이만큼 비우기 / 앵커 이동 시 헤더에 가리지 않게 / 헤더 아래 고정 요소 */
+@utility pt-header {
+  padding-top: calc(var(--ds-header-offset) + var(--ds-header-height));
+}
+
+@utility scroll-mt-header {
+  scroll-margin-top: calc(var(--ds-header-offset) + var(--ds-header-height) + 16px);
+}
+
+@utility top-below-header {
+  top: calc(var(--ds-header-offset) + var(--ds-header-height) + 16px);
+}

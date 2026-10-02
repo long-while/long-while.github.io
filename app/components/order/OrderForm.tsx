@@ -148,20 +148,20 @@ export default function OrderForm() {
       <div className="mb-8">
         {/* 모바일: 현재 스텝만 표시 */}
         <div className="md:hidden">
-          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center justify-between bg-background-100 rounded-lg p-4 border border-border-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[var(--brand-primary)] text-white flex items-center justify-center font-medium text-[14px] shadow-md">
+              <div className="w-10 h-10 rounded-full bg-brand text-text-inverse flex items-center justify-center font-medium text-[14px] shadow-md">
                 {currentStep}
               </div>
               <div>
-                <p className="text-[14px] font-medium text-black">{currentStepData?.label}</p>
+                <p className="text-[14px] font-medium text-text-primary">{currentStepData?.label}</p>
                 <p className="text-[12px] text-foreground/60">Step {currentStep} / 4</p>
               </div>
             </div>
             {/* 미니 진행률 바 */}
-            <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="w-20 h-2 bg-background-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-[var(--brand-primary)] transition-all duration-500"
+                className="h-full bg-brand transition-all duration-500"
                 style={{ width: `${(currentStep / 4) * 100}%` }}
               />
             </div>
@@ -172,9 +172,9 @@ export default function OrderForm() {
         <div className="hidden md:block">
           <div className="flex items-center justify-between relative">
             {/* 프로그레스 라인 */}
-            <div className="absolute left-0 right-0 h-1 bg-gray-200 top-1/2 -translate-y-1/2 -z-10">
+            <div className="absolute left-0 right-0 h-1 bg-background-200 top-1/2 -translate-y-1/2 -z-10">
               <div
-                className="h-full bg-[var(--brand-primary)] transition-all duration-500"
+                className="h-full bg-brand transition-all duration-500"
                 style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
               />
             </div>
@@ -196,17 +196,17 @@ export default function OrderForm() {
                     }, 200);
                   }}
                   disabled={!isAccessible}
-                  className={`flex flex-col items-center gap-2 bg-white px-2 group ${
+                  className={`flex flex-col items-center gap-2 bg-background-white px-2 group ${
                     !isAccessible ? 'cursor-not-allowed opacity-50' : ''
                   }`}
                 >
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-[14px] border-2 transition-all duration-300 ${
                       currentStep >= step.num
-                        ? 'bg-[var(--brand-primary)] text-white border-[var(--brand-primary)] shadow-md'
+                        ? 'bg-brand text-text-inverse border-brand shadow-md'
                         : isAccessible
-                          ? 'bg-white text-gray-400 border-gray-300 group-hover:border-[var(--brand-primary)] group-hover:text-[var(--brand-primary)]'
-                          : 'bg-gray-100 text-gray-300 border-gray-200'
+                          ? 'bg-background-white text-text-disabled border-border-100 group-hover:border-brand group-hover:text-brand'
+                          : 'bg-background-100 text-text-disabled border-border-100'
                     }`}
                   >
                     {step.num}
@@ -214,10 +214,10 @@ export default function OrderForm() {
                   <span
                     className={`text-[14px] whitespace-nowrap transition-all duration-300 ${
                       currentStep >= step.num
-                        ? 'text-[var(--brand-primary)] font-medium'
+                        ? 'text-brand font-medium'
                         : isAccessible
-                          ? 'text-gray-400 group-hover:text-[var(--brand-primary)]'
-                          : 'text-gray-300'
+                          ? 'text-text-disabled group-hover:text-brand'
+                          : 'text-text-disabled'
                     }`}
                   >
                     {step.label}
@@ -268,14 +268,14 @@ export default function OrderForm() {
 
       {/* 잠긴 단계를 눌렀을 때의 안내 */}
       {stepNotice && (
-        <div role="status" className="mb-6 p-4 bg-amber-50 border border-amber-400 rounded-md flex items-center justify-between gap-4">
-          <p className="text-[14px] text-amber-800">{stepNotice}</p>
+        <div role="status" className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-md flex items-center justify-between gap-4">
+          <p className="text-[14px] text-warning-700">{stepNotice}</p>
           <button
             onClick={() => setStepNotice(null)}
-            className="p-1 hover:bg-amber-100 rounded-full transition-colors shrink-0"
+            className="p-1 hover:bg-warning-200 rounded-full transition-colors shrink-0"
             aria-label="알림 닫기"
           >
-            <X className="w-4 h-4 text-amber-700" />
+            <X className="w-4 h-4 text-warning-700" />
           </button>
         </div>
       )}
@@ -316,7 +316,7 @@ export default function OrderForm() {
 
       {/* Step 컨텐츠 카드 - 트랜지션 효과 추가 */}
       <div 
-        className={`bg-white border border-border rounded-lg p-8 shadow-sm mb-8 transition-all duration-300 ${
+        className={`bg-background-white border border-border rounded-lg p-8 shadow-sm mb-8 transition-all duration-300 ${
           isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
         }`}
       >
@@ -334,14 +334,14 @@ export default function OrderForm() {
           <button
             onClick={handlePrevious}
             disabled={currentStep === 1}
-            className="px-6 py-3 border border-border bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-sm active:scale-[0.98]"
+            className="px-6 py-3 border border-border bg-background-white hover:bg-background-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-sm active:scale-[0.98]"
           >
             ← 이전
           </button>
 
           <button
             onClick={handleNext}
-            className="px-6 py-3 border border-transparent bg-[var(--brand-primary)] text-white transition-all duration-200 text-[14px] font-medium rounded-md shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
+            className="px-6 py-3 border border-transparent bg-brand text-text-inverse transition-all duration-200 text-[14px] font-medium rounded-md shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
           >
             다음 →
           </button>
@@ -353,7 +353,7 @@ export default function OrderForm() {
         <div className="flex justify-start">
           <button
             onClick={handlePrevious}
-            className="px-6 py-3 border border-border bg-white hover:bg-gray-50 transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-sm active:scale-[0.98]"
+            className="px-6 py-3 border border-border bg-background-white hover:bg-background-100 transition-all duration-300 text-[14px] font-medium rounded-md hover:shadow-sm active:scale-[0.98]"
           >
             ← 이전
           </button>

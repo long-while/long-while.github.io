@@ -1,16 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useEstimate } from '@/app/contexts/EstimateContext';
-import { LONG_TERM_MIN_MONTHS } from '@/app/constants/form';
 import {
   TIER_OPTIONS,
-  getAvailableTiers,
   getMonthOptions,
-  getServerCalcResult,
-  getUsersOptions,
-  isUsersAllowed,
-  needsTier,
 } from '@/app/lib/mastodonServerConfig';
-import type { ServerCalcResult, ServerTier } from '@/app/lib/mastodonServerConfig';
+import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
+import { useServerCalculator } from '@/app/components/server/useServerCalculator';
 import {
   Select,
   SelectContent,
@@ -27,78 +20,11 @@ export default function MastodonServerCalculator({
   /** 장기 소규모 서버: 기간을 12개월 이상(Vultr)으로 고정하고 검색을 막는다 */
   longTerm?: boolean;
 }) {
-  const { serverCalcResult, setServerCalcResult } = useEstimate();
-
-  const [months, setMonths] = useState<string>(
-    serverCalcResult ? String(serverCalcResult.months) : ''
-  );
-  const [usersKey, setUsersKey] = useState<string>(
-    serverCalcResult ? serverCalcResult.usersKey : ''
-  );
-  const [search, setSearch] = useState<'yes' | 'no' | null>(
-    serverCalcResult ? serverCalcResult.search : null
-  );
-  const [tier, setTier] = useState<ServerTier | null>(serverCalcResult?.tier ?? null);
-
-  // 장기 소규모 서버는 반영구(12개월 이상) 운영 → 기간을 12개월로 고정
-  useEffect(() => {
-    if (longTerm && months !== '12') {
-      setMonths('12');
-    }
-  }, [longTerm, months]);
-
-  // 장기(12개월 이상)는 10인 이하만 받는다. 기간을 바꿔 고른 인원이 범위를 벗어나면 선택 해제
-  const isLongTermMonths = Number(months) >= LONG_TERM_MIN_MONTHS;
-  const usersOptions = getUsersOptions(Number(months));
-  useEffect(() => {
-    if (months && usersKey && !isUsersAllowed(Number(months), usersKey)) {
-      setUsersKey('');
-    }
-  }, [months, usersKey]);
-  const usersValid = !!usersKey && isUsersAllowed(Number(months), usersKey);
-
-  // 4개월 이상은 서버 사양 등급(최소/타협/쾌적)을 고른다
-  const showTier = !!months && usersValid && needsTier(Number(months));
-  const availableTiers = useMemo(
-    () => getAvailableTiers(Number(months), usersKey),
-    [months, usersKey]
-  );
-
-  // 기간·인원을 바꿔 고른 등급이 없어지면(5인 미만·장기는 타협 없음) 선택 해제
-  useEffect(() => {
-    if (tier && !availableTiers.includes(tier)) {
-      setTier(null);
-    }
-  }, [tier, availableTiers]);
-
-  // 현재 인원/기간/등급이 Vultr(장기·소규모) 호스팅인지 검색 제외 기준으로 판정 (검색값에 따른 순환 방지)
-  const baselineIsVultr = useMemo(() => {
-    if (!months || !usersValid) return false;
-    return getServerCalcResult(Number(months), usersKey, 'no', tier).type === 'vultr';
-  }, [months, usersKey, usersValid, tier]);
-
-  // 검색 차단 규칙: Vultr(장기·소규모) 서버는 검색 서버 비용이 커서 막고, GCP는 허용한다.
-  const searchLocked = longTerm || baselineIsVultr;
-
-  // 검색 잠금 시 '아니오'로 강제 고정
-  useEffect(() => {
-    if (searchLocked && search !== 'no') {
-      setSearch('no');
-    }
-  }, [searchLocked, search]);
-
-  const isAllSelected = !!(months && usersValid && search && (!showTier || tier));
-  const result: ServerCalcResult | null = isAllSelected
-    ? getServerCalcResult(Number(months), usersKey, search!, tier)
-    : null;
-
-  useEffect(() => {
-    setServerCalcResult(result);
-  }, [months, usersKey, search, tier, showTier, setServerCalcResult]);
-
-  // 등급 버튼에 표시할 월 서버비 (5인 미만+검색은 경고라 금액 없음)
-  const getTierMonthlyKrw = (t: ServerTier) =>
-    getServerCalcResult(Number(months), usersKey, search ?? 'no', t).monthlyKrw;
+  const {
+    months, setMonths, usersKey, setUsersKey, search, setSearch, tier, setTier,
+    isLongTermMonths, usersOptions, showTier, availableTiers, searchLocked,
+    isAllSelected, result, getTierMonthlyKrw,
+  } = useServerCalculator(longTerm);
 
   const handleSetSearchNo = () => setSearch('no');
 
@@ -132,20 +58,20 @@ export default function MastodonServerCalculator({
         {/* 1. 서버 운영 기간 */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-[14px] font-medium text-foreground/70">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-bold font-mono shrink-0">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand/10 text-brand text-[11px] font-bold font-mono shrink-0">
               1
             </span>
             서버 운영 기간
           </label>
           {longTerm ? (
-            <div className="h-[46px] px-3 flex items-center text-[14px] border border-[#ff7b00] bg-[#fff5eb] text-[#cc5500]">
+            <div className="h-[46px] px-3 flex items-center text-[14px] border border-brand bg-brand-50 text-brand-700">
               12개월 이상 · 장기 소규모 서버 (반영구)
             </div>
           ) : (
             <Select value={months} onValueChange={setMonths}>
               <SelectTrigger
                 className={`h-[46px] text-[14px] rounded-none w-full
-                  ${months ? 'border-[#ff7b00]' : ''}`}
+                  ${months ? 'border-brand' : ''}`}
               >
                 <SelectValue placeholder="선택해주세요" />
               </SelectTrigger>
@@ -163,7 +89,7 @@ export default function MastodonServerCalculator({
         {/* 2. 러닝 인원 */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-[14px] font-medium text-foreground/70">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-bold font-mono shrink-0">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand/10 text-brand text-[11px] font-bold font-mono shrink-0">
               2
             </span>
             평균 동시접속자 수 (커뮤니티의 경우 러닝 인원)
@@ -171,7 +97,7 @@ export default function MastodonServerCalculator({
           <Select value={usersKey} onValueChange={setUsersKey}>
             <SelectTrigger
               className={`h-[46px] text-[14px] rounded-none w-full
-                ${usersKey ? 'border-[#ff7b00]' : ''}`}
+                ${usersKey ? 'border-brand' : ''}`}
             >
               <SelectValue placeholder="선택해주세요" />
             </SelectTrigger>
@@ -184,7 +110,7 @@ export default function MastodonServerCalculator({
             </SelectContent>
           </Select>
           {isLongTermMonths && (
-            <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+            <p className="text-[13px] leading-[1.7] text-brand-700">
               장기(12개월 이상) 서버는 10인 이하 소규모만 신청하실 수 있어요.
               11인 이상이 1년 넘게 운영하실 예정이라면 따로 문의해 주세요.
             </p>
@@ -194,7 +120,7 @@ export default function MastodonServerCalculator({
         {/* 3. 검색 기능 */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-[14px] font-medium text-foreground/70">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-bold font-mono shrink-0">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand/10 text-brand text-[11px] font-bold font-mono shrink-0">
               3
             </span>
             검색 기능 추가 여부
@@ -212,8 +138,8 @@ export default function MastodonServerCalculator({
                 disabled={searchLocked}
                 className={`px-5 py-2.5 border text-[14px] transition-all min-h-[44px]
                   ${search === val
-                    ? 'border-[#ff7b00] bg-[#fff5eb] text-[#ff7b00] font-medium'
-                    : 'border-border text-foreground/60 hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                    ? 'border-brand bg-brand-50 text-brand font-medium'
+                    : 'border-border text-foreground/60 hover:border-brand hover:bg-brand-50'
                   }
                   ${searchLocked ? 'opacity-40 cursor-not-allowed hover:border-border hover:bg-transparent' : ''}`}
               >
@@ -222,7 +148,7 @@ export default function MastodonServerCalculator({
             ))}
           </div>
           {searchLocked && (
-            <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+            <p className="text-[13px] leading-[1.7] text-brand-700">
               {longTerm
                 ? '장기 소규모 서버(반영구)는 검색 서버가 별도로 필요해 서버비가 크게 올라, 검색을 '
                 : '이 사양은 장기·소규모(Vultr) 서버라 검색 서버 비용이 커, 검색을 '}
@@ -236,7 +162,7 @@ export default function MastodonServerCalculator({
         {showTier && (
           <div className="space-y-2 animate-fadeIn">
             <label className="flex items-center gap-2 text-[14px] font-medium text-foreground/70">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-bold font-mono shrink-0">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand/10 text-brand text-[11px] font-bold font-mono shrink-0">
                 4
               </span>
               서버 사양
@@ -253,12 +179,12 @@ export default function MastodonServerCalculator({
                     onClick={() => setTier(o.value)}
                     className={`w-full text-left px-4 py-3 border transition-all min-h-[44px]
                       ${tier === o.value
-                        ? 'border-[#ff7b00] bg-[#fff5eb]'
-                        : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                        ? 'border-brand bg-brand-50'
+                        : 'border-border hover:border-brand hover:bg-brand-50'
                       }`}
                   >
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className={`text-[14px] font-medium ${tier === o.value ? 'text-[#ff7b00]' : 'text-foreground/80'}`}>
+                      <span className={`text-[14px] font-medium ${tier === o.value ? 'text-brand' : 'text-foreground/80'}`}>
                         {o.label}
                       </span>
                       {monthlyKrw && (
@@ -289,13 +215,13 @@ export default function MastodonServerCalculator({
           <div className="animate-fadeIn">
             {result.type === 'warn' ? (
               /* 경고 카드 */
-              <div className="border border-amber-300 bg-amber-50 p-5 space-y-3">
-                <p className="text-[14px] font-medium text-amber-800">검색 기능 비추천</p>
+              <div className="border border-warning-200 bg-warning-50 p-5 space-y-3">
+                <p className="text-[14px] font-medium text-warning-700">검색 기능 비추천</p>
                 <ul className="space-y-1">
                   {result.warnNotes.map((note, i) => (
                     <li
                       key={i}
-                      className="text-[13px] text-amber-700 pl-3 relative before:content-['·'] before:absolute before:left-0"
+                      className="text-[13px] text-warning-700 pl-3 relative before:content-['·'] before:absolute before:left-0"
                     >
                       {note}
                     </li>
@@ -304,16 +230,16 @@ export default function MastodonServerCalculator({
                 <button
                   type="button"
                   onClick={handleSetSearchNo}
-                  className="mt-1 text-[13px] font-medium text-amber-800 border border-amber-400 bg-white px-4 py-2 hover:bg-amber-50 transition-colors min-h-[40px]"
+                  className="mt-1 text-[13px] font-medium text-warning-700 border border-warning-200 bg-background-white px-4 py-2 hover:bg-warning-50 transition-colors min-h-[40px]"
                 >
                   검색 없이 계속하기 →
                 </button>
               </div>
             ) : (
               /* 결과 카드 */
-              <div className="border border-[#ff7b00] bg-white">
+              <div className="border border-brand bg-background-white">
                 {/* 헤더: 총비용 */}
-                <div className="px-5 py-5 border-b border-[#ff7b00]/20 space-y-3">
+                <div className="px-5 py-5 border-b border-brand/20 space-y-3">
                   {/* 배지 */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-[11px] font-bold font-mono px-2 py-0.5 ${getHostingBadgeClass(result as ServerCalcResult & { type: 'gcp' | 'vultr' })}`}>
@@ -325,7 +251,7 @@ export default function MastodonServerCalculator({
                   {result.months >= 12 ? (
                     <div>
                       <p className="text-[17px] font-bold text-foreground mb-0.5">월별 서버비</p>
-                      <span className="text-[26px] font-bold tracking-tight leading-none text-[#ff7b00]">
+                      <span className="text-[26px] font-bold tracking-tight leading-none text-brand">
                         {result.monthlyKrw}
                       </span>
                     </div>
@@ -336,7 +262,7 @@ export default function MastodonServerCalculator({
                         {result.monthsLabel} 총 서버비
                       </p>
                       <span className={`text-[26px] font-bold tracking-tight leading-none
-                        ${result.totalKrw === '무료' ? 'text-green-600' : 'text-[#ff7b00]'}`}>
+                        ${result.totalKrw === '무료' ? 'text-green-600' : 'text-brand'}`}>
                         {result.totalKrw}
                       </span>
                     </div>
@@ -352,14 +278,14 @@ export default function MastodonServerCalculator({
                   )}
                   {result.months < 12 && result.type === 'gcp' && result.paidMonths > 0 && (
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-gray-50 border border-gray-200 px-3 py-2.5">
+                      <div className="bg-background-100 border border-border-100 px-3 py-2.5">
                         <p className="text-[11px] font-semibold text-foreground mb-0.5">처음 {result.freeMonths}개월</p>
                         <p className="text-[17px] font-bold text-green-600">무료</p>
                         <p className="text-[11px] text-foreground/60">GCP 크레딧 적용</p>
                       </div>
-                      <div className="bg-gray-50 border border-gray-200 px-3 py-2.5">
+                      <div className="bg-background-100 border border-border-100 px-3 py-2.5">
                         <p className="text-[11px] font-semibold text-foreground mb-0.5">이후 {result.paidMonths}개월</p>
-                        <p className="text-[17px] font-bold text-[#ff7b00]">월 {result.monthlyKrw}</p>
+                        <p className="text-[17px] font-bold text-brand">월 {result.monthlyKrw}</p>
                         <p className="text-[11px] text-foreground/60">등록한 결제수단에서 자동 청구</p>
                       </div>
                     </div>
@@ -367,7 +293,7 @@ export default function MastodonServerCalculator({
                   {result.months < 12 && result.type === 'vultr' && (
                     <div className="inline-flex items-baseline gap-1.5">
                       <span className="text-[13px] text-foreground/60">월</span>
-                      <span className="text-[18px] font-bold text-[#ff7b00]">{result.monthlyKrw}</span>
+                      <span className="text-[18px] font-bold text-brand">{result.monthlyKrw}</span>
                       <span className="text-[13px] text-foreground/60">× {result.months}개월</span>
                     </div>
                   )}
@@ -406,7 +332,7 @@ export default function MastodonServerCalculator({
 
         {/* 서버비 지불 방식 */}
         {!compact && isAllSelected && result && result.type !== 'warn' && (
-          <div className="border border-border bg-gray-50/50 px-4 py-4 space-y-1.5">
+          <div className="border border-border bg-background-100/50 px-4 py-4 space-y-1.5">
             <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">서버비 지불 방식</p>
             <p className="text-[13px] text-foreground/60 leading-[1.75]">
               {result.type === 'gcp' && result.paidMonths > 0 && (
@@ -429,7 +355,7 @@ export default function MastodonServerCalculator({
 
         {/* 규모와 예산 */}
         {!compact && (
-          <div className="border border-border bg-gray-50/50 px-4 py-4 space-y-1.5">
+          <div className="border border-border bg-background-100/50 px-4 py-4 space-y-1.5">
             <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">규모와 예산</p>
             <p className="text-[13px] text-foreground/60 leading-[1.75]">
               사양과 서버비는 계단처럼 증가하기 때문에, 19인 규모와 30인 규모가 동일한 사양의 서버를 사용하게 될 수도 있습니다.

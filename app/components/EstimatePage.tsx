@@ -53,20 +53,20 @@ function UndoToast({ itemId, name, onUndo, onDismiss }: {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-5 py-4 bg-black text-white rounded-lg shadow-lg max-w-[calc(100vw-32px)]"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-5 py-4 bg-background-inverse text-text-inverse rounded-lg shadow-lg max-w-[calc(100vw-32px)]"
     >
       <span className="text-[14px] break-keep">
         '{name}'을(를) 삭제했습니다.
       </span>
       <button
         onClick={onUndo}
-        className="text-[14px] font-semibold text-[#ffab5e] hover:text-[#ffc890] underline shrink-0 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2 rounded"
+        className="text-[14px] font-semibold text-brand-300 hover:text-brand-200 underline shrink-0 focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2 rounded"
       >
         실행 취소
       </button>
       <button
         onClick={onDismiss}
-        className="p-1 text-white/50 hover:text-white shrink-0 rounded focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
+        className="p-1 text-text-inverse/50 hover:text-text-inverse shrink-0 rounded focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
         aria-label="알림 닫기"
       >
         <X size={16} />
@@ -82,12 +82,12 @@ function ItemRow({ item, onRemove, onEdit }: {
   onEdit: () => void;
 }) {
   return (
-    <div className="flex items-center gap-4 px-5 py-4 hover:bg-black/[0.01] transition-colors">
+    <div className="flex items-center gap-4 px-5 py-4 hover:bg-background-inverse/[0.01] transition-colors">
       <div className="flex-1 min-w-0">
-        <h4 className="text-[15px] text-black font-semibold break-words">
+        <h4 className="text-[15px] text-text-primary font-semibold break-words">
           {item.name}
           {item.locked && (
-            <span className="ml-2 inline-flex items-center gap-1 align-middle px-2 py-0.5 bg-[#fff5eb] text-[#ff7b00] text-[11px] font-medium rounded-full">
+            <span className="ml-2 inline-flex items-center gap-1 align-middle px-2 py-0.5 bg-brand-50 text-brand text-[11px] font-medium rounded-full">
               <Lock size={10} aria-hidden />
               필수 포함
             </span>
@@ -99,7 +99,7 @@ function ItemRow({ item, onRemove, onEdit }: {
           </p>
         )}
       </div>
-      <span className="text-[15px] font-mono leading-normal text-[#ff7b00] shrink-0">
+      <span className="text-[15px] font-mono leading-normal text-brand shrink-0">
         {item.price === 0 ? '협의' : `₩${item.price.toLocaleString()}`}
       </span>
       {item.locked ? (
@@ -114,7 +114,7 @@ function ItemRow({ item, onRemove, onEdit }: {
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={onEdit}
-            className="p-1.5 text-foreground/30 hover:text-[#ff7b00] transition-colors rounded focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+            className="p-1.5 text-foreground/30 hover:text-brand transition-colors rounded focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2"
             aria-label={`${item.name} 수정하러 가기`}
             title="상품 페이지에서 이 항목을 다시 고릅니다"
           >
@@ -122,7 +122,7 @@ function ItemRow({ item, onRemove, onEdit }: {
           </button>
           <button
             onClick={onRemove}
-            className="p-1.5 text-foreground/30 hover:text-red-500 transition-colors rounded focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+            className="p-1.5 text-foreground/30 hover:text-red-500 transition-colors rounded focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2"
             aria-label={`${item.name} 삭제`}
           >
             <Trash2 size={16} />
@@ -163,7 +163,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
   }, [onNavigate, setEditTargetName]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background-white">
       {lastRemoved && (
         <UndoToast
           itemId={lastRemoved.item.id}
@@ -177,7 +177,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
         {/* 뒤로가기 버튼 */}
         <button
           onClick={onBack}
-          className="mb-10 flex items-center gap-3 text-[14px] min-h-[44px] hover:text-[#ff7b00] transition-colors text-foreground/70 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2 rounded"
+          className="mb-10 flex items-center gap-3 text-[14px] min-h-[44px] hover:text-brand transition-colors text-foreground/70 focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2 rounded"
         >
           <span className="text-[18px]">←</span>
           메인으로 돌아가기
@@ -185,7 +185,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
 
         {/* 타이틀 */}
         <div className="mb-8">
-          <h1 className="text-[40px] leading-[0.95] tracking-[-0.03em] font-bold text-[#ff7b00]">
+          <h1 className="text-[40px] leading-[0.95] tracking-[-0.03em] font-bold text-brand">
             내 견적 확인하기
           </h1>
         </div>
@@ -194,8 +194,8 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
         {items.length === 0 ? (
           <div className="py-24 text-center">
             <div className="mb-8 flex justify-center">
-              <div className="w-24 h-24 rounded-full bg-[#fff5eb] flex items-center justify-center">
-                <svg className="w-12 h-12 text-[#ff7b00]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="w-24 h-24 rounded-full bg-brand-50 flex items-center justify-center">
+                <svg className="w-12 h-12 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
                 </svg>
               </div>
@@ -210,14 +210,14 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => onNavigate('server')}
-                className="min-h-[60px] px-8 py-4 border border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all text-[16px] rounded-lg flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                className="min-h-[60px] px-8 py-4 border border-border hover:border-brand hover:bg-brand-50 transition-all text-[16px] rounded-lg flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2"
               >
                 <Server className="w-5 h-5" />
                 서버 설치 커미션
               </button>
               <button
                 onClick={() => onNavigate('bot')}
-                className="min-h-[60px] px-8 py-4 border border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] transition-all text-[16px] rounded-lg flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-[#ff7b00] focus-visible:outline-offset-2"
+                className="min-h-[60px] px-8 py-4 border border-border hover:border-brand hover:bg-brand-50 transition-all text-[16px] rounded-lg flex items-center justify-center gap-2 focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2"
               >
                 <Bot className="w-5 h-5" />
                 자동봇 커미션
@@ -245,9 +245,9 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                     {/* 서버 설치 옵션 */}
                     {serverItems.length > 0 && (
                       <div className="border border-border overflow-hidden">
-                        <div className="bg-black/[0.02] px-5 py-3 border-b border-border flex items-center justify-between">
+                        <div className="bg-background-inverse/[0.02] px-5 py-3 border-b border-border flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Server className="w-4 h-4 text-[#ff7b00]" />
+                            <Server className="w-4 h-4 text-brand" />
                             <h3 className="text-[15px] font-semibold">서버 설치</h3>
                           </div>
                           <span className="text-[14px] font-mono leading-normal text-foreground/50">
@@ -265,9 +265,9 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                     {/* 자동봇 옵션 */}
                     {botItems.length > 0 && (
                       <div className="border border-border overflow-hidden">
-                        <div className="bg-black/[0.02] px-5 py-3 border-b border-border flex items-center justify-between">
+                        <div className="bg-background-inverse/[0.02] px-5 py-3 border-b border-border flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Bot className="w-4 h-4 text-[#ff7b00]" />
+                            <Bot className="w-4 h-4 text-brand" />
                             <h3 className="text-[15px] font-semibold">자동봇</h3>
                           </div>
                           <span className="text-[14px] font-mono leading-normal text-foreground/50">
@@ -285,7 +285,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
                     {/* 기타 항목 */}
                     {otherItems.length > 0 && (
                       <div className="border border-border overflow-hidden">
-                        <div className="bg-black/[0.02] px-5 py-3 border-b border-border flex items-center justify-between">
+                        <div className="bg-background-inverse/[0.02] px-5 py-3 border-b border-border flex items-center justify-between">
                           <h3 className="text-[15px] font-semibold">기타</h3>
                           <span className="text-[14px] font-mono leading-normal text-foreground/50">
                             소계 ₩{calculateSubtotal(otherItems).toLocaleString()}
@@ -305,14 +305,14 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
 
             {/* 총 견적 금액 + 안내사항 통합 */}
             <section className="mb-4">
-              <div className="border border-[#ff7b00] p-6">
+              <div className="border border-brand p-6">
                 <div className="flex justify-between items-center">
                   <span className="text-[18px] leading-normal font-semibold">총 견적 금액</span>
-                  <span className="text-[28px] font-mono leading-normal text-[#ff7b00]">
+                  <span className="text-[28px] font-mono leading-normal text-brand">
                     ₩{getTotalPrice().toLocaleString()}
                   </span>
                 </div>
-                <div className="mt-4 pt-4 border-t border-[#ff7b00]/20 space-y-1 text-[13px] text-foreground/50">
+                <div className="mt-4 pt-4 border-t border-brand/20 space-y-1 text-[13px] text-foreground/50">
                   <p>• 최종 견적은 작업 난이도와 일정에 따라 달라질 수 있습니다.</p>
                   <p>• 정확한 견적은 신청서 제출 후 확인해드립니다.</p>
                   <p>• 자동봇 구동비는 1주 5천원이며, 테스트 기간 제외 후 주 단위로 청구합니다.</p>
@@ -325,7 +325,7 @@ export default function EstimatePage({ onBack, onNavigate }: EstimatePageProps) 
               <div className="flex flex-col items-center gap-3">
                 <button
                   onClick={handleProceedToOrder}
-                  className="inline-flex items-center gap-3 bg-[var(--brand-primary)] text-white px-10 py-4 rounded-full font-semibold text-[16px] shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98] transition-all duration-200"
+                  className="inline-flex items-center gap-3 bg-brand text-text-inverse px-10 py-4 rounded-full font-semibold text-[16px] shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98] transition-all duration-200"
                 >
                   신청서 작성하기
                   <ArrowRightIcon className="w-5 h-5" />

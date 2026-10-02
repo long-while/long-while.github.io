@@ -2,8 +2,8 @@
 
 :root {
   --font-size: 16px;
-  --background: #ffffff;
-  --foreground: #1a1a1a;
+  --background: var(--color-background-white);
+  --foreground: var(--color-text-primary);
   --card: #ffffff;
   --card-foreground: #1a1a1a;
   --popover: #ffffff;
@@ -13,24 +13,22 @@
   --secondary: #f5f5f5;
   --secondary-foreground: #1a1a1a;
   --muted: #f5f5f5;
-  --muted-foreground: #737373;
+  --muted-foreground: var(--color-text-secondary);
   --accent: #f5f5f5;
   --accent-foreground: #1a1a1a;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: #d1d5db;
+  --border: var(--color-border-100);
+  --input: var(--color-border-100);
   --input-background: #f5f5f5;
   --switch-background: #d4d4d4;
   --font-weight-bold: 700;
   --font-weight-semibold: 600;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #737373;
+  --ring: var(--color-text-secondary);
 
-  /* 포인트 컬러 추가 */
-  --color-orange: #ff7b00;
-  --color-orange-light: #ffa640;
+  /* 포인트 컬러 (주황 --color-orange* 는 Q2 로 제거, 브랜드 색은 design-tokens.css) */
   --color-blue: #2563eb;
   --color-blue-light: #60a5fa;
   --color-gray-50: #f9fafb;
@@ -45,11 +43,11 @@
   --color-gray-900: #111827;
 
   /* oklch 폴백 색상 (구형 브라우저용) */
-  --chart-1: #e05a00;
+  --chart-1: var(--color-brand-700);
   --chart-2: #0891b2;
   --chart-3: #475569;
-  --chart-4: #eab308;
-  --chart-5: #f97316;
+  --chart-4: var(--color-brand-300);
+  --chart-5: var(--color-brand-500);
   --radius: 0.625rem;
   --sidebar: #fafafa;
   --sidebar-foreground: #262626;
@@ -64,11 +62,11 @@
 /* oklch 지원 브라우저에서 사용 */
 @supports (color: oklch(0 0 0)) {
   :root {
-    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-1: var(--color-brand-700);
     --chart-2: oklch(0.6 0.118 184.704);
     --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
+    --chart-4: var(--color-brand-300);
+    --chart-5: var(--color-brand-500);
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -105,7 +103,7 @@
   --font-weight-normal: 400;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-3: var(--color-brand-400);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
@@ -157,8 +155,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: 'Noto Sans KR', sans-serif;
-  --font-mono: 'Noto Sans KR', sans-serif;
+  --font-sans: var(--font-pretendard);
+  --font-mono: var(--font-pretendard);
 }
 
 @layer base {
@@ -179,37 +177,12 @@
     font-size: var(--font-size);
   }
 
-  h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-bold);
-    line-height: 1.5;
-  }
-
-  h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-semibold);
-    line-height: 1.5;
-  }
-
-  h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-semibold);
-    line-height: 1.5;
-  }
-
-  h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-semibold);
-    line-height: 1.5;
+  /* 버튼 기본 굵기만 유지 (글자 크기·줄 간격 기본값은 2단계에서 정리: 크기는 각 컴포넌트가 토큰으로 정함) */
+  button {
+    font-weight: var(--font-weight-medium);
   }
 
   label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  button {
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);
     line-height: 1.5;

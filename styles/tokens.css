@@ -1,58 +1,44 @@
 /**
- * Design Tokens - OKLCH 기반 브랜드 컬러 시스템
+ * Legacy Design Tokens
  * =============================================
  *
- * 모든 컬러는 OKLCH 색공간으로 정의되어 있습니다.
- * --brand-hue 값 하나만 변경하면 전체 브랜드 컬러가 일관되게 변경됩니다.
- *
- * OKLCH(L C H) = Lightness(밝기) Chroma(채도) Hue(색상)
- *
- * 사용 예시:
- * - CSS: color: var(--brand-primary);
- * - Tailwind: className="text-[var(--brand-primary)]"
+ * 브랜드 색의 원천은 styles/design-tokens.css (@theme) 이다 (리디자인 Q2: 주황 → 블루 #3376E7).
+ * 아래 --brand-* 변수는 기존 CSS(.btn, .form-option 등)가 쓰는 별칭이며 모두 새 토큰을 가리킨다.
+ * 새 코드는 Tailwind 토큰 클래스(bg-brand, text-brand, bg-brand-50 …)를 쓴다.
  */
 
 :root {
   /* ========================================
-   * Brand Hue - 이 값만 바꾸면 전체 테마 변경
+   * Brand Colors → design-tokens.css 별칭
    * ========================================
    */
-  --brand-hue: 51;
-
-  /* ========================================
-   * Brand Colors - Primary (Orange)
-   * ========================================
-   *
-   * L(밝기): 60 → 99  /  C(채도): 0.19 → 0.01
-   * 밝을수록 L↑ C↓, 어두울수록 L↓ C↑
-   */
-  --brand-primary: oklch(72% 0.19 var(--brand-hue));
-  --brand-primary-hover: oklch(67% 0.18 var(--brand-hue));
-  --brand-primary-active: oklch(61% 0.16 var(--brand-hue));
-  --brand-primary-light: oklch(80% 0.15 var(--brand-hue));
-  --brand-primary-lighter: oklch(83% 0.14 var(--brand-hue));
+  --brand-primary: var(--color-brand);
+  --brand-primary-hover: var(--color-brand-hover);
+  --brand-primary-active: var(--color-brand-800);
+  --brand-primary-light: var(--color-brand-400);
+  --brand-primary-lighter: var(--color-brand-300);
 
   /* 브랜드 배경색 */
-  --brand-bg: oklch(97.5% 0.02 var(--brand-hue));
-  --brand-bg-hover: oklch(95.5% 0.03 var(--brand-hue));
-  --brand-bg-subtle: oklch(99% 0.01 var(--brand-hue));
+  --brand-bg: var(--color-brand-50);
+  --brand-bg-hover: var(--color-brand-100);
+  --brand-bg-subtle: var(--color-brand-50);
 
   /* 브랜드 그라디언트 */
-  --brand-gradient-start: var(--brand-primary);
-  --brand-gradient-mid: oklch(77% 0.16 var(--brand-hue));
-  --brand-gradient-end: var(--brand-primary-lighter);
-  --brand-gradient: linear-gradient(to right, var(--brand-gradient-start), var(--brand-gradient-mid));
-  --brand-gradient-vibrant: linear-gradient(to right, var(--brand-gradient-start), var(--brand-gradient-end));
+  --brand-gradient-start: var(--color-brand);
+  --brand-gradient-mid: var(--color-brand-400);
+  --brand-gradient-end: var(--color-brand-300);
+  --brand-gradient: linear-gradient(to right, var(--color-brand), var(--color-brand-400));
+  --brand-gradient-vibrant: linear-gradient(to right, var(--color-brand), var(--color-brand-300));
 
-  /* 히어로 섹션 그라디언트 */
+  /* 히어로 섹션 그라디언트 (각도·단계 위치는 그대로, 색만 블루 단계로) */
   --hero-gradient: linear-gradient(
     135deg,
-    oklch(91% 0.01 240) 0%,
-    oklch(92% 0.07 77) 25%,
-    oklch(86% 0.12 76) 45%,
-    oklch(83% 0.14 var(--brand-hue)) 65%,
-    oklch(75% 0.17 var(--brand-hue)) 85%,
-    oklch(72% 0.19 var(--brand-hue)) 100%
+    var(--color-brand-50) 0%,
+    var(--color-brand-100) 25%,
+    var(--color-brand-200) 45%,
+    var(--color-brand-300) 65%,
+    var(--color-brand-400) 85%,
+    var(--color-brand) 100%
   );
 
   /* ========================================
@@ -63,9 +49,9 @@
   --color-success-bg: oklch(98% 0.02 155);
   --color-success-border: oklch(87% 0.14 154);
 
-  --color-warning: oklch(77% 0.16 70);
-  --color-warning-bg: oklch(99% 0.02 95);
-  --color-warning-border: oklch(88% 0.15 92);
+  --color-warning: var(--color-warning-500);
+  --color-warning-bg: var(--color-warning-50);
+  --color-warning-border: var(--color-warning-200);
 
   --color-error: oklch(64% 0.21 25);
   --color-error-bg: oklch(97% 0.01 17);
@@ -75,7 +61,7 @@
   --color-info-bg: oklch(97% 0.01 255);
   --color-info-border: oklch(81% 0.10 252);
 
-  --color-amber-50: oklch(99% 0.02 95);
+  --color-amber-50: var(--color-warning-50);
 
   /* ========================================
    * Neutral Colors (Gray Scale)
@@ -138,23 +124,23 @@
   /* Form Elements */
   --form-border: var(--gray-300);
   --form-border-hover: var(--gray-400);
-  --form-border-focus: var(--brand-primary);
-  --form-focus-ring: oklch(72.45% 0.189 var(--brand-hue) / 0.1);
-  --form-focus-ring-color: oklch(72.45% 0.189 var(--brand-hue) / 0.3);
+  --form-border-focus: var(--color-brand);
+  --form-focus-ring: color-mix(in srgb, var(--color-brand) 10%, transparent);
+  --form-focus-ring-color: color-mix(in srgb, var(--color-brand) 30%, transparent);
   --form-bg: var(--color-white);
   --form-bg-disabled: var(--gray-100);
 
   /* Navigation */
   --nav-text: var(--gray-900);
-  --nav-text-hover: var(--brand-primary);
-  --nav-text-active: var(--brand-primary);
+  --nav-text-hover: var(--color-brand);
+  --nav-text-active: var(--color-brand);
   --nav-bg: var(--color-white);
   --nav-border: var(--gray-200);
   --nav-mobile-overlay: oklch(0% 0 0 / 0.5);
 
   /* Button - Primary */
-  --btn-primary-bg: var(--brand-primary);
-  --btn-primary-bg-hover: var(--brand-primary-hover);
+  --btn-primary-bg: var(--color-brand);
+  --btn-primary-bg-hover: var(--color-brand-hover);
   --btn-primary-text: var(--color-white);
   --btn-primary-border: transparent;
 
@@ -172,7 +158,7 @@
   --card-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 
   /* Badge */
-  --badge-bg: var(--brand-primary);
+  --badge-bg: var(--color-brand);
   --badge-text: var(--color-white);
   --badge-size: 20px;
 
@@ -219,44 +205,8 @@
  * ========================================
  */
 
-/* Text Colors */
-.text-brand {
-  color: var(--brand-primary);
-}
-
-.text-brand-hover:hover {
-  color: var(--brand-primary-hover);
-}
-
-/* Background Colors */
-.bg-brand {
-  background-color: var(--brand-primary);
-}
-
-.bg-brand-hover:hover {
-  background-color: var(--brand-primary-hover);
-}
-
-.bg-brand-light {
-  background-color: var(--brand-bg);
-}
-
-/* Border Colors */
-.border-brand {
-  border-color: var(--brand-primary);
-}
-
-/* Gradient */
-.bg-brand-gradient {
-  background: var(--brand-gradient);
-}
-
-.text-brand-gradient {
-  background: var(--brand-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+/* 색 유틸리티(.text-brand, .bg-brand, .border-brand 등)는 design-tokens.css 의 Tailwind 토큰이 만든다.
+ * 여기(레이어 밖)에 같은 이름을 두면 hover: 같은 변형 클래스를 이겨 버리므로 정의하지 않는다. */
 
 /* Focus Ring */
 .focus-brand:focus {
@@ -343,26 +293,26 @@ select[aria-invalid='true']:focus {
 }
 
 .form-option:hover {
-  border-color: var(--brand-primary);
-  background-color: var(--brand-bg);
+  border-color: var(--color-brand);
+  background-color: var(--color-brand-50);
   box-shadow: var(--card-shadow);
 }
 
 .form-option.selected {
-  border-color: var(--brand-primary);
-  background-color: var(--brand-bg);
-  box-shadow: 0 0 0 2px oklch(72.45% 0.189 var(--brand-hue) / 0.2);
+  border-color: var(--color-brand);
+  background-color: var(--color-brand-50);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 20%, transparent);
 }
 
 .form-checkbox,
 .form-radio {
-  accent-color: var(--brand-primary);
+  accent-color: var(--color-brand);
   cursor: pointer;
 }
 
 /* 브랜드 그라디언트 텍스트 */
 .text-gradient-brand {
-  background: linear-gradient(to right, var(--brand-primary), var(--brand-gradient-mid));
+  background: linear-gradient(to right, var(--color-brand), var(--color-brand-400));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -428,7 +378,7 @@ select[aria-invalid='true']:focus {
 }
 
 .btn-link {
-  color: var(--brand-primary);
+  color: var(--color-brand);
   background: none;
   border: none;
   padding: 0;
@@ -436,7 +386,7 @@ select[aria-invalid='true']:focus {
 }
 
 .btn-link:hover {
-  color: var(--brand-primary-hover);
+  color: var(--color-brand-hover);
   text-decoration: underline;
   transform: none;
 }
@@ -451,8 +401,8 @@ select[aria-invalid='true']:focus {
   align-items: center;
   justify-content: center;
   padding: 4px 12px;
-  background-color: var(--brand-bg);
-  border: 1px solid var(--brand-primary);
+  background-color: var(--color-brand-50);
+  border: 1px solid var(--color-brand);
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
 }
@@ -463,7 +413,7 @@ select[aria-invalid='true']:focus {
  */
 
 .card-header-brand {
-  background-color: var(--brand-primary);
+  background-color: var(--color-brand);
   padding: 16px 24px;
   border-bottom: 1px solid var(--gray-200);
 }

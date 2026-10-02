@@ -81,7 +81,7 @@ export default function TermsModal({ open, onClose }: TermsModalProps) {
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-overlay"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -91,7 +91,7 @@ export default function TermsModal({ open, onClose }: TermsModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label="이용안내"
-        className="relative w-full max-w-[820px] max-h-[85vh] bg-white rounded-lg shadow-xl flex flex-col"
+        className="relative w-full max-w-[820px] max-h-[85vh] bg-background-white rounded-lg shadow-xl flex flex-col"
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
           <h2 className="text-[18px] font-semibold">이용안내</h2>
@@ -99,7 +99,7 @@ export default function TermsModal({ open, onClose }: TermsModalProps) {
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="p-2 text-foreground/50 hover:text-foreground rounded-full hover:bg-black/5 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2"
+            className="p-2 text-foreground/50 hover:text-foreground rounded-full hover:bg-background-inverse/5 transition-colors focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2"
             aria-label="이용안내 닫기"
           >
             <X size={18} />
@@ -115,7 +115,7 @@ export default function TermsModal({ open, onClose }: TermsModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 bg-[var(--brand-primary)] text-white rounded-md text-[14px] font-medium hover:brightness-95 active:scale-[0.98] transition-all focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)] focus-visible:outline-offset-2"
+            className="px-6 py-2.5 bg-brand text-text-inverse rounded-md text-[14px] font-medium hover:brightness-95 active:scale-[0.98] transition-all focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2"
           >
             확인했습니다
           </button>

@@ -139,10 +139,10 @@ export default function Step2Server() {
     <div className="space-y-8">
       {/* 헤더 */}
       <div className="pb-6 border-b border-border animate-fadeInDown">
-        <h2 className="text-[25px] font-semibold mb-2 bg-gradient-to-r from-[#ff7b00] to-[#ff9933] bg-clip-text text-transparent">
+        <h2 className="text-[25px] font-semibold mb-2 bg-gradient-to-r from-brand to-brand-400 bg-clip-text text-transparent">
           Step 2. 서버 설치 옵션
         </h2>
-        <p className="text-[14px] text-gray-600">
+        <p className="text-[14px] text-text-secondary">
           마스토돈 서버 설치가 필요하신가요? 필요하지 않으시다면 "아니오"를 선택해 주세요.
         </p>
       </div>
@@ -154,8 +154,8 @@ export default function Step2Server() {
             1) 서버 설치를 신청하시나요? <span className="text-red-500">*</span>
             {serverFromCart && step2.applyServerInstall === 'yes' && <FromCartBadge />}
           </span>
-          <p className="text-[13px] text-gray-600 mt-1 mb-3">
-            서버 설치 기본 비용: <span className="font-medium text-[#ff7b00]">20,000원</span>
+          <p className="text-[13px] text-text-secondary mt-1 mb-3">
+            서버 설치 기본 비용: <span className="font-medium text-brand">20,000원</span>
           </p>
         </label>
         <FieldGroupError field="applyServerInstall">
@@ -167,7 +167,7 @@ export default function Step2Server() {
                 name="applyServerInstall"
                 checked={step2.applyServerInstall === 'yes'}
                 onChange={() => handleServerInstallChange('yes')}
-                className="w-5 h-5 accent-[#ff7b00] cursor-pointer"
+                className="w-5 h-5 accent-brand cursor-pointer"
               />
               <span className="text-[14px]">예</span>
             </label>
@@ -177,7 +177,7 @@ export default function Step2Server() {
                 name="applyServerInstall"
                 checked={step2.applyServerInstall === 'no'}
                 onChange={() => handleServerInstallChange('no')}
-                className="w-5 h-5 accent-[#ff7b00] cursor-pointer"
+                className="w-5 h-5 accent-brand cursor-pointer"
               />
               <span className="text-[14px]">아니오</span>
             </label>
@@ -187,30 +187,30 @@ export default function Step2Server() {
 
       {/* 서버 설치 "예" 선택 시에만 표시되는 옵션들 */}
       {step2.applyServerInstall === 'yes' && (
-        <div className="space-y-8 pt-6 border-t border-gray-200 animate-slideDown">
+        <div className="space-y-8 pt-6 border-t border-border-100 animate-slideDown">
 
           {/* 자동 포함 실비 안내 (해제 불가 / 장기 소규모 서버 제외) */}
           {!isLongTermServer && (
-            <div className="flex items-start gap-3 p-4 border border-[#ff7b00]/30 bg-[#fff5eb] rounded-lg">
+            <div className="flex items-start gap-3 p-4 border border-brand/30 bg-brand-50 rounded-lg">
               <input
                 type="checkbox"
                 checked
                 disabled
                 readOnly
                 aria-label={`${SERVER_INFRA_FEE_ITEM.name} (해제 불가)`}
-                className="w-4 h-4 mt-0.5 shrink-0 accent-[#ff7b00] cursor-not-allowed"
+                className="w-4 h-4 mt-0.5 shrink-0 accent-brand cursor-not-allowed"
               />
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="font-medium text-[14px]">{SERVER_INFRA_FEE_ITEM.name}</span>
-                  <span className="text-[11px] font-medium text-white bg-[#ff7b00] rounded-full px-2 py-0.5">
+                  <span className="text-[11px] font-medium text-text-inverse bg-brand rounded-full px-2 py-0.5">
                     필수 포함
                   </span>
-                  <span className="text-[14px] font-medium text-[#ff7b00]">
+                  <span className="text-[14px] font-medium text-brand">
                     +{SERVER_INFRA_FEE_ITEM.price.toLocaleString()}원
                   </span>
                 </div>
-                <p className="text-[13px] text-gray-600 mt-1">{SERVER_INFRA_FEE_ITEM.description}</p>
+                <p className="text-[13px] text-text-secondary mt-1">{SERVER_INFRA_FEE_ITEM.description}</p>
               </div>
             </div>
           )}
@@ -225,7 +225,7 @@ export default function Step2Server() {
                 2) 커스텀 옵션 선택
                 {themeFromCart && step2.additionalOption && <FromCartBadge />}
               </h3>
-              <p className="text-[13px] text-gray-600">
+              <p className="text-[13px] text-text-secondary">
                 테마 옵션은 전부 로고 변경 옵션이 포함되어 있습니다.
               </p>
             </div>
@@ -234,8 +234,8 @@ export default function Step2Server() {
               {/* 기본 (커스텀 없음) */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === null
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                  : 'border-border hover:border-brand hover:bg-brand-50 hover:shadow-sm'
                   }`}
               >
                 <input
@@ -243,19 +243,19 @@ export default function Step2Server() {
                   name="additionalOption"
                   checked={step2.additionalOption === null}
                   onChange={() => updateStep2({ additionalOption: null })}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-brand"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">기본</div>
-                  <div className="text-[13px] text-gray-600 mt-1">무료 — 기본 트위터 테마</div>
+                  <div className="text-[13px] text-text-secondary mt-1">무료 — 기본 트위터 테마</div>
                 </div>
               </label>
 
               {/* 로고 변경 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === 'logo'
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                  : 'border-border hover:border-brand hover:bg-brand-50 hover:shadow-sm'
                   }`}
               >
                 <input
@@ -263,19 +263,19 @@ export default function Step2Server() {
                   name="additionalOption"
                   checked={step2.additionalOption === 'logo'}
                   onChange={() => handleAdditionalOptionChange('logo')}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-brand"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">로고 변경</div>
-                  <div className="text-[13px] text-gray-600 mt-1">+5,000원</div>
+                  <div className="text-[13px] text-text-secondary mt-1">+5,000원</div>
                 </div>
               </label>
 
               {/* 낮 테마 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === 'dayTheme'
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                  : 'border-border hover:border-brand hover:bg-brand-50 hover:shadow-sm'
                   }`}
               >
                 <input
@@ -283,19 +283,19 @@ export default function Step2Server() {
                   name="additionalOption"
                   checked={step2.additionalOption === 'dayTheme'}
                   onChange={() => handleAdditionalOptionChange('dayTheme')}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-brand"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">낮 테마</div>
-                  <div className="text-[13px] text-gray-600 mt-1">+20,000원</div>
+                  <div className="text-[13px] text-text-secondary mt-1">+20,000원</div>
                 </div>
               </label>
 
               {/* 밤 테마 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === 'nightTheme'
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                  : 'border-border hover:border-brand hover:bg-brand-50 hover:shadow-sm'
                   }`}
               >
                 <input
@@ -303,19 +303,19 @@ export default function Step2Server() {
                   name="additionalOption"
                   checked={step2.additionalOption === 'nightTheme'}
                   onChange={() => handleAdditionalOptionChange('nightTheme')}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-brand"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">밤 테마</div>
-                  <div className="text-[13px] text-gray-600 mt-1">+20,000원</div>
+                  <div className="text-[13px] text-text-secondary mt-1">+20,000원</div>
                 </div>
               </label>
 
               {/* 테마 2종 */}
               <label
                 className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 ${step2.additionalOption === 'bothTheme'
-                  ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                  : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb] hover:shadow-sm'
+                  ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                  : 'border-border hover:border-brand hover:bg-brand-50 hover:shadow-sm'
                   }`}
               >
                 <input
@@ -323,11 +323,11 @@ export default function Step2Server() {
                   name="additionalOption"
                   checked={step2.additionalOption === 'bothTheme'}
                   onChange={() => handleAdditionalOptionChange('bothTheme')}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-brand"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">커스텀 테마 2종</div>
-                  <div className="text-[13px] text-gray-600 mt-1">+30,000원</div>
+                  <div className="text-[13px] text-text-secondary mt-1">+30,000원</div>
                 </div>
               </label>
             </div>
@@ -338,11 +338,11 @@ export default function Step2Server() {
             <h3 className="text-[18px] font-semibold">3) 기타 옵션 선택</h3>
 
             {/* 마스토돈 가이드: 서버 설치 신청 시 무료 제공 (선택 항목 아님) */}
-            <div className="p-4 border border-[#ff7b00] rounded-lg bg-[#fff5eb]">
-              <div className="font-medium text-[14px] text-[#cc5500]">
+            <div className="p-4 border border-brand rounded-lg bg-brand-50">
+              <div className="font-medium text-[14px] text-brand-700">
                 노션 마스토돈 가이드 무료 제공
               </div>
-              <div className="text-[13px] text-gray-600 mt-1">
+              <div className="text-[13px] text-text-secondary mt-1">
                 마스토돈 커뮤니티를 처음 러닝하는 러너를 위한 가이드입니다. 서버 설치 커미션을 신청하시면 별도 신청 없이 함께 전달드립니다. 기본 트위터 블루 테마 캡처 화면으로 제작되며, 각 서버 테마가 적용된 가이드는 제공하지 않습니다.
               </div>
             </div>
@@ -350,8 +350,8 @@ export default function Step2Server() {
             {/* 글자수 제한 변경 */}
             <div className="space-y-3">
               <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.changeCharacterLimit
-                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                : 'border-border hover:border-brand hover:bg-brand-50'
                 }`}>
                 <input
                   type="checkbox"
@@ -363,14 +363,14 @@ export default function Step2Server() {
                       setCharacterLimitError(null);
                     }
                   }}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                  className="w-4 h-4 shrink-0 accent-brand"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
                     글자수 제한 변경 (+5,000원)
                     {charLimitFromCart && step2.changeCharacterLimit && <FromCartBadge />}
                   </div>
-                  <div className="text-[13px] text-gray-600 mt-1">
+                  <div className="text-[13px] text-text-secondary mt-1">
                     기본 공백 포함 1000자. 원하는 글자수 제한을 설정합니다.
                   </div>
                 </div>
@@ -394,7 +394,7 @@ export default function Step2Server() {
                     placeholder="예: 500, 1500, 2000"
                     className={`w-full md:w-64 px-4 py-2 border rounded-md focus:outline-none text-[14px] ${characterLimitError
                       ? 'border-red-500 focus:border-red-500'
-                      : 'border-input focus:border-[#ff7b00]'
+                      : 'border-input focus:border-brand'
                       }`}
                   />
                   {!characterLimitError && <FieldError field="characterLimitValue" />}
@@ -410,8 +410,8 @@ export default function Step2Server() {
             {/* 검색 옵션 */}
             <div className="space-y-3">
               <label className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 hover:shadow-sm ${step2.searchOption
-                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                : 'border-border hover:border-brand hover:bg-brand-50'
                 } ${searchLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
@@ -421,29 +421,29 @@ export default function Step2Server() {
                     updateStep2({ searchOption: e.target.checked });
                   }}
                   disabled={searchLocked}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00] disabled:cursor-not-allowed"
+                  className="w-4 h-4 shrink-0 accent-brand disabled:cursor-not-allowed"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
                     검색 옵션 (+15,000원)
                     {searchFromCart && step2.searchOption && <FromCartBadge />}
                     {searchBlockedByVultr && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full ml-2">
+                      <span className="inline-flex items-center px-2 py-0.5 bg-background-100 text-text-secondary text-[11px] font-medium rounded-full ml-2">
                         장기·소규모(Vultr) 서버 선택 불가
                       </span>
                     )}
                     {!searchBlockedByVultr && serverCalcResult?.search === 'yes' && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-medium rounded-full ml-2">
+                      <span className="inline-flex items-center px-2 py-0.5 bg-brand/10 text-brand text-[11px] font-medium rounded-full ml-2">
                         계산기에서 선택됨
                       </span>
                     )}
                     {!searchBlockedByVultr && serverCalcResult?.search === 'no' && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-medium rounded-full ml-2">
+                      <span className="inline-flex items-center px-2 py-0.5 bg-background-100 text-text-secondary text-[11px] font-medium rounded-full ml-2">
                         계산기에서 제외됨
                       </span>
                     )}
                   </div>
-                  <div className="text-[13px] text-gray-600 mt-1">
+                  <div className="text-[13px] text-text-secondary mt-1">
                     서버에 검색 기능을 추가합니다. 위 계산기의 ‘검색 기능 추가 여부’와 연동됩니다.
                   </div>
                 </div>
@@ -451,8 +451,8 @@ export default function Step2Server() {
 
               {/* Vultr(장기·소규모) 서버: 검색 기능 추가 불가 안내 */}
               {searchBlockedByVultr && (
-                <div className="ml-7 p-3 bg-[#fff5eb] border border-[#ff7b00] rounded-md animate-slideDown">
-                  <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+                <div className="ml-7 p-3 bg-brand-50 border border-brand rounded-md animate-slideDown">
+                  <p className="text-[13px] leading-[1.7] text-brand-700">
                     {isLongTermServer
                       ? '장기 소규모 서버(반영구)는 검색 서버가 별도로 필요해 월 서버비가 크게 오릅니다. 서버비 절약을 위해 검색 기능을 추가할 수 없어요. 검색이 필요하시면 Step 1에서 ‘장기 소규모 서버’ 체크를 해제해 주세요.'
                       : '이 사양은 장기·소규모(Vultr) 서버라, 검색 서버 비용이 커서 검색 기능을 추가할 수 없습니다. 검색이 필요하시면 위 계산기에서 운영 기간을 12개월 미만(GCP 사양)으로 선택해 주세요.'}
@@ -464,21 +464,21 @@ export default function Step2Server() {
 
             {/* masto.host 데이터 이전 */}
             <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all duration-300 hover:shadow-sm ${step2.mastoHostMigration
-              ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-              : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+              ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+              : 'border-border hover:border-brand hover:bg-brand-50'
               }`}>
               <input
                 type="checkbox"
                 checked={step2.mastoHostMigration}
                 onChange={(e) => updateStep2({ mastoHostMigration: e.target.checked })}
-                className="w-4 h-4 shrink-0 accent-[#ff7b00]"
+                className="w-4 h-4 shrink-0 accent-brand"
               />
               <div className="flex-1">
                 <div className="font-medium text-[14px]">
                   masto.host 에서 서버 데이터 이전 (+20,000원)
                   {mastoHostFromCart && step2.mastoHostMigration && <FromCartBadge />}
                 </div>
-                <div className="text-[13px] text-gray-600 mt-1">
+                <div className="text-[13px] text-text-secondary mt-1">
                   팔로우 관계, 텍스트 데이터, 이미지 등 모든 정보를 기존 서버에서 새로운 서버로 옮겨드립니다.
                 </div>
               </div>
@@ -488,8 +488,8 @@ export default function Step2Server() {
             <FieldGroupError field="fastDeadline">
             <div className="space-y-3">
               <label className={`flex items-center gap-3 p-4 border rounded-lg transition-all duration-300 hover:shadow-sm ${step2.fastDeadline
-                ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                : 'border-border hover:border-brand hover:bg-brand-50'
                 } ${requiredFastDeadline ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
@@ -502,14 +502,14 @@ export default function Step2Server() {
                       updateStep2({ fastDeadlineOption: null });
                     }
                   }}
-                  className="w-4 h-4 shrink-0 accent-[#ff7b00] disabled:cursor-not-allowed"
+                  className="w-4 h-4 shrink-0 accent-brand disabled:cursor-not-allowed"
                 />
                 <div className="flex-1">
                   <div className="font-medium text-[14px]">
                     48시간 이내 빠른 마감
                     {fastDeadlineFromCart && step2.fastDeadline && <FromCartBadge />}
                     {requiredFastDeadline && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-medium rounded-full ml-2">
+                      <span className="inline-flex items-center px-2 py-0.5 bg-brand/10 text-brand text-[11px] font-medium rounded-full ml-2">
                         마감 임박 필수
                       </span>
                     )}
@@ -521,20 +521,20 @@ export default function Step2Server() {
               {step2.fastDeadline && (
                 <div className="ml-7 space-y-3 animate-slideDown">
                   {requiredFastDeadline ? (
-                    <div className="p-3 bg-[#fff5eb] border border-[#ff7b00] rounded-md">
-                      <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+                    <div className="p-3 bg-brand-50 border border-brand rounded-md">
+                      <p className="text-[13px] leading-[1.7] text-brand-700">
                         희망 마감일이 작성일로부터 2일 이내라, 선택하신 옵션에 맞는 빠른 마감이 필수로 적용됩니다.
                       </p>
                     </div>
                   ) : (
-                    <p className="text-[13px] text-gray-600 mb-2">아래 옵션 중 하나를 선택해 주세요.</p>
+                    <p className="text-[13px] text-text-secondary mb-2">아래 옵션 중 하나를 선택해 주세요.</p>
                   )}
 
                   {/* 48시간 내 기본 서버 */}
                   <label
                     className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-300 ${step2.fastDeadlineOption === 'basic48h'
-                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                      : 'border-border hover:border-brand hover:bg-brand-50'
                       } ${isFastOptionLocked('basic48h') ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <input
@@ -543,7 +543,7 @@ export default function Step2Server() {
                       checked={step2.fastDeadlineOption === 'basic48h'}
                       disabled={isFastOptionLocked('basic48h')}
                       onChange={() => updateStep2({ fastDeadlineOption: 'basic48h' })}
-                      className="w-4 h-4 accent-[#ff7b00] disabled:cursor-not-allowed"
+                      className="w-4 h-4 accent-brand disabled:cursor-not-allowed"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">48시간 내 기본 서버 설치 마감 (+5,000원)</div>
@@ -553,8 +553,8 @@ export default function Step2Server() {
                   {/* 24시간 내 기본 서버 */}
                   <label
                     className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-300 ${step2.fastDeadlineOption === 'basic24h'
-                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                      : 'border-border hover:border-brand hover:bg-brand-50'
                       } ${isFastOptionLocked('basic24h') ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <input
@@ -563,7 +563,7 @@ export default function Step2Server() {
                       checked={step2.fastDeadlineOption === 'basic24h'}
                       disabled={isFastOptionLocked('basic24h')}
                       onChange={() => updateStep2({ fastDeadlineOption: 'basic24h' })}
-                      className="w-4 h-4 accent-[#ff7b00] disabled:cursor-not-allowed"
+                      className="w-4 h-4 accent-brand disabled:cursor-not-allowed"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">24시간 내 기본 서버 설치 마감 (+10,000원)</div>
@@ -573,8 +573,8 @@ export default function Step2Server() {
                   {/* 48시간 내 로고 변경 */}
                   <label
                     className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-300 ${step2.fastDeadlineOption === 'logo48h'
-                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                      : 'border-border hover:border-brand hover:bg-brand-50'
                       } ${isFastOptionLocked('logo48h') ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <input
@@ -583,7 +583,7 @@ export default function Step2Server() {
                       checked={step2.fastDeadlineOption === 'logo48h'}
                       disabled={isFastOptionLocked('logo48h')}
                       onChange={() => updateStep2({ fastDeadlineOption: 'logo48h' })}
-                      className="w-4 h-4 accent-[#ff7b00] disabled:cursor-not-allowed"
+                      className="w-4 h-4 accent-brand disabled:cursor-not-allowed"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">48시간 내 로고 변경된 서버 설치 마감 (+15,000원)</div>
@@ -593,8 +593,8 @@ export default function Step2Server() {
                   {/* 48시간 내 테마 커스텀 */}
                   <label
                     className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-300 ${step2.fastDeadlineOption === 'theme48h'
-                      ? 'border-[#ff7b00] bg-[#fff5eb] ring-2 ring-[#ff7b00]/20'
-                      : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      ? 'border-brand bg-brand-50 ring-2 ring-brand/20'
+                      : 'border-border hover:border-brand hover:bg-brand-50'
                       } ${isFastOptionLocked('theme48h') ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <input
@@ -603,7 +603,7 @@ export default function Step2Server() {
                       checked={step2.fastDeadlineOption === 'theme48h'}
                       disabled={isFastOptionLocked('theme48h')}
                       onChange={() => updateStep2({ fastDeadlineOption: 'theme48h' })}
-                      className="w-4 h-4 accent-[#ff7b00] disabled:cursor-not-allowed"
+                      className="w-4 h-4 accent-brand disabled:cursor-not-allowed"
                     />
                     <div className="flex-1">
                       <div className="font-medium text-[14px]">48시간 내 테마 커스텀된 서버 설치 마감 (+20,000원)</div>
@@ -616,7 +616,7 @@ export default function Step2Server() {
           </div>
 
           {/* 4) 기타 정보 */}
-          <div className="pt-6 border-t border-gray-200">
+          <div className="pt-6 border-t border-border-100">
             <h3 className="text-[18px] font-semibold mb-4">4) 기타 정보</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -632,7 +632,7 @@ export default function Step2Server() {
                   placeholder="MM/DD"
                   className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${deadlineBlackoutError
                     ? 'border-red-500 focus:border-red-500'
-                    : 'border-input focus:border-[#ff7b00]'
+                    : 'border-input focus:border-brand'
                     }`}
                 />
                 {!deadlineBlackoutError && <FieldError field="desiredDeadline" />}
@@ -641,14 +641,14 @@ export default function Step2Server() {
                     <p className="text-[13px] text-red-600">{deadlineBlackoutError.message}</p>
                   </div>
                 ) : (
-                  <p className="text-[12px] text-gray-600">
+                  <p className="text-[12px] text-text-secondary">
                     월/일 형식으로 입력해 주세요.
                     <br />
                     <strong>{DEADLINE_BLACKOUT_LABEL} 은 마감이 불가능한 기간입니다.</strong>
                   </p>
                 )}
-                <div className="mt-2 p-3 bg-[#fff5eb] border border-[#ff7b00] rounded-md">
-                  <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+                <div className="mt-2 p-3 bg-brand-50 border border-brand rounded-md">
+                  <p className="text-[13px] leading-[1.7] text-brand-700">
                     로고 혹은 테마 옵션을 신청하셨나요? 신청서를 접수하시면 테마와 로고 이미지 규격이 전달됩니다. 신청자님께서는 마감일로부터 <strong>최소 일주일 이전에 9종/12종/13종</strong>의 이미지를 전달해주셔야 합니다. 그때까지 디자인을 완성하고 이미지를 전달하실 수 있는지 생각해보고 마감일을 조정하세요.
                   </p>
                 </div>
@@ -679,7 +679,7 @@ export default function Step2Server() {
                   placeholder="@NOTICE"
                   className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${adminAccountError
                     ? 'border-red-500 focus:border-red-500'
-                    : 'border-input focus:border-[#ff7b00]'
+                    : 'border-input focus:border-brand'
                     }`}
                 />
                 {!adminAccountError && <FieldError field="adminAccountId" />}
@@ -688,7 +688,7 @@ export default function Step2Server() {
                     <p className="text-[13px] text-red-600">{adminAccountError}</p>
                   </div>
                 ) : (
-                  <p className="text-[12px] text-gray-600">대문자 권장 / 3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
+                  <p className="text-[12px] text-text-secondary">대문자 권장 / 3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
                 )}
               </div>
             </div>
@@ -698,8 +698,8 @@ export default function Step2Server() {
 
       {/* "아니오" 선택 시 안내 메시지 */}
       {step2.applyServerInstall === 'no' && (
-        <div className="p-6 bg-gray-50 border border-border rounded-lg animate-slideDown">
-          <p className="text-[14px] text-gray-700 flex items-center gap-2">
+        <div className="p-6 bg-background-100 border border-border rounded-lg animate-slideDown">
+          <p className="text-[14px] text-text-primary flex items-center gap-2">
             <span>✓</span>
             서버 설치를 신청하지 않으셨습니다. 다음 단계로 이동해 주세요.
           </p>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { OrderProvider, useOrder } from '@/app/contexts/OrderContext';
-import Navigation from '@/app/components/Navigation';
-import Footer from '@/app/components/Footer';
+import { SiteFooter, SiteHeader } from '@/app/components/ds';
 import OrderForm from './OrderForm';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
 import { loadSyncState } from '@/app/utils/cartOrderSync';
@@ -77,15 +76,15 @@ function OrderContent({ onNavigate }: OrderContentProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navigation currentPage="order" onNavigate={onNavigate} />
+    <div className="min-h-screen bg-background-white">
+      <SiteHeader currentPage="order" onNavigate={onNavigate} />
 
-      <div className="pt-16 pb-16">
+      <div className="pt-header pb-16">
         {/* 헤더 섹션 */}
-        <div className="bg-gradient-to-br from-[var(--brand-bg)] via-[var(--brand-bg-subtle)] to-white border-b border-border py-12 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-brand-50 via-brand-50 to-white border-b border-border py-12 relative overflow-hidden">
           {/* 장식 요소 */}
-          <div className="absolute top-0 left-0 w-32 h-32 bg-[var(--brand-primary)] opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-40 h-40 bg-[var(--brand-primary)] opacity-5 rounded-full translate-x-1/2 translate-y-1/2"></div>
+          <div className="absolute top-0 left-0 w-32 h-32 bg-brand opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-brand opacity-5 rounded-full translate-x-1/2 translate-y-1/2"></div>
 
           <div className="max-w-[700px] mx-auto px-4 relative z-10">
             <h1 className="text-[25px] md:text-[29px] font-bold mb-6 text-center">
@@ -94,8 +93,8 @@ function OrderContent({ onNavigate }: OrderContentProps) {
             
             {/* 단계별 안내 - 온보딩 모달 스타일 */}
             <div className="space-y-3 mb-6">
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-border">
-                <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
+              <div className="flex items-center gap-3 p-3 bg-background-white rounded-lg border border-border">
+                <div className="w-7 h-7 bg-brand rounded-full flex items-center justify-center text-text-inverse font-bold text-[12px] shrink-0">
                   1
                 </div>
                 <div>
@@ -106,8 +105,8 @@ function OrderContent({ onNavigate }: OrderContentProps) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-border">
-                <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
+              <div className="flex items-center gap-3 p-3 bg-background-white rounded-lg border border-border">
+                <div className="w-7 h-7 bg-brand rounded-full flex items-center justify-center text-text-inverse font-bold text-[12px] shrink-0">
                   2
                 </div>
                 <div>
@@ -118,8 +117,8 @@ function OrderContent({ onNavigate }: OrderContentProps) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-border">
-                <div className="w-7 h-7 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-bold text-[12px] shrink-0">
+              <div className="flex items-center gap-3 p-3 bg-background-white rounded-lg border border-border">
+                <div className="w-7 h-7 bg-brand rounded-full flex items-center justify-center text-text-inverse font-bold text-[12px] shrink-0">
                   3
                 </div>
                 <div>
@@ -133,7 +132,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
 
             {/* 안내 배지 */}
             <div className="flex justify-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#fff5eb] text-[#ff7b00] text-[12px] rounded-full border border-[#ff7b00]">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-brand-50 text-brand text-[12px] rounded-full border border-brand">
                 <LightbulbOn size={14} color="currentColor" />
                 <span>작성 중인 내용은 자동으로 저장됩니다</span>
               </div>
@@ -144,31 +143,31 @@ function OrderContent({ onNavigate }: OrderContentProps) {
         {/* 복원 다이얼로그 */}
         {showRestoreDialog && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-overlay animate-fadeIn"
             role="dialog"
             aria-labelledby="restore-dialog-title"
             aria-modal="true"
           >
-            <div className="bg-white border border-border rounded-lg p-6 mx-4 max-w-md shadow-xl animate-bounceIn">
+            <div className="bg-background-white border border-border rounded-lg p-6 mx-4 max-w-md shadow-xl animate-bounceIn">
               <div className="flex items-center gap-3 mb-3">
-                <FileText size={24} color="var(--brand-primary)" aria-hidden="true" />
+                <FileText size={24} color="var(--color-brand)" aria-hidden="true" />
                 <h2 id="restore-dialog-title" className="text-[20px] font-bold">
                   작성 중인 내용 발견
                 </h2>
               </div>
-              <p className="text-[14px] text-gray-700 mb-6">
+              <p className="text-[14px] text-text-primary mb-6">
                 이전에 작성하던 신청서가 있습니다. 계속 작성하시겠습니까?
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={handleRestore}
-                  className="flex-1 px-4 py-3 bg-[var(--brand-primary)] text-white border border-transparent rounded-md font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
+                  className="flex-1 px-4 py-3 bg-brand text-text-inverse border border-transparent rounded-md font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
                 >
                   이어서 작성
                 </button>
                 <button
                   onClick={handleStartNew}
-                  className="flex-1 px-4 py-3 bg-white hover:bg-gray-50 border border-border rounded-md font-medium transition-all duration-300 hover:shadow-sm active:scale-[0.98]"
+                  className="flex-1 px-4 py-3 bg-background-white hover:bg-background-100 border border-border rounded-md font-medium transition-all duration-300 hover:shadow-sm active:scale-[0.98]"
                 >
                   새로 작성
                 </button>
@@ -180,34 +179,34 @@ function OrderContent({ onNavigate }: OrderContentProps) {
         {/* 장바구니 동기화 다이얼로그 */}
         {showSyncDialog && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-overlay animate-fadeIn"
             role="dialog"
             aria-labelledby="sync-dialog-title"
             aria-modal="true"
           >
-            <div className="bg-white border border-border rounded-lg p-6 mx-4 max-w-md shadow-xl animate-bounceIn">
+            <div className="bg-background-white border border-border rounded-lg p-6 mx-4 max-w-md shadow-xl animate-bounceIn">
               <div className="flex items-center gap-3 mb-3">
-                <ShoppingBasket size={24} color="var(--brand-primary)" aria-hidden="true" />
+                <ShoppingBasket size={24} color="var(--color-brand)" aria-hidden="true" />
                 <h2 id="sync-dialog-title" className="text-[20px] font-bold">
                   견적 데이터 반영
                 </h2>
               </div>
-              <p className="text-[14px] text-gray-700 mb-4">
+              <p className="text-[14px] text-text-primary mb-4">
                 견적에서 선택한 항목을 신청서에 반영하시겠습니까?
               </p>
-              <p className="text-[13px] text-gray-500 mb-6">
+              <p className="text-[13px] text-text-secondary mb-6">
                 이전에 작성하던 신청서가 있습니다. 견적 데이터로 덮어쓰거나 기존 신청서를 유지할 수 있습니다.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={handleSyncOverwrite}
-                  className="flex-1 px-4 py-3 bg-[var(--brand-primary)] text-white border border-transparent rounded-md font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
+                  className="flex-1 px-4 py-3 bg-brand text-text-inverse border border-transparent rounded-md font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:brightness-95 active:scale-[0.98]"
                 >
                   견적으로 새로 작성
                 </button>
                 <button
                   onClick={handleKeepExisting}
-                  className="flex-1 px-4 py-3 bg-white hover:bg-gray-50 border border-border rounded-md font-medium transition-all duration-300 hover:shadow-sm active:scale-[0.98]"
+                  className="flex-1 px-4 py-3 bg-background-white hover:bg-background-100 border border-border rounded-md font-medium transition-all duration-300 hover:shadow-sm active:scale-[0.98]"
                 >
                   기존 신청서 유지
                 </button>
@@ -220,7 +219,7 @@ function OrderContent({ onNavigate }: OrderContentProps) {
         <OrderForm />
       </div>
 
-      <Footer onNavigate={onNavigate} />
+      <SiteFooter onNavigate={onNavigate} />
     </div>
   );
 }
