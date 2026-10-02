@@ -187,17 +187,17 @@ export function getMonthOptions(usersKey: string): { value: number; label: strin
 
 // ===== Vultr 서울 장기 소규모 (12개월 이상, 10인 이하, 검색 불가) =====
 // 인원       최소                    쾌적
-// u5   vc2-1c-1gb 8천원 ($5)    vc2-1c-2gb 1.5만원 ($10)
+// u5   vhf-1c-1gb 9천원 ($6)    vc2-1c-2gb 1.5만원 ($10)
 // u10  vc2-1c-2gb 1.5만원 ($10) vc2-2c-4gb 3만원 ($20)
 
-const VC2_1C_1GB = 'vc2-1c-1gb (1 vCPU, 1GB RAM, 25GB SSD)';
+const VHF_1C_1GB = 'vhf-1c-1gb (1 vCPU, 1GB RAM, 32GB NVMe)';
 const VC2_1C_2GB = 'vc2-1c-2gb (1 vCPU, 2GB RAM, 55GB SSD)';
 const VC2_2C_4GB = 'vc2-2c-4gb (2 vCPU, 4GB RAM, 80GB SSD)';
 
 interface VultrOption { monthly: number; mastodon: string }
 
 const LONG_TERM_MACHINES: Record<string, Partial<Record<ServerTier, VultrOption>>> = {
-  u5:  { min: { monthly: 8000, mastodon: VC2_1C_1GB }, max: { monthly: 15000, mastodon: VC2_1C_2GB } },
+  u5:  { min: { monthly: 9000, mastodon: VHF_1C_1GB }, max: { monthly: 15000, mastodon: VC2_1C_2GB } },
   u10: { min: { monthly: 15000, mastodon: VC2_1C_2GB }, max: { monthly: 30000, mastodon: VC2_2C_4GB } },
 };
 

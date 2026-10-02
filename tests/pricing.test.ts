@@ -446,12 +446,12 @@ check('고를 수 없는 등급은 최소로 계산', getServerCalcResult(6, 'u5
 
 // 장기 소규모 (12개월 이상, 10인 이하)
 check('장기: 5인 미만 최소/쾌적', tierModels(12, 'u5'),
-  ['min:vultr:vc2-1c-1gb:8천원', 'max:vultr:vc2-1c-2gb:1.5만원']);
+  ['min:vultr:vhf-1c-1gb:9천원', 'max:vultr:vc2-1c-2gb:1.5만원']);
 check('장기: 5~10인 최소/쾌적', tierModels(12, 'u10'),
   ['min:vultr:vc2-1c-2gb:1.5만원', 'max:vultr:vc2-2c-4gb:3만원']);
 check('장기: 검색 요청해도 검색 서버 없음',
   [getServerCalcResult(12, 'u10', 'yes', 'max').elastic, getServerCalcResult(12, 'u10', 'yes', 'max').search], [null, 'no']);
-check('장기: 연간 총액', getServerCalcResult(12, 'u5', 'no', 'min').totalKrw, '9.6만원');
+check('장기: 연간 총액', getServerCalcResult(12, 'u5', 'no', 'min').totalKrw, '10.8만원');
 check('장기 인원 선택지는 10인 이하만', getUsersOptions(12).map((o) => o.value), ['u5', 'u10']);
 check('4~11개월 인원 선택지는 전체', getUsersOptions(11).length, 5);
 check('장기 11인 이상 차단', [isUsersAllowed(12, 'u18'), isUsersAllowed(12, 'u10'), isUsersAllowed(6, 'u30p')], [false, true, true]);
