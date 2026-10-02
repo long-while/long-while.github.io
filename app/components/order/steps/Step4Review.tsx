@@ -4,9 +4,8 @@ import { useEstimate } from '@/app/contexts/EstimateContext';
 import {
   calculateTotalEstimate,
   generateCopyText,
-  getPrimaryBotAccountLabel,
+  getBotAccountLines,
   hasServerInfraFee,
-  isTrpg2d6AccountSeparate,
   validateGoogleAccount,
 } from '@/app/utils/orderUtils';
 import { copyToClipboard } from '@/app/utils/clipboard';
@@ -364,48 +363,25 @@ export default function Step4Review() {
                   </div>
                 )}
               {(() => {
-                const cocAccountActive = step3.cocBot && step3.mainBot !== null;
-                const investigationAccountActive =
-                  step3.investigationBot && step3.mainBot !== null;
-                const trpg2d6AccountActive = isTrpg2d6AccountSeparate(step3);
-                const hasSeparate =
-                  cocAccountActive || investigationAccountActive || trpg2d6AccountActive;
-                const primaryLabel = getPrimaryBotAccountLabel(step3);
+                const accountLines = getBotAccountLines(step3);
+                if (accountLines.length === 0) return null;
 
-                if (
-                  !step3.botAccountId &&
-                  !step3.cocBotAccountId &&
-                  !step3.trpg2d6BotAccountId &&
-                  !step3.investigationBotAccountId
-                ) {
-                  return null;
-                }
-
-                if (!hasSeparate) {
-                  return step3.botAccountId ? (
+                if (accountLines.length === 1) {
+                  return (
                     <div>
-                      <p className="text-[13px] text-gray-500 mb-1">{primaryLabel}</p>
-                      <p className="text-[15px]">{step3.botAccountId}</p>
+                      <p className="text-[13px] text-gray-500 mb-1">{accountLines[0].label}</p>
+                      <p className="text-[15px]">{accountLines[0].value}</p>
                     </div>
-                  ) : null;
+                  );
                 }
 
                 return (
                   <div>
                     <p className="text-[13px] text-gray-500 mb-1">봇 계정 (분리)</p>
                     <div className="text-[15px] space-y-1">
-                      {step3.botAccountId && (
-                        <p>{primaryLabel}: {step3.botAccountId}</p>
-                      )}
-                      {cocAccountActive && step3.cocBotAccountId && (
-                        <p>D100 봇 계정: {step3.cocBotAccountId}</p>
-                      )}
-                      {trpg2d6AccountActive && step3.trpg2d6BotAccountId && (
-                        <p>2D6 기본 다이스봇 아이디: {step3.trpg2d6BotAccountId}</p>
-                      )}
-                      {investigationAccountActive && step3.investigationBotAccountId && (
-                        <p>조사 자동봇: {step3.investigationBotAccountId}</p>
-                      )}
+                      {accountLines.map(({ label, value }) => (
+                        <p key={label}>{label}: {value}</p>
+                      ))}
                     </div>
                   </div>
                 );

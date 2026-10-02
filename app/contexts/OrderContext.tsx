@@ -86,8 +86,6 @@ const initialStep3Data: Step3Data = {
   setupDeadline: '',
   botSymbol: '✶',
   botAccountId: '',
-  cocBotAccountId: '',
-  trpg2d6BotAccountId: '',
   investigationBotAccountId: '',
 };
 

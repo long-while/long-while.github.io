@@ -103,8 +103,6 @@ function createFormData(): OrderFormData {
       setupDeadline: '',
       botSymbol: '✶',
       botAccountId: '',
-      cocBotAccountId: '',
-      trpg2d6BotAccountId: '',
       investigationBotAccountId: '',
     },
     step4: { policyConfirmation: '' },
@@ -345,9 +343,9 @@ const cartSync = syncCartToOrderData([
 check('견적 → 신청서: D100 타입', cartSync.step3.cocBot, true);
 check('견적 → 신청서: 2D6 3종세트 타입', cartSync.step3.trpg2d6Bot, true);
 
-const solo2d6 = createTrpgOrder({ trpg2d6Bot: true, botAccountId: '@DICE' });
+const solo2d6 = createTrpgOrder({ trpg2d6Bot: true, botAccountId: '' });
 check('2D6 단독 신청 허용', fieldsOf(solo2d6).includes('mainBot'), false);
-check('2D6 단독이면 별도 아이디 불필요', fieldsOf(solo2d6).includes('trpg2d6BotAccountId'), false);
+check('2D6 단독이면 봇 계정 입력 불필요', fieldsOf(solo2d6), []);
 check(
   '2D6 가격',
   calculateTotalEstimate(solo2d6).botTotal,
@@ -356,19 +354,23 @@ check(
 const solo2d6Text = generateCopyText(solo2d6, calculateTotalEstimate(solo2d6), null);
 check('복붙 텍스트 짧은 이름', solo2d6Text.includes('+ 2D6 3종세트 타입'), true);
 check('복붙 텍스트 긴 이름 없음', solo2d6Text.includes('특기표'), false);
-check('2D6 단독 계정 라벨', solo2d6Text.includes('기본 다이스봇 아이디 : @DICE'), true);
+check('2D6 단독이면 계정 정보 미출력', solo2d6Text.includes('봇 계정'), false);
 
-const mixed = createTrpgOrder({ mainBot: 'basicShop', cocBot: true, trpg2d6Bot: true, currencyUnit: '원', cocBotAccountId: '@CoC' });
-check('다른 봇과 함께면 2D6 아이디 필수', fieldsOf(mixed).includes('trpg2d6BotAccountId'), true);
-const mixedFilled = { ...mixed, step3: { ...mixed.step3, trpg2d6BotAccountId: '@DICE' } };
-check('2D6 아이디 입력 시 통과', fieldsOf(mixedFilled), []);
-const mixedDup = { ...mixed, step3: { ...mixed.step3, trpg2d6BotAccountId: '@coc' } };
-check('2D6 아이디 중복 차단', fieldsOf(mixedDup).includes('trpg2d6BotAccountId'), true);
-const mixedText = generateCopyText(mixedFilled, calculateTotalEstimate(mixedFilled), null);
+const soloCoc = createTrpgOrder({ cocBot: true, botAccountId: '@leftover' });
+check('D100 단독이면 봇 계정 입력 불필요', fieldsOf(soloCoc), []);
+const soloCocText = generateCopyText(soloCoc, calculateTotalEstimate(soloCoc), null);
+check('D100 단독이면 계정 정보 미출력', soloCocText.includes('봇 계정'), false);
+check('메인 봇 없으면 남은 입력값 미출력', soloCocText.includes('@leftover'), false);
+
+const mixed = createTrpgOrder({ mainBot: 'basicShop', cocBot: true, trpg2d6Bot: true, currencyUnit: '원' });
+check('다른 봇과 함께여도 TRPG 계정 입력 불필요', fieldsOf(mixed), []);
+check('메인 봇 계정은 여전히 필수', fieldsOf({ ...mixed, step3: { ...mixed.step3, botAccountId: '' } }).includes('botAccountId'), true);
+const mixedText = generateCopyText(mixed, calculateTotalEstimate(mixed), null);
 check('복붙 텍스트 D100 짧은 이름', mixedText.includes('+ D100 타입'), true);
-check('복붙 텍스트 2D6 아이디', mixedText.includes('2D6 기본 다이스봇 아이디 : @DICE'), true);
+check('복붙 텍스트 봇 계정', mixedText.includes('봇 계정 : @BOT'), true);
+check('복붙 텍스트에 D100 / 2D6 계정 미출력', /D100 봇 계정|2D6 봇 계정/.test(mixedText), false);
 
-const basicWith2d6 = createTrpgOrder({ mainBot: 'basic', trpg2d6Bot: true, trpg2d6BotAccountId: '@DICE' });
+const basicWith2d6 = createTrpgOrder({ mainBot: 'basic', trpg2d6Bot: true });
 check('기본 봇 + 2D6 차단', fieldsOf(basicWith2d6).includes('mainBot'), true);
 
 // ===== 서버 사양 계산기 =====

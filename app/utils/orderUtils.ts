@@ -568,16 +568,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       }
     }
 
-    // 봇 계정 ID 필수 + 길이 검증 (빈칸/3자 미만/예약어 차단)
-    const botAccountError = validateAccountId(data.botAccountId, 'botAccountId', '봇 계정 ID');
-    if (botAccountError) {
-      errors.push(botAccountError);
-    } else if (data.botAccountId.length > INPUT_LIMITS.botAccountId) {
-      errors.push({
-        field: 'botAccountId',
-        message: `봇 계정은 ${INPUT_LIMITS.botAccountId}자 이하여야 합니다.`,
-      });
-    }
+    errors.push(...validateMainBotAccount(data));
 
     // 세팅 마감일 필수 + 접수 불가 기간(마감 중단/휴가) 검증
     if (!data.setupDeadline || data.setupDeadline.trim() === '') {
@@ -589,23 +580,6 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       const blackoutError = getDeadlineBlackoutError(data.setupDeadline, 'setupDeadline');
       if (blackoutError) {
         errors.push(blackoutError);
-      }
-    }
-
-    // D100 봇 계정 길이 + 아이디 규칙 검증 (입력된 경우)
-    if (data.cocBotAccountId && data.cocBotAccountId.trim() !== '') {
-      const cocAccountError = validateAccountId(
-        data.cocBotAccountId,
-        'cocBotAccountId',
-        'D100 봇 계정 ID'
-      );
-      if (cocAccountError) {
-        errors.push(cocAccountError);
-      } else if (data.cocBotAccountId.length > INPUT_LIMITS.cocBotAccountId) {
-        errors.push({
-          field: 'cocBotAccountId',
-          message: `D100 봇 계정은 ${INPUT_LIMITS.cocBotAccountId}자 이하여야 합니다.`,
-        });
       }
     }
 
@@ -626,33 +600,6 @@ export function validateStep3(data: Step3Data): ValidationError[] {
           message: `조사 자동봇 계정은 ${INPUT_LIMITS.investigationBotAccountId}자 이하여야 합니다.`,
         });
       }
-    }
-
-    errors.push(...validateTrpg2d6BotAccount(data));
-
-    // D100 봇이 메인 봇과 함께 신청된 경우 분리된 계정 입력 필수
-    if (
-      data.cocBot &&
-      data.mainBot &&
-      data.botAccountId.trim() !== '' &&
-      data.cocBotAccountId.trim() === ''
-    ) {
-      errors.push({
-        field: 'cocBotAccountId',
-        message: 'D100 봇은 별도 계정으로 운영되므로 D100 봇 전용 계정 ID를 입력해 주세요.',
-      });
-    }
-    if (
-      data.cocBot &&
-      data.mainBot &&
-      data.botAccountId.trim() !== '' &&
-      data.cocBotAccountId.trim() !== '' &&
-      isSameAccountId(data.botAccountId, data.cocBotAccountId)
-    ) {
-      errors.push({
-        field: 'cocBotAccountId',
-        message: '기본 자동봇과 D100 봇은 서로 다른 계정 ID를 사용해야 합니다.',
-      });
     }
 
     // 조사 자동봇이 메인 봇과 함께 신청된 경우 분리된 계정 입력 필수
@@ -677,19 +624,6 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       errors.push({
         field: 'investigationBotAccountId',
         message: '메인 봇과 조사 자동봇은 서로 다른 계정 ID를 사용해야 합니다.',
-      });
-    }
-    if (
-      data.cocBot &&
-      data.investigationBot &&
-      data.mainBot !== null &&
-      data.cocBotAccountId.trim() !== '' &&
-      data.investigationBotAccountId.trim() !== '' &&
-      isSameAccountId(data.cocBotAccountId, data.investigationBotAccountId)
-    ) {
-      errors.push({
-        field: 'investigationBotAccountId',
-        message: 'D100 봇과 조사 자동봇은 서로 다른 계정 ID를 사용해야 합니다.',
       });
     }
 
@@ -831,65 +765,46 @@ export function calculateServerPrice(
 }
 
 /**
- * 2D6 3종세트 타입이 다른 봇과 함께 신청된 경우, 별도의 기본 다이스봇 아이디를 받는다.
- * (2D6 단독이면 봇 계정 ID 칸이 곧 기본 다이스봇 아이디)
+ * 직접 입력받는 봇 계정 칸(botAccountId)은 메인 봇이 있을 때만 노출한다.
+ * (D100 / 2D6 봇 계정은 운영자가 직접 세팅하므로 받지 않는다)
  */
-export function isTrpg2d6AccountSeparate(data: Step3Data): boolean {
-  return data.trpg2d6Bot && (data.mainBot !== null || data.cocBot);
+export function needsMainBotAccountId(data: Step3Data): boolean {
+  return data.mainBot !== null;
 }
 
-/**
- * 첫 번째 봇 계정 칸(botAccountId)의 이름.
- * 메인 봇 → D100 → 2D6 순으로 그 칸의 주인이 되며, 2D6 단독이면 기본 다이스봇 아이디가 된다.
- */
+/** 직접 입력받는 봇 계정 칸(botAccountId)의 이름 */
 export function getPrimaryBotAccountLabel(data: Step3Data): string {
-  if (data.mainBot !== null) {
-    const hasSeparate = data.cocBot || data.investigationBot || data.trpg2d6Bot;
-    return hasSeparate ? '메인 봇 계정' : '봇 계정';
-  }
-  if (data.cocBot) return data.trpg2d6Bot ? 'D100 봇 계정' : '봇 계정';
-  if (data.trpg2d6Bot) return '기본 다이스봇 아이디';
-  return '봇 계정';
+  return data.investigationBot ? '메인 봇 계정' : '봇 계정';
 }
 
-function validateTrpg2d6BotAccount(data: Step3Data): ValidationError[] {
-  const accountId = data.trpg2d6BotAccountId.trim();
-  if (accountId !== '') {
-    const formatError = validateAccountId(
-      data.trpg2d6BotAccountId,
-      'trpg2d6BotAccountId',
-      '2D6 기본 다이스봇 아이디'
-    );
-    if (formatError) return [formatError];
-    if (data.trpg2d6BotAccountId.length > INPUT_LIMITS.trpg2d6BotAccountId) {
-      return [{
-        field: 'trpg2d6BotAccountId',
-        message: `2D6 기본 다이스봇 아이디는 ${INPUT_LIMITS.trpg2d6BotAccountId}자 이하여야 합니다.`,
-      }];
-    }
-  }
+function validateMainBotAccount(data: Step3Data): ValidationError[] {
+  if (!needsMainBotAccountId(data)) return [];
 
-  if (!isTrpg2d6AccountSeparate(data) || data.botAccountId.trim() === '') return [];
-
-  if (accountId === '') {
+  const formatError = validateAccountId(data.botAccountId, 'botAccountId', '봇 계정 ID');
+  if (formatError) return [formatError];
+  if (data.botAccountId.length > INPUT_LIMITS.botAccountId) {
     return [{
-      field: 'trpg2d6BotAccountId',
-      message: '2D6 3종세트 타입은 별도 계정으로 운영되므로 기본 다이스봇 아이디를 입력해 주세요.',
-    }];
-  }
-
-  const otherAccounts = [
-    data.botAccountId,
-    data.cocBot && data.mainBot !== null ? data.cocBotAccountId : '',
-    data.investigationBot && data.mainBot !== null ? data.investigationBotAccountId : '',
-  ].filter((id) => id.trim() !== '');
-  if (otherAccounts.some((id) => isSameAccountId(id, data.trpg2d6BotAccountId))) {
-    return [{
-      field: 'trpg2d6BotAccountId',
-      message: '2D6 기본 다이스봇 아이디는 다른 봇과 서로 다른 계정 ID를 사용해야 합니다.',
+      field: 'botAccountId',
+      message: `봇 계정은 ${INPUT_LIMITS.botAccountId}자 이하여야 합니다.`,
     }];
   }
   return [];
+}
+
+/** 신청서/복붙 텍스트에 표시할 봇 계정 목록 */
+export function getBotAccountLines(data: Step3Data): { label: string; value: string }[] {
+  const lines: { label: string; value: string }[] = [];
+  if (needsMainBotAccountId(data) && data.botAccountId.trim() !== '') {
+    lines.push({ label: getPrimaryBotAccountLabel(data), value: data.botAccountId.trim() });
+  }
+  if (
+    data.investigationBot &&
+    needsMainBotAccountId(data) &&
+    data.investigationBotAccountId.trim() !== ''
+  ) {
+    lines.push({ label: '조사 자동봇 계정', value: data.investigationBotAccountId.trim() });
+  }
+  return lines;
 }
 
 /**
@@ -1142,36 +1057,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
 
     text += '\n';
 
-    const cocAccountActive = step3.cocBot && step3.mainBot !== null;
-    const investigationAccountActive =
-      step3.investigationBot && step3.mainBot !== null;
-    const trpg2d6AccountActive = isTrpg2d6AccountSeparate(step3);
-    const hasSeparateBotAccounts =
-      cocAccountActive || investigationAccountActive || trpg2d6AccountActive;
-
-    if (hasSeparateBotAccounts) {
-      if (step3.botAccountId) {
-        text += `${getPrimaryBotAccountLabel(step3)} : ${step3.botAccountId}\n`;
-      }
-      if (cocAccountActive && step3.cocBotAccountId) {
-        text += `D100 봇 계정 : ${step3.cocBotAccountId}\n`;
-      }
-      if (trpg2d6AccountActive && step3.trpg2d6BotAccountId) {
-        text += `2D6 기본 다이스봇 아이디 : ${step3.trpg2d6BotAccountId}\n`;
-      }
-      if (investigationAccountActive && step3.investigationBotAccountId) {
-        text += `조사 자동봇 계정 : ${step3.investigationBotAccountId}\n`;
-      }
-      if (
-        step3.botAccountId ||
-        (cocAccountActive && step3.cocBotAccountId) ||
-        (trpg2d6AccountActive && step3.trpg2d6BotAccountId) ||
-        (investigationAccountActive && step3.investigationBotAccountId)
-      ) {
-        text += '\n';
-      }
-    } else if (step3.botAccountId) {
-      text += `${getPrimaryBotAccountLabel(step3)} : ${step3.botAccountId}\n\n`;
+    const accountLines = getBotAccountLines(step3);
+    if (accountLines.length > 0) {
+      text += accountLines.map(({ label, value }) => `${label} : ${value}\n`).join('') + '\n';
     }
     if (step3.botSymbol && step3.botSymbol !== '✶') text += `봇 기호 : ${step3.botSymbol}\n\n`;
     if (step3.setupDeadline) text += `희망 마감일 : ${step3.setupDeadline}\n\n`;

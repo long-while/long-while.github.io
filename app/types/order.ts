@@ -83,9 +83,7 @@ export interface Step3Data {
   omakaseDetails: string;
   setupDeadline: string; // MM/DD
   botSymbol: string;
-  botAccountId: string;
-  cocBotAccountId: string;
-  trpg2d6BotAccountId: string;
+  botAccountId: string; // 메인 봇 계정 (D100 / 2D6 계정은 고정값이라 받지 않음)
   investigationBotAccountId: string;
 }
 
@@ -149,8 +147,6 @@ export const INPUT_LIMITS = {
   botSymbol: 5,
   adminAccountId: 100,
   botAccountId: 100,
-  cocBotAccountId: 100,
-  trpg2d6BotAccountId: 100,
   investigationBotAccountId: 100,
   currencyUnit: 20,
   statList: 500,

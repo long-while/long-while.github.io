@@ -7,7 +7,7 @@ import { INPUT_LIMITS } from '@/app/types/order';
 import {
   getDeadlineBlackoutError,
   getPrimaryBotAccountLabel,
-  isTrpg2d6AccountSeparate,
+  needsMainBotAccountId,
   validateAccountId,
   DEADLINE_BLACKOUT_LABEL,
 } from '@/app/utils/orderUtils';
@@ -168,24 +168,6 @@ export default function Step3Bot() {
         : validateAccountId(step3.botAccountId, 'botAccountId', '봇 계정 ID'),
     [step3.botAccountId]
   );
-  const cocBotAccountIdError = useMemo(
-    () =>
-      step3.cocBotAccountId.trim() === ''
-        ? null
-        : validateAccountId(step3.cocBotAccountId, 'cocBotAccountId', 'D100 봇 계정 ID'),
-    [step3.cocBotAccountId]
-  );
-  const trpg2d6BotAccountIdError = useMemo(
-    () =>
-      step3.trpg2d6BotAccountId.trim() === ''
-        ? null
-        : validateAccountId(
-          step3.trpg2d6BotAccountId,
-          'trpg2d6BotAccountId',
-          '2D6 기본 다이스봇 아이디'
-        ),
-    [step3.trpg2d6BotAccountId]
-  );
   const investigationBotAccountIdError = useMemo(
     () =>
       step3.investigationBotAccountId.trim() === ''
@@ -245,8 +227,6 @@ export default function Step3Bot() {
         setupDeadline: '',
         botSymbol: '✶',
         botAccountId: '',
-        cocBotAccountId: '',
-        trpg2d6BotAccountId: '',
         investigationBotAccountId: '',
       });
     }
@@ -301,22 +281,6 @@ export default function Step3Bot() {
     }
   };
 
-  // D100 봇 해제 시 분리 계정 초기화
-  const handleCocBotChange = (checked: boolean) => {
-    updateStep3({ cocBot: checked });
-    if (!checked) {
-      updateStep3({ cocBotAccountId: '' });
-    }
-  };
-
-  // 2D6 봇 해제 시 분리 계정 초기화
-  const handleTrpg2d6BotChange = (checked: boolean) => {
-    updateStep3({ trpg2d6Bot: checked });
-    if (!checked) {
-      updateStep3({ trpg2d6BotAccountId: '' });
-    }
-  };
-
   // 조사 자동봇 사용 가능 조건 (메인 봇이 선택된 경우)
   const canHaveInvestigationBot = step3.mainBot !== null;
 
@@ -328,19 +292,11 @@ export default function Step3Bot() {
   ].filter(Boolean).join(', ');
 
   // 분리 계정 입력 노출 조건
-  const showCocBotAccount = step3.cocBot && step3.mainBot !== null;
-  const showTrpg2d6BotAccount = isTrpg2d6AccountSeparate(step3);
+  // D100 / 2D6 봇 계정은 운영자가 직접 세팅하므로 아이디를 받지 않는다
+  const showMainBotAccount = needsMainBotAccountId(step3);
   const showInvestigationBotAccount =
     step3.investigationBot && canHaveInvestigationBot;
-  const requiresSeparateAccounts =
-    showCocBotAccount || showTrpg2d6BotAccount || showInvestigationBotAccount;
   const primaryAccountLabel = getPrimaryBotAccountLabel(step3);
-  const separateBotNames = [
-    step3.mainBot !== null ? '메인 봇' : step3.cocBot ? 'D100 봇' : null,
-    showCocBotAccount && 'D100 봇',
-    showTrpg2d6BotAccount && '2D6 봇',
-    showInvestigationBotAccount && '조사 자동봇',
-  ].filter(Boolean).join(' / ');
 
   // ── 예약 툿/자동 스진용 계정 목록 ──────────────────────────────
   const showAccountList = step3.reservationToot || step3.autoProfileImage;
@@ -662,7 +618,7 @@ export default function Step3Bot() {
                 <input
                   type="checkbox"
                   checked={step3.cocBot}
-                  onChange={(e) => handleCocBotChange(e.target.checked)}
+                  onChange={(e) => updateStep3({ cocBot: e.target.checked })}
                   className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
@@ -684,7 +640,7 @@ export default function Step3Bot() {
                 <input
                   type="checkbox"
                   checked={step3.trpg2d6Bot}
-                  onChange={(e) => handleTrpg2d6BotChange(e.target.checked)}
+                  onChange={(e) => updateStep3({ trpg2d6Bot: e.target.checked })}
                   className="w-4 h-4 shrink-0 accent-[#ff7b00]"
                 />
                 <div className="flex-1">
@@ -1308,123 +1264,73 @@ export default function Step3Bot() {
                 <FieldError field="botSymbol" />
               </div>
 
-              {requiresSeparateAccounts && (
+              {showInvestigationBotAccount && (
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-md text-[13px] text-amber-800 flex items-start gap-2">
                   <AlertTriangle size={16} color="currentColor" className="mt-0.5 shrink-0" />
                   <div className="space-y-1">
                     <p className="font-medium">
-                      {separateBotNames}은(는) 각각 별도의 계정으로 운영됩니다.
+                      메인 봇 / 조사 자동봇은 각각 별도의 계정으로 운영됩니다.
                     </p>
                     <p>
-                      어떤 계정이 어떤 봇으로 사용될지 구분되도록 아이디를 따로 입력해 주세요. (예: @BOT / @CoC / @DICE / @SEARCH)
+                      어떤 계정이 어떤 봇으로 사용될지 구분되도록 아이디를 따로 입력해 주세요. (예: @BOT / @SEARCH)
                     </p>
                   </div>
                 </div>
               )}
 
-              <div className={`grid grid-cols-1 ${requiresSeparateAccounts ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-1'} gap-4`}>
-                <div className="space-y-2">
-                  <label htmlFor="botAccountId" className="block text-[14px] font-medium">
-                    {primaryAccountLabel.endsWith('계정') ? `${primaryAccountLabel} ID` : primaryAccountLabel} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="botAccountId"
-                    {...fieldAria('botAccountId')}
-                    type="text"
-                    value={step3.botAccountId}
-                    onChange={(e) => updateStep3({ botAccountId: e.target.value })}
-                    placeholder="@DICE, @BOT"
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${botAccountIdError
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-input focus:border-[#ff7b00]'
-                      }`}
-                  />
-                  {!botAccountIdError && <FieldError field="botAccountId" />}
-                  {botAccountIdError ? (
-                    <p id="botAccountId-error" role="alert" className="text-[12px] text-red-600">{botAccountIdError.message}</p>
-                  ) : (
-                    <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
+              {showMainBotAccount && (
+                <div className={`grid grid-cols-1 ${showInvestigationBotAccount ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4`}>
+                  <div className="space-y-2">
+                    <label htmlFor="botAccountId" className="block text-[14px] font-medium">
+                      {primaryAccountLabel} ID <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="botAccountId"
+                      {...fieldAria('botAccountId')}
+                      type="text"
+                      value={step3.botAccountId}
+                      onChange={(e) => updateStep3({ botAccountId: e.target.value })}
+                      placeholder="@BOT"
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${botAccountIdError
+                        ? 'border-red-500 focus:border-red-500'
+                        : 'border-input focus:border-[#ff7b00]'
+                        }`}
+                    />
+                    {!botAccountIdError && <FieldError field="botAccountId" />}
+                    {botAccountIdError ? (
+                      <p id="botAccountId-error" role="alert" className="text-[12px] text-red-600">{botAccountIdError.message}</p>
+                    ) : (
+                      <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
+                    )}
+                  </div>
+
+                  {showInvestigationBotAccount && (
+                    <div className="space-y-2">
+                      <label htmlFor="investigationBotAccountId" className="block text-[14px] font-medium">
+                        조사 자동봇 계정 ID <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="investigationBotAccountId"
+                        {...fieldAria('investigationBotAccountId')}
+                        type="text"
+                        value={step3.investigationBotAccountId}
+                        onChange={(e) => updateStep3({ investigationBotAccountId: e.target.value })}
+                        placeholder="@SEARCH"
+                        className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${investigationBotAccountIdError
+                          ? 'border-red-500 focus:border-red-500'
+                          : 'border-input focus:border-[#ff7b00]'
+                          }`}
+                      />
+                      {!investigationBotAccountIdError && <FieldError field="investigationBotAccountId" />}
+                      {investigationBotAccountIdError ? (
+                        <p id="investigationBotAccountId-error" role="alert" className="text-[12px] text-red-600">{investigationBotAccountIdError.message}</p>
+                      ) : (
+                        <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
+                      )}
+                    </div>
                   )}
                 </div>
-
-                {showCocBotAccount && (
-                  <div className="space-y-2">
-                    <label htmlFor="cocBotAccountId" className="block text-[14px] font-medium">
-                      D100 봇 계정 ID <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="cocBotAccountId"
-                      {...fieldAria('cocBotAccountId')}
-                      type="text"
-                      value={step3.cocBotAccountId}
-                      onChange={(e) => updateStep3({ cocBotAccountId: e.target.value })}
-                      placeholder="@CoC"
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${cocBotAccountIdError
-                        ? 'border-red-500 focus:border-red-500'
-                        : 'border-input focus:border-[#ff7b00]'
-                        }`}
-                    />
-                    {!cocBotAccountIdError && <FieldError field="cocBotAccountId" />}
-                    {cocBotAccountIdError ? (
-                      <p id="cocBotAccountId-error" role="alert" className="text-[12px] text-red-600">{cocBotAccountIdError.message}</p>
-                    ) : (
-                      <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
-                    )}
-                  </div>
-                )}
-
-                {showTrpg2d6BotAccount && (
-                  <div className="space-y-2">
-                    <label htmlFor="trpg2d6BotAccountId" className="block text-[14px] font-medium">
-                      2D6 기본 다이스봇 아이디 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="trpg2d6BotAccountId"
-                      {...fieldAria('trpg2d6BotAccountId')}
-                      type="text"
-                      value={step3.trpg2d6BotAccountId}
-                      onChange={(e) => updateStep3({ trpg2d6BotAccountId: e.target.value })}
-                      placeholder="@DICE"
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${trpg2d6BotAccountIdError
-                        ? 'border-red-500 focus:border-red-500'
-                        : 'border-input focus:border-[#ff7b00]'
-                        }`}
-                    />
-                    {!trpg2d6BotAccountIdError && <FieldError field="trpg2d6BotAccountId" />}
-                    {trpg2d6BotAccountIdError ? (
-                      <p id="trpg2d6BotAccountId-error" role="alert" className="text-[12px] text-red-600">{trpg2d6BotAccountIdError.message}</p>
-                    ) : (
-                      <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
-                    )}
-                  </div>
-                )}
-
-                {showInvestigationBotAccount && (
-                  <div className="space-y-2">
-                    <label htmlFor="investigationBotAccountId" className="block text-[14px] font-medium">
-                      조사 자동봇 계정 ID <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="investigationBotAccountId"
-                      {...fieldAria('investigationBotAccountId')}
-                      type="text"
-                      value={step3.investigationBotAccountId}
-                      onChange={(e) => updateStep3({ investigationBotAccountId: e.target.value })}
-                      placeholder="@SEARCH"
-                      className={`w-full px-4 py-2 border rounded-md focus:outline-none text-[14px] ${investigationBotAccountIdError
-                        ? 'border-red-500 focus:border-red-500'
-                        : 'border-input focus:border-[#ff7b00]'
-                        }`}
-                    />
-                    {!investigationBotAccountIdError && <FieldError field="investigationBotAccountId" />}
-                    {investigationBotAccountIdError ? (
-                      <p id="investigationBotAccountId-error" role="alert" className="text-[12px] text-red-600">{investigationBotAccountIdError.message}</p>
-                    ) : (
-                      <p className="text-[12px] text-gray-600">3자 이상, admin·owner·moderator 는 사용할 수 없습니다.</p>
-                    )}
-                  </div>
-                )}
-              </div>
+              )}
 
               <div className="space-y-2">
                 <label htmlFor="setupDeadline" className="block text-[14px] font-medium">
