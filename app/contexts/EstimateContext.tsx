@@ -7,6 +7,7 @@ import {
   SERVER_INFRA_FEE_ITEM,
   LONG_TERM_MIN_MONTHS,
 } from '@/app/constants/form';
+import { isValidTier, isValidUsersKey } from '@/app/lib/mastodonServerConfig';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 export interface EstimateItem {
@@ -48,7 +49,8 @@ interface EstimateContextType {
 const EstimateContext = createContext<EstimateContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'mas_commission_estimate';
-const SERVER_CALC_KEY = 'mas_commission_server_calc';
+// v2: 인원 구간 키 변경(u25/u25p → u18/u30/u30p). 예전 u30(11~30인)과 의미가 달라 키를 새로 쓴다.
+const SERVER_CALC_KEY = 'mas_commission_server_calc_v2';
 
 /**
  * 더 이상 판매하지 않는 항목 이름.
@@ -91,6 +93,8 @@ function isValidServerCalcResult(obj: unknown): obj is ServerCalcResult {
     ['gcp', 'vultr', 'warn'].includes(r.type) &&
     typeof r.months === 'number' &&
     typeof r.usersKey === 'string' &&
+    isValidUsersKey(r.usersKey) &&
+    (r.tier === null || isValidTier(r.tier)) &&
     typeof r.search === 'string'
   );
 }

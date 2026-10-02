@@ -1017,7 +1017,8 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     // 서버 사양 (계산기 결과)
     if (serverCalcResult && serverCalcResult.type !== 'warn') {
       text += '\n서버 사양\n\n';
-      text += `${serverCalcResult.monthsLabel} / ${serverCalcResult.usersLabel} / 검색 ${serverCalcResult.search === 'yes' ? 'O' : 'X'}\n\n`;
+      const tierText = serverCalcResult.tierLabel ? ` / ${serverCalcResult.tierLabel}` : '';
+      text += `${serverCalcResult.monthsLabel} / ${serverCalcResult.usersLabel} / 검색 ${serverCalcResult.search === 'yes' ? 'O' : 'X'}${tierText}\n\n`;
       // 마스토돈 사양: 괄호 앞 모델명만 추출 (e.g. "e2-medium (2 vCPU, 4GB RAM)" → "e2-medium")
       const mastodonModel = serverCalcResult.mastodon?.split(' (')[0] ?? serverCalcResult.mastodon ?? '';
       text += `마스토돈: ${mastodonModel}\n`;

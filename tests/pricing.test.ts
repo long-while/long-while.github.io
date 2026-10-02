@@ -25,6 +25,14 @@ import {
   SERVER_INSTALL_ITEM_NAME,
 } from '@/app/constants/form';
 import type { OrderFormData } from '@/app/types/order';
+import {
+  getAvailableTiers,
+  getMonthOptions,
+  getServerCalcResult,
+  getUsersOptions,
+  isUsersAllowed,
+  needsTier,
+} from '@/app/lib/mastodonServerConfig';
 
 let failed = 0;
 
@@ -362,6 +370,80 @@ check('복붙 텍스트 2D6 아이디', mixedText.includes('2D6 기본 다이스
 
 const basicWith2d6 = createTrpgOrder({ mainBot: 'basic', trpg2d6Bot: true, trpg2d6BotAccountId: '@DICE' });
 check('기본 봇 + 2D6 차단', fieldsOf(basicWith2d6).includes('mainBot'), true);
+
+// ===== 서버 사양 계산기 =====
+
+const specOf = (months: number, usersKey: string, search: 'yes' | 'no' = 'no') => {
+  const r = getServerCalcResult(months, usersKey, search);
+  return [r.type, r.mastodon, r.elastic, r.monthlyKrw, r.totalKrw, r.freeMonths, r.paidMonths, r.monthsLabel];
+};
+check('3개월 이하 11~18인 → e2-standard-2',
+  specOf(3, 'u18'), ['gcp', 'e2-standard-2 (2 vCPU, 8GB RAM)', null, '8만원', '무료', 3, 0, '3개월 이하']);
+check('3개월 이하 19~30인 → e2-highmem-2',
+  specOf(3, 'u30'), ['gcp', 'e2-highmem-2 (2 vCPU, 16GB RAM)', null, '11만원', '무료', 3, 0, '3개월 이하']);
+check('30인 초과 → e2-highmem-4, 2개월 무료',
+  specOf(3, 'u30p'), ['gcp', 'e2-highmem-4 (4 vCPU, 32GB RAM)', null, '21만원', '무료', 2, 0, '2개월 이하']);
+check('30인 초과 + 검색 → e2-medium 검색 서버',
+  specOf(3, 'u30p', 'yes'), ['gcp', 'e2-highmem-4 (4 vCPU, 32GB RAM)', 'e2-medium (2 vCPU, 4GB RAM)', '25만원', '무료', 2, 0, '2개월 이하']);
+check('19~30인 + 검색 → 14만원',
+  specOf(3, 'u30', 'yes'), ['gcp', 'e2-highmem-2 (2 vCPU, 16GB RAM)', 'e2-small (2 vCPU, 2GB RAM)', '14만원', '무료', 3, 0, '3개월 이하']);
+check('5~10인 3개월 이하는 그대로 e2-medium',
+  specOf(3, 'u10')[1], 'e2-medium (2 vCPU, 4GB RAM)');
+check('30인 초과 4개월은 일반 사양·3개월 무료',
+  specOf(4, 'u30p'), ['gcp', 'e2-standard-2 (2 vCPU, 8GB RAM)', null, '8만원', '8만원', 3, 1, '4개월']);
+check('19~30인 6개월은 일반 사양 e2-medium', specOf(6, 'u30')[1], 'e2-medium (2 vCPU, 4GB RAM)');
+const tierModels = (months: number, usersKey: string, search: 'yes' | 'no' = 'no') =>
+  getAvailableTiers(months, usersKey).map((tier) => {
+    const r = getServerCalcResult(months, usersKey, search, tier);
+    return `${tier}:${r.type}:${r.mastodon?.split(' (')[0]}${r.elastic ? '+' + r.elastic.split(' (')[0] : ''}:${r.monthlyKrw}`;
+  });
+check('등급: 5인 미만 (타협 없음)', tierModels(6, 'u5'),
+  ['min:gcp:e2-small:3만원', 'max:gcp:e2-medium:4만원']);
+check('등급: 5~10인', tierModels(6, 'u10'),
+  ['min:gcp:e2-small:3만원', 'mid:gcp:e2-medium:4만원', 'max:gcp:e2-standard-2:8만원']);
+check('등급: 11~18인', tierModels(6, 'u18'),
+  ['min:gcp:e2-medium:4만원', 'mid:gcp:e2-standard-2:8만원', 'max:gcp:e2-standard-2:8만원']);
+check('등급: 19~30인', tierModels(6, 'u30'),
+  ['min:gcp:e2-medium:4만원', 'mid:gcp:e2-standard-2:8만원', 'max:gcp:e2-highmem-2:11만원']);
+check('등급: 30인 초과', tierModels(6, 'u30p'),
+  ['min:gcp:e2-standard-2:8만원', 'mid:gcp:e2-highmem-2:11만원', 'max:gcp:e2-highmem-4:21만원']);
+check('등급: 19~30인 + 검색', tierModels(6, 'u30', 'yes'),
+  ['min:gcp:e2-medium+e2-small:7만원', 'mid:gcp:e2-standard-2+e2-small:11만원', 'max:gcp:e2-highmem-2+e2-small:14만원']);
+check('등급: 30인 초과 + 검색', tierModels(6, 'u30p', 'yes'),
+  ['min:gcp:e2-standard-2+e2-medium:12만원', 'mid:gcp:e2-highmem-2+e2-medium:15만원', 'max:gcp:e2-highmem-4+e2-medium:25만원']);
+check('등급: 5인 미만 10개월 최소는 Vultr, 쾌적은 GCP 유지', tierModels(10, 'u5'),
+  ['min:vultr:vhf-1c-2gb:2만원', 'max:gcp:e2-medium:4만원']);
+check('등급 결과에 라벨 포함', getServerCalcResult(6, 'u30', 'no', 'max').tierLabel, '쾌적');
+check('3개월 이하는 등급 무시', getServerCalcResult(3, 'u30', 'no', 'min').tier, null);
+check('4개월 이상은 등급 필요', [3, 4, 11, 12].map(needsTier), [false, true, true, true]);
+check('고를 수 없는 등급은 최소로 계산', getServerCalcResult(6, 'u5', 'no', 'mid').tierLabel, '최소');
+
+// 장기 소규모 (12개월 이상, 10인 이하)
+check('장기: 5인 미만 최소/쾌적', tierModels(12, 'u5'),
+  ['min:vultr:vc2-1c-1gb:8천원', 'max:vultr:vc2-1c-2gb:1.5만원']);
+check('장기: 5~10인 최소/쾌적', tierModels(12, 'u10'),
+  ['min:vultr:vc2-1c-2gb:1.5만원', 'max:vultr:vc2-2c-4gb:3만원']);
+check('장기: 검색 요청해도 검색 서버 없음',
+  [getServerCalcResult(12, 'u10', 'yes', 'max').elastic, getServerCalcResult(12, 'u10', 'yes', 'max').search], [null, 'no']);
+check('장기: 연간 총액', getServerCalcResult(12, 'u5', 'no', 'min').totalKrw, '9.6만원');
+check('장기 인원 선택지는 10인 이하만', getUsersOptions(12).map((o) => o.value), ['u5', 'u10']);
+check('4~11개월 인원 선택지는 전체', getUsersOptions(11).length, 5);
+check('장기 11인 이상 차단', [isUsersAllowed(12, 'u18'), isUsersAllowed(12, 'u10'), isUsersAllowed(6, 'u30p')], [false, true, true]);
+const tierOrder = createFormData();
+tierOrder.step2.applyServerInstall = 'yes';
+const tierText = generateCopyText(tierOrder, calculateTotalEstimate(tierOrder), getServerCalcResult(6, 'u30', 'no', 'mid'));
+check('복붙 텍스트 등급 표시', tierText.includes('6개월 / 19~30인 / 검색 X / 타협'), true);
+
+check('기간 선택지 라벨: 30인 초과',getMonthOptions('u30p')[0].label, '2개월 이하');
+check('기간 선택지 라벨: 19~30인', getMonthOptions('u30')[0].label, '3개월 이하');
+check('기간 선택지 라벨: 인원 미선택', getMonthOptions('')[0].label, '3개월 이하');
+
+const highmemOrder = createFormData();
+highmemOrder.step2.applyServerInstall = 'yes';
+const highmemText = generateCopyText(highmemOrder, calculateTotalEstimate(highmemOrder), getServerCalcResult(3, 'u30p', 'no'));
+check('복붙 텍스트 highmem-4 모델명', highmemText.includes('마스토돈: e2-highmem-4\n'), true);
+check('복붙 텍스트 highmem-4 무료 기간', highmemText.includes('2개월까지 무료, 서버비 발생 없음'), true);
+check('복붙 텍스트 highmem-4 기간 라벨', highmemText.includes('2개월 이하 / 30인 초과 / 검색 X'), true);
 
 // ===== FAQ 분류 =====
 

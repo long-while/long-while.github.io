@@ -23,7 +23,7 @@ export default function Step2Server() {
   const fieldAria = useFieldAria();
   const { serverCalcResult } = useEstimate();
   const step2 = formData.step2;
-  // 장기 소규모 서버 선택 시: 검색 기능(검색 서버) 추가 불가 (월 1만원 서버비 유지)
+  // 장기 소규모 서버 선택 시: 검색 기능(검색 서버) 추가 불가 (저렴한 월 서버비 유지)
   const isLongTermServer = formData.step1.isLongTermCommunity;
   const [characterLimitError, setCharacterLimitError] = useState<string | null>(null);
   const [adminAccountError, setAdminAccountError] = useState<string | null>(null);

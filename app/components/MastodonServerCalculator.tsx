@@ -1,7 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
-import { MONTH_OPTIONS, USERS_OPTIONS, getServerCalcResult } from '@/app/lib/mastodonServerConfig';
-import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
+import { LONG_TERM_MIN_MONTHS } from '@/app/constants/form';
+import {
+  TIER_OPTIONS,
+  getAvailableTiers,
+  getMonthOptions,
+  getServerCalcResult,
+  getUsersOptions,
+  isUsersAllowed,
+  needsTier,
+} from '@/app/lib/mastodonServerConfig';
+import type { ServerCalcResult, ServerTier } from '@/app/lib/mastodonServerConfig';
 import {
   Select,
   SelectContent,
@@ -29,6 +38,7 @@ export default function MastodonServerCalculator({
   const [search, setSearch] = useState<'yes' | 'no' | null>(
     serverCalcResult ? serverCalcResult.search : null
   );
+  const [tier, setTier] = useState<ServerTier | null>(serverCalcResult?.tier ?? null);
 
   // 장기 소규모 서버는 반영구(12개월 이상) 운영 → 기간을 12개월로 고정
   useEffect(() => {
@@ -37,11 +47,35 @@ export default function MastodonServerCalculator({
     }
   }, [longTerm, months]);
 
-  // 현재 인원/기간이 Vultr(장기·소규모) 호스팅인지 검색 제외 기준으로 판정 (검색값에 따른 순환 방지)
-  const baselineIsVultr = useMemo(() => {
-    if (!months || !usersKey) return false;
-    return getServerCalcResult(Number(months), usersKey, 'no').type === 'vultr';
+  // 장기(12개월 이상)는 10인 이하만 받는다. 기간을 바꿔 고른 인원이 범위를 벗어나면 선택 해제
+  const isLongTermMonths = Number(months) >= LONG_TERM_MIN_MONTHS;
+  const usersOptions = getUsersOptions(Number(months));
+  useEffect(() => {
+    if (months && usersKey && !isUsersAllowed(Number(months), usersKey)) {
+      setUsersKey('');
+    }
   }, [months, usersKey]);
+  const usersValid = !!usersKey && isUsersAllowed(Number(months), usersKey);
+
+  // 4개월 이상은 서버 사양 등급(최소/타협/쾌적)을 고른다
+  const showTier = !!months && usersValid && needsTier(Number(months));
+  const availableTiers = useMemo(
+    () => getAvailableTiers(Number(months), usersKey),
+    [months, usersKey]
+  );
+
+  // 기간·인원을 바꿔 고른 등급이 없어지면(5인 미만·장기는 타협 없음) 선택 해제
+  useEffect(() => {
+    if (tier && !availableTiers.includes(tier)) {
+      setTier(null);
+    }
+  }, [tier, availableTiers]);
+
+  // 현재 인원/기간/등급이 Vultr(장기·소규모) 호스팅인지 검색 제외 기준으로 판정 (검색값에 따른 순환 방지)
+  const baselineIsVultr = useMemo(() => {
+    if (!months || !usersValid) return false;
+    return getServerCalcResult(Number(months), usersKey, 'no', tier).type === 'vultr';
+  }, [months, usersKey, usersValid, tier]);
 
   // 검색 차단 규칙: Vultr(장기·소규모) 서버는 검색 서버 비용이 커서 막고, GCP는 허용한다.
   const searchLocked = longTerm || baselineIsVultr;
@@ -53,14 +87,18 @@ export default function MastodonServerCalculator({
     }
   }, [searchLocked, search]);
 
-  const isAllSelected = !!(months && usersKey && search);
+  const isAllSelected = !!(months && usersValid && search && (!showTier || tier));
   const result: ServerCalcResult | null = isAllSelected
-    ? getServerCalcResult(Number(months), usersKey, search!)
+    ? getServerCalcResult(Number(months), usersKey, search!, tier)
     : null;
 
   useEffect(() => {
     setServerCalcResult(result);
-  }, [months, usersKey, search, setServerCalcResult]);
+  }, [months, usersKey, search, tier, showTier, setServerCalcResult]);
+
+  // 등급 버튼에 표시할 월 서버비 (5인 미만+검색은 경고라 금액 없음)
+  const getTierMonthlyKrw = (t: ServerTier) =>
+    getServerCalcResult(Number(months), usersKey, search ?? 'no', t).monthlyKrw;
 
   const handleSetSearchNo = () => setSearch('no');
 
@@ -112,7 +150,7 @@ export default function MastodonServerCalculator({
                 <SelectValue placeholder="선택해주세요" />
               </SelectTrigger>
               <SelectContent>
-                {MONTH_OPTIONS.map((o) => (
+                {getMonthOptions(usersKey).map((o) => (
                   <SelectItem key={o.value} value={String(o.value)}>
                     {o.label}
                   </SelectItem>
@@ -138,13 +176,19 @@ export default function MastodonServerCalculator({
               <SelectValue placeholder="선택해주세요" />
             </SelectTrigger>
             <SelectContent>
-              {USERS_OPTIONS.map((o) => (
+              {usersOptions.map((o) => (
                 <SelectItem key={o.value} value={o.value}>
                   {o.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {isLongTermMonths && (
+            <p className="text-[13px] leading-[1.7] text-[#cc5500]">
+              장기(12개월 이상) 서버는 10인 이하 소규모만 신청하실 수 있어요.
+              11인 이상이 1년 넘게 운영하실 예정이라면 따로 문의해 주세요.
+            </p>
+          )}
         </div>
 
         {/* 3. 검색 기능 */}
@@ -188,10 +232,51 @@ export default function MastodonServerCalculator({
           )}
         </div>
 
+        {/* 4. 서버 사양 (4~11개월) */}
+        {showTier && (
+          <div className="space-y-2 animate-fadeIn">
+            <label className="flex items-center gap-2 text-[14px] font-medium text-foreground/70">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ff7b00]/10 text-[#ff7b00] text-[11px] font-bold font-mono shrink-0">
+                4
+              </span>
+              서버 사양
+            </label>
+            <div className="space-y-2" role="radiogroup" aria-label="서버 사양">
+              {TIER_OPTIONS.filter((o) => availableTiers.includes(o.value)).map((o) => {
+                const monthlyKrw = getTierMonthlyKrw(o.value);
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={tier === o.value}
+                    onClick={() => setTier(o.value)}
+                    className={`w-full text-left px-4 py-3 border transition-all min-h-[44px]
+                      ${tier === o.value
+                        ? 'border-[#ff7b00] bg-[#fff5eb]'
+                        : 'border-border hover:border-[#ff7b00] hover:bg-[#fff5eb]'
+                      }`}
+                  >
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className={`text-[14px] font-medium ${tier === o.value ? 'text-[#ff7b00]' : 'text-foreground/80'}`}>
+                        {o.label}
+                      </span>
+                      {monthlyKrw && (
+                        <span className="text-[13px] font-mono text-foreground/60 shrink-0">월 {monthlyKrw}</span>
+                      )}
+                    </div>
+                    <p className="text-[13px] text-foreground/60 mt-0.5">{o.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* 미선택 안내 */}
         {!isAllSelected && (
           <p className="text-[13px] text-foreground/40">
-            위 3가지를 모두 선택하면 예상 서버비와 설치 사양을 확인할 수 있습니다.
+            위 {showTier ? 4 : 3}가지를 모두 선택하면 예상 서버비와 설치 사양을 확인할 수 있습니다.
           </p>
         )}
       </div>
@@ -308,6 +393,7 @@ export default function MastodonServerCalculator({
                       <span className="text-[13px] text-foreground/60 shrink-0">선택 사양</span>
                       <span className="text-[12px] font-mono text-foreground/80 text-right">
                         {result.monthsLabel} / {result.usersLabel} / 검색 {result.search === 'yes' ? 'O' : 'X'}
+                        {result.tierLabel && ` / ${result.tierLabel}`}
                       </span>
                     </div>
                   </div>
@@ -324,13 +410,13 @@ export default function MastodonServerCalculator({
             <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">서버비 지불 방식</p>
             <p className="text-[13px] text-foreground/60 leading-[1.75]">
               {result.type === 'gcp' && result.paidMonths > 0 && (
-                <>첫 3개월은 구글에서 제공하는 무료 크레딧을 소모하며, 이후 매달 약 {result.monthlyKrw}이 지출됩니다.<br />
+                <>첫 {result.freeMonths}개월은 구글에서 제공하는 무료 크레딧을 소모하며, 이후 매달 약 {result.monthlyKrw}이 지출됩니다.<br />
                   서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.</>
               )}
               {result.type === 'gcp' && result.paidMonths === 0 && (
-                <>서버 설치 후 3개월간은 구글에서 제공하는 무료 크레딧을 소모하여 서버비 없이 사용하실 수 있습니다.
-                  애프터 등을 위해 서버를 3개월 이상 유지하실 경우, 사양을 낮추고 월 3만원 정도의 금액으로 서버를 유지해 드립니다.<br /><br />
-                  무료 체험이 끝나도 자동 결제가 진행되지 않습니다. 만약 유료 플랜으로 전환하여 3개월 이상 서버를 사용하실 경우, 서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.</>
+                <>서버 설치 후 {result.freeMonths}개월간은 구글에서 제공하는 무료 크레딧을 소모하여 서버비 없이 사용하실 수 있습니다.
+                  애프터 등을 위해 서버를 {result.freeMonths}개월 이상 유지하실 경우, 사양을 낮추고 월 3만원 정도의 금액으로 서버를 유지해 드립니다.<br /><br />
+                  무료 체험이 끝나도 자동 결제가 진행되지 않습니다. 만약 유료 플랜으로 전환하여 {result.freeMonths}개월 이상 서버를 사용하실 경우, 서버 비용은 커미션 비용과 별개로, 호스팅 업체에 등록하신 결제수단으로 월초에 자동 결제됩니다.</>
               )}
               {result.type === 'vultr' && (
                 <>장기/소규모 서버의 경우 서버비 절약을 위해 구글이 아닌 Vultr라는 호스팅 업체를 통해 서버 컴퓨터를 대여하게 됩니다.
@@ -346,8 +432,8 @@ export default function MastodonServerCalculator({
           <div className="border border-border bg-gray-50/50 px-4 py-4 space-y-1.5">
             <p className="text-[12px] font-semibold text-foreground/50 uppercase tracking-widest font-mono">규모와 예산</p>
             <p className="text-[13px] text-foreground/60 leading-[1.75]">
-              사양과 서버비는 계단처럼 증가하기 때문에, 11인 규모와 25인 규모가 동일한 사양의 서버를 사용하게 될 수도 있습니다.
-              이 경우, 11인 서버는 널널하지만 25인 서버는 다소 렉이 발생할 수 있습니다.
+              사양과 서버비는 계단처럼 증가하기 때문에, 19인 규모와 30인 규모가 동일한 사양의 서버를 사용하게 될 수도 있습니다.
+              이 경우, 19인 서버는 널널하지만 30인 서버는 다소 렉이 발생할 수 있습니다.
               좁은 공간에 많은 사람이 들어와 있으니까요.
               이때, 서버비 증가를 감안하시고 더 넓은 서버를 선택하시거나,
               렉을 감안하고 예산에 맞추어 사양이 낮은 서버를 설치할 수도 있습니다.

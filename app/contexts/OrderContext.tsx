@@ -155,7 +155,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const updateStep1 = useCallback((data: Partial<Step1Data>) => {
     setFormData(prev => {
       const step1 = { ...prev.step1, ...data };
-      // 불변식: 장기 소규모 서버는 검색 옵션과 공존 불가 (월 1만원 서버비 유지)
+      // 불변식: 장기 소규모 서버는 검색 옵션과 공존 불가 (저렴한 월 서버비 유지)
       // UI 효과(Step2)와 별개로 데이터 단에서도 강제 해제해, 견적·복사·요약이 항상 일치하도록 한다.
       const step2 = step1.isLongTermCommunity && prev.step2.searchOption
         ? { ...prev.step2, searchOption: false }
