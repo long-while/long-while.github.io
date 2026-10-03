@@ -66,7 +66,7 @@ function botAddonText(step3: OrderFormData['step3']) {
     step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
     step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null &&
       `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`,
-    step3.customCommandUpgrade && '답멘에 이름·주사위 넣기',
+    step3.customCommandUpgrade && '키워드 답변에 이름·주사위 넣기',
     step3.reservationToot && '예약 툿',
     step3.autoProfileImage && '스토리 자동 진행',
     step3.tootCurrencyLink && '툿수-재화 자동반영',
@@ -166,7 +166,7 @@ function botPriceLines(data: OrderFormData, estimate: PriceEstimate) {
     step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null && {
       label: `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`, price: won(a.investigationDailyLimit),
     },
-    step3.customCommandUpgrade && { label: '답멘에 이름·주사위 넣기', price: won(a.customCommandUpgrade) },
+    step3.customCommandUpgrade && { label: '키워드 답변에 이름·주사위 넣기', price: won(a.customCommandUpgrade) },
     step3.reservationToot && { label: '예약 툿', price: won(a.reservationToot) },
     step3.autoProfileImage && { label: '스토리 자동 진행', price: won(a.autoProfileImage) },
     (step3.reservationToot || step3.autoProfileImage) && step3.extraAccountTiers > 0 && {

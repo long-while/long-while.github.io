@@ -5,7 +5,7 @@
  * FeatureCard — '특징 카드' 264×264, #DDDDDD 선, 패딩 24, 간격 24: 아이콘 80 → 제목 title4 + 설명 body3 #767676 (가운데).
  * ProcessStep — '스텝 카드' 312×312, 흰 바탕, 모서리 12, 패딩 8, 그림자: 그림 칸 296×160(모서리 8, gradientSoft, 아이콘 140)
  *               → 패딩 16 글(STEP caption2 #3376E7 → 12 → 제목 title4 + 설명 body3, 간격 4).
- * StickyEstimateBar — 서버 페이지 하단 고정 바 680×100: 블루 22% 반투명 + 흰 선 + 배경 흐림 12, 모서리 8, 패딩 20.
+ * StickyEstimateBar — 서버 페이지 하단 고정 바 (시안 680×100 에서 30% 줄임, 폭은 다시 20% 줄여 380, 패딩 14): 블루 22% 반투명 + 흰 선 + 배경 흐림 12, 모서리 8.
  */
 import clsx from 'clsx';
 import { useEffect, type MouseEventHandler, type ReactNode } from 'react';
@@ -147,7 +147,7 @@ function useBottomScrollPadding(active: boolean) {
     if (!active) return;
     const root = document.documentElement;
     const previous = root.style.scrollPaddingBottom;
-    root.style.scrollPaddingBottom = '140px';
+    root.style.scrollPaddingBottom = '100px';
     return () => { root.style.scrollPaddingBottom = previous; };
   }, [active]);
 }
@@ -159,13 +159,13 @@ export function StickyEstimateBar({ message, amount, href, onClick, placement = 
       href={href}
       onClick={onClick}
       className={clsx(
-        'group pointer-events-auto flex max-w-[680px] items-center justify-between gap-4 rounded-input border border-background-white bg-brand/22 p-4 shadow-modal backdrop-blur-[12px] lg:p-5',
+        'group pointer-events-auto flex max-w-[380px] items-center justify-between gap-3 rounded-input border border-background-white bg-brand/22 p-3 shadow-modal backdrop-blur-[12px] lg:p-3.5',
         placement === 'fixed' ? 'fixed bottom-[calc(16px+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-32px)] -translate-x-1/2' : 'w-full',
         focusRing,
       )}
     >
-      <span className="text-body2 font-medium text-text-primary lg:text-title4">{message}</span>
-      <span className="inline-flex min-h-[60px] shrink-0 items-center justify-center rounded-input bg-brand px-5 py-4 text-title4 text-text-inverse transition-colors group-hover:bg-brand-hover lg:w-[180px]">
+      <span className="text-body3 font-medium text-text-primary">{message}</span>
+      <span className="inline-flex min-h-[42px] shrink-0 items-center justify-center rounded-input bg-brand px-3.5 py-2.5 text-body2 font-semibold text-text-inverse transition-colors group-hover:bg-brand-hover lg:w-[126px]">
         {amount}
       </span>
     </a>

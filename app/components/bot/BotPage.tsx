@@ -1,8 +1,8 @@
 /**
  * 자동봇 커미션 (/bot/) — 시안 '자동봇 커미션' (183:760, file.json 실측). 문구는 기존 사이트 그대로 (Q9).
- *  배너 600 (헤더가 위에 뜸, P1) → 80 → 섹션 간격 100: 기본 안내 · 시트 미리보기 · 타입 비교 · 키워드 답멘 ·
+ *  배너 600 (헤더가 위에 뜸, P1) → 80 → 섹션 간격 100: 기본 안내 · 시트 미리보기 · 타입 비교 · 키워드 답변 ·
  *  타입 상세 · 추가 옵션 · 가동 기간 → 120 → 푸터.
- *  (무엇을 살지 고른 뒤 기간을 정하도록 가동 기간을 맨 뒤로. 답멘 옵션 설명은 키워드 답멘 섹션 안에 함께)
+ *  (무엇을 살지 고른 뒤 기간을 정하도록 가동 기간을 맨 뒤로. 답멘 옵션 설명은 키워드 답변 섹션 안에 함께)
  *  견적 담기·빼기·택1·충돌 토스트·선행 조건·수정 강조 동작은 기존 BotCommission 과 같다 (useBotEstimate).
  *  하단 고정 바: 견적이 있으면 StickyEstimateBar (P8, 이 페이지에서는 플로팅 버튼 숨김).
  */
@@ -79,7 +79,7 @@ function BasicInfo({ onNavigate }: { onNavigate: NavigateFunction }) {
 function SheetPreview() {
   return (
     <TitledSection title="자동봇 시트 미리보기">
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-6">
+      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-6">
         {SHEET_LINKS.map((sheet) => (
           <li key={sheet.href}>
             <a href={sheet.href} target="_blank" rel="noopener noreferrer"
@@ -223,10 +223,10 @@ export default function BotPage({ onNavigate }: BotPageProps) {
         <BasicInfo onNavigate={onNavigate} />
         <SheetPreview />
         <TitledSection title="봇 타입 비교"><CompareTable /></TitledSection>
-        <TitledSection title="키워드 답멘이란?"><KeywordReplyGuide /></TitledSection>
+        <TitledSection title="키워드 답변이란?"><KeywordReplyGuide /></TitledSection>
         <TitledSection title="봇 타입 상세">
           <p className="text-body3 text-text-secondary">
-            * 기본 / 기본&상점 / 기본&상점&스탯 중 <span className="font-semibold text-text-primary">하나만</span> 고를 수 있어요. 뒤 타입일수록 앞 타입 기능을 모두 포함해요.
+            * 기본 / 기본&상점 / 기본&상점&스탯 중 <span className="font-semibold text-text-primary">하나만</span> 고를 수 있어요.
           </p>
           <BotTypeCards types={BOT_TYPES} est={est} highlighted={highlighted} />
         </TitledSection>

@@ -94,7 +94,7 @@ export function botSummaryRows(step3: Step3Data, closingDate: string) {
     step3.cocBot && 'D100 룰 대응 TRPG봇',
     step3.trpg2d6Bot && '2D6 룰 대응 TRPG봇 3종',
     step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
-    step3.customCommandUpgrade && '답멘에 이름·주사위 넣기',
+    step3.customCommandUpgrade && '키워드 답변에 이름·주사위 넣기',
     step3.reservationToot && '예약 툿',
     step3.autoProfileImage && '스토리 자동 진행',
     step3.tootCurrencyLink && '툿수-재화 자동반영',

@@ -1184,7 +1184,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
         : '';
       text += `+ 일일 조사 횟수 제한${countLabel}\n`;
     }
-    if (step3.customCommandUpgrade) text += '+ 답멘에 이름·주사위 넣기\n';
+    if (step3.customCommandUpgrade) text += '+ 키워드 답변에 이름·주사위 넣기\n';
     if (step3.reservationToot) text += '+ 예약 툿\n';
     if (step3.autoProfileImage) text += '+ 스토리 자동 진행\n';
     if (step3.tootCurrencyLink) text += '+ 툿-재화 연동\n';
@@ -1307,7 +1307,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       text += `일일 조사 횟수 제한 ${bot.addons.investigationDailyLimit.toLocaleString()}\n`;
     }
     if (step3.customCommandUpgrade) {
-      text += `답멘에 이름·주사위 넣기 ${bot.addons.customCommandUpgrade.toLocaleString()}\n`;
+      text += `키워드 답변에 이름·주사위 넣기 ${bot.addons.customCommandUpgrade.toLocaleString()}\n`;
     }
     if (step3.reservationToot) {
       text += `예약 툿 ${bot.addons.reservationToot.toLocaleString()}\n`;

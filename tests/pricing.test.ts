@@ -550,8 +550,8 @@ const renamed = sanitizeEstimateItems([
   { id: 'h', name: '답멘에 이름·주사위 넣기', price: 1, category: 'bot' },
   { id: 'i', name: '기본&상점 타입 - 커스텀 명령어 업그레이드', price: 1, category: 'bot' },
 ]);
-check('저장 견적 정리: 예전 이름 → 지금 이름', renamed.map((i) => [i.name, i.price]), [['답멘에 이름·주사위 넣기', PRICING_CONFIG.bot.addons.customCommandUpgrade]]);
-check('예전 이름도 같은 신청서 칸으로', [ESTIMATE_NAME_TO_MAPPING_KEY['답멘에 이름·주사위 넣기'], ESTIMATE_NAME_TO_MAPPING_KEY['커스텀 명령어 업그레이드']], ['customCommandUpgrade', 'customCommandUpgrade']);
+check('저장 견적 정리: 예전 이름 → 지금 이름', renamed.map((i) => [i.name, i.price]), [['키워드 답변에 이름·주사위 넣기', PRICING_CONFIG.bot.addons.customCommandUpgrade]]);
+check('예전 이름도 같은 신청서 칸으로', [ESTIMATE_NAME_TO_MAPPING_KEY['키워드 답변에 이름·주사위 넣기'], ESTIMATE_NAME_TO_MAPPING_KEY['답멘에 이름·주사위 넣기'], ESTIMATE_NAME_TO_MAPPING_KEY['커스텀 명령어 업그레이드']], ['customCommandUpgrade', 'customCommandUpgrade', 'customCommandUpgrade']);
 check('모르는 이름은 그대로', currentItemName('검색 기능'), '검색 기능');
 
 // 자동봇 페이지 가격 = 신청서 계산 가격 (한쪽만 바뀌면 견적함과 신청서 금액이 어긋난다)

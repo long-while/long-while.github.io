@@ -389,8 +389,8 @@ export function AddonSection({ s }: S) {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         {canHaveInvestigationBot && <InvestigationAddon s={s} />}
         <OptionCard type="checkbox" layout="row" checked={step3.customCommandUpgrade} onChange={(e) => updateStep3({ customCommandUpgrade: e.target.checked })}
-          title={<CardTitle badge={fromCart.customCommandUpgrade && step3.customCommandUpgrade && <FromCartBadge />}>답멘에 이름·주사위 넣기</CardTitle>}
-          description="키워드 답멘에 보낸 사람 이름, 주사위 결과, 랜덤 단어를 넣어요 (은/는 자동 맞춤)" price={won(PRICING_CONFIG.bot.addons.customCommandUpgrade)} />
+          title={<CardTitle badge={fromCart.customCommandUpgrade && step3.customCommandUpgrade && <FromCartBadge />}>키워드 답변에 이름·주사위 넣기</CardTitle>}
+          description="키워드 답변에 보낸 사람 이름, 주사위 결과, 랜덤 단어를 넣어요 (은/는 자동 맞춤)" price={won(PRICING_CONFIG.bot.addons.customCommandUpgrade)} />
         <OptionCard type="checkbox" layout="row" checked={step3.reservationToot} onChange={(e) => s.handleReservationTootChange(e.target.checked)}
           title={<CardTitle badge={fromCart.reservation && step3.reservationToot && <FromCartBadge />}>예약 툿 (시트로 관리)</CardTitle>} price={won(PRICING_CONFIG.bot.addons.reservationToot)} />
         <OptionCard type="checkbox" layout="row" checked={step3.autoProfileImage} onChange={(e) => s.handleAutoProfileImageChange(e.target.checked)}
