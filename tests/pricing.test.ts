@@ -4,7 +4,8 @@
  */
 
 import { syncInfraFeeItem, insertRemovedItem, sanitizeEstimateItems } from '@/app/contexts/EstimateContext';
-import { catalogPrice } from '@/app/utils/estimateCatalog';
+import { catalogPrice, currentItemName } from '@/app/utils/estimateCatalog';
+import { ESTIMATE_NAME_TO_MAPPING_KEY } from '@/app/types/estimate-mapping';
 import { ADDITIONAL_OPTIONS as BOT_OPTIONS, BOT_TYPES } from '@/app/components/bot/botContent';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
 import {
@@ -542,6 +543,16 @@ const dirty: unknown = [
 ];
 check('저장 견적 정리: 이름·가격·분류', sanitizeEstimateItems(dirty).map((i) => [i.name, i.price]), [['검색 기능', PRICING_CONFIG.server.addons.search], ['알 수 없는 옛 항목2', 7000], ['기본 가동료 (3주)', 3 * PRICING_CONFIG.bot.operationPerWeek]]);
 check('저장 견적 정리: 배열이 아니면 빈 견적', sanitizeEstimateItems({ a: 1 }), []);
+
+// 이름을 바꾼 옵션: 예전 이름으로 저장된 견적도 지금 이름·가격으로, 예전/지금 이름이 같이 있으면 하나만
+const renamed = sanitizeEstimateItems([
+  { id: 'g', name: '커스텀 명령어 업그레이드', price: 1, category: 'bot' },
+  { id: 'h', name: '답멘에 이름·주사위 넣기', price: 1, category: 'bot' },
+  { id: 'i', name: '기본&상점 타입 - 커스텀 명령어 업그레이드', price: 1, category: 'bot' },
+]);
+check('저장 견적 정리: 예전 이름 → 지금 이름', renamed.map((i) => [i.name, i.price]), [['답멘에 이름·주사위 넣기', PRICING_CONFIG.bot.addons.customCommandUpgrade]]);
+check('예전 이름도 같은 신청서 칸으로', [ESTIMATE_NAME_TO_MAPPING_KEY['답멘에 이름·주사위 넣기'], ESTIMATE_NAME_TO_MAPPING_KEY['커스텀 명령어 업그레이드']], ['customCommandUpgrade', 'customCommandUpgrade']);
+check('모르는 이름은 그대로', currentItemName('검색 기능'), '검색 기능');
 
 // 자동봇 페이지 가격 = 신청서 계산 가격 (한쪽만 바뀌면 견적함과 신청서 금액이 어긋난다)
 const botPriceByName = Object.fromEntries(BOT_TYPES.map((t) => [t.name, t.price]));

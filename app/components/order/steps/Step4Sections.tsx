@@ -66,9 +66,9 @@ function botAddonText(step3: OrderFormData['step3']) {
     step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
     step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null &&
       `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`,
-    step3.customCommandUpgrade && '커스텀 명령어 업그레이드',
+    step3.customCommandUpgrade && '답멘에 이름·주사위 넣기',
     step3.reservationToot && '예약 툿',
-    step3.autoProfileImage && '자동 스진',
+    step3.autoProfileImage && '스토리 자동 진행',
     step3.tootCurrencyLink && '툿수-재화 자동반영',
     step3.transferFeature && `재화, 아이템 양도 기능 (${transferLabel(step3.transferOption)})`,
     step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') &&
@@ -166,9 +166,9 @@ function botPriceLines(data: OrderFormData, estimate: PriceEstimate) {
     step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null && {
       label: `일일 조사 횟수 제한${step3.investigationDailyLimitCount > 0 ? ` (${step3.investigationDailyLimitCount}회)` : ''}`, price: won(a.investigationDailyLimit),
     },
-    step3.customCommandUpgrade && { label: '커스텀 명령어 업그레이드', price: won(a.customCommandUpgrade) },
+    step3.customCommandUpgrade && { label: '답멘에 이름·주사위 넣기', price: won(a.customCommandUpgrade) },
     step3.reservationToot && { label: '예약 툿', price: won(a.reservationToot) },
-    step3.autoProfileImage && { label: '자동 스진', price: won(a.autoProfileImage) },
+    step3.autoProfileImage && { label: '스토리 자동 진행', price: won(a.autoProfileImage) },
     (step3.reservationToot || step3.autoProfileImage) && step3.extraAccountTiers > 0 && {
       label: `추가 계정 ${tiers * ACCOUNT_LIST_CONFIG.slotsPerTier}칸`, price: won(tiers * a.extraAccountTier),
     },

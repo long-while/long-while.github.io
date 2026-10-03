@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { EstimateMappingKey } from '@/app/types/estimate-mapping';
 import { ESTIMATE_NAME_TO_MAPPING_KEY, MAPPING_KEY_TO_ORDER_FIELD } from '@/app/types/estimate-mapping';
-import { catalogPrice } from '@/app/utils/estimateCatalog';
+import { catalogPrice, currentItemName } from '@/app/utils/estimateCatalog';
 import { saveSyncState, clearSyncState } from '@/app/utils/cartOrderSync';
 import {
   SERVER_INSTALL_ITEM_NAME,
@@ -76,20 +76,23 @@ export function sanitizeEstimateItems(raw: unknown): EstimateItem[] {
   for (const entry of raw) {
     if (!entry || typeof entry !== 'object') continue;
     const o = entry as Record<string, unknown>;
-    if (typeof o.name !== 'string' || o.name.trim() === '' || RETIRED_ITEM_NAMES.includes(o.name) || seen.has(o.name)) continue;
+    if (typeof o.name !== 'string' || o.name.trim() === '' || RETIRED_ITEM_NAMES.includes(o.name)) continue;
+    // 이름이 바뀐 옵션은 예전 이름으로 저장돼 있어도 지금 이름으로 보여 준다 (견적함·신청서·복사문이 같은 이름)
+    const name = currentItemName(o.name);
+    if (seen.has(name)) continue;
     if (o.category !== 'server' && o.category !== 'bot') continue;
     const stored = typeof o.price === 'number' && Number.isFinite(o.price) && o.price >= 0 ? o.price : null;
-    const price = catalogPrice(o.name) ?? stored;
+    const price = catalogPrice(name) ?? stored;
     if (price === null) continue;
-    seen.add(o.name);
+    seen.add(name);
     items.push({
       id: typeof o.id === 'string' && o.id !== '' ? o.id : createItemId(),
-      name: o.name,
+      name,
       price,
       category: o.category,
       description: typeof o.description === 'string' ? o.description : undefined,
       mappingKey: typeof o.mappingKey === 'string' && hasOwn(MAPPING_KEY_TO_ORDER_FIELD, o.mappingKey) ? (o.mappingKey as EstimateMappingKey) : undefined,
-      locked: o.name === SERVER_INFRA_FEE_ITEM.name ? true : undefined,
+      locked: name === SERVER_INFRA_FEE_ITEM.name ? true : undefined,
     });
   }
   return items;

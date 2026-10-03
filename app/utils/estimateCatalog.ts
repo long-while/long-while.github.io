@@ -24,6 +24,13 @@ function buildPriceTable(): Map<string, number> {
 }
 
 let priceTable: Map<string, number> | null = null;
+let currentNames: Map<string, string> | null = null;
+
+/** 예전 이름(별칭)으로 저장된 견적 항목을 지금 이름으로. 별칭이 아니면 그대로 */
+export function currentItemName(name: string): string {
+  currentNames ??= new Map(BOT_ADDITIONAL.flatMap((o) => (o.aliases ?? []).map((alias) => [alias, o.name] as const)));
+  return currentNames.get(name) ?? name;
+}
 
 /** 현재 가격. 모르는 이름이면 null */
 export function catalogPrice(name: string): number | null {

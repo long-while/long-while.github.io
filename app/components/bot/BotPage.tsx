@@ -1,7 +1,8 @@
 /**
  * 자동봇 커미션 (/bot/) — 시안 '자동봇 커미션' (183:760, file.json 실측). 문구는 기존 사이트 그대로 (Q9).
- *  배너 600 (헤더가 위에 뜸, P1) → 80 → 섹션 간격 100: 기본 안내 · 시트 미리보기 · 가동 기간 · 타입 비교 ·
- *  커스텀 명령어 · 타입 상세 · 추가 옵션 → 120 → 푸터.
+ *  배너 600 (헤더가 위에 뜸, P1) → 80 → 섹션 간격 100: 기본 안내 · 시트 미리보기 · 타입 비교 · 키워드 답멘 ·
+ *  타입 상세 · 추가 옵션 · 가동 기간 → 120 → 푸터.
+ *  (무엇을 살지 고른 뒤 기간을 정하도록 가동 기간을 맨 뒤로. 답멘 옵션 설명은 키워드 답멘 섹션 안에 함께)
  *  견적 담기·빼기·택1·충돌 토스트·선행 조건·수정 강조 동작은 기존 BotCommission 과 같다 (useBotEstimate).
  *  하단 고정 바: 견적이 있으면 StickyEstimateBar (P8, 이 페이지에서는 플로팅 버튼 숨김).
  */
@@ -13,11 +14,11 @@ import { IMAGES } from '@/app/constants/images';
 import { navLinkProps } from '@/app/lib/navLink';
 import type { NavigateFunction } from '@/app/types/navigation';
 import {
-  ADDITIONAL_OPTIONS, BOT_TYPES, INVESTIGATION_TYPE, MAIN_REQUIRES_LABEL, OPERATION_FEE_PREFIX, OPERATION_NOTES, SHEET_LINKS, SHOP_REQUIRES_LABEL, WEEKLY_FEE,
-  type AdditionalOption,
+  ADDITIONAL_OPTIONS, BOT_INTRO_CHAT, BOT_TYPES, INVESTIGATION_TYPE, MAIN_REQUIRES_LABEL, OPERATION_FEE_PREFIX, OPERATION_NOTES, OPERATION_WEEKS_HINT,
+  SHEET_LINKS, SHOP_REQUIRES_LABEL, WEEKLY_FEE, type AdditionalOption,
 } from './botContent';
 import { BotTypeCards } from './BotTypeCards';
-import { CommandTable, CompareTable } from './BotTables';
+import { ChatExample, CompareTable, KeywordReplyGuide } from './BotTables';
 import { MAX_WEEKS, useBotEstimate, type BotEstimate, type BotToast } from './useBotEstimate';
 
 interface BotPageProps {
@@ -64,6 +65,12 @@ function BasicInfo({ onNavigate }: { onNavigate: NavigateFunction }) {
           </span>,
         ]}
       />
+      {/* 처음 보는 사람도 [ ] 키워드가 무엇인지 바로 알도록 한 장면 */}
+      <div className="flex flex-col gap-3 rounded-card border border-border-100 bg-background-white p-5 lg:max-w-[560px] lg:p-6">
+        <p className="text-title5 text-text-primary">이렇게 움직여요</p>
+        <p className="text-body3 text-text-secondary">봇을 멘션하고 [ ] 안에 키워드를 적으면, 봇이 답멘을 달아요.</p>
+        <ChatExample turns={BOT_INTRO_CHAT} label="자동봇 사용 예시 대화" />
+      </div>
     </TitledSection>
   );
 }
@@ -123,7 +130,10 @@ function OperationWeeks({ est, highlighted }: { est: BotEstimate; highlighted: s
         <BulletList items={OPERATION_NOTES} />
         <div data-option-name={OPERATION_FEE_PREFIX}
           className={clsx('flex flex-wrap items-center justify-between gap-4 rounded-card bg-background-100 px-5 py-6 lg:px-6 lg:py-8', highlightRing(!!highlighted?.startsWith(OPERATION_FEE_PREFIX)))}>
-          <h3 className="text-title4 text-text-primary">가동 주수</h3>
+          <div className="flex flex-col gap-1">
+            <h3 className="text-title4 text-text-primary">가동 주수</h3>
+            <p className="text-body3 text-text-secondary">{OPERATION_WEEKS_HINT}</p>
+          </div>
           <div className="flex items-center gap-6">
             <span className="text-title3 text-brand">{won(weeks * WEEKLY_FEE)}</span>
             <div className="flex items-center">
@@ -157,7 +167,8 @@ function OperationWeeks({ est, highlighted }: { est: BotEstimate; highlighted: s
  * (예전에는 카드마다 '* …을 먼저 선택해 주세요'가 반복됐다, 4단계 문구 정리). 막힌 카드를 누르면 이유는 토스트로.
  */
 const OPTION_GROUPS: Array<{ title: string; requiresLabel: string }> = [
-  { title: '기본 계열 타입 전용', requiresLabel: MAIN_REQUIRES_LABEL },
+  // '기본 계열'은 어렵고 '모든 타입'은 틀린 말이라(자동조사·TRPG봇만으로는 못 고름) 세 타입을 그대로 적는다
+  { title: '기본 / 기본&상점 / 기본&상점&스탯 공통', requiresLabel: MAIN_REQUIRES_LABEL },
   { title: '기본&상점 이상 타입 전용', requiresLabel: SHOP_REQUIRES_LABEL },
   { title: '자동조사 타입 전용', requiresLabel: INVESTIGATION_TYPE },
 ];
@@ -211,16 +222,16 @@ export default function BotPage({ onNavigate }: BotPageProps) {
       <div className="container-ds flex flex-col gap-20 pb-[120px] pt-10 lg:gap-[100px] lg:pt-20">
         <BasicInfo onNavigate={onNavigate} />
         <SheetPreview />
-        <OperationWeeks est={est} highlighted={highlighted} />
         <TitledSection title="봇 타입 비교"><CompareTable /></TitledSection>
-        <TitledSection title="커스텀 명령어 업그레이드란?"><CommandTable /></TitledSection>
+        <TitledSection title="키워드 답멘이란?"><KeywordReplyGuide /></TitledSection>
         <TitledSection title="봇 타입 상세">
           <p className="text-body3 text-text-secondary">
-            * 기본 계열 타입은 <span className="font-semibold text-text-primary">하나만</span> 고를 수 있어요.
+            * 기본 / 기본&상점 / 기본&상점&스탯 중 <span className="font-semibold text-text-primary">하나만</span> 고를 수 있어요. 뒤 타입일수록 앞 타입 기능을 모두 포함해요.
           </p>
           <BotTypeCards types={BOT_TYPES} est={est} highlighted={highlighted} />
         </TitledSection>
         <AdditionalOptions est={est} highlighted={highlighted} />
+        <OperationWeeks est={est} highlighted={highlighted} />
       </div>
       {est.items.length > 0 && (
         <StickyEstimateBar placement="sticky" message={`견적 확인 (${est.items.length}개)`} amount={won(total)} href={estimate.href} onClick={estimate.onClick} />

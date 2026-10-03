@@ -96,6 +96,19 @@ function OmakaseDetail({ note }: { note?: string }) {
   );
 }
 
+/** 운영진만 쓰는 명령어는 일반 유저 기능과 섞이지 않게 구분선 아래로 따로 묶는다 */
+function AdminFeatures({ features }: { features: string[] }) {
+  return (
+    <div className="border-t border-border-100 pt-3">
+      <ul className="flex flex-col gap-1 text-body3 text-text-secondary">
+        {features.map((feature) => (
+          <li key={feature} className="flex gap-2"><span aria-hidden="true">•</span>{feature}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function CardHeader({ type, selected }: { type: BotType; selected: boolean }) {
   return (
     <span className="flex w-full items-center justify-between gap-4">
@@ -117,7 +130,7 @@ function TypeCard({ type, est, highlighted }: { type: BotType; est: BotEstimate;
       {type.price > 0 ? (
         <button type="button" data-option-name={type.name} aria-pressed={selected}
           aria-label={selected ? `${type.name} 견적에서 제거` : `${type.name} 견적에 추가`}
-          onClick={() => est.toggleType(type.name, type.price, type.features.join(', '))}
+          onClick={() => est.toggleType(type.name, type.price, [...type.features, ...(type.adminFeatures ?? [])].join(', '))}
           className={clsx('-m-2 flex rounded-input p-2 text-left', focus, ring)}>
           {header}
         </button>
@@ -130,6 +143,7 @@ function TypeCard({ type, est, highlighted }: { type: BotType; est: BotEstimate;
             <li key={feature} className="flex gap-2"><span aria-hidden="true">•</span>{feature}</li>
           ))}
         </ul>
+        {type.adminFeatures && <AdminFeatures features={type.adminFeatures} />}
         {type.name === INVESTIGATION_TYPE && <InvestigationExample />}
         {type.name === OMAKASE_TYPE && <OmakaseDetail note={type.note} />}
         {type.note && type.name !== OMAKASE_TYPE && <p className="text-body3 text-text-secondary">{type.note}</p>}

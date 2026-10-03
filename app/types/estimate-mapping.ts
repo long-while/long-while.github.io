@@ -31,7 +31,7 @@ export type EstimateMappingKey =
   | 'tootCurrencyLink'   // → step3.tootCurrencyLink = true
   | 'transferFeature'    // → step3.transferFeature = true
   | 'operationWeeks'     // → step3.manualWeeks (특별 처리 필요)
-  | 'customCommandUpgrade' // → 커스텀 명령어 업그레이드 (추가 옵션)
+  | 'customCommandUpgrade' // → 답멘에 이름·주사위 넣기 (추가 옵션, 예전 이름 커스텀 명령어 업그레이드)
   | 'autoInvestigation'  // → 자동조사 타입
   | 'investigationDailyLimit' // → 일일 조사 횟수 제한
   | 'dmNotification' // → 특정 상황 DM 전송
@@ -76,7 +76,8 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   // 봇 추가 옵션
   '예약 툿': 'reservationToot',
   '스토리 자동 진행': 'autoProfileImage',
-  '커스텀 명령어 업그레이드': 'customCommandUpgrade',
+  '답멘에 이름·주사위 넣기': 'customCommandUpgrade',
+  '커스텀 명령어 업그레이드': 'customCommandUpgrade', // 예전 이름
   '재화, 아이템 양도 기능': 'transferFeature',
   '양도 기능': 'transferFeature',
   '툿수-재화 자동반영': 'tootCurrencyLink',

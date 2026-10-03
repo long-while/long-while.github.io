@@ -94,7 +94,7 @@ export function MainBotSection({ s }: S) {
     <FormSection
       title={<>메인 봇 종류 <span className="text-brand" aria-hidden="true">*</span></>}
       description={<>
-        기본 계열은 하나만 고를 수 있어요. D100, 2D6 TRPG봇은 단독으로 신청하거나 기본&상점 이상과 함께 고를 수 있어요.{' '}
+        기본 / 기본&상점 / 기본&상점&스탯 중 하나만 고를 수 있어요. D100, 2D6 TRPG봇은 단독으로 신청하거나 기본&상점 이상과 함께 고를 수 있어요.{' '}
         <strong className="font-medium text-text-primary">(기본 타입과는 기능이 겹쳐서 함께 고를 수 없어요)</strong>
       </>}
     >
@@ -389,13 +389,13 @@ export function AddonSection({ s }: S) {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         {canHaveInvestigationBot && <InvestigationAddon s={s} />}
         <OptionCard type="checkbox" layout="row" checked={step3.customCommandUpgrade} onChange={(e) => updateStep3({ customCommandUpgrade: e.target.checked })}
-          title={<CardTitle badge={fromCart.customCommandUpgrade && step3.customCommandUpgrade && <FromCartBadge />}>커스텀 명령어 업그레이드</CardTitle>}
-          description="유저 이름/은는맞춤/문구 내 다이스 기능 추가" price={won(PRICING_CONFIG.bot.addons.customCommandUpgrade)} />
+          title={<CardTitle badge={fromCart.customCommandUpgrade && step3.customCommandUpgrade && <FromCartBadge />}>답멘에 이름·주사위 넣기</CardTitle>}
+          description="키워드 답멘에 보낸 사람 이름, 주사위 결과, 랜덤 단어를 넣어요 (은/는 자동 맞춤)" price={won(PRICING_CONFIG.bot.addons.customCommandUpgrade)} />
         <OptionCard type="checkbox" layout="row" checked={step3.reservationToot} onChange={(e) => s.handleReservationTootChange(e.target.checked)}
           title={<CardTitle badge={fromCart.reservation && step3.reservationToot && <FromCartBadge />}>예약 툿 (시트로 관리)</CardTitle>} price={won(PRICING_CONFIG.bot.addons.reservationToot)} />
         <OptionCard type="checkbox" layout="row" checked={step3.autoProfileImage} onChange={(e) => s.handleAutoProfileImageChange(e.target.checked)}
-          title={<CardTitle badge={fromCart.autoProfile && step3.autoProfileImage && <FromCartBadge />}>자동 스진 (시트로 관리)</CardTitle>} price={won(PRICING_CONFIG.bot.addons.autoProfileImage)} />
-        {/* 예약 툿 또는 자동 스진 선택 시 계정 목록 입력 */}
+          title={<CardTitle badge={fromCart.autoProfile && step3.autoProfileImage && <FromCartBadge />}>스토리 자동 진행 (시트로 관리)</CardTitle>} price={won(PRICING_CONFIG.bot.addons.autoProfileImage)} />
+        {/* 예약 툿 또는 스토리 자동 진행 선택 시 계정 목록 입력 */}
         {showAccountList && <AccountListPanel s={s} />}
         {showTransferFeature && <TootCurrencyAddon s={s} />}
         {showAttendanceSystem && (

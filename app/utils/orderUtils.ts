@@ -1184,9 +1184,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
         : '';
       text += `+ 일일 조사 횟수 제한${countLabel}\n`;
     }
-    if (step3.customCommandUpgrade) text += '+ 커스텀 명령어 업그레이드\n';
+    if (step3.customCommandUpgrade) text += '+ 답멘에 이름·주사위 넣기\n';
     if (step3.reservationToot) text += '+ 예약 툿\n';
-    if (step3.autoProfileImage) text += '+ 자동 스진\n';
+    if (step3.autoProfileImage) text += '+ 스토리 자동 진행\n';
     if (step3.tootCurrencyLink) text += '+ 툿-재화 연동\n';
     if (step3.transferFeature) {
       const transferNames: Record<string, string> = {
@@ -1307,13 +1307,13 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       text += `일일 조사 횟수 제한 ${bot.addons.investigationDailyLimit.toLocaleString()}\n`;
     }
     if (step3.customCommandUpgrade) {
-      text += `커스텀 명령어 업그레이드 ${bot.addons.customCommandUpgrade.toLocaleString()}\n`;
+      text += `답멘에 이름·주사위 넣기 ${bot.addons.customCommandUpgrade.toLocaleString()}\n`;
     }
     if (step3.reservationToot) {
       text += `예약 툿 ${bot.addons.reservationToot.toLocaleString()}\n`;
     }
     if (step3.autoProfileImage) {
-      text += `자동 스진 ${bot.addons.autoProfileImage.toLocaleString()}\n`;
+      text += `스토리 자동 진행 ${bot.addons.autoProfileImage.toLocaleString()}\n`;
     }
     if ((step3.reservationToot || step3.autoProfileImage) && step3.extraAccountTiers > 0) {
       const tiers = Math.min(ACCOUNT_LIST_CONFIG.maxTiers, step3.extraAccountTiers);

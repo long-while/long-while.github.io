@@ -88,7 +88,8 @@ export function useStep3Bot() {
   // 추가 기능이 견적에서 선택되었는지
   const cocBotFromCart = isFromCart('D100');
   const trpg2d6BotFromCart = isFromCart('2D6');
-  const customCommandUpgradeFromCart = isFromCart('커스텀 명령어');
+  // 예전 이름(커스텀 명령어 업그레이드)으로 동기화된 상태도 인정
+  const customCommandUpgradeFromCart = isFromCart('답멘에 이름·주사위') || isFromCart('커스텀 명령어');
   const reservationFromCart = isFromCart('예약 툿');
   const autoProfileFromCart = isFromCart('스토리 자동 진행');
   const tootCurrencyFromCart = isFromCart('툿수-재화 자동반영');

@@ -86,7 +86,7 @@ export function useBotEstimate() {
       if (isMain && investigation) {
         removeItem(investigation.id);
         items.filter((item) => item.name === '일일 조사 횟수 제한').forEach((item) => removeItem(item.id));
-        setToast({ tone: 'info', title: '자동조사 타입도 뺐어요', message: '자동조사 타입은 기본 계열 타입과 함께만 신청할 수 있어요.' });
+        setToast({ tone: 'info', title: '자동조사 타입도 뺐어요', message: '자동조사 타입은 기본 / 기본&상점 / 기본&상점&스탯 중 하나와 함께만 신청할 수 있어요.' });
       }
       return;
     }
