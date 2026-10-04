@@ -47,7 +47,7 @@ const STEP1 = {
   termsAgreed: 'yes', applicantNickname: '테스트닉', communityShortName: '테커', communityKoreanName: '테스트 커뮤',
   communityEnglishName: 'Test Community', isLongTermCommunity: false, longTermConfirmed: false,
   resultAnnouncementDate: iso(plusDays(30)), openingDate: iso(plusDays(40)), closingDate: iso(plusDays(70)),
-  operationWeeks: 5, googleEmail: '', googlePassword: '',
+  operationWeeks: 5, googleEmail: '',
 };
 const STEP2 = {
   applyServerInstall: 'yes', additionalOption: null, changeCharacterLimit: false, characterLimitValue: 0, searchOption: false,
@@ -56,8 +56,8 @@ const STEP2 = {
 const STEP3 = {
   applyBot: 'no', operationWeeksOption: null, manualWeeks: 0, botStartDate: '', botEndDate: '', mainBot: null, cocBot: false,
   trpg2d6Bot: false, omakaseBot: false, investigationBot: false, investigationDailyLimit: false, investigationDailyLimitCount: 0,
-  customCommandUpgrade: false, reservationToot: false, autoProfileImage: false, tootCurrencyLink: false, transferFeature: false,
-  transferOption: null, attendanceSystem: false, attendanceCurrencyAmount: 10, attendanceCommand: '[출석]', currencyUnit: '',
+  customCommandUpgrade: false, keywordReplyImage: false, reservationToot: false, autoProfileImage: false, tootCurrencyLink: false, transferFeature: false,
+  transferOption: null, attendanceSystem: false, attendanceCurrencyAmount: 10, attendanceCommand: '[출석]', randomBox: false, randomBoxCommand: '', currencyUnit: '',
   statList: '', accountList: [], extraAccountTiers: 0, tootPerCurrency: '', omakaseDetails: '', setupDeadline: '',
   botSymbol: '✶', botAccountId: '', investigationBotAccountId: '',
 };
@@ -137,7 +137,6 @@ const ui = {
     await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
     await ui.waitStep(page, 4);
     await page.locator('#googleEmail').fill('test@gmail.com');
-    await page.locator('#googlePassword').fill('dummy-password');
     await ui.pick(ui.policyCheckbox(page));
     await ui.copyButton(page).click();
   },
@@ -248,8 +247,10 @@ const SCENARIOS = {
     // Q6(3단계에서 바뀐 동작): 견적에서 채워진 단계는 요약 상태로 시작 → '수정'을 눌러 펼친 뒤 확인
     await expectVisible(ui.summary(page, '선택하신 서버 사양'), 'STEP2 요약 상태');
     await expectVisible(page.getByText('※ 견적에서 선택됨'), '견적에서 선택됨 표시');
+    // 커스텀 옵션 드롭다운은 요약 상태에서도 늘 보인다 (사용자 요청)
+    await expectVisible(page.getByRole('combobox', { name: '커스텀 옵션' }), '요약 상태에서도 커스텀 옵션 드롭다운');
     await ui.summaryEdit(page).click();
-    await expectVisible(page.getByRole('heading', { name: '커스텀 옵션 선택' }), '수정 → 편집 상태');
+    await expectVisible(page.getByRole('heading', { name: '테마 커스텀 선택' }), '수정 → 편집 상태');
     // 4단계: 신청서 옵션 이름을 서버 페이지와 맞춤 ('검색 옵션' → '검색 기능')
     expect(await page.getByRole('checkbox', { name: /검색 기능/ }).isChecked(), '검색 기능이 채워져야 함');
   },
@@ -270,7 +271,7 @@ const SCENARIOS = {
     await expectVisible(ui.summary(page, '선택하신 자동봇 사양'), 'STEP3 요약 상태');
     await ui.next(page);
     await expectVisible(ui.errorSummary(page), '요약 상태에서도 검증 오류');
-    await expectVisible(page.getByRole('heading', { name: '메인 봇 종류' }), '숨긴 칸(메인 봇) 오류 → 자동으로 펼침');
+    await expectVisible(page.getByRole('heading', { name: '커뮤니티 봇 선택' }), '숨긴 칸(메인 봇) 오류 → 자동으로 펼침');
     await ui.waitStep(page, 3);
   },
 
@@ -279,7 +280,7 @@ const SCENARIOS = {
     await ui.open(page, '/order/');
     await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
     await ui.waitStep(page, 2);
-    await expectVisible(page.getByRole('heading', { name: '커스텀 옵션 선택' }), '직접 들어오면 편집 상태');
+    await expectVisible(page.getByRole('heading', { name: '테마 커스텀 선택' }), '직접 들어오면 편집 상태');
     expect((await ui.summary(page, '선택하신 서버 사양').count()) === 0, '요약 상태가 아니어야 함');
   },
 
@@ -387,8 +388,15 @@ const SCENARIOS = {
     await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
     await ui.waitStep(page, 2);
     await ui.pick(ui.serverYes(page));
-    await expectVisible(page.getByRole('heading', { name: '커스텀 옵션 선택' }), '예 → 옵션 보임');
+    await expectVisible(page.getByRole('heading', { name: '테마 커스텀 선택' }), '예 → 옵션 보임');
     await ui.pick(ui.serverNo(page));
+    // 입력한 내용이 있으면 '아니오' 전에 확인창 (1번 리뷰: 한 번 눌러도 다 사라졌다)
+    const confirmNo = ui.dialog(page, '입력한 내용이 사라져요');
+    await expectVisible(confirmNo, '아니오 확인창');
+    await confirmNo.getByRole('button', { name: '계속 신청할게요' }).click();
+    expect(await ui.serverYes(page).isChecked(), '취소하면 예 그대로');
+    await ui.pick(ui.serverNo(page));
+    await ui.dialog(page, '입력한 내용이 사라져요').getByRole('button', { name: '아니오로 바꾸고 지우기' }).click();
     await expectVisible(page.getByText('서버 설치를 신청하지 않으셨습니다. 다음 단계로 이동해 주세요.'), '아니오 안내');
     await ui.next(page);
     await ui.waitStep(page, 3);
@@ -426,9 +434,11 @@ const SCENARIOS = {
     await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
     await ui.waitStep(page, 3);
     await ui.pick(ui.botYes(page));
-    await expectVisible(page.getByRole('heading', { name: '메인 봇 종류' }), '예 → 메인 봇 보임');
+    await expectVisible(page.getByRole('heading', { name: '커뮤니티 봇 선택' }), '예 → 메인 봇 보임');
     await ui.pick(ui.botNo(page));
-    await expectHidden(page.getByRole('heading', { name: '메인 봇 종류' }), '아니오 → 옵션 숨김');
+    // '예'를 누르면 가동 날짜가 자동으로 채워지므로 지울 내용이 있어 확인창이 뜬다
+    await ui.dialog(page, '입력한 내용이 사라져요').getByRole('button', { name: '아니오로 바꾸고 지우기' }).click();
+    await expectHidden(page.getByRole('heading', { name: '커뮤니티 봇 선택' }), '아니오 → 옵션 숨김');
     await ui.next(page);
     await ui.waitStep(page, 4);
   },
@@ -571,7 +581,7 @@ Object.assign(SCENARIOS, {
   async 'estimate-bar-footer-and-menu'(page) {
     // 리뷰(4단계): 고정 바는 왼쪽 글자를 눌러도 이동, 플로팅 버튼은 푸터가 보이면 숨김, 모바일 메뉴를 열면 메뉴가 위
     const mobile = page.viewportSize().width < 768;
-    await ui.seed(page, { [KEY.estimate]: [item('테마 1종 커스텀', 20000, 'server')] });
+    await ui.seed(page, { [KEY.estimate]: [item('커스텀 테마 1종', 20000, 'server')] });
     await ui.open(page, '/faq/');
     const floating = page.locator(mobile ? 'button[aria-label^="견적 보기"]' : 'button[aria-label^="견적 확인하기"]');
     await expectVisible(floating, '플로팅 견적 버튼');
@@ -603,10 +613,10 @@ Object.assign(SCENARIOS, {
     let list = await names();
     expect(list.includes('빠른마감: 24시간 내 기본 서버 설치') && !list.includes('빠른마감: 48시간 내 기본 서버 설치'), `빠른마감은 하나만: ${list}`);
     expect(await rush('빠른마감: 48시간 내 테마 커스텀 서버 설치').isDisabled(), '테마 없이 테마 마감은 못 고름');
-    await page.locator('[data-option-name="테마 1종 커스텀"]').first().click({ force: true });
+    await page.locator('[data-option-name="커스텀 테마 1종"]').first().click({ force: true });
     await expectVisible(page.getByRole('status').filter({ hasText: '테마 선택이 바뀌어' }), '맞지 않게 된 빠른마감을 뺐다는 안내');
     list = await names();
-    expect(list.includes('테마 1종 커스텀') && !list.some((n) => n.startsWith('빠른마감')), `테마를 고르면 기본 마감은 빠짐: ${list}`);
+    expect(list.includes('커스텀 테마 1종') && !list.some((n) => n.startsWith('빠른마감')), `테마를 고르면 기본 마감은 빠짐: ${list}`);
     expect(await rush('빠른마감: 24시간 내 기본 서버 설치').isDisabled(), '테마를 고르면 기본 마감은 잠김');
     await rush('빠른마감: 48시간 내 테마 커스텀 서버 설치').click({ force: true });
     expect((await names()).includes('빠른마감: 48시간 내 테마 커스텀 서버 설치'), '테마 마감은 고를 수 있음');
@@ -638,6 +648,25 @@ Object.assign(SCENARIOS, {
     expect(!(await hasSearch()), '미리보기에서 아니오 → 견적에서 빠짐');
   },
 
+  async 'order-search-from-other-options'(page) {
+    // 신청서 STEP2: 계산기 안 검색 질문·결과·지불 방식·부가비용·가이드 안내를 빼고, 검색은 기타 옵션 체크가 정한다 (사용자 요청)
+    const calcSearch = () => page.evaluate((k) => JSON.parse(localStorage.getItem(k) || 'null')?.search ?? null, KEY.calc);
+    await ui.seed(page, { [KEY.draft]: draft(2), [KEY.calc]: { ...CALC, search: 'no' } });
+    await ui.open(page, '/order/');
+    await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
+    await ui.waitStep(page, 2);
+    expect((await page.getByRole('radiogroup', { name: '검색 기능 추가 여부' }).count()) === 0, '계산기 검색 질문 없음');
+    for (const gone of ['도메인·메일(SMTP) 부가비용', '서버비 지불 방식', '노션 마스토돈 가이드 무료 제공']) {
+      expect((await page.getByText(gone).count()) === 0, `숨김: ${gone}`);
+    }
+    const search = page.getByRole('checkbox', { name: /검색 기능/ });
+    await search.check({ force: true });
+    await page.waitForFunction((k) => JSON.parse(localStorage.getItem(k) || 'null')?.search === 'yes', KEY.calc, { timeout: 3000 });
+    await search.uncheck({ force: true });
+    await page.waitForTimeout(300);
+    expect((await calcSearch()) === 'no', '검색 체크 해제 → 계산기도 아니오');
+  },
+
   async 'server-fee-note'(page) {
     // 리뷰(4단계): 견적 총액에 매달 나가는 서버비가 빠져 있다는 표시가 없었다
     await ui.seed(page, { [KEY.estimate]: [item('마스토돈 서버 설치', 20000, 'server')] });
@@ -651,7 +680,7 @@ Object.assign(SCENARIOS, {
 
   async 'estimate-orphan-server-options'(page) {
     // 리뷰(4단계): 서버 설치를 지워도 서버 옵션만 남아 신청서로 갈 수 있었다 → 알리고 함께 빼거나 다시 담게
-    await ui.seed(page, { [KEY.estimate]: [item('테마 1종 커스텀', 20000, 'server'), item('검색 기능', 15000, 'server'), item('기본 타입', 15000, 'bot')] });
+    await ui.seed(page, { [KEY.estimate]: [item('커스텀 테마 1종', 20000, 'server'), item('검색 기능', 15000, 'server'), item('기본 타입', 15000, 'bot')] });
     await ui.open(page, '/estimate/');
     const banner = page.getByRole('status').filter({ hasText: '서버 설치 없이 담긴 서버 옵션이 있어요' });
     await expectVisible(banner, '서버 옵션만 남은 경고');
@@ -706,10 +735,14 @@ Object.assign(SCENARIOS, {
     await ui.open(page, '/order/');
     await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
     await ui.waitStep(page, 3);
-    const start = page.getByLabel('가동 시작일');
-    await start.fill('');
-    await start.pressSequentially('6/16');
-    expect((await start.inputValue()) === '6/16', `가동 시작일 입력 유지: ${await start.inputValue()}`);
+    // 가동 기간은 달력(date) 입력으로 바뀜 (사용자 요청). 저장은 예전처럼 MM/DD
+    const year = new Date().getFullYear();
+    await page.getByLabel('가동 시작일').fill(`${year}-06-16`);
+    await page.getByLabel('가동 종료일').fill(`${year}-07-14`);
+    await page.waitForTimeout(400);
+    const bot = await page.evaluate((k) => JSON.parse(localStorage.getItem(k)).formData.step3, KEY.draft);
+    expect(bot.botStartDate === '06/16' && bot.botEndDate === '07/14', `가동 기간 저장: ${bot.botStartDate} ~ ${bot.botEndDate}`);
+    await expectVisible(page.getByText(/자동봇 가동 기간: 4주/), '가동 주수 안내');
   },
 
   async 'sync-dialog-once'(page) {
@@ -802,7 +835,6 @@ Object.assign(SCENARIOS, {
     await tabTo(page, () => document.activeElement?.type === 'checkbox' && document.activeElement.closest('section')?.textContent.includes('질문 정책'), '정책 동의');
     await page.keyboard.press('Space');
     await typeInto('googleEmail', 'kb@gmail.com');
-    await typeInto('googlePassword', 'keyboard-pass');
     await tabTo(page, focusedText('신청서 복사하기'), '복사 버튼');
     await page.keyboard.press('Enter');
     const modal = ui.dialog(page, '복사가 완료되었습니다');

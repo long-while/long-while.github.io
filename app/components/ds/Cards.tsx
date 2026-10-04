@@ -159,7 +159,7 @@ export function StickyEstimateBar({ message, amount, href, onClick, placement = 
       href={href}
       onClick={onClick}
       className={clsx(
-        'group pointer-events-auto flex max-w-[380px] items-center justify-between gap-3 rounded-input border border-background-white bg-brand/22 p-3 shadow-modal backdrop-blur-[12px] lg:p-3.5',
+        'group pointer-events-auto flex max-w-[380px] items-center justify-between gap-3 rounded-input border border-background-white bg-brand/22 p-3 shadow-[2px_2px_6px_0_rgb(34_34_34/0.08)] backdrop-blur-[12px] lg:p-3.5',
         placement === 'fixed' ? 'fixed bottom-[calc(16px+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-32px)] -translate-x-1/2' : 'w-full',
         focusRing,
       )}
@@ -171,9 +171,10 @@ export function StickyEstimateBar({ message, amount, href, onClick, placement = 
     </a>
   );
   if (placement !== 'sticky') return bar;
-  // 높이 0 인 sticky 기준점 위로 바를 띄운다: 자리를 차지하지 않고, 부모 영역 끝에서 멈춘다
+  // 높이 0 인 sticky 기준점 위로 바를 띄운다: 자리를 차지하지 않고, 부모 영역 끝에서 멈춘다.
+  // 아래 여백 16(화면 맨 아래와 띄우는 간격과 같음)으로 끝까지 내려가도 푸터에 붙지 않고 그 위에 멈춘다
   return (
-    <div className="pointer-events-none sticky bottom-[calc(16px+env(safe-area-inset-bottom))] z-40 h-0">
+    <div className="pointer-events-none sticky bottom-[calc(16px+env(safe-area-inset-bottom))] z-40 mb-4 h-0">
       <div className="absolute inset-x-0 bottom-0 flex justify-center px-4">{bar}</div>
     </div>
   );

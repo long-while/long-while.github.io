@@ -9,6 +9,7 @@ import { ESTIMATE_NAME_TO_MAPPING_KEY } from '@/app/types/estimate-mapping';
 import { ADDITIONAL_OPTIONS as BOT_OPTIONS, BOT_TYPES } from '@/app/components/bot/botContent';
 import type { EstimateItem } from '@/app/contexts/EstimateContext';
 import {
+  calculateBotPrice,
   calculateServerPrice,
   calculateTotalEstimate,
   generateCopyText,
@@ -21,9 +22,9 @@ import {
   isPastMonthDay,
   rushFitsCustomOption,
   validateOrderConsistency,
+  monthDayWithYear,
   isRealMonthDay,
   MISSING_GOOGLE_EMAIL_MARK,
-  MISSING_GOOGLE_PASSWORD_MARK,
   validateAccountId,
   validateDates,
   validateGoogleAccount,
@@ -36,6 +37,7 @@ import { FAQ_ITEMS, FAQ_CATEGORIES } from '@/app/components/faq/faqContent';
 import { filterEntries, groupByCategory, splitByQuery } from '@/app/components/faq/faqSearch';
 import { eulReul, eunNeun } from '@/app/utils/josa';
 import {
+  botOperationFee,
   PRICING_CONFIG,
   SERVER_INFRA_FEE_ITEM,
   SERVER_INSTALL_ITEM_NAME,
@@ -78,7 +80,6 @@ function createFormData(): OrderFormData {
       closingDate: '',
       operationWeeks: 0,
       googleEmail: '',
-      googlePassword: '',
     },
     step2: {
       applyServerInstall: null,
@@ -106,6 +107,7 @@ function createFormData(): OrderFormData {
       investigationDailyLimit: false,
       investigationDailyLimitCount: 0,
       customCommandUpgrade: false,
+      keywordReplyImage: false,
       reservationToot: false,
       autoProfileImage: false,
       tootCurrencyLink: false,
@@ -114,6 +116,8 @@ function createFormData(): OrderFormData {
       attendanceSystem: false,
       attendanceCurrencyAmount: 10,
       attendanceCommand: '[출석]',
+      randomBox: false,
+      randomBoxCommand: '',
       currencyUnit: '',
       statList: '',
       accountList: [],
@@ -139,7 +143,7 @@ const installItem: EstimateItem = {
 };
 const themeItem: EstimateItem = {
   id: 'theme',
-  name: '테마 1종 커스텀',
+  name: '커스텀 테마 1종',
   price: 20000,
   category: 'server',
 };
@@ -250,11 +254,11 @@ check(
   copyText.includes(`${SERVER_INFRA_FEE_ITEM.copyLabel} ${PRICING_CONFIG.server.infraFee.toLocaleString()}`),
   true
 );
-check('복붙 텍스트 총액', copyText.trim().endsWith('25,000원'), true);
+check('복붙 텍스트 총액', copyText.includes('총 25,000원'), true);
 
 const longTermCopyText = generateCopyText(longTermOrder, calculateTotalEstimate(longTermOrder), null);
 check('장기 소규모 복붙 텍스트에는 실비가 없다', longTermCopyText.includes(SERVER_INFRA_FEE_ITEM.copyLabel), false);
-check('장기 소규모 복붙 텍스트 총액', longTermCopyText.trim().endsWith('2만원'), true);
+check('장기 소규모 복붙 텍스트 총액', longTermCopyText.includes('총 2만원'), true);
 
 // ===== 마감 불가 기간 =====
 
@@ -273,28 +277,10 @@ check('안내 문구에 연도', getDeadlineBlackoutError('10/20', 'desiredDeadl
 // ===== 구글 계정 검증 (Step 1 → Step 4 이동) =====
 
 const emptyStep1 = createFormData().step1;
-check(
-  '빈 구글 계정은 이메일·비밀번호 두 가지 오류',
-  validateGoogleAccount(emptyStep1).map((e) => e.field),
-  ['googleEmail', 'googlePassword']
-);
-check(
-  'Gmail 이 아니면 오류',
-  validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@naver.com', googlePassword: 'longenough' })
-    .map((e) => e.field),
-  ['googleEmail']
-);
-check(
-  '비밀번호 8자 미만이면 오류',
-  validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@gmail.com', googlePassword: 'short' })
-    .map((e) => e.field),
-  ['googlePassword']
-);
-check(
-  '정상 입력이면 오류 없음',
-  validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@gmail.com', googlePassword: 'longenough' }),
-  []
-);
+// 구글 비밀번호는 신청서에서 받지 않는다 (복사문에 평문으로 남았다, 접수 후 따로 받음 — 5번 리뷰)
+check('빈 구글 계정은 이메일 오류 하나', validateGoogleAccount(emptyStep1).map((e) => e.field), ['googleEmail']);
+check('Gmail 이 아니면 오류', validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@naver.com' }).map((e) => e.field), ['googleEmail']);
+check('정상 입력이면 오류 없음', validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@gmail.com' }), []);
 
 // 구글 계정은 Step 4 에서 받으므로 Step 1 검증에는 더 이상 포함되지 않는다
 const filledStep1 = {
@@ -320,20 +306,19 @@ check(
 
 const missingAccountOrder: OrderFormData = {
   ...serverOrder,
-  step1: { ...serverOrder.step1, googleEmail: '', googlePassword: '' },
+  step1: { ...serverOrder.step1, googleEmail: '' },
 };
 const missingAccountText = generateCopyText(
   missingAccountOrder,
   calculateTotalEstimate(missingAccountOrder),
   null
 );
-check('비밀번호가 비면 복사 텍스트에 표시가 남는다', missingAccountText.includes(MISSING_GOOGLE_PASSWORD_MARK), true);
 check('이메일이 비면 복사 텍스트에 표시가 남는다', missingAccountText.includes(MISSING_GOOGLE_EMAIL_MARK), true);
 check('빈 계정이 " / " 로만 남지 않는다', missingAccountText.includes('\n / \n'), false);
 
 const filledAccountOrder: OrderFormData = {
   ...serverOrder,
-  step1: { ...serverOrder.step1, googleEmail: 'me@gmail.com', googlePassword: 'longenough' },
+  step1: { ...serverOrder.step1, googleEmail: 'me@gmail.com' },
 };
 const filledAccountText = generateCopyText(
   filledAccountOrder,
@@ -341,7 +326,7 @@ const filledAccountText = generateCopyText(
   null
 );
 check('정상 입력이면 표시가 붙지 않는다', filledAccountText.includes('[!]'), false);
-check('정상 입력은 이메일 / 비밀번호로 들어간다', filledAccountText.includes('me@gmail.com / longenough'), true);
+check('복사문에는 이메일만, 비밀번호는 따로 전달 안내', [filledAccountText.includes('me@gmail.com (비밀번호는 접수 후 따로 전달)'), /비밀번호s*:/.test(filledAccountText)], [true, false]);
 
 // ===== TRPG 봇 (D100 / 2D6 3종세트) =====
 
@@ -461,7 +446,7 @@ tierOrder.step2.applyServerInstall = 'yes';
 const tierText = generateCopyText(tierOrder, calculateTotalEstimate(tierOrder), getServerCalcResult(6, 'u30', 'no', 'mid'));
 check('복붙 텍스트 등급 표시', tierText.includes('6개월 / 19~30인 / 검색 X / 타협'), true);
 
-check('기간 선택지 라벨: 30인 초과',getMonthOptions('u30p')[0].label, '2개월 이하');
+check('기간 선택지 라벨: 30인 초과', getMonthOptions('u30p')[0].label, '2개월 이하');
 check('기간 선택지 라벨: 19~30인', getMonthOptions('u30')[0].label, '3개월 이하');
 check('기간 선택지 라벨: 인원 미선택', getMonthOptions('')[0].label, '3개월 이하');
 
@@ -548,11 +533,19 @@ check('저장 견적 정리: 배열이 아니면 빈 견적', sanitizeEstimateIt
 const renamed = sanitizeEstimateItems([
   { id: 'g', name: '커스텀 명령어 업그레이드', price: 1, category: 'bot' },
   { id: 'h', name: '답멘에 이름·주사위 넣기', price: 1, category: 'bot' },
+  { id: 'j', name: '키워드 답변에 이름·주사위 넣기', price: 1, category: 'bot' },
   { id: 'i', name: '기본&상점 타입 - 커스텀 명령어 업그레이드', price: 1, category: 'bot' },
 ]);
-check('저장 견적 정리: 예전 이름 → 지금 이름', renamed.map((i) => [i.name, i.price]), [['키워드 답변에 이름·주사위 넣기', PRICING_CONFIG.bot.addons.customCommandUpgrade]]);
-check('예전 이름도 같은 신청서 칸으로', [ESTIMATE_NAME_TO_MAPPING_KEY['키워드 답변에 이름·주사위 넣기'], ESTIMATE_NAME_TO_MAPPING_KEY['답멘에 이름·주사위 넣기'], ESTIMATE_NAME_TO_MAPPING_KEY['커스텀 명령어 업그레이드']], ['customCommandUpgrade', 'customCommandUpgrade', 'customCommandUpgrade']);
+check('저장 견적 정리: 예전 이름 → 지금 이름', renamed.map((i) => [i.name, i.price]), [['키워드 답변에 이름 · 주사위 넣기', PRICING_CONFIG.bot.addons.customCommandUpgrade]]);
+check('예전 이름도 같은 신청서 칸으로', [ESTIMATE_NAME_TO_MAPPING_KEY['키워드 답변에 이름 · 주사위 넣기'], ESTIMATE_NAME_TO_MAPPING_KEY['답멘에 이름·주사위 넣기'], ESTIMATE_NAME_TO_MAPPING_KEY['키워드 답변에 이름·주사위 넣기'], ESTIMATE_NAME_TO_MAPPING_KEY['커스텀 명령어 업그레이드']], ['customCommandUpgrade', 'customCommandUpgrade', 'customCommandUpgrade', 'customCommandUpgrade']);
 check('모르는 이름은 그대로', currentItemName('검색 기능'), '검색 기능');
+// 서버 테마 옵션 이름 변경: 배포됐던 예전 이름도 지금 이름·가격·신청서 칸으로 이어진다
+const renamedThemes = sanitizeEstimateItems([
+  { id: 't1', name: '테마 1종 커스텀', price: 1, category: 'server' },
+  { id: 't2', name: '테마 전체 커스텀', price: 1, category: 'server' },
+]);
+check('테마 예전 이름 → 지금 이름·가격', renamedThemes.map((i) => [i.name, i.price]), [['커스텀 테마 1종', PRICING_CONFIG.server.options.dayTheme], ['커스텀 테마 2종', PRICING_CONFIG.server.options.bothTheme]]);
+check('테마 예전 이름도 신청서 칸으로', [ESTIMATE_NAME_TO_MAPPING_KEY['테마 1종 커스텀'], ESTIMATE_NAME_TO_MAPPING_KEY['테마 전체 커스텀']], ['dayTheme', 'bothTheme']);
 
 // 자동봇 페이지 가격 = 신청서 계산 가격 (한쪽만 바뀌면 견적함과 신청서 금액이 어긋난다)
 const botPriceByName = Object.fromEntries(BOT_TYPES.map((t) => [t.name, t.price]));
@@ -582,11 +575,85 @@ const emptyOrder = createFormData();
 check('서버·자동봇 둘 다 아니오면 오류', validateOrderConsistency({ ...emptyOrder, step2: { ...emptyOrder.step2, applyServerInstall: 'no' }, step3: { ...emptyOrder.step3, applyBot: 'no' } }, null).step3.length, 1);
 check('서버 설치인데 미리보기 미완료면 오류', validateOrderConsistency({ ...emptyOrder, step2: { ...emptyOrder.step2, applyServerInstall: 'yes' } }, null).step2.length, 1);
 
+// 리뷰 반영: 날짜끼리 맞는지(6·8번), 장기 자동봇(7번), 총괄=봇 계정(18번), 조사 봇 계정 필수(16번), 오마카세 링크(23번)
+const dayOffset = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+const isoOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const mmddOf = (d: Date) => `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+const datedOrder = (step2: Partial<OrderFormData['step2']>, step3: Partial<OrderFormData['step3']> = {}): OrderFormData => ({
+  ...emptyOrder,
+  step1: { ...emptyOrder.step1, resultAnnouncementDate: isoOf(dayOffset(5)), openingDate: isoOf(dayOffset(10)), closingDate: isoOf(dayOffset(60)) },
+  step2: { ...emptyOrder.step2, applyServerInstall: 'yes', adminAccountId: '@NOTICE', ...step2 },
+  step3: { ...emptyOrder.step3, ...step3 },
+});
+const fieldsIn = (errors: { field: string }[]) => errors.map((e) => e.field);
+check('희망 마감일이 개장일보다 늦으면 오류', fieldsIn(validateOrderConsistency(datedOrder({ desiredDeadline: mmddOf(dayOffset(20)) }), null).step2).includes('desiredDeadline'), true);
+check('희망 마감일이 개장일 전이면 통과', fieldsIn(validateOrderConsistency(datedOrder({ desiredDeadline: mmddOf(dayOffset(8)) }), null).step2).includes('desiredDeadline'), false);
+check('마감일이 먼데 빠른마감이면 오류', fieldsIn(validateOrderConsistency(datedOrder({ desiredDeadline: mmddOf(dayOffset(8)), fastDeadline: true, fastDeadlineOption: 'basic48h' }), null).step2).includes('fastDeadline'), true);
+check('세팅 마감일이 폐장일보다 늦으면 오류', fieldsIn(validateOrderConsistency(datedOrder({ applyServerInstall: 'no' }, { applyBot: 'yes', setupDeadline: mmddOf(dayOffset(90)) }), null).step3).includes('setupDeadline'), true);
+check('세팅 마감일이 서버 설치 마감일보다 앞서면 오류', fieldsIn(validateOrderConsistency(datedOrder({ desiredDeadline: mmddOf(dayOffset(8)) }, { applyBot: 'yes', setupDeadline: mmddOf(dayOffset(6)) }), null).step3).includes('setupDeadline'), true);
+check('세팅 마감일이 서버 설치 마감일과 같거나 늦으면 통과', fieldsIn(validateOrderConsistency(datedOrder({ desiredDeadline: mmddOf(dayOffset(8)) }, { applyBot: 'yes', setupDeadline: mmddOf(dayOffset(8)) }), null).step3).includes('setupDeadline'), false);
+check('장기 체크 없이 장기 자동봇이면 오류', fieldsIn(validateOrderConsistency(datedOrder({}, { applyBot: 'yes', operationWeeksOption: 'longterm' }), null).step3).includes('operationWeeksOption'), true);
+check('봇 계정이 총괄 계정과 같으면 오류', fieldsIn(validateOrderConsistency(datedOrder({}, { applyBot: 'yes', botAccountId: '@notice' }), null).step3).includes('botAccountId'), true);
+const invStep3 = { ...emptyOrder.step3, applyBot: 'yes' as const, mainBot: 'basic' as const, investigationBot: true, botAccountId: '', investigationBotAccountId: '@' };
+check('조사 봇 계정은 메인 봇 계정이 비어도 필수', fieldsIn(validateStep3(invStep3)).includes('investigationBotAccountId'), true);
+const omakaseStep3 = { ...emptyOrder.step3, applyBot: 'yes' as const, omakaseBot: true };
+check('오마카세 링크: 아무 글자면 오류, https 주소면 통과', [
+  fieldsIn(validateStep3({ ...omakaseStep3, omakaseDetails: '아무거나' })).includes('omakaseDetails'),
+  fieldsIn(validateStep3({ ...omakaseStep3, omakaseDetails: 'https://notion.so/abc' })).includes('omakaseDetails'),
+], [true, false]);
+check('마감일에 연도 붙이기', monthDayWithYear(mmddOf(dayOffset(20))), isoOf(dayOffset(20)));
+
+// 복사문: 예약 툿 · 스토리 자동 진행 · 툿-재화 연동이 맨 위, 예상 일정, 맺음말 (사용자 요청)
+const mdOf = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+const orderCopy = (step2: Partial<OrderFormData['step2']>, step3: Partial<OrderFormData['step3']>) => {
+  const order = datedOrder(step2, step3);
+  return generateCopyText(order, calculateTotalEstimate(order), null);
+};
+const botCopy = orderCopy({ desiredDeadline: mmddOf(dayOffset(20)), additionalOption: 'dayTheme' }, {
+  applyBot: 'yes', mainBot: 'basicShop', investigationBot: true, reservationToot: true, autoProfileImage: true,
+  tootCurrencyLink: true, tootPerCurrency: '40툿당 1갈레온', setupDeadline: mmddOf(dayOffset(30)),
+});
+const optionBlock = botCopy.slice(botCopy.indexOf('기본+상점봇\n'));
+check('옵션 목록: 예약 툿 → 스토리 → 툿-재화(비율) → 조사 자동봇', [
+  optionBlock.indexOf('+ 예약 툿') < optionBlock.indexOf('+ 스토리 자동 진행'),
+  optionBlock.indexOf('+ 스토리 자동 진행') < optionBlock.indexOf('+ 툿-재화 연동 (40툿당 1갈레온)'),
+  optionBlock.indexOf('+ 툿-재화 연동') < optionBlock.indexOf('+ 조사 자동봇'),
+], [true, true, true]);
+const estimateBlock = botCopy.slice(botCopy.indexOf('>>> 견적'));
+check('견적: 예약 툿이 조사 자동봇보다 위', estimateBlock.indexOf('예약 툿') < estimateBlock.indexOf('조사 자동봇'), true);
+check('자동봇 포함 일정: 결제 7일 전, 테마 이미지 8일 전, 세팅 마감일이 마감', botCopy.includes(
+  `>>> 예상 일정\n\n${mdOf(dayOffset(22))} 이전: 테마 이미지 전달\n${mdOf(dayOffset(23))}: 결제 요청\n${mdOf(dayOffset(30))}: 마감`), true);
+const serverCopy = orderCopy({ desiredDeadline: mmddOf(dayOffset(20)) }, { applyBot: 'no' });
+check('서버만 + 테마 없음: 결제 5일 전, 이미지 줄 없음', [serverCopy.includes(`${mdOf(dayOffset(15))}: 결제 요청`), serverCopy.includes('이미지 전달')], [true, false]);
+check('복사문 맨 끝 맺음말', botCopy.endsWith('위 견적 및 일정은 커미션주의 확인 이후 달라질 수 있습니다.'), true);
+
 // 자동봇 가동 기간: 날짜 필수, 1~52주
 const botStep3 = { ...createFormData().step3, applyBot: 'yes' as const, operationWeeksOption: 'manual' as const, mainBot: 'basic' as const, setupDeadline: '12/01', botAccountId: 'bot_one' };
 check('가동 날짜 없으면 오류', validateStep3({ ...botStep3, botStartDate: '', botEndDate: '', manualWeeks: 0 }).some((e) => e.field === 'operationWeeksOption'), true);
 check('가동 0주면 오류', validateStep3({ ...botStep3, botStartDate: '06/01', botEndDate: '06/02', manualWeeks: 0 }).some((e) => e.field === 'operationWeeksOption'), true);
 check('가동 4주는 통과', validateStep3({ ...botStep3, botStartDate: '06/01', botEndDate: '06/28', manualWeeks: 4 }).some((e) => e.field === 'operationWeeksOption'), false);
+
+// 랜덤박스(상점 타입 전용, 명령어 필수) · 키워드 답변 시 이미지 전송(기본 세 타입 공통)
+const B = PRICING_CONFIG.bot;
+const shopStep3 = { ...botStep3, mainBot: 'basicShop' as const };
+check('랜덤박스: 상점 타입이면 +2만원', calculateBotPrice({ ...shopStep3, randomBox: true, randomBoxCommand: '[가챠]' }, 0).botCost, B.mainTypes.basicShop + B.addons.randomBox);
+check('랜덤박스: 기본 타입이면 금액에 안 들어감', calculateBotPrice({ ...botStep3, randomBox: true, randomBoxCommand: '[가챠]' }, 0).botCost, B.mainTypes.basic);
+const boxErrors = (cmd: string) => validateStep3({ ...shopStep3, randomBox: true, randomBoxCommand: cmd }).filter((e) => e.field === 'randomBoxCommand').length;
+check('랜덤박스: 명령어 비면 오류', [boxErrors(''), boxErrors('[]'), boxErrors('[ ]')], [1, 1, 1]);
+check('랜덤박스: [가챠] 는 통과, 대괄호 없으면 오류', [boxErrors('[가챠]'), boxErrors('가챠')], [0, 1]);
+check('랜덤박스: 기본 타입이면 명령어 검사 안 함', validateStep3({ ...botStep3, randomBox: true, randomBoxCommand: '' }).some((e) => e.field === 'randomBoxCommand'), false);
+check('이미지 전송: +1만원', calculateBotPrice({ ...botStep3, keywordReplyImage: true }, 0).botCost, B.mainTypes.basic + B.addons.keywordReplyImage);
+check('새 옵션 견적 이름 → 신청서 칸', [ESTIMATE_NAME_TO_MAPPING_KEY['랜덤박스 기능'], ESTIMATE_NAME_TO_MAPPING_KEY['키워드 답변 시 이미지 전송']], ['randomBox', 'keywordReplyImage']);
+check('새 옵션 가격 = 카탈로그', [catalogPrice('랜덤박스 기능'), catalogPrice('키워드 답변 시 이미지 전송')], [B.addons.randomBox, B.addons.keywordReplyImage]);
+const boxOrder = { ...createFormData(), step3: { ...shopStep3, randomBox: true, randomBoxCommand: '[뽑기]', keywordReplyImage: true } };
+const boxCopy = generateCopyText(boxOrder, calculateTotalEstimate(boxOrder), null);
+// 가동비 상한 5만원: 10주부터는 몇 주든 5만원 (페이지·견적함·신청서·복사문 모두)
+check('가동비 상한', [botOperationFee(4), botOperationFee(9), botOperationFee(10), botOperationFee(26), botOperationFee(-1)], [20000, 45000, 50000, 50000, 0]);
+check('견적함 가동료 26주 = 5만원', catalogPrice('기본 가동료 (26주)'), B.operationFeeCap);
+check('신청서 가동비 26주 = 5만원', calculateBotPrice({ ...botStep3, manualWeeks: 26 }, 26).operationCost, B.operationFeeCap);
+const capOrder = { ...createFormData(), step3: { ...botStep3, manualWeeks: 26 } };
+check('복사문 가동비 26주 = 5만원', generateCopyText(capOrder, calculateTotalEstimate(capOrder), null).includes('자동봇 26주 50,000'), true);
+check('복사문에 랜덤박스 명령어와 이미지 전송', [boxCopy.includes('랜덤박스 기능 ([뽑기])'), boxCopy.includes('랜덤박스 명령어 : [뽑기]'), boxCopy.includes('키워드 답변 시 이미지 전송')], [true, true, true]);
 
 // 계정 표기
 check('계정 표기 정리', [asAccount(' @@Notice '), asAccount('bot_1'), asAccount('  ')], ['@Notice', '@bot_1', '']);
@@ -594,4 +661,4 @@ check('계정 표기 정리', [asAccount(' @@Notice '), asAccount('bot_1'), asAc
 console.log(failed === 0 ? '\n모든 검증 통과' : `\n${failed}개 실패`);
 if (failed > 0) process.exit(1);
 
-export {};
+export { };

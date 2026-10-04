@@ -15,7 +15,11 @@ import {
 } from '@/app/lib/mastodonServerConfig';
 import type { ServerCalcResult, ServerTier } from '@/app/lib/mastodonServerConfig';
 
-export function useServerCalculator(longTerm: boolean) {
+/**
+ * externalSearch: 신청서 STEP2 처럼 검색 여부를 계산기 밖(기타 옵션 '검색 기능' 체크)에서 정할 때 넘긴다.
+ * 넘기면 계산기 검색 값이 늘 그 값을 따른다 (검색이 잠긴 장기·소규모 서버는 그대로 '아니오').
+ */
+export function useServerCalculator(longTerm: boolean, externalSearch?: 'yes' | 'no', allowLongTerm = true) {
   const { serverCalcResult, setServerCalcResult } = useEstimate();
 
   const [months, setMonths] = useState<string>(
@@ -25,16 +29,19 @@ export function useServerCalculator(longTerm: boolean) {
     serverCalcResult ? serverCalcResult.usersKey : ''
   );
   const [search, setSearch] = useState<'yes' | 'no' | null>(
-    serverCalcResult ? serverCalcResult.search : null
+    externalSearch ?? (serverCalcResult ? serverCalcResult.search : null)
   );
   const [tier, setTier] = useState<ServerTier | null>(serverCalcResult?.tier ?? null);
 
-  // 장기 소규모 서버는 반영구(12개월 이상) 운영 → 기간을 12개월로 고정
+  // 장기 소규모 서버는 반영구(12개월 이상) 운영 → 기간을 12개월로 고정.
+  // 장기를 고를 수 없는 곳(신청서, STEP1 장기 체크 없음)에 12개월 이상이 남아 있으면 선택을 비운다
   useEffect(() => {
     if (longTerm && months !== '12') {
       setMonths('12');
+    } else if (!longTerm && !allowLongTerm && Number(months) >= LONG_TERM_MIN_MONTHS) {
+      setMonths('');
     }
-  }, [longTerm, months]);
+  }, [longTerm, allowLongTerm, months]);
 
   // 장기(12개월 이상)는 10인 이하만 받는다. 기간을 바꿔 고른 인원이 범위를 벗어나면 선택 해제
   const isLongTermMonths = Number(months) >= LONG_TERM_MIN_MONTHS;
@@ -69,12 +76,13 @@ export function useServerCalculator(longTerm: boolean) {
   // 검색 차단 규칙: Vultr(장기·소규모) 서버는 검색 서버 비용이 커서 막고, GCP는 허용한다.
   const searchLocked = longTerm || baselineIsVultr;
 
-  // 검색 잠금 시 '아니오'로 강제 고정
+  // 검색 잠금 시 '아니오'로 강제 고정, 아니면 바깥에서 정한 값을 따른다
   useEffect(() => {
-    if (searchLocked && search !== 'no') {
-      setSearch('no');
+    const wanted = searchLocked ? 'no' : externalSearch;
+    if (wanted && search !== wanted) {
+      setSearch(wanted);
     }
-  }, [searchLocked, search]);
+  }, [searchLocked, search, externalSearch]);
 
   const isAllSelected = !!(months && usersValid && search && (!showTier || tier));
   const result: ServerCalcResult | null = isAllSelected

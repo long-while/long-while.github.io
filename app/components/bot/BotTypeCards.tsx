@@ -62,7 +62,7 @@ function OmakaseDetail({ note }: { note?: string }) {
   return (
     <Disclosure label="오마카세 기능 상세 설명">
       <p className="text-body2 text-text-secondary">
-        (커뮤 시스템 문서와 따로 만든 문서여야 해요)
+        원하시는 봇 기능 설명 문서를 작성해서 문의해 주셔야 구현 여부 및 견적을 확인할 수 있습니다. (커뮤 시스템 문서를 전달하시면 안 됩니다.)
       </p>
       <div className="flex flex-col gap-2 border-t border-border-100 pt-4">
         <h4 className="text-title5 text-text-primary">문서에 포함되어야 할 내용</h4>

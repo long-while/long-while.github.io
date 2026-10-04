@@ -14,11 +14,9 @@ import { CopyDialogs, MoveBanner } from './CopyDialogs';
 import { useCopyFlow } from './useCopyFlow';
 
 export default function Step4Review() {
-  const { formData, setCurrentStep, updateStep1, restoredFromStorage } = useOrder();
+  const { formData, setCurrentStep, updateStep1 } = useOrder();
   const { serverCalcResult } = useEstimate();
   const { step1 } = formData;
-  // 임시저장 복원 시 비밀번호는 저장되지 않아 비어 있으므로 재입력 안내
-  const passwordNeedsReentry = restoredFromStorage && step1.googlePassword.trim() === '';
   const [policyConfirmed, setPolicyConfirmed] = useState(false);
   // 구글 계정 오류는 복사를 한 번 시도한 뒤부터 보여준다 (입력 전부터 빨갛게 두지 않도록)
   const [googleErrorsShown, setGoogleErrorsShown] = useState(false);
@@ -47,12 +45,6 @@ export default function Step4Review() {
     [formData, estimate, serverCalcResult],
   );
   const flow = useCopyFlow(copyTextPreview);
-  // 확인용 화면에는 비밀번호를 가린다 (복사되는 원문은 그대로). 비밀번호는 검증상 8자 이상이라 다른 글자와 겹칠 일이 거의 없다
-  // 복사문에는 앞뒤 공백을 뺀 비밀번호가 들어가므로 둘 다 가린다 (공백이 붙은 비밀번호가 그대로 보이던 문제, 4단계 검토)
-  const maskedCopyText = useMemo(() => {
-    const variants = Array.from(new Set([step1.googlePassword, step1.googlePassword.trim()])).filter((v) => v.length >= 8);
-    return variants.reduce((text, secret) => text.split(secret).join('••••••••'), copyTextPreview);
-  }, [copyTextPreview, step1.googlePassword]);
 
   // 복사 직전 전체 검사: 임시저장을 복원해 바로 4단계로 왔거나, 그사이 마감일이 지나는 등 앞 단계가 틀어진 경우 (4단계 검토)
   const [stepProblem, setStepProblem] = useState<{ step: 1 | 2 | 3; message: string } | null>(null);
@@ -94,20 +86,14 @@ export default function Step4Review() {
   return (
     <div className="flex flex-col gap-12 lg:gap-[70px]">
       <MoveBanner flow={flow} />
-      <CopyDialogs flow={flow} text={copyTextPreview} maskedText={maskedCopyText} />
+      <CopyDialogs flow={flow} text={copyTextPreview} />
 
       <ApplicantReview data={formData} onEdit={handleEdit} />
-      <ServerReview data={formData} onEdit={handleEdit} />
+      <ServerReview data={formData} onEdit={handleEdit} serverCalc={serverCalcResult} />
       <BotReview data={formData} onEdit={handleEdit} />
       <EstimateReview data={formData} estimate={estimate} infraFeeApplied={infraFeeApplied} serverCalc={serverCalcResult} />
       <PolicyBox confirmed={policyConfirmed} onConfirm={setPolicyConfirmed} />
-      <GoogleAccountFields
-        email={step1.googleEmail}
-        password={step1.googlePassword}
-        onChange={updateStep1}
-        errorFor={googleErrorFor}
-        passwordNeedsReentry={passwordNeedsReentry}
-      />
+      <GoogleAccountFields email={step1.googleEmail} onChange={updateStep1} errorFor={googleErrorFor} />
 
       {stepProblem && (
         <div role="alert" className="flex flex-col gap-3 rounded-card border border-error-500 bg-background-white p-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
@@ -133,7 +119,7 @@ export default function Step4Review() {
       <div className="flex flex-col-reverse justify-center gap-3 sm:flex-row">
         <Button variant="white" size="lg" onClick={goPrevious} className="sm:w-[220px]">← 이전</Button>
         <Button size="lg" onClick={handleCopy} disabled={!isCopyEnabled} className="sm:min-w-[220px]">
-          {flow.isCopying ? '복사 중...' : isCopyEnabled ? '신청서 복사하기' : '정책 동의 후 복사 가능'}
+          {flow.isCopying ? '복사 중...' : isCopyEnabled ? '신청서 복사하기' : '정책 동의·구글 이메일 입력 후 복사'}
         </Button>
       </div>
     </div>

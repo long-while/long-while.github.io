@@ -3,7 +3,7 @@
  * name/aliases 는 견적함 항목 이름이라 바꾸면 안 된다 (견적함·신청서 매핑, 수정 강조에 쓰임).
  */
 import { IMAGES } from '@/app/constants/images';
-import { PRICING_CONFIG } from '@/app/constants/form';
+import { PRICING_CONFIG, botOperationFee } from '@/app/constants/form';
 
 /** 가격은 신청서 계산과 같은 PRICING_CONFIG 에서 (한 곳만 고치면 페이지·견적·신청서가 함께 바뀜) */
 const PB = PRICING_CONFIG.bot;
@@ -39,9 +39,9 @@ const EXAMPLE_WEEKS = 4;
 
 export const OPERATION_NOTES = [
   // '주수만큼 골라 주세요'는 주수 고르는 칸 바로 위로 옮김 (OPERATION_WEEKS_HINT)
-  '가동비는 1주 5천원이에요. (테스트 기간 제외)',
-  '12개월 이상 장기 서버는 주당 비용 대신 초기 세팅비 1만원만 받아요. 이때는 아래에서 2주(1만원)를 골라 주세요.',
-  `합계 예: 기본&상점 ${won(PB.mainTypes.basicShop)} + ${EXAMPLE_WEEKS}주 ${won(EXAMPLE_WEEKS * PB.operationPerWeek)} = ${won(PB.mainTypes.basicShop + EXAMPLE_WEEKS * PB.operationPerWeek)}`,
+  `가동비는 1주 5천원이에요. (테스트 기간 제외) ${PB.operationFeeCap / PB.operationPerWeek}주 이상은 몇 주든 ${PB.operationFeeCap / 10000}만원이에요.`,
+  `12개월 이상 장기 서버는 주당 비용 대신 초기 세팅비 ${PB.longTermSetupFee / 10000}만원만 받아요. 이때는 아래에서 ${PB.longTermSetupFee / PB.operationPerWeek}주(${PB.longTermSetupFee / 10000}만원)를 골라 주세요.`,
+  `합계 예: 기본&상점 ${won(PB.mainTypes.basicShop)} + ${EXAMPLE_WEEKS}주 ${won(botOperationFee(EXAMPLE_WEEKS))} = ${won(PB.mainTypes.basicShop + botOperationFee(EXAMPLE_WEEKS))}`,
   '지난 신청자분들의 자동봇도 지금까지 꾸준히 업데이트해 드리고 있습니다.',
 ];
 export const OPERATION_WEEKS_HINT = '커뮤를 운영할 주수만큼 골라 주세요.';
@@ -56,7 +56,7 @@ export const COMPARE_ROWS: { feature: string; keyword?: string; has: [boolean, b
   { feature: '키워드 답변 기능', keyword: '운영진 마음대로 지정', has: [true, true, true] },
   { feature: '돈(재화) 관리', has: [false, true, true] },
   { feature: '인벤토리 · 아이템 · 상점', keyword: '[가방] [상점] [구매] [설명/아이템명]', has: [false, true, true] },
-  { feature: '캐릭터 스탯 (체력 등)', has: [false, false, true] },
+  { feature: '캐릭터 스탯 (체력, 이성 등)', has: [false, false, true] },
   { feature: '아이템 사용 시 스탯 변화', keyword: '[사용/아이템명]', has: [false, false, true] },
 ];
 export const COMPARE_PRICES = [PB.mainTypes.basic, PB.mainTypes.basicShop, PB.mainTypes.basicShopStat].map(won);
@@ -68,7 +68,7 @@ export interface ChatTurn {
   message: string;
 }
 
-/** 시트 한 줄 (키워드 | 답멘). reply 안의 {중괄호} 부분은 강조 표시 */
+/** 시트 한 줄 (키워드 | 답변). reply 안의 {중괄호} 부분은 강조 표시 */
 export interface SheetRow {
   keyword: string;
   reply: string;
@@ -95,7 +95,7 @@ export const KEYWORD_REPLY_CHAT: ChatTurn[] = [
 ];
 
 /**
- * 키워드 답변에 이름·주사위 넣기 (추가 옵션). 봇 코드 custom_command.py 기준으로
+ * 키워드 답변에 이름 · 주사위 넣기 (추가 옵션). 봇 코드 custom_command.py 기준으로
  * 옵션이 꺼져 있으면 {중괄호}를 하나도 바꾸지 않고 글자 그대로 보낸다 (랜덤 단어 포함).
  * {과와} {아야} {으로로}도 동작하지만 ㄹ 받침 처리가 아직 틀려서 안내하지 않는다.
  */
@@ -104,9 +104,9 @@ export interface ReplyTagRow {
   tag: string;
   /** 지정이 바뀌는 값 */
   meaning: string;
-  /** 시트 예 (키워드 | 답멘) */
+  /** 시트 예 (키워드 | 답변) */
   sheet: SheetRow;
-  /** 봇이 보내주는 답멘 */
+  /** 봇이 보내주는 답변 */
   botReply: string;
 }
 
@@ -145,10 +145,12 @@ export const BOT_TYPES: BotType[] = [
     price: PB.mainTypes.basicShop,
     features: [
       '기본 타입에 포함된 모든 기능 +@',
-      '구글 시트로 캐릭터, 재화, 인벤토리 관리 (운영진 수동 편집 지원)',
+      '구글 시트로 캐릭터, 재화, 인벤토리 관리 (운영진이 직접 편집)',
+      '[가방] 인벤토리, 재화 확인',
       '[상점] 아이템 목록 출력',
       '[구매/아이템명] 아이템 구매 시 재화 차감',
-      '[가방] 인벤토리, 재화 확인',
+      '[설명/아이템명] 아이템 설명 출력',
+      '[소모/아이템명] 인벤토리에서 아이템 삭제 (스탯 변경 X)'
     ],
     adminFeatures: ['[소지금 추가/금액/캐릭터명] [소지금 차감/금액/캐릭터명]'],
   },
@@ -157,8 +159,8 @@ export const BOT_TYPES: BotType[] = [
     price: PB.mainTypes.basicShopStat,
     features: [
       '기본&상점 타입에 포함된 모든 기능 +@',
-      '구글 시트로 캐릭터 스탯 관리 (운영진 수동 편집 지원)',
-      '[사용/아이템명] 아이템 소모 후 캐릭터 스탯 변화. 운영진이 시트로 아이템 편집 가능',
+      '구글 시트로 캐릭터 스탯 관리 (운영진이 직접 편집)',
+      '[사용/아이템명] 아이템 소모 후 캐릭터 스탯 변화',
     ],
     adminFeatures: ['[OO 변경/수치/캐릭터명] (예: 체력 변경)'],
   },
@@ -167,7 +169,7 @@ export const BOT_TYPES: BotType[] = [
     price: PB.addons.investigationBot,
     features: [
       // T6: 신청서 규칙과 같게 (메인 봇이 있어야 함)
-      '기본 / 기본&상점 / 기본&상점&스탯 중 하나와 함께 신청해 주세요. (단독 신청은 안 돼요)',
+      '기본 / 기본&상점 / 기본&상점&스탯 중 하나와 함께 신청해 주세요. (단독 신청 불가)',
       '[장소 목록] [진입/장소명] [조사/포인트명]',
       '장소 목록과 각 장소에서 조사할 수 있는 포인트 관리',
       '캐릭터 소지품 및 스탯과 연동 (특정 이벤트 발생 시 아이템 획득 / 체력 -5 등)',
@@ -184,7 +186,7 @@ export const BOT_TYPES: BotType[] = [
       '보너스/페널티 다이스 [근력+1] [관찰력-2]',
       '판정, 피해 정산, 치명타가 모두 적용되는 무기 공격',
       '[랜덤/옵션, 옵션, 옵션] 여러 개의 옵션 중 하나를 랜덤 선택',
-      '판정 기능만 드려요. 룰북 내용(광기 목록 등)은 직접 입력해 주세요.',
+      '판정 기능만 포함 / 룰북 내용(광기 목록 등)은 직접 입력',
     ],
   },
   {
@@ -195,11 +197,9 @@ export const BOT_TYPES: BotType[] = [
       '특기를 체크하는 방식의 플레이어 구글 시트 제공',
       '편집 가능한 커스텀 시트 + 랜덤표 시트 제공',
       '[nDm±k] [nDm±k>=a] [xBy] [aSG@b#c±d>=e] [nDAm±k] 등 지원',
-      '기본 판정 [특기명]',
-      '보너스/페널티 다이스',
+      '기본 판정 [특기명] + 보너스/페널티 다이스',
       '명령어를 통한 아이템 관리',
-      '[랜덤/옵션, 옵션, 옵션] 여러 개의 옵션 중 하나를 랜덤 선택',
-      '판정 기능만 드려요. 룰북 내용(특기명, 광기표 등)은 직접 입력해 주세요.',
+      '판정 기능만 포함 / 룰북 내용(특기명, 광기표 등)은 직접 입력',
       '일부만 선택해 설치 시 룰 당 3만원 (문의 요망)',
     ],
   },
@@ -234,11 +234,14 @@ export const SHOP_REQUIRES_LABEL = '기본&상점 또는 기본&상점&스탯 �
 
 // 3단계 사용자 요청으로 뺀 옵션: '특정 상황 DM 전송', '빠른 마감 (48시간 내)', '빠른 마감 (1주일 내)' (EstimateContext 의 판매 중단 목록에도 넣음)
 export const ADDITIONAL_OPTIONS: AdditionalOption[] = [
-  // 예전 이름('커스텀 명령어 업그레이드', '답멘에 이름·주사위 넣기')은 별칭으로 남긴다 (저장된 견적은 불러올 때 새 이름으로 바뀜, estimateCatalog)
-  { name: '키워드 답변에 이름·주사위 넣기', price: PB.addons.customCommandUpgrade, aliases: ['답멘에 이름·주사위 넣기', '커스텀 명령어 업그레이드', '기본 타입 - 커스텀 명령어 업그레이드', '기본&상점 타입 - 커스텀 명령어 업그레이드', '기본&상점&스탯 타입 - 커스텀 명령어 업그레이드'], requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
+  // 예전 이름(실제 배포된 그대로: '커스텀 명령어 업그레이드', '답멘에 이름·주사위 넣기', '키워드 답변에 이름·주사위 넣기')은 별칭으로 남긴다 (저장된 견적은 불러올 때 새 이름으로 바뀜, estimateCatalog)
+  { name: '키워드 답변에 이름 · 주사위 넣기', price: PB.addons.customCommandUpgrade, aliases: ['키워드 답변에 이름·주사위 넣기', '답멘에 이름·주사위 넣기', '커스텀 명령어 업그레이드', '기본 타입 - 커스텀 명령어 업그레이드', '기본&상점 타입 - 커스텀 명령어 업그레이드', '기본&상점&스탯 타입 - 커스텀 명령어 업그레이드'], requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
+  { name: '키워드 답변 시 이미지 전송', price: PB.addons.keywordReplyImage, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
   { name: '재화, 아이템 양도 기능', price: PB.addons.transferFeature, aliases: ['양도 기능', '기본&상점 타입 - 양도 기능', '기본&상점&스탯 타입 - 양도 기능'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
   { name: '툿수-재화 자동반영', price: PB.addons.tootCurrencyLink, aliases: ['기본&상점 타입 - 툿수-재화 자동반영', '기본&상점&스탯 타입 - 툿수-재화 자동반영'], requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
   { name: '출석 시스템', price: PB.addons.attendanceSystem, requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
+  // 명령어는 신청서에서 정한다 (봇 코드 box_command 의 '박스' 자리)
+  { name: '랜덤박스 기능', price: PB.addons.randomBox, requires: [...SHOP_BOT_TYPES], requiresLabel: SHOP_REQUIRES_LABEL },
   { name: '예약 툿', label: '예약 툿 (시트로 관리)', price: PB.addons.reservationToot, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
   { name: '스토리 자동 진행', label: '스토리 자동 진행 (시트로 관리)', price: PB.addons.autoProfileImage, requires: [...MAIN_BOT_TYPES], requiresLabel: MAIN_REQUIRES_LABEL },
   { name: '일일 조사 횟수 제한', price: PB.addons.investigationDailyLimit, description: '[조사] 명령어 사용 시 1회 카운트', requires: INVESTIGATION_TYPE },

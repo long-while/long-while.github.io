@@ -43,10 +43,9 @@ function CopyTextBox({ text, initiallyOpen, selectOnOpen }: { text: string; init
 }
 
 /**
- * text: 실제 복사한 원문(실패 시 직접 복사용). maskedText: 화면 확인용(구글 비밀번호를 가린 것).
- * 복사 완료 모달·다시 보기에는 비밀번호를 보이지 않는다 (Q16 범위 밖이지만 새 화면 위치에 노출하지 않기 위해).
+ * text: 실제 복사한 원문 (완료 모달 확인용, 실패 시 직접 복사용).
  */
-export function CopyDialogs({ flow, text, maskedText }: { flow: Flow; text: string; maskedText: string }) {
+export function CopyDialogs({ flow, text }: { flow: Flow; text: string }) {
   const { dialog, countdown } = flow;
   return (
     <>
@@ -72,7 +71,7 @@ export function CopyDialogs({ flow, text, maskedText }: { flow: Flow; text: stri
           </>
         }
       >
-        <CopyTextBox text={maskedText} initiallyOpen={dialog === 'review'} />
+        <CopyTextBox text={text} initiallyOpen={dialog === 'review'} />
       </Modal>
 
       <Modal

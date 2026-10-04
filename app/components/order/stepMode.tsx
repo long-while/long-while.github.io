@@ -8,7 +8,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useOrder } from '@/app/contexts/OrderContext';
 import type { Step2Data, Step3Data, ValidationError } from '@/app/types/order';
-import { RUSH_LABEL, THEME_CHOICE_LABEL } from '@/app/components/server/serverContent';
+import { RUSH_LABEL } from '@/app/components/server/serverContent';
 import { botPeriodWithYears } from '@/app/utils/orderUtils';
 import { PRICING_CONFIG } from '@/app/constants/form';
 
@@ -16,8 +16,8 @@ type SummaryStep = 2 | 3;
 
 /** 요약 상태에서 접혀 보이지 않는 입력칸 (이 칸에 오류가 나면 펼친다) */
 const HIDDEN_FIELDS: Record<SummaryStep, string[]> = {
-  2: ['additionalOption', 'changeCharacterLimit', 'characterLimitValue', 'searchOption', 'mastoHostMigration', 'fastDeadline'],
-  3: ['operationWeeksOption', 'mainBot', 'accountList', 'extraAccountTiers', 'attendanceCurrencyAmount', 'attendanceCommand',
+  2: ['changeCharacterLimit', 'characterLimitValue', 'searchOption', 'mastoHostMigration', 'fastDeadline'],
+  3: ['operationWeeksOption', 'mainBot', 'accountList', 'extraAccountTiers', 'attendanceCurrencyAmount', 'attendanceCommand', 'randomBoxCommand',
     'omakaseDetails', 'investigationDailyLimitCount', 'tootPerCurrency', 'statList', 'transferOption', 'applyBot'],
 };
 
@@ -76,7 +76,6 @@ export function serverSummaryRows(step2: Step2Data) {
     step2.fastDeadline && (step2.fastDeadlineOption ? RUSH_LABEL[step2.fastDeadlineOption] : '빠른마감'),
   ].filter(Boolean).join(', ');
   return [
-    { label: '커스텀 옵션', value: step2.additionalOption ? THEME_CHOICE_LABEL[step2.additionalOption] : '기본' },
     { label: '추가 옵션', value: extras || '-' },
   ];
 }
@@ -94,12 +93,14 @@ export function botSummaryRows(step3: Step3Data, closingDate: string) {
     step3.cocBot && 'D100 룰 대응 TRPG봇',
     step3.trpg2d6Bot && '2D6 룰 대응 TRPG봇 3종',
     step3.investigationBot && step3.mainBot !== null && '조사 자동봇',
-    step3.customCommandUpgrade && '키워드 답변에 이름·주사위 넣기',
+    step3.customCommandUpgrade && '키워드 답변에 이름 · 주사위 넣기',
+    step3.keywordReplyImage && '키워드 답변 시 이미지 전송',
     step3.reservationToot && '예약 툿',
     step3.autoProfileImage && '스토리 자동 진행',
     step3.tootCurrencyLink && '툿수-재화 자동반영',
     step3.transferFeature && '재화, 아이템 양도 기능',
     step3.attendanceSystem && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') && '출석 시스템',
+    step3.randomBox && (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat') && `랜덤박스 기능 (${step3.randomBoxCommand})`,
     step3.omakaseBot && '오마카세',
   ].filter(Boolean).join(', ');
   return [

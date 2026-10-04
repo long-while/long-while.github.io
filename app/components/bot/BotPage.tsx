@@ -1,8 +1,8 @@
 /**
  * 자동봇 커미션 (/bot/) — 시안 '자동봇 커미션' (183:760, file.json 실측). 문구는 기존 사이트 그대로 (Q9).
  *  배너 600 (헤더가 위에 뜸, P1) → 80 → 섹션 간격 100: 기본 안내 · 시트 미리보기 · 타입 비교 · 키워드 답변 ·
- *  타입 상세 · 추가 옵션 · 가동 기간 → 120 → 푸터.
- *  (무엇을 살지 고른 뒤 기간을 정하도록 가동 기간을 맨 뒤로. 답멘 옵션 설명은 키워드 답변 섹션 안에 함께)
+ *  가동 기간 · 타입 상세 · 추가 옵션 → 120 → 푸터.
+ *  (답변 옵션 설명은 키워드 답변 섹션 안에 함께)
  *  견적 담기·빼기·택1·충돌 토스트·선행 조건·수정 강조 동작은 기존 BotCommission 과 같다 (useBotEstimate).
  *  하단 고정 바: 견적이 있으면 StickyEstimateBar (P8, 이 페이지에서는 플로팅 버튼 숨김).
  */
@@ -10,12 +10,13 @@ import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { BulletList, Icon, OptionCard, PageHero, StickyEstimateBar, TitledSection } from '@/app/components/ds';
 import { useEditTargetHighlight } from '@/app/hooks/useEditTargetHighlight';
+import { botOperationFee } from '@/app/constants/form';
 import { IMAGES } from '@/app/constants/images';
 import { navLinkProps } from '@/app/lib/navLink';
 import type { NavigateFunction } from '@/app/types/navigation';
 import {
   ADDITIONAL_OPTIONS, BOT_INTRO_CHAT, BOT_TYPES, INVESTIGATION_TYPE, MAIN_REQUIRES_LABEL, OPERATION_FEE_PREFIX, OPERATION_NOTES, OPERATION_WEEKS_HINT,
-  SHEET_LINKS, SHOP_REQUIRES_LABEL, WEEKLY_FEE, type AdditionalOption,
+  SHEET_LINKS, SHOP_REQUIRES_LABEL, type AdditionalOption,
 } from './botContent';
 import { BotTypeCards } from './BotTypeCards';
 import { ChatExample, CompareTable, KeywordReplyGuide } from './BotTables';
@@ -63,12 +64,18 @@ function BasicInfo({ onNavigate }: { onNavigate: NavigateFunction }) {
           <span key="server">서버 설치도 함께 필요하시다면{' '}
             <a {...server} className="text-brand underline-offset-2 hover:underline">서버 설치 커미션 페이지</a>를 확인해주세요.
           </span>,
+          <span key="recommend">
+            <strong className="font-semibold text-text-primary">커미션주의 추천: 자동 스진 기능!</strong>{' '}
+            스크립트를 자동으로 출력해 주며 문장 별로 몇 초를 쉬어갈지를 지정할 수 있어요.<br />
+            운영진이 스진 시간대에 필참하지 않아도 됩니다.
+            있고 없고의 차이가 커서, 제가 운영할 때에는 무조건! 무조건 사용합니다.
+          </span>,
         ]}
       />
       {/* 처음 보는 사람도 [ ] 키워드가 무엇인지 바로 알도록 한 장면 */}
       <div className="flex flex-col gap-3 rounded-card border border-border-100 bg-background-white p-5 lg:max-w-[560px] lg:p-6">
         <p className="text-title5 text-text-primary">이렇게 움직여요</p>
-        <p className="text-body3 text-text-secondary">봇을 멘션하고 [ ] 안에 키워드를 적으면, 봇이 답멘을 달아요.</p>
+        <p className="text-body3 text-text-secondary">봇을 멘션하고 [ ] 안에 키워드를 적으면, 봇이 답변을 달아요.</p>
         <ChatExample turns={BOT_INTRO_CHAT} label="자동봇 사용 예시 대화" />
       </div>
     </TitledSection>
@@ -135,7 +142,7 @@ function OperationWeeks({ est, highlighted }: { est: BotEstimate; highlighted: s
             <p className="text-body3 text-text-secondary">{OPERATION_WEEKS_HINT}</p>
           </div>
           <div className="flex items-center gap-6">
-            <span className="text-title3 text-brand">{won(weeks * WEEKLY_FEE)}</span>
+            <span className="text-title3 text-brand">{won(botOperationFee(weeks))}</span>
             <div className="flex items-center">
               <button type="button" className={stepBtn} onClick={() => est.changeWeeks(Math.max(0, weeks - 1))} disabled={weeks === 0} aria-label="1주 감소">
                 <Icon name="minus" />
@@ -224,6 +231,7 @@ export default function BotPage({ onNavigate }: BotPageProps) {
         <SheetPreview />
         <TitledSection title="봇 타입 비교"><CompareTable /></TitledSection>
         <TitledSection title="키워드 답변이란?"><KeywordReplyGuide /></TitledSection>
+        <OperationWeeks est={est} highlighted={highlighted} />
         <TitledSection title="봇 타입 상세">
           <p className="text-body3 text-text-secondary">
             * 기본 / 기본&상점 / 기본&상점&스탯 중 <span className="font-semibold text-text-primary">하나만</span> 고를 수 있어요.
@@ -231,7 +239,6 @@ export default function BotPage({ onNavigate }: BotPageProps) {
           <BotTypeCards types={BOT_TYPES} est={est} highlighted={highlighted} />
         </TitledSection>
         <AdditionalOptions est={est} highlighted={highlighted} />
-        <OperationWeeks est={est} highlighted={highlighted} />
       </div>
       {est.items.length > 0 && (
         <StickyEstimateBar placement="sticky" message={`견적 확인 (${est.items.length}개)`} amount={won(total)} href={estimate.href} onClick={estimate.onClick} />

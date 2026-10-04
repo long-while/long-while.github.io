@@ -13,6 +13,7 @@ import {
   validateAccountId,
 } from '@/app/utils/orderUtils';
 import { ACCOUNT_LIST_CONFIG } from '@/app/constants/form';
+import { isBlankAccount } from '../fixedAffix';
 
 // 예약 툿/자동 스진용 추가 계정 정책 (constants/form.ts 와 공유)
 export const {
@@ -23,7 +24,7 @@ export const {
 } = ACCOUNT_LIST_CONFIG;
 
 // yyyy-mm-dd → MM/DD
-function ymdToMonthDay(date: string): string {
+export function ymdToMonthDay(date: string): string {
   if (!date) return '';
   const parts = date.split('-');
   if (parts.length !== 3) return '';
@@ -31,19 +32,6 @@ function ymdToMonthDay(date: string): string {
   const d = (parts[2] || '').padStart(2, '0');
   if (!m || !d || m === '00' || d === '00') return '';
   return `${m}/${d}`;
-}
-
-// MM/DD 입력값 정리. '6/16'처럼 구분자를 직접 쓰면 그대로 두고(예전에는 숫자만 모아 '61/6'이 됐다, 4단계 검토),
-// 숫자만 치면 2자리 뒤에 '/'를 넣는다 ('0616' → '06/16'). 전각 숫자도 받는다
-export function normalizeMonthDayInput(raw: string): string {
-  const value = raw.normalize('NFKC');
-  // '6월 16일'처럼 쓰는 중이면 그대로 둔다 (검사에서 받는 형식)
-  if (/^\s*\d{1,2}\s*월\s*\d{0,2}\s*일?\s*$/.test(value)) return value;
-  const typed = value.match(/^\s*(\d{0,2})\s*[/.\-]\s*(\d{0,2})/);
-  if (typed) return `${typed[1]}/${typed[2]}`;
-  const digits = value.replace(/\D/g, '').slice(0, 4);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
 }
 
 // 원 단위 금액을 "n.n만원" 형태로 표시 (정수면 소수점 생략)
@@ -88,13 +76,15 @@ export function useStep3Bot() {
   // 추가 기능이 견적에서 선택되었는지
   const cocBotFromCart = isFromCart('D100');
   const trpg2d6BotFromCart = isFromCart('2D6');
-  // 예전 이름(커스텀 명령어 업그레이드, 답멘에 이름·주사위 넣기)으로 동기화된 상태도 인정
-  const customCommandUpgradeFromCart = isFromCart('이름·주사위 넣기') || isFromCart('커스텀 명령어');
+  // 예전 이름(커스텀 명령어 업그레이드, 답멘에 이름·주사위 넣기, 키워드 답변에 이름·주사위 넣기)으로 동기화된 상태도 인정
+  const customCommandUpgradeFromCart = isFromCart('주사위 넣기') || isFromCart('커스텀 명령어');
+  const keywordReplyImageFromCart = isFromCart('키워드 답변 시 이미지 전송');
   const reservationFromCart = isFromCart('예약 툿');
   const autoProfileFromCart = isFromCart('스토리 자동 진행');
   const tootCurrencyFromCart = isFromCart('툿수-재화 자동반영');
   const transferFromCart = isFromCart('재화, 아이템 양도 기능');
   const attendanceFromCart = isFromCart('출석 시스템');
+  const randomBoxFromCart = isFromCart('랜덤박스 기능');
   const omakaseFromCart = isFromCart('오마카세');
   const investigationFromCart = isFromCart('자동조사');
 
@@ -115,7 +105,10 @@ export function useStep3Bot() {
     const fillDates = !datesAutoFilled.current;
     datesAutoFilled.current = true;
     if (fillDates && !step3.botStartDate && step1.resultAnnouncementDate) {
-      updates.botStartDate = ymdToMonthDay(step1.resultAnnouncementDate);
+      // 발표일이 이미 지났으면 오늘부터 (지난 날짜가 그대로 들어가 모르고 넘어가기 쉬웠다, 9번 리뷰)
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      updates.botStartDate = ymdToMonthDay(step1.resultAnnouncementDate < today ? today : step1.resultAnnouncementDate);
     }
     if (fillDates && !step3.botEndDate && step1.closingDate) {
       updates.botEndDate = ymdToMonthDay(step1.closingDate);
@@ -159,14 +152,14 @@ export function useStep3Bot() {
   // 빈칸은 다음 단계 진행 시 필수 검증에서 걸러지므로 입력 중에는 표시하지 않는다.
   const botAccountIdError = useMemo(
     () =>
-      step3.botAccountId.trim() === ''
+      isBlankAccount(step3.botAccountId)
         ? null
         : validateAccountId(step3.botAccountId, 'botAccountId', '봇 계정 ID'),
     [step3.botAccountId]
   );
   const investigationBotAccountIdError = useMemo(
     () =>
-      step3.investigationBotAccountId.trim() === ''
+      isBlankAccount(step3.investigationBotAccountId)
         ? null
         : validateAccountId(
           step3.investigationBotAccountId,
@@ -206,6 +199,7 @@ export function useStep3Bot() {
         investigationDailyLimit: false,
         investigationDailyLimitCount: 0,
         customCommandUpgrade: false,
+        keywordReplyImage: false,
         reservationToot: false,
         autoProfileImage: false,
         tootCurrencyLink: false,
@@ -214,6 +208,8 @@ export function useStep3Bot() {
         attendanceSystem: false,
         attendanceCurrencyAmount: 10,
         attendanceCommand: '[출석]',
+        randomBox: false,
+        randomBoxCommand: '',
         currencyUnit: '',
         statList: '',
         accountList: [],
@@ -242,6 +238,7 @@ export function useStep3Bot() {
         transferFeature: false,
         transferOption: null,
         attendanceSystem: false,
+        randomBox: false,
         tootCurrencyLink: false,
         tootPerCurrency: '',
       });
@@ -261,6 +258,7 @@ export function useStep3Bot() {
     if (bot === null) {
       updateStep3({
         attendanceSystem: false,
+        randomBox: false,
         transferFeature: false,
         transferOption: null,
         tootCurrencyLink: false,
@@ -323,8 +321,10 @@ export function useStep3Bot() {
   const isOverCapacity = accounts.length > maxExtraSlots;
   const canBuyAccountTier =
     accountTiers < MAX_ACCOUNT_TIERS && accounts.length >= maxExtraSlots;
+  // 빈 칸은 세지 않는다 (구매하면 빈 칸이 하나 생기므로, 아직 안 적었으면 바로 취소할 수 있게)
+  const filledAccounts = accounts.filter((a) => !isBlankAccount(a));
   const canRefundAccountTier =
-    accountTiers > 0 && accounts.length <= freeExtraSlots + (accountTiers - 1) * SLOTS_PER_TIER;
+    accountTiers > 0 && filledAccounts.length <= freeExtraSlots + (accountTiers - 1) * SLOTS_PER_TIER;
 
   // 예약 툿/자동 스진을 모두 해제하면 계정 목록 초기화
   const handleReservationTootChange = (checked: boolean) => {
@@ -358,18 +358,21 @@ export function useStep3Bot() {
     });
   };
 
+  // 구매하면 바로 적을 수 있게 빈 칸 하나를 띄운다 (사용자 요청)
   const buyAccountTier = () => {
     if (accountTiers >= MAX_ACCOUNT_TIERS) return;
-    updateStep3({ extraAccountTiers: accountTiers + 1 });
+    updateStep3({ extraAccountTiers: accountTiers + 1, accountList: [...accounts, ''] });
   };
 
+  // 취소하면 빈 칸부터 정리하고, 적은 계정은 순서대로 남긴다
   const refundAccountTier = () => {
     if (accountTiers <= 0) return;
     const nextTiers = accountTiers - 1;
     const nextMax = freeExtraSlots + nextTiers * SLOTS_PER_TIER;
+    const blanks = accounts.filter((a) => isBlankAccount(a));
     updateStep3({
       extraAccountTiers: nextTiers,
-      accountList: accounts.slice(0, nextMax),
+      accountList: [...filledAccounts, ...blanks].slice(0, nextMax),
     });
   };
 
@@ -377,9 +380,9 @@ export function useStep3Bot() {
     step1, step2, step3, updateStep3,
     fromCart: {
       basicBot: basicBotFromCart, basicShopBot: basicShopBotFromCart, basicShopStatBot: basicShopStatBotFromCart,
-      cocBot: cocBotFromCart, trpg2d6Bot: trpg2d6BotFromCart, customCommandUpgrade: customCommandUpgradeFromCart,
+      cocBot: cocBotFromCart, trpg2d6Bot: trpg2d6BotFromCart, customCommandUpgrade: customCommandUpgradeFromCart, keywordReplyImage: keywordReplyImageFromCart,
       reservation: reservationFromCart, autoProfile: autoProfileFromCart, tootCurrency: tootCurrencyFromCart,
-      transfer: transferFromCart, attendance: attendanceFromCart, omakase: omakaseFromCart, investigation: investigationFromCart,
+      transfer: transferFromCart, attendance: attendanceFromCart, randomBox: randomBoxFromCart, omakase: omakaseFromCart, investigation: investigationFromCart,
     },
     setupDeadlineBlackoutError, botAccountIdError, investigationBotAccountIdError,
     showTransferFeature, showAttendanceSystem, showCurrencyUnit, showStatList,

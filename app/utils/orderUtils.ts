@@ -1,6 +1,6 @@
 import type { OrderFormData, PriceEstimate, ValidationError, Step2Data, Step3Data, AdditionalOption, FastDeadlineOption } from '@/app/types/order';
 import { DATE_FORMAT_REGEX, GMAIL_REGEX, INPUT_LIMITS } from '@/app/types/order';
-import { PRICING_CONFIG, FORM_CONFIG, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM, LONG_TERM_MIN_MONTHS } from '@/app/constants/form';
+import { PRICING_CONFIG, FORM_CONFIG, botOperationFee, ACCOUNT_LIST_CONFIG, SERVER_INFRA_FEE_ITEM, LONG_TERM_MIN_MONTHS } from '@/app/constants/form';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 
 /**
@@ -155,6 +155,15 @@ export function rushFitsCustomOption(option: FastDeadlineOption, custom: Additio
 /** 월/일 마감일 입력이 실제 달력 날짜인지 (13/45, 2/31 같은 값은 false) */
 export function isRealMonthDay(raw: string): boolean {
   return parseMonthDayToDate(raw, new Date()) !== null;
+}
+
+/**
+ * 월/일 마감일에 연도를 붙인 yyyy-mm-dd (다른 마감일 검사와 같은 규칙: 반년 넘게 지난 날짜는 다음 해).
+ * 'MM/DD'만 받아 올해인지 내년인지 헷갈린다는 리뷰(10번) — 입력칸 아래·확인 화면·복사문에 함께 보여 준다. 못 읽으면 null
+ */
+export function monthDayWithYear(raw: string, reference: Date = new Date()): string | null {
+  const date = parseMonthDayToDate(raw, reference);
+  return date ? localIsoDate(date) : null;
 }
 
 /**
@@ -427,25 +436,17 @@ export function validateBotSymbol(symbol: string): ValidationError | null {
 /**
  * 커뮤니티 구글 계정 검증
  *
- * 입력란은 Step 4(최종 확인)에 있습니다. 비밀번호는 브라우저에 저장되지 않기 때문에,
- * 신청서를 복사해 제출하기 직전에 받는 편이 중간에 날아갈 위험이 적습니다.
+ * 입력란은 Step 4(최종 확인)에 있습니다. 이메일만 받고, 비밀번호는 신청서에 넣지 않습니다
+ * (복사문에 평문으로 남아 크레페 메시지에 그대로 보였다 — 접수 후 따로 받음).
  */
 export function validateGoogleAccount(data: OrderFormData['step1']): ValidationError[] {
-  const errors: ValidationError[] = [];
-
   if (!data.googleEmail.trim()) {
-    errors.push({ field: 'googleEmail', message: '구글 이메일을 입력해 주세요.' });
-  } else if (!isValidGmail(data.googleEmail)) {
-    errors.push({ field: 'googleEmail', message: '올바른 Gmail 주소를 입력해 주세요. (예: example@gmail.com)' });
+    return [{ field: 'googleEmail', message: '구글 이메일을 입력해 주세요.' }];
   }
-
-  if (!data.googlePassword.trim()) {
-    errors.push({ field: 'googlePassword', message: '구글 비밀번호를 입력해 주세요.' });
-  } else if (data.googlePassword.trim().length < 8) {
-    errors.push({ field: 'googlePassword', message: '비밀번호는 최소 8자 이상이어야 합니다.' });
+  if (!isValidGmail(data.googleEmail)) {
+    return [{ field: 'googleEmail', message: '올바른 Gmail 주소를 입력해 주세요. (예: example@gmail.com)' }];
   }
-
-  return errors;
+  return [];
 }
 
 /**
@@ -644,7 +645,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
     if (data.mainBot === null && !data.cocBot && !data.trpg2d6Bot) {
       errors.push({
         field: 'mainBot',
-        message: '메인 봇 종류를 선택해 주세요. (D100 룰 대응 TRPG봇, 2D6 룰 대응 TRPG봇 3종은 단독 신청도 가능합니다)',
+        message: '커뮤니티 봇이나 TRPG 봇 중 하나는 골라 주세요. (TRPG 봇은 단독 신청도 가능합니다)',
       });
     }
 
@@ -653,7 +654,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       errors.push({
         field: 'mainBot',
         message:
-          'D100 룰 대응 TRPG봇, 2D6 룰 대응 TRPG봇 3종은 기본 봇과 기능이 겹쳐 함께 신청할 수 없습니다. 단독으로 신청하시거나, 메인 봇을 기본&상점 이상으로 선택해 주세요.',
+          'D100 룰 대응 TRPG봇, 2D6 룰 대응 TRPG봇 3종은 기본 봇과 기능이 겹쳐 함께 신청할 수 없습니다. 단독으로 신청하시거나, 커뮤니티 봇을 기본&상점 이상으로 선택해 주세요.',
       });
     }
 
@@ -690,7 +691,7 @@ export function validateStep3(data: Step3Data): ValidationError[] {
     }
 
     // 조사 자동봇 계정 길이 + 아이디 규칙 검증 (입력된 경우)
-    if (data.investigationBotAccountId && data.investigationBotAccountId.trim() !== '') {
+    if (normalizeAccountId(data.investigationBotAccountId) !== '') {
       const investigationAccountError = validateAccountId(
         data.investigationBotAccountId,
         'investigationBotAccountId',
@@ -708,12 +709,11 @@ export function validateStep3(data: Step3Data): ValidationError[] {
       }
     }
 
-    // 조사 자동봇이 메인 봇과 함께 신청된 경우 분리된 계정 입력 필수
+    // 조사 자동봇이 메인 봇과 함께 신청된 경우 분리된 계정 입력 필수 (메인 봇 계정이 비어 있어도 — * 표시와 맞춤, 16번 리뷰)
     if (
       data.investigationBot &&
       data.mainBot !== null &&
-      data.botAccountId.trim() !== '' &&
-      data.investigationBotAccountId.trim() === ''
+      normalizeAccountId(data.investigationBotAccountId) === ''
     ) {
       errors.push({
         field: 'investigationBotAccountId',
@@ -807,6 +807,9 @@ export function validateStep3(data: Step3Data): ValidationError[] {
     }
     if (data.omakaseBot && data.omakaseDetails.trim() === '') {
       errors.push({ field: 'omakaseDetails', message: '오마카세 시스템을 정리한 문서 링크를 적어 주세요.' });
+    } else if (data.omakaseBot && !/^https?:\/\/\S+\.\S+/.test(data.omakaseDetails.trim())) {
+      // 23번 리뷰: '아무거나'도 통과했다
+      errors.push({ field: 'omakaseDetails', message: '문서 링크를 https:// 로 시작하는 주소로 적어 주세요.' });
     }
     if ((data.reservationToot || data.autoProfileImage) && data.accountList.some((a) => a.trim() !== '' && !/^@?[A-Za-z0-9_]+$/.test(normalizeAccountId(a)))) {
       errors.push({ field: 'accountList', message: '계정 목록에는 영문·숫자·밑줄로 된 아이디를 한 칸에 하나씩 적어 주세요. (주소·쉼표 불가)' });
@@ -836,9 +839,25 @@ export function validateStep3(data: Step3Data): ValidationError[] {
         });
       }
     }
+    errors.push(...validateRandomBox(data));
   }
 
   return errors;
+}
+
+const hasShopBot = (data: Step3Data) => data.mainBot === 'basicShop' || data.mainBot === 'basicShopStat';
+
+/** 랜덤박스: 명령어는 신청자가 꼭 정해야 한다 (기본값 없음) */
+function validateRandomBox(data: Step3Data): ValidationError[] {
+  if (!data.randomBox || !hasShopBot(data)) return [];
+  const cmd = data.randomBoxCommand?.trim() ?? '';
+  if (cmd.replace(/[[\]\s]/g, '') === '') {
+    return [{ field: 'randomBoxCommand', message: '랜덤박스 기능으로 사용할 명령어를 정해 주세요. 예: [랜덤박스]' }];
+  }
+  if (!/^\[.+\]$/.test(cmd)) {
+    return [{ field: 'randomBoxCommand', message: '랜덤박스 명령어는 [랜덤박스] 처럼 대괄호로 감싸야 합니다.' }];
+  }
+  return [];
 }
 
 /**
@@ -847,9 +866,49 @@ export function validateStep3(data: Step3Data): ValidationError[] {
  * - STEP2: 미리보기는 12개월 이상(장기)인데 STEP1 '장기 소규모 서버'는 체크 안 함 → 견적함과 신청서의 부가비용이 달라졌다
  * - STEP3: 서버 설치·자동봇 둘 다 '아니오' (0원짜리 빈 신청서가 복사됐다)
  */
+/** STEP2 날짜가 STEP1 일정과 맞는지 (6·8번 리뷰): 희망 마감일은 개장일 이전, 빠른마감은 마감일이 2일 이내일 때만 */
+function step2DateErrors(data: OrderFormData): ValidationError[] {
+  const { step1, step2 } = data;
+  if (step2.applyServerInstall !== 'yes' || !isRealMonthDay(step2.desiredDeadline)) return [];
+  const errors: ValidationError[] = [];
+  const deadline = monthDayWithYear(step2.desiredDeadline);
+  if (deadline && !step1.isLongTermCommunity && isValidDateFormat(step1.openingDate) && deadline > step1.openingDate) {
+    errors.push({ field: 'desiredDeadline', message: `희망 마감일(${deadline})이 개장일(${step1.openingDate})보다 늦어요. 개장 전에 서버가 준비되도록 앞당겨 주세요.` });
+  }
+  const daysLeft = getFullDaysUntilDeadline(step2.desiredDeadline);
+  if (step2.fastDeadline && daysLeft !== null && daysLeft > 2) {
+    errors.push({ field: 'fastDeadline', message: `희망 마감일이 ${daysLeft}일 뒤라 빠른마감이 필요 없어요. 빠른마감은 마감일이 2일 이내일 때만 골라 주세요.` });
+  }
+  return errors;
+}
+
+/** STEP3 가 STEP1·STEP2 와 맞는지 (7·6·18번 리뷰) */
+function step3ConsistencyErrors(data: OrderFormData): ValidationError[] {
+  const { step1, step2, step3 } = data;
+  if (step3.applyBot !== 'yes') return [];
+  const errors: ValidationError[] = [];
+  if (step3.operationWeeksOption === 'longterm' && !step1.isLongTermCommunity) {
+    errors.push({ field: 'operationWeeksOption', message: '장기 소규모 서버 자동봇은 Step 1에서 ‘장기 소규모 서버’를 체크한 경우에만 고를 수 있어요.' });
+  }
+  const setup = isRealMonthDay(step3.setupDeadline) ? monthDayWithYear(step3.setupDeadline) : null;
+  if (setup && !step1.isLongTermCommunity && isValidDateFormat(step1.closingDate) && setup > step1.closingDate) {
+    errors.push({ field: 'setupDeadline', message: `세팅 마감일(${setup})이 폐장일(${step1.closingDate})보다 늦어요. 날짜를 확인해 주세요.` });
+  }
+  // 자동봇은 서버가 설치된 뒤에 세팅하므로 서버 설치 마감일보다 앞설 수 없다 (사용자 요청)
+  const serverDeadline = step2.applyServerInstall === 'yes' && isRealMonthDay(step2.desiredDeadline) ? monthDayWithYear(step2.desiredDeadline) : null;
+  if (setup && serverDeadline && setup < serverDeadline) {
+    errors.push({ field: 'setupDeadline', message: `세팅 마감일(${setup})은 서버 설치 마감일(${serverDeadline})보다 앞설 수 없어요.` });
+  }
+  const admin = normalizeAccountId(step2.adminAccountId);
+  if (admin && isSameAccountId(step3.botAccountId, step2.adminAccountId)) {
+    errors.push({ field: 'botAccountId', message: '봇 계정은 총괄 계정과 다른 아이디로 적어 주세요.' });
+  }
+  return errors;
+}
+
 export function validateOrderConsistency(data: OrderFormData, serverCalc: ServerCalcResult | null): { step2: ValidationError[]; step3: ValidationError[] } {
-  const step2: ValidationError[] = [];
-  const step3: ValidationError[] = [];
+  const step2: ValidationError[] = step2DateErrors(data);
+  const step3: ValidationError[] = step3ConsistencyErrors(data);
   if (data.step2.applyServerInstall === 'yes') {
     if (!serverCalc) {
       step2.push({ field: 'server-months', message: '서버비 미리보기에서 운영 기간·인원·검색·사양을 모두 골라 주세요.' });
@@ -994,6 +1053,7 @@ export function calculateBotPrice(
   if (data.cocBot) botCost += bot.addons.cocBot;
   if (data.trpg2d6Bot) botCost += bot.addons.trpg2d6Bot;
   if (data.customCommandUpgrade) botCost += bot.addons.customCommandUpgrade;
+  if (data.keywordReplyImage) botCost += bot.addons.keywordReplyImage;
   if (data.reservationToot) botCost += bot.addons.reservationToot;
   if (data.autoProfileImage) botCost += bot.addons.autoProfileImage;
   if (data.tootCurrencyLink) botCost += bot.addons.tootCurrencyLink;
@@ -1005,6 +1065,7 @@ export function calculateBotPrice(
   if (data.attendanceSystem && (data.mainBot === 'basicShop' || data.mainBot === 'basicShopStat')) {
     botCost += bot.addons.attendanceSystem;
   }
+  if (data.randomBox && hasShopBot(data)) botCost += bot.addons.randomBox;
   // 예약 툿/자동 스진용 추가 계정 단계 (단계당 +5천원, 최대 2단계)
   if (data.reservationToot || data.autoProfileImage) {
     const tiers = Math.min(ACCOUNT_LIST_CONFIG.maxTiers, Math.max(0, data.extraAccountTiers));
@@ -1017,7 +1078,7 @@ export function calculateBotPrice(
     operationCost = bot.longTermSetupFee;
   } else {
     // 손상된 저장본의 NaN·음수가 총액을 NaN 으로 만들지 않게 (4단계 검토)
-    operationCost = (Number.isFinite(data.manualWeeks) ? Math.max(0, Math.floor(data.manualWeeks)) : 0) * bot.operationPerWeek;
+    operationCost = botOperationFee(data.manualWeeks);
   }
 
   return { botCost, operationCost };
@@ -1057,7 +1118,6 @@ function formatDateForDisplay(date: string): string {
  * 신청자도 받는 쪽도 누락을 알아채지 못한 채 접수되는 일이 반복됐다.
  */
 export const MISSING_GOOGLE_EMAIL_MARK = '[!] 이메일 미입력 — 신청자 확인 필요';
-export const MISSING_GOOGLE_PASSWORD_MARK = '[!] 비밀번호 미입력 — 신청자 확인 필요';
 
 /**
  * 최종 복사용 텍스트 생성
@@ -1077,9 +1137,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
   } else {
     text += `${formatDateForDisplay(step1.openingDate)} ~ ${formatDateForDisplay(step1.closingDate)} (${step1.operationWeeks}주)\n\n`;
   }
-  // 빈 값이 'abc@gmail.com / ' 처럼 조용히 지나가면 받는 쪽에서 누락을 알아채기 어렵다.
+  // 빈 이메일이 조용히 지나가면 받는 쪽에서 누락을 알아채기 어렵다.
   // 검증에서 걸러지지만, 혹시 빠져나가더라도 눈에 띄도록 표시를 남긴다.
-  text += `${step1.googleEmail.trim() || MISSING_GOOGLE_EMAIL_MARK} / ${step1.googlePassword.trim() || MISSING_GOOGLE_PASSWORD_MARK}\n\n`;
+  text += `${step1.googleEmail.trim() || MISSING_GOOGLE_EMAIL_MARK} (비밀번호는 접수 후 따로 전달)\n\n`;
   text += `커미션 신청자명 : ${step1.applicantNickname.trim()}\n\n`;
 
   text += divider;
@@ -1121,9 +1181,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (step2.additionalOption) {
       const optionNames: Record<string, string> = {
         logo: '로고 변경',
-        dayTheme: '낮 테마',
-        nightTheme: '밤 테마',
-        bothTheme: '테마 2종',
+        dayTheme: '커스텀 낮 테마',
+        nightTheme: '커스텀 밤 테마',
+        bothTheme: '커스텀 테마 2종 (낮/밤)',
       };
       text += `+ ${optionNames[step2.additionalOption]}\n`;
     }
@@ -1150,7 +1210,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
 
     // 기타 정보 (각각 별도 줄)
     if (step2.adminAccountId.trim()) text += `총괄 계정 : ${asAccount(step2.adminAccountId)}\n\n`;
-    if (step2.desiredDeadline) text += `희망 마감일 : ${step2.desiredDeadline}\n\n`;
+    if (step2.desiredDeadline) text += `희망 마감일 : ${monthDayWithYear(step2.desiredDeadline) ?? step2.desiredDeadline}\n\n`;
 
     text += divider;
   }
@@ -1177,6 +1237,10 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
 
     if (step3.cocBot) text += '+ D100 타입\n';
     if (step3.trpg2d6Bot) text += '+ 2D6 3종세트 타입\n';
+    // 예약 툿 · 스토리 자동 진행 · 툿-재화 연동은 늘 맨 위에 (사용자 요청). 툿-재화 비율은 이 줄에 붙인다
+    if (step3.reservationToot) text += '+ 예약 툿\n';
+    if (step3.autoProfileImage) text += '+ 스토리 자동 진행\n';
+    if (step3.tootCurrencyLink) text += `+ 툿-재화 연동${step3.tootPerCurrency.trim() ? ` (${oneLine(step3.tootPerCurrency)})` : ''}\n`;
     if (step3.investigationBot && step3.mainBot !== null) text += '+ 조사 자동봇\n';
     if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null) {
       const countLabel = step3.investigationDailyLimitCount > 0
@@ -1184,10 +1248,8 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
         : '';
       text += `+ 일일 조사 횟수 제한${countLabel}\n`;
     }
-    if (step3.customCommandUpgrade) text += '+ 키워드 답변에 이름·주사위 넣기\n';
-    if (step3.reservationToot) text += '+ 예약 툿\n';
-    if (step3.autoProfileImage) text += '+ 스토리 자동 진행\n';
-    if (step3.tootCurrencyLink) text += '+ 툿-재화 연동\n';
+    if (step3.customCommandUpgrade) text += '+ 키워드 답변에 이름 · 주사위 넣기\n';
+    if (step3.keywordReplyImage) text += '+ 키워드 답변 시 이미지 전송\n';
     if (step3.transferFeature) {
       const transferNames: Record<string, string> = {
         itemOnly: '양도 (아이템만)',
@@ -1202,6 +1264,8 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (attendanceEnabled) {
       text += `+ 출석 시스템 (${step3.attendanceCommand || '[출석]'} / ${step3.attendanceCurrencyAmount || 0})\n`;
     }
+    const randomBoxEnabled = step3.randomBox && hasShopBot(step3);
+    if (randomBoxEnabled) text += `+ 랜덤박스 기능 (${step3.randomBoxCommand})\n`;
     if (step3.omakaseBot) text += '+ 오마카세\n';
 
     text += '\n';
@@ -1209,7 +1273,6 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     // 기타 정보 (각각 별도 줄)
     if (step3.currencyUnit.trim()) text += `재화 단위 : ${oneLine(step3.currencyUnit)}\n`;
     if (step3.statList.trim()) text += `스탯 : ${oneLine(step3.statList)}\n`;
-    if (step3.tootPerCurrency.trim()) text += `${oneLine(step3.tootPerCurrency)}\n`;
     if (step3.reservationToot || step3.autoProfileImage) {
       const accounts: string[] = [];
       if (step2.adminAccountId.trim()) accounts.push(asAccount(step2.adminAccountId));
@@ -1219,6 +1282,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (attendanceEnabled) {
       text += `출석 명령어 : ${step3.attendanceCommand || '[출석]'} / 재화 +${step3.attendanceCurrencyAmount || 0}\n`;
     }
+    if (randomBoxEnabled) text += `랜덤박스 명령어 : ${step3.randomBoxCommand}\n`;
 
     text += '\n';
 
@@ -1228,7 +1292,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     }
     if (step3.botSymbol && step3.botSymbol !== '✶') text += `봇 기호 : ${step3.botSymbol}\n\n`;
     // 자동봇 쪽은 화면 이름과 같게 '세팅 마감일' (서버의 '희망 마감일'과 헷갈렸다)
-    if (step3.setupDeadline) text += `세팅 마감일 : ${step3.setupDeadline}\n\n`;
+    if (step3.setupDeadline) text += `세팅 마감일 : ${monthDayWithYear(step3.setupDeadline) ?? step3.setupDeadline}\n\n`;
 
     if (step3.omakaseDetails) {
       text += `오마카세 상세 : ${oneLine(step3.omakaseDetails)}\n\n`;
@@ -1238,7 +1302,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
   }
 
   // 견적
-  text += '견적\n\n';
+  text += '>>> 견적\n\n';
 
   // 서버 관련
   if (step2.applyServerInstall === 'yes') {
@@ -1250,9 +1314,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (step2.additionalOption) {
       const optionNames: Record<string, string> = {
         logo: '로고 변경',
-        dayTheme: '낮 테마',
-        nightTheme: '밤 테마',
-        bothTheme: '테마 2종',
+        dayTheme: '커스텀 낮 테마',
+        nightTheme: '커스텀 밤 테마',
+        bothTheme: '커스텀 테마 2종 (낮/밤)',
       };
       text += `${optionNames[step2.additionalOption]} ${server.options[step2.additionalOption as keyof typeof server.options].toLocaleString()}\n`;
     }
@@ -1283,7 +1347,7 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       text += `장기 자동봇 세팅비 ${bot.longTermSetupFee.toLocaleString()}\n`;
     } else {
       const weeks = step3.manualWeeks;
-      text += `자동봇 ${weeks}주 ${(weeks * bot.operationPerWeek).toLocaleString()}\n`;
+      text += `자동봇 ${weeks}주 ${botOperationFee(weeks).toLocaleString()}\n`;
     }
 
     if (step3.mainBot) {
@@ -1300,27 +1364,31 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     if (step3.trpg2d6Bot) {
       text += `2D6 3종세트 타입 ${bot.addons.trpg2d6Bot.toLocaleString()}\n`;
     }
-    if (step3.investigationBot && step3.mainBot !== null) {
-      text += `조사 자동봇 ${bot.addons.investigationBot.toLocaleString()}\n`;
-    }
-    if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null) {
-      text += `일일 조사 횟수 제한 ${bot.addons.investigationDailyLimit.toLocaleString()}\n`;
-    }
-    if (step3.customCommandUpgrade) {
-      text += `키워드 답변에 이름·주사위 넣기 ${bot.addons.customCommandUpgrade.toLocaleString()}\n`;
-    }
+    // 위 옵션 목록과 같은 순서 (예약 툿 · 스토리 자동 진행 · 툿-재화 연동이 맨 위, 사용자 요청)
     if (step3.reservationToot) {
       text += `예약 툿 ${bot.addons.reservationToot.toLocaleString()}\n`;
     }
     if (step3.autoProfileImage) {
       text += `스토리 자동 진행 ${bot.addons.autoProfileImage.toLocaleString()}\n`;
     }
+    if (step3.tootCurrencyLink) {
+      text += `툿-재화 연동 ${bot.addons.tootCurrencyLink.toLocaleString()}\n`;
+    }
+    if (step3.investigationBot && step3.mainBot !== null) {
+      text += `조사 자동봇 ${bot.addons.investigationBot.toLocaleString()}\n`;
+    }
+    if (step3.investigationDailyLimit && step3.investigationBot && step3.mainBot !== null) {
+      text += `일일 조사 횟수 제한 ${bot.addons.investigationDailyLimit.toLocaleString()}\n`;
+    }
     if ((step3.reservationToot || step3.autoProfileImage) && step3.extraAccountTiers > 0) {
       const tiers = Math.min(ACCOUNT_LIST_CONFIG.maxTiers, step3.extraAccountTiers);
       text += `추가 계정 ${tiers * ACCOUNT_LIST_CONFIG.slotsPerTier}칸 ${(tiers * bot.addons.extraAccountTier).toLocaleString()}\n`;
     }
-    if (step3.tootCurrencyLink) {
-      text += `툿-재화 연동 ${bot.addons.tootCurrencyLink.toLocaleString()}\n`;
+    if (step3.customCommandUpgrade) {
+      text += `키워드 답변에 이름 · 주사위 넣기 ${bot.addons.customCommandUpgrade.toLocaleString()}\n`;
+    }
+    if (step3.keywordReplyImage) {
+      text += `키워드 답변 시 이미지 전송 ${bot.addons.keywordReplyImage.toLocaleString()}\n`;
     }
     if (step3.transferFeature) {
       const transferNames: Record<string, string> = {
@@ -1335,6 +1403,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
       (step3.mainBot === 'basicShop' || step3.mainBot === 'basicShopStat')
     ) {
       text += `출석 시스템 ${bot.addons.attendanceSystem.toLocaleString()}\n`;
+    }
+    if (step3.randomBox && hasShopBot(step3)) {
+      text += `랜덤박스 기능 ${bot.addons.randomBox.toLocaleString()}\n`;
     }
     if (step3.omakaseBot) {
       text += '오마카세 별도 협의\n';
@@ -1357,5 +1428,39 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
     text += ` (${estimate.variableItems.join(', ')} 비용 별도)`;
   }
 
+  const schedule = scheduleLines(data);
+  if (schedule.length > 0) text += `\n\n\n>>> 예상 일정\n\n${schedule.join('\n')}`;
+  text += '\n\n위 견적 및 일정은 커미션주의 확인 이후 달라질 수 있습니다.';
+
   return text;
+}
+
+/** 결제 요청은 마감일 기준: 서버 설치만 5일 전, 자동봇 세팅까지 하면 7일 전 */
+const PAYMENT_DAYS_BEFORE = { serverOnly: 5, withBot: 7 } as const;
+
+/**
+ * 복사문 '예상 일정' (사용자 요청).
+ *  마감일: 자동봇을 신청하면 세팅 마감일, 아니면 서버 희망 마감일 (세팅 마감일은 서버 마감일보다 앞설 수 없다).
+ *  결제 요청: 마감일 5일 전(서버만) / 7일 전(자동봇 포함). 이미지 전달: 결제 요청 1일 전까지 — 로고·테마를 골랐을 때만.
+ *  이미 지난 날짜는 오늘로 당긴다. 마감일을 못 읽으면 빈 배열.
+ */
+function scheduleLines(data: OrderFormData, today: Date = new Date()): string[] {
+  const { step2, step3 } = data;
+  const withBot = step3.applyBot === 'yes';
+  const raw = withBot ? step3.setupDeadline : step2.applyServerInstall === 'yes' ? step2.desiredDeadline : '';
+  const deadline = parseMonthDayToDate(raw, today);
+  if (!deadline) return [];
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const daysBefore = (n: number) => {
+    const d = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate() - n);
+    return d < startOfToday ? startOfToday : d;
+  };
+  const md = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+  const paymentGap = withBot ? PAYMENT_DAYS_BEFORE.withBot : PAYMENT_DAYS_BEFORE.serverOnly;
+  const lines: string[] = [];
+  const option = step2.applyServerInstall === 'yes' ? step2.additionalOption : null;
+  if (option) lines.push(`${md(daysBefore(paymentGap + 1))} 이전: ${option === 'logo' ? '로고' : '테마'} 이미지 전달`);
+  lines.push(`${md(daysBefore(paymentGap))}: 결제 요청`);
+  lines.push(`${md(deadline)}: 마감`);
+  return lines;
 }

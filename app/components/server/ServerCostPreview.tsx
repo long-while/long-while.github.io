@@ -6,10 +6,10 @@
  */
 import type { ReactNode } from 'react';
 import { Button, GoogleLogo, InfoBox, PriceCard, Radio, Select, TitledSection } from '@/app/components/ds';
-import { TIER_OPTIONS, getMonthOptions } from '@/app/lib/mastodonServerConfig';
+import { SHORT_TERM_MONTHS, TIER_OPTIONS, getMonthOptions, getServerCalcResult, type ServerTier } from '@/app/lib/mastodonServerConfig';
 import type { ServerCalcResult } from '@/app/lib/mastodonServerConfig';
 import { useServerCalculator } from './useServerCalculator';
-import { PRICING_CONFIG } from '@/app/constants/form';
+import { LONG_TERM_MIN_MONTHS, PRICING_CONFIG } from '@/app/constants/form';
 
 type CalcResult = ServerCalcResult & { type: 'gcp' | 'vultr' };
 
@@ -20,8 +20,9 @@ function Row({ label, labelFor, children, layout = 'rows' }: { label: ReactNode;
   if (layout === 'grid') {
     return (
       <div className="flex flex-col gap-3">
+        {/* 신청서에서는 모두 필수 (16번 리뷰: * 표시가 없었다) */}
         <Label {...(labelFor ? { htmlFor: labelFor } : {})} className="text-title5 text-text-primary">
-          {label}
+          {label} <span className="text-brand" aria-hidden="true">*</span>
         </Label>
         {children}
       </div>
@@ -111,14 +112,31 @@ function PaymentInfo({ result }: { result: CalcResult }) {
   return <InfoBox title="서버비 지불 방식" items={paymentItems(result)} />;
 }
 
+const TIER_HINT: Record<ServerTier, string> = {
+  min: '서버비를 아끼는 사양, 접속이 몰리면 느려질 수 있어요',
+  mid: '대부분의 커뮤에 충분한 사양',
+  max: '여유 있는 사양, 이벤트 날에도 쾌적해요',
+};
+
+/** 등급별 월 서버비 (12번 리뷰: 최소/타협/쾌적이 무슨 차이인지, 서버비가 얼마나 다른지 알 수 없었다) */
+function tierMonthly(calc: ReturnType<typeof useServerCalculator>, tier: ServerTier): string | null {
+  if (!calc.months || !calc.usersKey) return null;
+  const result = getServerCalcResult(Number(calc.months), calc.usersKey, calc.search ?? 'no', tier);
+  return result.type === 'warn' ? null : result.monthlyKrw;
+}
+
 function TierChoice({ calc, layout }: { calc: ReturnType<typeof useServerCalculator>; layout: CalcLayout }) {
   return (
     <Row label="서버 사양" layout={layout}>
-      {/* 사용자 요청(4단계): 검색 예/아니오처럼 라디오로 등급 이름(최소/타협/쾌적)만. 고른 등급의 금액은 바로 아래 결과 상자에 나온다 */}
-      <div className="flex flex-wrap items-center gap-5" role="radiogroup" aria-label="서버 사양">
-        {TIER_OPTIONS.filter((o) => calc.availableTiers.includes(o.value)).map((o) => (
-          <Radio key={o.value} name="server-tier" label={o.label} checked={calc.tier === o.value} onChange={() => calc.setTier(o.value)} />
-        ))}
+      <div className="flex flex-col gap-3" role="radiogroup" aria-label="서버 사양">
+        {TIER_OPTIONS.filter((o) => calc.availableTiers.includes(o.value)).map((o) => {
+          const monthly = tierMonthly(calc, o.value);
+          return (
+            <Radio key={o.value} name="server-tier" checked={calc.tier === o.value} onChange={() => calc.setTier(o.value)}
+              label={<>{o.label}{monthly && <span className="text-brand"> · 월 약 {monthly}</span>} <span className="text-body3 font-normal text-text-secondary">— {TIER_HINT[o.value]}</span></>} />
+          );
+        })}
+        <p className="text-body3 text-text-secondary">※ 매달 나가는 서버비예요. (구글 클라우드는 처음 3개월 무료)</p>
       </div>
     </Row>
   );
@@ -147,15 +165,23 @@ function SearchChoice({ calc, longTerm, layout }: { calc: ReturnType<typeof useS
   );
 }
 
-function CalculatorFields({ calc, longTerm, layout }: { calc: ReturnType<typeof useServerCalculator>; longTerm: boolean; layout: CalcLayout }) {
+/** 30인 초과는 무료 크레딧이 2개월분이라 첫 기간이 '2개월 이하'로 바뀐다 → 이유와 3개월 이상일 때 고를 것을 알려 준다 (2·3번 리뷰) */
+function MonthsHelper() {
+  return <span className="text-brand-700">30인 초과는 무료 크레딧으로 2개월까지만 무료라 첫 항목이 ‘2개월 이하’예요. 3개월 이상 쓰신다면 ‘4개월’부터 골라 주세요.</span>;
+}
+
+function CalculatorFields({ calc, longTerm, layout, showSearch, allowLongTerm }: {
+  calc: ReturnType<typeof useServerCalculator>; longTerm: boolean; layout: CalcLayout; showSearch: boolean; allowLongTerm: boolean;
+}) {
+  const monthOptions = getMonthOptions(calc.usersKey).filter((o) => allowLongTerm || o.value < LONG_TERM_MIN_MONTHS);
   const months = longTerm ? (
     // 장기 소규모 서버(STEP1 체크): 기간을 12개월 이상으로 고정해 보여만 준다 (기존 신청서 계산기와 같은 문구)
     <p id="server-months" className="flex min-h-16 items-center rounded-input border border-border-strong bg-background-100 px-4 text-body2 text-text-primary">
       12개월 이상 · 장기 소규모 서버 (반영구)
     </p>
   ) : (
-    <Select id="server-months" value={calc.months} onValueChange={calc.setMonths}
-      options={getMonthOptions(calc.usersKey).map((o) => ({ value: String(o.value), label: o.label }))} />
+    <Select id="server-months" value={calc.months} onValueChange={calc.setMonths} helper={calc.usersKey === 'u30p' ? <MonthsHelper /> : undefined}
+      options={monthOptions.map((o) => ({ value: String(o.value), label: o.label }))} />
   );
   const users = (
     <Select id="server-users" value={calc.usersKey} onValueChange={calc.setUsersKey} options={calc.usersOptions}
@@ -169,7 +195,7 @@ function CalculatorFields({ calc, longTerm, layout }: { calc: ReturnType<typeof 
         <Row label="서버 운영 기간" labelFor={longTerm ? undefined : 'server-months'} layout={layout}>{months}</Row>
         <Row label={<>평균 동시접속자 수 <span className="text-body3 text-text-secondary">(커뮤 러너 수)</span></>} labelFor="server-users" layout={layout}>{users}</Row>
       </div>
-      <SearchChoice calc={calc} longTerm={longTerm} layout={layout} />
+      {showSearch && <SearchChoice calc={calc} longTerm={longTerm} layout={layout} />}
       {calc.showTier && <TierChoice calc={calc} layout={layout} />}
     </div>
   );
@@ -179,24 +205,61 @@ function CalculatorFields({ calc, longTerm, layout }: { calc: ReturnType<typeof 
  * 계산기 본문 (입력 → 결과 카드 → 지불 방식·규모와 예산). 서버 커미션 페이지와 신청서 STEP2 가 같이 쓴다.
  * layout: rows(서버 페이지, 이름 140 ↔ 입력 580) / grid(신청서, 위 라벨 + 2열). longTerm: 기간 12개월 이상 고정(신청서 STEP1 장기 체크).
  */
-export function ServerCalculator({ longTerm = false, layout = 'rows' }: { longTerm?: boolean; layout?: CalcLayout }) {
-  const calc = useServerCalculator(longTerm);
+interface ServerCalculatorProps {
+  longTerm?: boolean;
+  layout?: CalcLayout;
+  /**
+   * 신청서 STEP2: 검색 여부는 아래 기타 옵션 '검색 기능' 체크가 정한다 (계산기 안 질문은 숨김).
+   * 이때는 결과 카드·지불 방식도 숨긴다 (서버 페이지에서 이미 본 내용, 사용자 요청). 사양 경고 카드는 남긴다.
+   */
+  search?: 'yes' | 'no';
+  /** 사양 경고 카드의 '검색 빼기' (search 를 바깥에서 정할 때는 바깥 값을 바꿔야 한다) */
+  onSearchNo?: () => void;
+  /** '12개월 이상'을 고를 수 있는지. 신청서는 STEP1 장기 체크가 없으면 숨긴다 (7번 리뷰: 고를 수 있는데 다음에서 막혔다) */
+  allowLongTerm?: boolean;
+  /** STEP1 일정(개장~폐장 주수). 고른 운영 기간과 다르면 알린다 (7번 리뷰, 막지는 않음) */
+  scheduleWeeks?: number;
+}
+
+/** 주수 → 기간 선택지 값 (3개월 이하는 3) */
+const weeksToMonthsOption = (weeks: number) => Math.max(SHORT_TERM_MONTHS, Math.ceil(weeks / 4.345));
+
+function ScheduleMismatch({ months, scheduleWeeks }: { months: string; scheduleWeeks?: number }) {
+  if (!months || !scheduleWeeks) return null;
+  const chosen = Number(months);
+  const expected = weeksToMonthsOption(scheduleWeeks);
+  if (chosen === expected || chosen >= LONG_TERM_MIN_MONTHS) return null;
+  const plan = `Step 1 일정은 ${scheduleWeeks}주(약 ${Math.max(1, Math.round(scheduleWeeks / 4.345))}개월)예요.`;
+  return (
+    <p role="status" className="rounded-input bg-warning-50 px-5 py-4 text-body3 text-warning-700">
+      {chosen < expected
+        ? `${plan} 운영 기간이 일정보다 짧으면 폐장 전에 서버비가 끊길 수 있어요. 기간을 다시 확인해 주세요.`
+        : `${plan} 애프터 기간까지 쓰실 거라면 그대로 두셔도 돼요.`}
+    </p>
+  );
+}
+
+export function ServerCalculator({ longTerm = false, layout = 'rows', search, onSearchNo, allowLongTerm = true, scheduleWeeks }: ServerCalculatorProps) {
+  const calc = useServerCalculator(longTerm, search, allowLongTerm || longTerm);
   const { result, isAllSelected } = calc;
+  const searchOutside = search !== undefined;
+  const fieldCount = (calc.showTier ? 1 : 0) + (searchOutside ? 2 : 3);
   return (
     <>
       <div className="flex flex-col gap-10">
-        <CalculatorFields calc={calc} longTerm={longTerm} layout={layout} />
+        <CalculatorFields calc={calc} longTerm={longTerm} layout={layout} showSearch={!searchOutside} allowLongTerm={allowLongTerm || longTerm} />
+        {!longTerm && <ScheduleMismatch months={calc.months} scheduleWeeks={scheduleWeeks} />}
         {!isAllSelected && (
           <p className="text-body3 text-text-secondary">
-            위 {calc.showTier ? 4 : 3}가지를 모두 선택하면 예상 서버비와 설치 사양을 확인할 수 있습니다.
+            {searchOutside ? `위 ${fieldCount}가지를 모두 선택해 주세요.` : `위 ${fieldCount}가지를 모두 선택하면 예상 서버비와 설치 사양을 확인할 수 있습니다.`}
           </p>
         )}
         {isAllSelected && result && (result.type === 'warn'
-          ? <WarnCard notes={result.warnNotes} onSearchNo={() => calc.setSearch('no')} />
-          : <ResultCard result={result as CalcResult} layout={layout} />)}
+          ? <WarnCard notes={result.warnNotes} onSearchNo={onSearchNo ?? (() => calc.setSearch('no'))} />
+          : !searchOutside && <ResultCard result={result as CalcResult} layout={layout} />)}
       </div>
       <div className="flex flex-col gap-4">
-        {isAllSelected && result && result.type !== 'warn' && <PaymentInfo result={result as CalcResult} />}
+        {isAllSelected && result && result.type !== 'warn' && !searchOutside && <PaymentInfo result={result as CalcResult} />}
         {/* 신청서(grid)에서는 서버 페이지에서 이미 읽고 온 내용이라 뺀다 */}
         {layout === 'rows' && (
           <InfoBox title="규모와 예산">

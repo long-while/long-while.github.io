@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useEstimate } from '@/app/contexts/EstimateContext';
+import { botOperationFee } from '@/app/constants/form';
 import { eulReul, eunNeun } from '@/app/utils/josa';
 import {
   ADDITIONAL_OPTIONS, INVESTIGATION_TYPE, MAIN_BOT_TYPES, OPERATION_FEE_PREFIX, TRPG_EXCLUSIVE_PAIRS, WEEKLY_FEE, type AdditionalOption,
@@ -47,9 +48,9 @@ export function useBotEstimate() {
     if (newWeeks > 0) {
       addItem({
         name: `${OPERATION_FEE_PREFIX} (${newWeeks}주)`,
-        price: newWeeks * WEEKLY_FEE,
+        price: botOperationFee(newWeeks),
         category: 'bot',
-        description: `1주당 ₩${WEEKLY_FEE.toLocaleString()} × ${newWeeks}주`,
+        description: `1주당 ₩${WEEKLY_FEE.toLocaleString()} × ${newWeeks}주${botOperationFee(newWeeks) < newWeeks * WEEKLY_FEE ? ` (최대 ₩${botOperationFee(newWeeks).toLocaleString()})` : ''}`,
       });
     }
   };

@@ -14,8 +14,8 @@ interface OptionCardProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 't
   title: ReactNode;
   description?: ReactNode;
   price?: ReactNode;
-  /** card: 세로(가운데) / row: 가로 / responsive: 모바일 row, 데스크톱 card */
-  layout?: 'card' | 'row' | 'responsive';
+  /** card: 세로(가운데) / row: 가로 / compact: 가로 + 가격은 이름 아래 / responsive: 모바일 row, 데스크톱 card */
+  layout?: 'card' | 'row' | 'compact' | 'responsive';
 }
 
 function Indicator({ type, checked }: { type: 'radio' | 'checkbox'; checked: boolean }) {
@@ -56,6 +56,15 @@ const LAYOUT = {
     title: 'text-title4',
     desc: 'text-body3',
     price: 'text-title5',
+    priceColor: 'text-brand',
+  },
+  // row 와 같은 가로형이지만 가격을 이름 아래에 둔다 (한 줄 3~4칸처럼 좁은 카드에서 이름·가격이 서로 밀어내지 않게)
+  compact: {
+    root: 'items-center gap-3 p-4',
+    body: 'flex-col gap-1',
+    title: 'text-title5',
+    desc: 'text-body3',
+    price: 'text-body3 font-medium',
     priceColor: 'text-brand',
   },
   responsive: {

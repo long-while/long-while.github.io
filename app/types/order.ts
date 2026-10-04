@@ -35,7 +35,6 @@ export interface Step1Data {
   closingDate: string; // yyyy-mm-dd
   operationWeeks: number; // 자동 계산
   googleEmail: string;
-  googlePassword: string;
 }
 
 // Step 2: 서버 설치 옵션
@@ -67,6 +66,7 @@ export interface Step3Data {
   investigationDailyLimit: boolean;
   investigationDailyLimitCount: number;
   customCommandUpgrade: boolean;
+  keywordReplyImage: boolean; // 키워드 답변 시 이미지 전송
   reservationToot: boolean;
   autoProfileImage: boolean;
   tootCurrencyLink: boolean;
@@ -75,6 +75,8 @@ export interface Step3Data {
   attendanceSystem: boolean;
   attendanceCurrencyAmount: number; // 출석 시 받을 재화의 수 (정수)
   attendanceCommand: string; // 출석 명령어 (항상 [..] 형식)
+  randomBox: boolean;
+  randomBoxCommand: string; // 랜덤박스 명령어 ([..] 형식, 신청자가 정함 — 기본값 없음)
   currencyUnit: string;
   statList: string;
   accountList: string[]; // 예약 툿/자동 스진용 추가 계정 (총괄 계정 제외)

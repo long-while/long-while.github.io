@@ -8,7 +8,8 @@ import { useOrder } from '@/app/contexts/OrderContext';
 import { calculateTotalEstimate } from '@/app/utils/orderUtils';
 import { botSummaryRows, useStepMode } from '../stepMode';
 import { useStep3Bot } from './useStep3Bot';
-import { AddonSection, ApplyBotQuestion, BotSettingsSection, ExtraInfoSection, MainBotSection, OperationSection } from './Step3Sections';
+import { ApplyBotQuestion, BotSettingsSection, ExtraInfoSection, MainBotSection, OperationSection } from './Step3Sections';
+import { AddonSection } from './Step3Addons';
 
 /** Q6 요약 상태: 운영 기간·메인 봇·추가 기능을 접고 고른 내용만 보여준다 */
 function BotSummary() {
@@ -52,7 +53,14 @@ export default function Step3Bot() {
       )}
 
       {/* "아니오" 선택 시 안내 메시지 */}
-      {s.step3.applyBot === 'no' && (
+      {/* 서버 설치도 '아니오'면 넘어갈 수 없으니 '다음 단계로 이동'이라고 하지 않는다 (26번 리뷰: 빨간 오류와 초록 안내가 같이 떴다) */}
+      {s.step3.applyBot === 'no' && s.step2.applyServerInstall === 'no' && (
+        <p className="flex items-center gap-2 rounded-card bg-background-100 p-5 text-body2 text-text-primary animate-slideDown lg:p-6">
+          <Icon name="warning" className="shrink-0 text-warning-700" />
+          서버 설치도 신청하지 않으셨어요. 서버 설치와 자동봇 중 하나는 신청해 주세요.
+        </p>
+      )}
+      {s.step3.applyBot === 'no' && s.step2.applyServerInstall !== 'no' && (
         <p className="flex items-center gap-2 rounded-card bg-background-100 p-5 text-body2 text-text-primary animate-slideDown lg:p-6">
           <Icon name="check" className="shrink-0 text-brand" />
           자동봇을 신청하지 않으셨습니다. 다음 단계로 이동해 주세요.

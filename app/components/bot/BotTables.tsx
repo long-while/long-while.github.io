@@ -4,7 +4,7 @@
  *    머리 #F6F7F8 + body1 #767676 / 본문 title4 #000 / 있음 = 파란 원 28 + 흰 체크, 없음 = #F6F7F8 원 + #A6A6A6 체크.
  *    가격 줄 #F1F6FD + title3 #3376E7 (패딩 32·24).
  *  KeywordReplyGuide — 키워드 답변: ① 시트에 적어요 → ② 멘션하면 봇이 답해요 두 카드,
- *    아래에 '키워드 답변에 이름·주사위 넣기' 옵션 표 (중괄호 지정 · 키워드 · 답멘 · 봇이 보내주는 답멘을 한 줄씩).
+ *    아래에 '키워드 답변에 이름 · 주사위 넣기' 옵션 표 (중괄호 지정 · 키워드 · 답변 · 봇이 보내주는 답변을 한 줄씩).
  * 좁은 화면에서는 글자를 줄이고 줄바꿈하거나 칸을 쌓아 화면 폭에 맞는다 (페이지 가로 스크롤 없음, Q1).
  */
 import type { ReactNode } from 'react';
@@ -95,7 +95,7 @@ function Mentioned({ text }: { text: string }) {
 
 const tagText = 'font-bold text-brand';
 
-/** {중괄호} 지정을 파란 굵은 글씨로 (시트 답멘) */
+/** {중괄호} 지정을 파란 굵은 글씨로 (시트 답변) */
 function Braced({ text }: { text: string }) {
   return (
     <>
@@ -145,7 +145,7 @@ function KeywordSheet() {
       <thead className="text-body3 text-text-secondary">
         <tr>
           <th scope="col" className={clsx(row, 'w-[34%] font-normal')}>키워드</th>
-          <th scope="col" className={clsx(row, 'font-normal')}>답멘</th>
+          <th scope="col" className={clsx(row, 'font-normal')}>답변</th>
         </tr>
       </thead>
       <tbody className="text-body3 text-text-primary lg:text-body2">
@@ -171,7 +171,7 @@ function ReplyTagList() {
   return (
     <div className="overflow-hidden rounded-card border border-border-100">
       <div aria-hidden="true" className={clsx(tagGrid, 'hidden border-b border-border-100 bg-background-100 px-6 py-3 text-body3 text-text-secondary')}>
-        <span>중괄호 지정</span><span>키워드</span><span>답멘</span><span>봇이 보내주는 답멘</span>
+        <span>중괄호 지정</span><span>키워드</span><span>답변</span><span>봇이 보내주는 답변</span>
       </div>
       <ul>
         {REPLY_TAGS.map((r) => (
@@ -184,7 +184,7 @@ function ReplyTagList() {
               <span className={clsx(cellLabel, 'font-normal')}>키워드</span>[{r.sheet.keyword}]
             </p>
             <p className={clsx(cellRow, 'text-body3 text-text-primary lg:text-body2')}>
-              <span className={cellLabel}>답멘</span><span><Braced text={r.sheet.reply} /></span>
+              <span className={cellLabel}>답변</span><span><Braced text={r.sheet.reply} /></span>
             </p>
             <p className={cellRow}>
               <span className={cellLabel}>봇</span>
@@ -197,17 +197,17 @@ function ReplyTagList() {
   );
 }
 
-/** 키워드 답변 중 '키워드 답변에 이름·주사위 넣기' 추가 옵션으로 되는 것 */
+/** 키워드 답변 중 '키워드 답변에 이름 · 주사위 넣기' 추가 옵션으로 되는 것 */
 function ReplyTagPart() {
   return (
     <div className="flex flex-col gap-6 border-t border-border-100 pt-10">
       <div className="flex flex-col gap-2">
         <h3 className="flex flex-wrap items-center gap-3 text-title4 text-text-primary">
-          키워드 답변에 이름·주사위 넣기
+          키워드 답변에 이름 · 주사위 넣기
           <span className="rounded-pill bg-background-brand px-3 py-1 text-body3 font-semibold text-brand">추가 옵션 +{upgradePrice}</span>
         </h3>
         <p className="text-body2 text-text-secondary">
-          답멘 안에 중괄호 {'{ }'}로 적어 두면 보낼 때 실제 값으로 바뀌어요. 조사를 맞추고 싶다면 <span className={tagText}>{'{은는} {이가} {을를}'}</span> 지정을 사용하세요.
+          답변 안에 중괄호 {'{ }'}로 적어 두면 보낼 때 실제 값으로 바뀌어요. 조사를 맞추고 싶다면 <span className={tagText}>{'{은는} {이가} {을를}'}</span> 지정을 사용하세요.
         </p>
       </div>
       <ReplyTagList />
@@ -221,11 +221,11 @@ export function KeywordReplyGuide() {
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-6">
         <p className="text-body2 text-text-secondary lg:text-body1">
-          운영진이 시트에 <strong className="font-bold text-text-primary">키워드</strong>와 <strong className="font-bold text-text-primary">답멘</strong>을 적어 두면, 누가 그 키워드를 보낼 때 봇이 답멘을 보내요.
-          같은 키워드에 답멘을 여러 개 적으면 그중 하나가 랜덤으로 나가요.
+          운영진이 시트에 <strong className="font-bold text-text-primary">키워드</strong>와 <strong className="font-bold text-text-primary">답변</strong>을 적어 두면, 누가 그 키워드를 보낼 때 봇이 답변을 보내요.
+          같은 키워드에 답변을 여러 개 적으면 그중 하나가 랜덤으로 나가요.
         </p>
         <div className="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-6">
-          <StepCard title="① 운영진이 원하는 키워드와 답멘을 구글 시트에 지정"><KeywordSheet /></StepCard>
+          <StepCard title="① 운영진이 원하는 키워드와 답변을 구글 시트에 지정"><KeywordSheet /></StepCard>
           <span aria-hidden="true" className="flex justify-center text-title3 text-text-disabled">
             <span className="lg:hidden">↓</span><span className="hidden lg:inline">→</span>
           </span>

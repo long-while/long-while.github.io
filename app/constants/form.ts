@@ -74,13 +74,17 @@ export const PRICING_CONFIG = {
       tootCurrencyLink: 10000,
       transferFeature: 10000,
       customCommandUpgrade: 5000,
+      keywordReplyImage: 10000,
       investigationBot: 20000,
       investigationDailyLimit: 5000,
       attendanceSystem: 10000,
+      randomBox: 20000,
       extraAccountTier: 5000,
     },
     operationPerWeek: 5000,
-    longTermSetupFee: 10000,
+    /** 가동비 상한: 10주 이상은 몇 주든 5만원 */
+    operationFeeCap: 50000,
+    longTermSetupFee: 20000,
   },
 
   policy: {
@@ -90,6 +94,12 @@ export const PRICING_CONFIG = {
 } as const;
 
 export type PricingConfig = typeof PRICING_CONFIG;
+
+/** 자동봇 가동비: 주수 × 주당 비용, 상한 operationFeeCap (페이지·견적함·신청서·복사문이 모두 이 함수를 쓴다) */
+export function botOperationFee(weeks: number): number {
+  const safeWeeks = Number.isFinite(weeks) ? Math.max(0, Math.floor(weeks)) : 0;
+  return Math.min(safeWeeks * PRICING_CONFIG.bot.operationPerWeek, PRICING_CONFIG.bot.operationFeeCap);
+}
 
 /** 견적(장바구니)에서 서버 설치 본품을 가리키는 항목명 */
 export const SERVER_INSTALL_ITEM_NAME = '마스토돈 서버 설치';

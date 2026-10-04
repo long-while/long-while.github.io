@@ -7,6 +7,7 @@
 import type { ReactNode } from 'react';
 import { Icon } from '@/app/components/ds';
 import { useOrder } from '@/app/contexts/OrderContext';
+import { monthDayWithYear } from '@/app/utils/orderUtils';
 
 export function FromCartBadge() {
   return (
@@ -42,4 +43,12 @@ export function useFromCart() {
   const { cartSyncState } = useOrder();
   return (itemName: string) =>
     cartSyncState?.syncedItems?.some((name) => name.includes(itemName) || itemName.includes(name)) ?? false;
+}
+
+/** 월/일 마감일 아래에 연도를 붙인 날짜를 보여 준다 ('MM/DD'만으로는 올해·내년이 헷갈렸다, 10번 리뷰) */
+export function DeadlineYearHint({ value }: { value: string }) {
+  const full = monthDayWithYear(value);
+  if (!full) return null;
+  const [y, m, d] = full.split('-').map(Number);
+  return <p className="mt-2 text-body3 font-medium text-brand">→ {y}년 {m}월 {d}일 마감으로 받아요.</p>;
 }

@@ -17,17 +17,17 @@ export const INSTALL = {
 };
 
 export const THEME_OPTIONS = [
-  { name: '테마 전체 커스텀', price: PRICE.options.bothTheme, kind: 'theme', description: '낮/밤 2종의 색상, 로고, 배경 변경' },
-  { name: '테마 1종 커스텀', price: PRICE.options.dayTheme, kind: 'theme', description: '낮/밤 중 1종의 색상, 로고, 배경 변경' },
+  { name: '커스텀 테마 2종', price: PRICE.options.bothTheme, kind: 'theme', description: '낮/밤 2종의 색상, 로고, 배경 변경' },
+  { name: '커스텀 테마 1종', price: PRICE.options.dayTheme, kind: 'theme', description: '낮/밤 중 1종의 색상, 로고, 배경 변경' },
   { name: '로고만 변경', price: PRICE.options.logo, kind: 'logo', description: '기본 트위터 테마에서 로고만 바꿔요.' },
 ] as const;
 
 /** 신청서 STEP2·요약·STEP4 에서 쓰는 커스텀 옵션 이름 (서버 페이지와 같은 이름, 테마 1종은 낮/밤을 고름) */
 export const THEME_CHOICE_LABEL: Record<NonNullable<AdditionalOption>, string> = {
   logo: '로고만 변경',
-  dayTheme: '테마 1종 커스텀 (낮 테마)',
-  nightTheme: '테마 1종 커스텀 (밤 테마)',
-  bothTheme: '테마 전체 커스텀 (낮/밤 2종)',
+  dayTheme: '커스텀 라이트 테마',
+  nightTheme: '커스텀 다크 테마',
+  bothTheme: '커스텀 라이트+다크 테마',
 };
 
 // 순서: 검색 / 글자수 / 데이터 이전 (4단계 사용자 요청)

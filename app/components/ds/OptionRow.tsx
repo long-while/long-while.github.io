@@ -1,14 +1,13 @@
 /**
- * OptionRow — 신청서 STEP2·3 옵션 목록 한 줄 (시안 '신청서 - STEP02-편집 상태' 커스텀·기타 옵션, file.json 실측).
- *  고르지 않음: 바탕 없음, 이름 title5 + 설명 body3 #767676 ↔ 가격 body3 #767676 + '선택하기' 칩(흰 바탕, #DDDDDD 선, 모서리 4).
- *  고름: #F6F7F8 바탕, 모서리 12, 패딩 28·24, 가격 body2 #000, 오른쪽 파란 체크.
- *   (시안은 고른 줄 오른쪽에 연필을 그렸지만, 이 줄을 누르면 선택이 풀리는 동작이라 체크로 표시함)
+ * OptionRow — 신청서 STEP2 옵션 목록 한 줄 (시안 '신청서 - STEP02-편집 상태' 기타 옵션, file.json 실측).
+ *  왼쪽에 체크박스(라디오면 동그라미) → 이름 title5 + 설명 body3 #767676 ↔ 가격.
+ *   (예전 '선택하기' 칩은 무엇을 고르는지 잘 안 보인다는 사용자 요청으로 Checkbox·Radio 와 같은 모양으로 바꿈)
+ *  고름: #F6F7F8 바탕, 모서리 12, 패딩 28·24, 가격 body2 #000.
  *  못 고름(disabled): 흐리게. 실제 <input type=radio|checkbox> 를 감싼 <label> 이라 키보드·폼 동작은 브라우저 기본.
  *  children: 고른 뒤에 펼쳐지는 추가 입력(예: 원하는 글자수, 빠른 마감 세부 옵션).
  */
 import clsx from 'clsx';
 import { useId, type InputHTMLAttributes, type ReactNode } from 'react';
-import { Icon } from './Icon';
 
 interface OptionRowProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'title'> {
   type?: 'radio' | 'checkbox';
@@ -17,12 +16,33 @@ interface OptionRowProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'ty
   badge?: ReactNode;
   description?: ReactNode;
   price?: ReactNode;
-  actionLabel?: string;
   children?: ReactNode;
 }
 
+const focusRing = 'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand';
+
+/** Checkbox·Radio(ds/Choice) 와 같은 28px 동그라미 */
+function Indicator({ type, checked }: { type: 'radio' | 'checkbox'; checked: boolean }) {
+  if (type === 'radio') {
+    return (
+      <span aria-hidden="true" className={clsx('flex size-7 shrink-0 items-center justify-center rounded-pill border-2 transition-colors duration-150', focusRing,
+        checked ? 'border-brand bg-brand' : 'border-border-200 bg-background-white group-hover:border-brand')}>
+        <span className="size-3 rounded-pill bg-background-white" />
+      </span>
+    );
+  }
+  return (
+    <span aria-hidden="true" className={clsx('flex size-7 shrink-0 items-center justify-center rounded-pill transition-colors duration-150', focusRing,
+      checked ? 'bg-brand' : 'bg-border-100')}>
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="text-text-inverse">
+        <path d="M8.91 14L12.73 17.82L19.09 10.18" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}
+
 export function OptionRow({
-  type = 'checkbox', title, badge, description, price, actionLabel = '선택하기', checked = false, disabled, id, className, children, ...rest
+  type = 'checkbox', title, badge, description, price, checked = false, disabled, id, className, children, ...rest
 }: OptionRowProps) {
   const autoId = useId();
   const inputId = id ?? `option-row-${autoId}`;
@@ -31,12 +51,13 @@ export function OptionRow({
       <label
         htmlFor={inputId}
         className={clsx(
-          'group flex items-center gap-4 rounded-card transition-colors duration-150',
-          checked ? 'bg-background-100 px-5 py-5 lg:px-7 lg:py-6' : 'px-0 py-2',
+          'group flex items-center gap-4 rounded-card px-5 py-4 transition-colors duration-150 lg:px-7',
+          checked ? 'bg-background-100' : !disabled && 'hover:bg-background-100/60',
           disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
         )}
       >
         <input id={inputId} type={type} checked={checked} disabled={disabled} className="peer sr-only" {...rest} />
+        <Indicator type={type} checked={checked} />
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="flex flex-wrap items-center gap-2 text-title5 text-text-primary">
             {title}
@@ -45,16 +66,6 @@ export function OptionRow({
           {description && <span className="text-body3 text-text-secondary">{description}</span>}
         </span>
         {price && <span className={clsx('shrink-0 text-right', checked ? 'text-body2 text-text-primary' : 'text-body3 text-text-secondary')}>{price}</span>}
-        <span
-          className={clsx(
-            'flex h-9 shrink-0 items-center justify-center rounded-button text-body3',
-            'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand',
-            checked ? 'w-9 text-brand' : 'border border-border-100 bg-background-white px-3 text-text-primary group-hover:border-border-strong',
-          )}
-          aria-hidden="true"
-        >
-          {checked ? <Icon name="check" size={24} /> : actionLabel}
-        </span>
       </label>
       {checked && children && <div className="flex flex-col gap-3 pl-0 lg:pl-7">{children}</div>}
     </div>

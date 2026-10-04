@@ -17,7 +17,7 @@ type TextKey = 'applicantNickname' | 'communityShortName' | 'communityKoreanName
 // 4단계 문구 정리: 같은 말이 겹치던 네 줄을 셋으로, 기간 기준은 12개월(T2). 자세한 조건은 FAQ 한 문항이 기준
 const LONG_TERM_NOTES: ReactNode[] = [
   <><strong>12개월 이상</strong> 소규모로 운영할 때만 체크해 주세요.</>,
-  <>그보다 짧게 쓰신다면 자관·역극용이어도 체크하지 말고, 아래 일정란에 대략적인 날짜를 적어 주세요.</>,
+  <>그보다 짧게 쓰신다면 자관·역극용이어도 체크를 풀고, 합격자 발표·개장·폐장 일정에 대략적인 날짜를 적어 주세요.</>,
   <>장기 소규모 서버는 서버비를 낮추기 위해 <strong>검색 기능을 넣을 수 없어요.</strong></>,
 ];
 

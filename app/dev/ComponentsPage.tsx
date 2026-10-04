@@ -162,8 +162,8 @@ function Cards() {
     <Block title="OptionCard · PriceCard · SectionTitle">
       <div className="grid gap-4 lg:grid-cols-3">
         <OptionCard name="theme" value="logo" checked={theme === 'logo'} onChange={() => setTheme('logo')} title="로고만 변경" description="트위터 테마에서 로고만 교체하는 옵션" price="₩5,000" />
-        <OptionCard name="theme" value="one" checked={theme === 'one'} onChange={() => setTheme('one')} title="테마 1종 커스텀" description="낮/밤 테마 중 하나를 선택해 색상 테마와 로고, 배경까지 변경" price="₩20,000" />
-        <OptionCard name="theme" value="all" disabled title="테마 전체 커스텀 (비활성)" description="선택할 수 없는 상태" price="₩30,000" />
+        <OptionCard name="theme" value="one" checked={theme === 'one'} onChange={() => setTheme('one')} title="커스텀 테마 1종" description="낮/밤 테마 중 하나를 선택해 색상 테마와 로고, 배경까지 변경" price="₩20,000" />
+        <OptionCard name="theme" value="all" disabled title="커스텀 테마 2종 (비활성)" description="선택할 수 없는 상태" price="₩30,000" />
       </div>
       <OptionCard type="checkbox" layout="row" checked={addons.includes('limit')} onChange={() => toggle('limit')} title="툿 글자수 제한 변경" description="기본 글자 수 제한으로 툿을 더 길게 작성" price="₩5,000" />
       <OptionCard type="checkbox" layout="row" checked={addons.includes('search')} onChange={() => toggle('search')} title="검색 기능" description="팔로우 중인 유저의 툿과 멘션을 단어 단위로 검색" price="₩15,000" />
@@ -210,8 +210,8 @@ function EstimateDemo() {
   return (
     <Block title="EstimateGroup · EstimateItemRow · EstimateTotal (견적함)">
       <EstimateGroup title="서버 설치" aside="소계 ₩55,000">
-        <EstimateItemRow name="테마 전체 커스텀" description="낮/밤 2종의 전반적인 색상테마+로고+배경 변경." price="₩30,000"
-          editLabel="테마 전체 커스텀 수정하러 가기" removeLabel="테마 전체 커스텀 삭제" onEdit={noop} onRemove={noop} />
+        <EstimateItemRow name="커스텀 테마 2종" description="낮/밤 2종의 전반적인 색상테마+로고+배경 변경." price="₩30,000"
+          editLabel="커스텀 테마 2종 수정하러 가기" removeLabel="커스텀 테마 2종 삭제" onEdit={noop} onRemove={noop} />
         <EstimateItemRow name="도메인·SMTP 실비" price="₩5,000" locked lockedLabel="삭제할 수 없는 필수 항목"
           badge={<span className="rounded-pill bg-brand-50 px-2 py-0.5 text-body3 text-brand">필수 포함</span>} />
       </EstimateGroup>

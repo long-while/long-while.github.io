@@ -31,11 +31,13 @@ export type EstimateMappingKey =
   | 'tootCurrencyLink'   // → step3.tootCurrencyLink = true
   | 'transferFeature'    // → step3.transferFeature = true
   | 'operationWeeks'     // → step3.manualWeeks (특별 처리 필요)
-  | 'customCommandUpgrade' // → 키워드 답변에 이름·주사위 넣기 (추가 옵션, 예전 이름 커스텀 명령어 업그레이드 · 답멘에 이름·주사위 넣기)
+  | 'customCommandUpgrade' // → 키워드 답변에 이름 · 주사위 넣기 (추가 옵션, 예전 이름 커스텀 명령어 업그레이드 · 답멘에 이름·주사위 넣기 · 키워드 답변에 이름·주사위 넣기)
+  | 'keywordReplyImage' // → 키워드 답변 시 이미지 전송
   | 'autoInvestigation'  // → 자동조사 타입
   | 'investigationDailyLimit' // → 일일 조사 횟수 제한
   | 'dmNotification' // → 특정 상황 DM 전송
   | 'attendanceSystem' // → 출석 시스템
+  | 'randomBox' // → 랜덤박스 기능
   | 'botFastDeadline48h' // → 빠른 마감 (48시간 내)
   | 'botFastDeadline1w'; // → 빠른 마감 (1주일 내)
 
@@ -47,8 +49,10 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
 
   // 서버 추가 옵션
   '로고만 변경': 'logo',
-  '테마 1종 커스텀': 'dayTheme',  // 낮 또는 밤 1종
-  '테마 전체 커스텀': 'bothTheme', // 낮/밤 2종
+  '커스텀 테마 1종': 'dayTheme',  // 낮 또는 밤 1종
+  '커스텀 테마 2종': 'bothTheme', // 낮/밤 2종
+  '테마 1종 커스텀': 'dayTheme',  // 예전 이름
+  '테마 전체 커스텀': 'bothTheme', // 예전 이름
   '툿 글자수 제한 변경': 'characterLimit',
   '검색 기능': 'search',
   'masto.host 에서 서버 데이터 이전': 'mastoHostMigration',
@@ -76,7 +80,9 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   // 봇 추가 옵션
   '예약 툿': 'reservationToot',
   '스토리 자동 진행': 'autoProfileImage',
-  '키워드 답변에 이름·주사위 넣기': 'customCommandUpgrade',
+  '키워드 답변에 이름 · 주사위 넣기': 'customCommandUpgrade',
+  '키워드 답변 시 이미지 전송': 'keywordReplyImage',
+  '키워드 답변에 이름·주사위 넣기': 'customCommandUpgrade', // 예전 이름
   '답멘에 이름·주사위 넣기': 'customCommandUpgrade', // 예전 이름
   '커스텀 명령어 업그레이드': 'customCommandUpgrade', // 예전 이름
   '재화, 아이템 양도 기능': 'transferFeature',
@@ -85,6 +91,7 @@ export const ESTIMATE_NAME_TO_MAPPING_KEY: Record<string, EstimateMappingKey> = 
   '일일 조사 횟수 제한': 'investigationDailyLimit',
   '특정 상황 DM 전송': 'dmNotification',
   '출석 시스템': 'attendanceSystem',
+  '랜덤박스 기능': 'randomBox',
   '빠른 마감 (48시간 내)': 'botFastDeadline48h',
   '빠른 마감 (1주일 내)': 'botFastDeadline1w',
 
@@ -187,6 +194,10 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   customCommandUpgrade: [
     { step: 3, field: 'customCommandUpgrade', value: true }
   ],
+  keywordReplyImage: [
+    { step: 3, field: 'applyBot', value: 'yes' },
+    { step: 3, field: 'keywordReplyImage', value: true },
+  ],
   autoInvestigation: [
     { step: 3, field: 'applyBot', value: 'yes' },
     { step: 3, field: 'investigationBot', value: true },
@@ -198,6 +209,10 @@ export const MAPPING_KEY_TO_ORDER_FIELD: Record<EstimateMappingKey, OrderFieldMa
   attendanceSystem: [
     { step: 3, field: 'applyBot', value: 'yes' },
     { step: 3, field: 'attendanceSystem', value: true },
+  ],
+  randomBox: [
+    { step: 3, field: 'applyBot', value: 'yes' },
+    { step: 3, field: 'randomBox', value: true },
   ],
   botFastDeadline48h: [],
   botFastDeadline1w: [],

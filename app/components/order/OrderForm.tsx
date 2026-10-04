@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, forwardRef } from 'r
 import clsx from 'clsx';
 import { Banner, Button, ErrorSummary, Icon, Stepper } from '@/app/components/ds';
 import { useOrder } from '@/app/contexts/OrderContext';
-import { validateOrderConsistency, validateStep1, validateStep2, validateStep3 } from '@/app/utils/orderUtils';
+import { calculateTotalEstimate, validateOrderConsistency, validateStep1, validateStep2, validateStep3 } from '@/app/utils/orderUtils';
 import { useEstimate } from '@/app/contexts/EstimateContext';
 import { FieldErrorProvider } from '@/app/contexts/FieldErrorContext';
 import type { ValidationError } from '@/app/types/order';
@@ -58,6 +58,25 @@ const OrderHead = forwardRef<HTMLDivElement, { step: StepNumber }>(function Orde
     </div>
   );
 });
+
+const won = (n: number) => `${n.toLocaleString()}원`;
+
+/** 단계 끝 소계 (11번 리뷰: 1~3단계에서 합계가 안 보이다가 4단계에서 갑자기 큰 금액이 나왔다) */
+function RunningTotal() {
+  const { formData } = useOrder();
+  const estimate = useMemo(() => calculateTotalEstimate(formData), [formData]);
+  const parts = [
+    formData.step2.applyServerInstall === 'yes' && `서버 ${won(estimate.serverTotal)}`,
+    formData.step3.applyBot === 'yes' && `자동봇 ${won(estimate.botTotal)}`,
+  ].filter(Boolean).join(' · ');
+  return (
+    <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 rounded-card bg-background-100 px-5 py-4 text-center text-body2 text-text-secondary">
+      <span>지금까지 견적</span>
+      <strong className="text-title4 text-brand">{won(estimate.grandTotal)}</strong>
+      {parts && <span className="text-body3">({parts}{estimate.hasVariablePrice ? ' · 협의 항목 별도' : ''})</span>}
+    </p>
+  );
+}
 
 function StepNotice({ message, onClose }: { message: string; onClose: () => void }) {
   return (
@@ -124,16 +143,17 @@ export default function OrderForm() {
    * 상단 오류 목록에서 항목을 누르면 해당 입력칸으로 이동해 포커스를 준다.
    * 입력칸 id 와 검증 field 이름이 같은 경우에만 동작하고, 아니면 그룹 위치로 스크롤한다.
    */
-  const focusField = (field: string) => {
+  const focusField = (field: string, behavior: ScrollBehavior = 'smooth'): boolean => {
     const input = document.getElementById(field);
     // disabled 입력칸에는 포커스가 들어가지 않으므로 메시지 위치로 보낸다
     if (input && !(input as HTMLInputElement).disabled) {
-      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input.scrollIntoView({ behavior, block: 'center' });
       (input as HTMLElement).focus({ preventScroll: true });
-      return;
+      return true;
     }
     const anchor = document.getElementById(`${field}-error`) ?? input;
-    anchor?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    anchor?.scrollIntoView({ behavior, block: 'center' });
+    return Boolean(anchor);
   };
 
   /** 현재 단계의 검증 결과 */
@@ -172,7 +192,8 @@ export default function OrderForm() {
   useEffect(() => {
     if (shownStep.current === currentStep) return;
     shownStep.current = currentStep;
-    headRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // 부드러운 스크롤은 새 단계 내용이 그려지며 높이가 바뀌는 동안 중간에 멈춰 푸터만 보이는 일이 있었다 (15번 리뷰) → 즉시 이동
+    headRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
     headRef.current?.querySelector<HTMLElement>('[data-step-title]')?.focus({ preventScroll: true });
   }, [currentStep]);
 
@@ -183,7 +204,11 @@ export default function OrderForm() {
     if (errors.length > 0) {
       setSubmitAttempted(true);
       setValidationErrors(errors);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // 첫 오류 칸으로 바로 보낸다 (15번 리뷰: 오류 목록은 맨 위인데 화면은 아래에 있어 보이지 않았다).
+      // 요약 상태에서 접혀 있던 칸이 펼쳐진 뒤에 찾도록 두 프레임 기다린다. 칸을 못 찾으면 맨 위 오류 목록으로
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (!focusField(errors[0].field, 'auto')) window.scrollTo({ top: 0, behavior: 'auto' });
+      }));
       return;
     }
 
@@ -265,6 +290,7 @@ export default function OrderForm() {
       </div>
 
       {/* STEP4 는 이전·복사 버튼을 Step4Review 가 직접 그린다 (시안: 복사 버튼이 이전 옆) */}
+      {(currentStep === 2 || currentStep === 3) && <RunningTotal />}
       {currentStep < 4 && (
         <div className="flex flex-col-reverse justify-center gap-3 sm:flex-row">
           {currentStep > 1 && <Button variant="white" size="lg" onClick={handlePrevious} className="sm:w-[220px]">← 이전</Button>}
