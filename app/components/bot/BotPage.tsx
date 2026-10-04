@@ -15,7 +15,7 @@ import { IMAGES } from '@/app/constants/images';
 import { navLinkProps } from '@/app/lib/navLink';
 import type { NavigateFunction } from '@/app/types/navigation';
 import {
-  ADDITIONAL_OPTIONS, BOT_INTRO_CHAT, BOT_TYPES, INVESTIGATION_TYPE, MAIN_REQUIRES_LABEL, OPERATION_FEE_PREFIX, OPERATION_NOTES, OPERATION_WEEKS_HINT,
+  ADDITIONAL_OPTIONS, BOT_INTRO_CHAT, BOT_TYPES, TRPG_BOT_TYPES, INVESTIGATION_TYPE, MAIN_REQUIRES_LABEL, OPERATION_FEE_PREFIX, OPERATION_NOTES, OPERATION_WEEKS_HINT,
   SHEET_LINKS, SHOP_REQUIRES_LABEL, type AdditionalOption,
 } from './botContent';
 import { BotTypeCards } from './BotTypeCards';
@@ -232,11 +232,22 @@ export default function BotPage({ onNavigate }: BotPageProps) {
         <TitledSection title="봇 타입 비교"><CompareTable /></TitledSection>
         <TitledSection title="키워드 답변이란?"><KeywordReplyGuide /></TitledSection>
         <OperationWeeks est={est} highlighted={highlighted} />
+        {/* 신청서 STEP3(커뮤니티 봇 / TRPG 봇)처럼 둘로 나눔 (사용자 요청) */}
         <TitledSection title="봇 타입 상세">
-          <p className="text-body3 text-text-secondary">
-            * 기본 / 기본&상점 / 기본&상점&스탯 중 <span className="font-semibold text-text-primary">하나만</span> 고를 수 있어요.
-          </p>
-          <BotTypeCards types={BOT_TYPES} est={est} highlighted={highlighted} />
+          <div className="flex flex-col gap-4">
+            <h3 className="text-title4 text-text-primary">커뮤 운영용 자동봇</h3>
+            <p className="text-body3 text-text-secondary">
+              * 기본 / 기본&상점 / 기본&상점&스탯 중 <span className="font-semibold text-text-primary">하나만</span> 고를 수 있어요.
+            </p>
+            <BotTypeCards types={BOT_TYPES.filter((t) => !TRPG_BOT_TYPES.includes(t.name))} est={est} highlighted={highlighted} />
+          </div>
+          <div className="flex flex-col gap-4">
+            <h3 className="text-title4 text-text-primary">TRPG용 자동봇</h3>
+            <p className="text-body3 text-text-secondary">
+              * 단독으로, 또는 기본&상점 이상과 함께 고를 수 있어요. 기본 타입과는 기능이 겹쳐 함께 고를 수 없어요.
+            </p>
+            <BotTypeCards types={BOT_TYPES.filter((t) => TRPG_BOT_TYPES.includes(t.name))} est={est} highlighted={highlighted} />
+          </div>
         </TitledSection>
         <AdditionalOptions est={est} highlighted={highlighted} />
       </div>

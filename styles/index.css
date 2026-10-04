@@ -4,11 +4,23 @@
 @import './design-tokens.css';
 @import './animations.css';
 
+/*
+ * 스크롤바 자리를 늘 비워 둔다. 페이지를 실제로 스크롤하는 건 html 이라 여기에 걸어야 한다 (예전에는 body 에 있어서 효과가 없었다).
+ * 드롭다운(Radix Select)·팝업이 스크롤을 잠가 스크롤바가 사라질 때 고정 헤더·화면이 덜컹거리던 문제 (사용자 요청).
+ */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* 스크롤 잠금(react-remove-scroll)이 스크롤바 폭만큼 더하는 오른쪽 여백을 끈다. 자리는 위 gutter 가 이미 지킨다 */
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
+}
+
 body {
   font-family: var(--font-sans);
   word-break: keep-all;
   overflow-wrap: break-word;
-  scrollbar-gutter: stable;
 }
 
 * {

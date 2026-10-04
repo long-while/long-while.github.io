@@ -219,7 +219,7 @@ function RushSection({ est, highlighted }: { est: ReturnType<typeof useServerEst
     <TitledSection title="빠른마감 옵션">
       <InfoBox title="택1 옵션">
         <p>고르신 테마에 맞는 옵션만 선택할 수 있어요. 모든 빠른마감은 결제 요청 시각부터 계산해요.</p>
-        <p>개장까지 48시간 이상 남은 시점에 문의하시면 추가금이 없어요. (옵션에 따라 다를 수 있어요)</p>
+        <p>개장까지 48시간 이상 남은 시점에 문의하시면 추가금이 없어요. (옵션에 따라 다를 수 있음)</p>
       </InfoBox>
       {est.rushNotice && <p role="status" className="rounded-input bg-warning-50 px-5 py-4 text-body3 text-warning-700">{est.rushNotice}</p>}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" role="radiogroup" aria-label="빠른마감 옵션">

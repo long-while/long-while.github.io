@@ -54,10 +54,9 @@ function useModalBehavior(open: boolean, onClose: () => void, dialogRef: RefObje
   useEffect(() => {
     if (!open) return;
     const previous = previousRef.current;
-    const { overflow, paddingRight } = document.body.style;
-    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    // 스크롤바 자리는 html 의 scrollbar-gutter 가 지키므로 오른쪽 여백 보정은 하지 않는다 (하면 오히려 밀렸다)
+    const { overflow } = document.body.style;
     document.body.style.overflow = 'hidden';
-    if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
     // 자식이 이미 안쪽으로 포커스를 옮겼으면(복사 실패 시 원문 선택) 그대로 둔다. 닫기 버튼으로 옮기면 Ctrl+C 가 안 됐다 (4단계 검토)
     if (!dialogRef.current?.contains(document.activeElement)) {
       const focusables = dialogRef.current ? Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)) : [];
@@ -84,7 +83,6 @@ function useModalBehavior(open: boolean, onClose: () => void, dialogRef: RefObje
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = overflow;
-      document.body.style.paddingRight = paddingRight;
       previous?.focus?.();
     };
   }, [open, dialogRef, initialFocus]);

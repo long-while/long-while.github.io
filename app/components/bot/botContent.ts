@@ -3,7 +3,7 @@
  * name/aliases 는 견적함 항목 이름이라 바꾸면 안 된다 (견적함·신청서 매핑, 수정 강조에 쓰임).
  */
 import { IMAGES } from '@/app/constants/images';
-import { PRICING_CONFIG, botOperationFee } from '@/app/constants/form';
+import { PRICING_CONFIG } from '@/app/constants/form';
 
 /** 가격은 신청서 계산과 같은 PRICING_CONFIG 에서 (한 곳만 고치면 페이지·견적·신청서가 함께 바뀜) */
 const PB = PRICING_CONFIG.bot;
@@ -14,6 +14,8 @@ export const SHOP_BOT_TYPES = ['기본&상점 타입', '기본&상점&스탯 타
 
 const D100_BOT_NAME = 'D100 룰 대응 TRPG봇';
 const TRPG_2D6_BOT_NAME = '2D6 룰 대응 TRPG봇 3종';
+/** 봇 타입 상세를 '커뮤 운영용' / 'TRPG용' 으로 나눌 때 TRPG 쪽 (사용자 요청, 신청서 STEP3 과 같은 묶음) */
+export const TRPG_BOT_TYPES: readonly string[] = [D100_BOT_NAME, TRPG_2D6_BOT_NAME];
 
 // TRPG봇(D100 / 2D6)은 기능이 겹치는 기본 타입과 함께 담을 수 없다 (기본&상점 이상은 허용)
 export const TRPG_EXCLUSIVE_PAIRS: Record<string, string[]> = {
@@ -35,16 +37,13 @@ export const SHEET_LINKS = [
 ];
 
 const won = (n: number) => `₩${n.toLocaleString()}`;
-const EXAMPLE_WEEKS = 4;
 
 export const OPERATION_NOTES = [
   // '주수만큼 골라 주세요'는 주수 고르는 칸 바로 위로 옮김 (OPERATION_WEEKS_HINT)
-  `가동비는 1주 5천원이에요. (테스트 기간 제외) ${PB.operationFeeCap / PB.operationPerWeek}주 이상은 몇 주든 ${PB.operationFeeCap / 10000}만원이에요.`,
+  `가동비는 1주 5천원이에요. (테스트 기간 제외) ${PB.operationFeeCap / PB.operationPerWeek}주 이상은 몇 주든 ${PB.operationFeeCap / 10000}만원입니다.`,
   `12개월 이상 장기 서버는 주당 비용 대신 초기 세팅비 ${PB.longTermSetupFee / 10000}만원만 받아요. 이때는 아래에서 ${PB.longTermSetupFee / PB.operationPerWeek}주(${PB.longTermSetupFee / 10000}만원)를 골라 주세요.`,
-  `합계 예: 기본&상점 ${won(PB.mainTypes.basicShop)} + ${EXAMPLE_WEEKS}주 ${won(botOperationFee(EXAMPLE_WEEKS))} = ${won(PB.mainTypes.basicShop + botOperationFee(EXAMPLE_WEEKS))}`,
-  '지난 신청자분들의 자동봇도 지금까지 꾸준히 업데이트해 드리고 있습니다.',
 ];
-export const OPERATION_WEEKS_HINT = '커뮤를 운영할 주수만큼 골라 주세요.';
+export const OPERATION_WEEKS_HINT = '자동봇을 사용할 주수만큼 골라 주세요.';
 
 /** 봇 타입 비교 표: 기본 / 기본&상점 / 기본&상점&스탯. 기능은 말로 쓰고 키워드·짧은 설명은 옆에 작게 */
 export const COMPARE_COLUMNS = ['기본', '기본&상점', '기본&상점&스탯'];
