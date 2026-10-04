@@ -41,6 +41,7 @@ const initialStep1Data: Step1Data = {
   closingDate: '',
   operationWeeks: 0,
   googleEmail: '',
+  googlePassword: '',
 };
 
 const initialStep2Data: Step2Data = {
@@ -267,10 +268,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       // 아무것도 안 쓴 신청서는 저장하지 않는다 (들어왔다 나가기만 해도 다음에 '작성 중인 내용 발견'이 떴다, 4단계 검토)
       // (지우지는 않는다: 빈 탭을 닫을 때 다른 탭의 진짜 저장본을 지울 수 있다)
       if (currentStep === 1 && JSON.stringify(formData) === JSON.stringify(initialFormData)) return;
-      // 구글 비밀번호는 신청서에서 받지 않는다 (복사문에 평문으로 남았다, 접수 후 따로 받음). 예전 저장본에 남은 값은 불러올 때 mergeSaved 가 버린다
+      // 구글 비밀번호는 복사문에만 넣고 브라우저에는 남기지 않는다
       const dataToSave = {
         version: SCHEMA_VERSION,
-        formData,
+        formData: { ...formData, step1: { ...formData.step1, googlePassword: '' } },
         currentStep,
         savedAt: new Date().toISOString(),
       };
@@ -309,6 +310,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
           step3: mergeSaved(initialStep3Data, migrateStep3(parsed.formData.step3)),
           step4: mergeSaved(initialStep4Data, parsed.formData.step4),
         };
+        // 비밀번호는 저장하지 않는다. 예전·조작된 저장본에 들어 있어도 비운다
+        mergedFormData.step1.googlePassword = '';
         // 고르는 값(선택지)은 정해진 값만. 이상한 값이면 선택 전 상태로
         const pick = <T,>(value: T, allowed: readonly T[]): T | null => (allowed.includes(value) ? value : null);
         mergedFormData.step1.termsAgreed = pick(mergedFormData.step1.termsAgreed, ['yes', 'no'] as const);

@@ -35,6 +35,7 @@ export interface Step1Data {
   closingDate: string; // yyyy-mm-dd
   operationWeeks: number; // 자동 계산
   googleEmail: string;
+  googlePassword: string; // 브라우저에 저장하지 않음 (복사문에만 들어감)
 }
 
 // Step 2: 서버 설치 옵션

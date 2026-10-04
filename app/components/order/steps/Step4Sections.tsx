@@ -30,7 +30,12 @@ export function ApplicantReview({ data, onEdit }: { data: OrderFormData; onEdit:
       rows={[
         { label: '신청자 닉네임', value: step1.applicantNickname || '-' },
         // 입력칸이 이 화면 맨 아래라 들어오자마자 빨간 '미입력'으로 혼내지 않는다 (24번 리뷰)
-        { label: '구글 계정', value: step1.googleEmail || <span className="text-text-secondary">아래 '커뮤니티 구글 계정'에서 입력</span> },
+        {
+          label: '구글 계정',
+          value: step1.googleEmail || step1.googlePassword
+            ? `${step1.googleEmail || '이메일 미입력'} / ${step1.googlePassword ? '비밀번호 입력됨' : '비밀번호 미입력'}`
+            : <span className="text-text-secondary">아래 '커뮤니티 구글 계정'에서 입력</span>,
+        },
         { label: '커뮤니티', value: `${step1.communityKoreanName} / ${step1.communityEnglishName} (약칭 '${step1.communityShortName}')` },
         ...(step1.isLongTermCommunity ? [] : [{ label: '합격자 발표일', value: step1.resultAnnouncementDate || '-' }]),
         { label: '커뮤 운영 일정 (개장~폐장)', value: step1.isLongTermCommunity ? '장기 소규모 서버' : `${step1.openingDate} ~ ${step1.closingDate} (${step1.operationWeeks}주)` },
@@ -262,8 +267,10 @@ export function PolicyBox({ confirmed, onConfirm }: { confirmed: boolean; onConf
 
 interface GoogleFieldsProps {
   email: string;
-  onChange: (data: { googleEmail?: string }) => void;
+  password: string;
+  onChange: (data: { googleEmail?: string; googlePassword?: string }) => void;
   errorFor: (field: string) => string | null;
+  passwordNeedsReentry: boolean;
 }
 
 function GoogleError({ id, message }: { id: string; message: string | null }) {
@@ -276,8 +283,31 @@ function GoogleError({ id, message }: { id: string; message: string | null }) {
   );
 }
 
-/** 이메일만 받는다. 비밀번호는 신청서(복사문)에 넣지 않고 접수 후 따로 받는다 (5번 리뷰) */
-export function GoogleAccountFields({ email, onChange, errorFor }: GoogleFieldsProps) {
+function GooglePasswordField({ password, onChange, errorFor, passwordNeedsReentry }: Omit<GoogleFieldsProps, 'email'>) {
+  return (
+    <div className="flex flex-col gap-3">
+      <FieldLabel htmlFor="googlePassword" required>구글 비밀번호</FieldLabel>
+      <div>
+        {passwordNeedsReentry && (
+          <p role="alert" className="mb-2 flex items-start gap-1.5 rounded-input border border-error-500 bg-background-white p-3 text-body3 text-error-500">
+            <span aria-hidden="true">⚠</span>
+            <span>비밀번호는 <strong className="font-medium">다시 입력</strong>해 주세요.</span>
+          </p>
+        )}
+        <input id="googlePassword" type="password" value={password} onChange={(e) => onChange({ googlePassword: e.target.value })} placeholder="비밀번호 입력"
+          aria-required="true" aria-invalid={Boolean(errorFor('googlePassword'))} aria-describedby={errorFor('googlePassword') ? 'googlePassword-error' : 'googlePassword-help'}
+          autoComplete="new-password" className="form-input" />
+        <GoogleError id="googlePassword-error" message={errorFor('googlePassword')} />
+        {/* '저장되지 않는다'만 쓰면 안전하다고 오해할 수 있어 복사문에 들어간다는 것도 밝힌다 (리뷰 5번) */}
+        <p id="googlePassword-help" className="mt-2 text-body3 text-text-secondary">
+          ※ 비밀번호는 브라우저에 저장되지 않지만, 복사되는 신청서에는 그대로 들어가요. 작업이 끝나면 꼭 비밀번호를 바꿔 주세요.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function GoogleAccountFields({ email, password, onChange, errorFor, passwordNeedsReentry }: GoogleFieldsProps) {
   return (
     <section id="googleAccount" className="flex scroll-mt-header flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -286,15 +316,16 @@ export function GoogleAccountFields({ email, onChange, errorFor }: GoogleFieldsP
           서버와 자동봇 세팅 시 사용됩니다. 구글 클라우드 플랫폼 무료 체험을 이용하지 않은 계정만 사용할 수 있습니다.
         </p>
       </div>
-      <div className="flex flex-col gap-3 md:w-[calc(50%-10px)]">
-        <FieldLabel htmlFor="googleEmail" required>구글 이메일 주소</FieldLabel>
-        <div>
-          <input id="googleEmail" type="email" value={email} onChange={(e) => onChange({ googleEmail: e.target.value })} placeholder="example@gmail.com"
-            aria-required="true" aria-invalid={Boolean(errorFor('googleEmail'))} aria-describedby={errorFor('googleEmail') ? 'googleEmail-error' : 'googleEmail-help'} className="form-input" />
-          <GoogleError id="googleEmail-error" message={errorFor('googleEmail')} />
-          <p id="googleEmail-help" className="mt-2 text-body3 text-text-secondary">
-          </p>
+      <div className="grid grid-cols-1 gap-x-5 gap-y-6 md:grid-cols-2">
+        <div className="flex flex-col gap-3">
+          <FieldLabel htmlFor="googleEmail" required>구글 이메일 주소</FieldLabel>
+          <div>
+            <input id="googleEmail" type="email" value={email} onChange={(e) => onChange({ googleEmail: e.target.value })} placeholder="example@gmail.com"
+              aria-required="true" aria-invalid={Boolean(errorFor('googleEmail'))} aria-describedby={errorFor('googleEmail') ? 'googleEmail-error' : undefined} className="form-input" />
+            <GoogleError id="googleEmail-error" message={errorFor('googleEmail')} />
+          </div>
         </div>
+        <GooglePasswordField password={password} onChange={onChange} errorFor={errorFor} passwordNeedsReentry={passwordNeedsReentry} />
       </div>
     </section>
   );

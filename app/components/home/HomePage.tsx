@@ -47,18 +47,32 @@ function scrollToServices() {
   document.getElementById('services-section')?.scrollIntoView({ behavior: 'smooth' });
 }
 
+/**
+ * 모바일(1024px 미만) 전용 세로 히어로 그림 (사용자 제공, 3792×6636 원본을 WebP 로 줄임).
+ * 가로 그림을 세로 화면에 채우면 양옆이 크게 잘렸다. images.ts 는 스크립트가 자동으로 만드는 파일이라 여기에 둔다
+ */
+const HOME_HERO_MOBILE: SiteImage = {
+  src: '/images/home-hero-mobile-1080w.webp',
+  width: 1080,
+  height: 1890,
+  srcSet: '/images/home-hero-mobile-720w.webp 720w, /images/home-hero-mobile-1080w.webp 1080w, /images/home-hero-mobile-1440w.webp 1440w',
+};
+
 function HomeHero() {
   return (
     <section className="relative flex min-h-[600px] items-end overflow-hidden bg-gradient-brand-hero lg:min-h-[980px]">
-      {/* 모든 너비에서 비율을 지키며 잘라 채움(다른 페이지 배너처럼 확대). 1920×980 에서는 원본 비율과 같아 잘리는 곳 없음 (사용자 요청: 늘려 채우면 좁은 창에서 찌그러짐) */}
-      <Img image={IMAGES.homeHero} priority className="absolute inset-0 size-full object-cover" />
+      {/* 모든 너비에서 비율을 지키며 잘라 채움(다른 페이지 배너처럼 확대). 1920×980 에서는 원본 비율과 같아 잘리는 곳 없음 (사용자 요청: 늘려 채우면 좁은 창에서 찌그러짐).
+          모바일은 세로 그림으로 바꾸고, 글자가 덮는 아래쪽보다 구름·로봇이 있는 가운데 위쪽이 보이게 맞춘다 */}
+      <picture>
+        <source media="(max-width: 1023.98px)" srcSet={HOME_HERO_MOBILE.srcSet} sizes="100vw" width={HOME_HERO_MOBILE.width} height={HOME_HERO_MOBILE.height} />
+        <Img image={IMAGES.homeHero} priority className="absolute inset-0 size-full object-cover max-lg:object-[50%_35%]" />
+      </picture>
       {/* 시안 Rectangle 33543: 높이 59.5% 부터 아래로 #4977D3 0→100%. 모바일은 글이 차지하는 비율이 커서 30% 부터 */}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_30%,#4977D3_100%)] lg:bg-[linear-gradient(180deg,transparent_59.5%,#4977D3_100%)]" aria-hidden="true" />
       {/* 글자가 놓이는 왼쪽 아래만 조금 더 어둡게: 밝은 일러스트 위 흰 글자 대비가 낮았다 (4단계 리뷰) */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_15%_100%,rgba(30,64,150,0.55),transparent_70%)]" aria-hidden="true" />
       <div className="container-ds relative pb-12 [text-shadow:0_1px_12px_rgba(20,45,110,0.35)] lg:pb-[68px]">
         <div className="flex max-w-[621px] flex-col gap-5">
-          <p className="font-inter text-eyebrow uppercase text-text-inverse">LONGWHILE COMMISSION</p>
           {/* 사용자 제공 '한참 커미션' 글자 로고(흰색). 기존 제목 글자(display 48/모바일 28)와 같은 높이. 읽는 글자는 그대로 */}
           <h1 className="text-text-inverse">
             <BrandWordmark className="block h-7 lg:h-12" />
@@ -70,7 +84,7 @@ function HomeHero() {
           </p>
           <ul className="flex flex-wrap gap-2">
             {/* '3개월 무료 서버비'는 서버비가 계속 무료인 것처럼 읽혀서, 구글 무료 크레딧임을 밝힘 (4단계 리뷰) */}
-            {['첫 3개월 구글 무료 크레딧', '무료 유지보수', '1:1 맞춤 설정'].map((badge) => (
+            {['3개월 서버비 0원', '무료 유지보수', '1:1 맞춤 설정'].map((badge) => (
               <li key={badge} className="rounded-pill border border-background-white/20 bg-background-white/10 px-4 py-2 text-body3 text-text-inverse backdrop-blur-sm">
                 {badge}
               </li>
@@ -103,7 +117,7 @@ function Services({ onNavigate }: HomeProps) {
       <SectionTitle eyebrow="SERVICE" title="커미션 서비스" />
       <div className="grid w-full grid-cols-1 justify-items-center gap-10 lg:grid-cols-2 lg:gap-6">
         <ServiceCard image={IMAGES.homeServiceServer.src} srcSet={IMAGES.homeServiceServer.srcSet} title={<>서버 설치 &amp; 테마 커스텀</>}
-          description="구글 클라우드에 마스토돈 서버를 설치하고 테마를 꾸며 드려요." ctaLabel="자세히 보기" href={server.href} onCtaClick={server.onClick} />
+          description="마스토돈 자체 서버를 개설해 드려요." ctaLabel="자세히 보기" href={server.href} onCtaClick={server.onClick} />
         <ServiceCard image={IMAGES.homeServiceBot.src} srcSet={IMAGES.homeServiceBot.srcSet} title="자동봇 커미션"
           description="커뮤 운영을 돕는 자동봇을 만들어 드려요." ctaLabel="자세히 보기" href={bot.href} onCtaClick={bot.onClick} />
       </div>

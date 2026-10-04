@@ -47,7 +47,7 @@ const STEP1 = {
   termsAgreed: 'yes', applicantNickname: '테스트닉', communityShortName: '테커', communityKoreanName: '테스트 커뮤',
   communityEnglishName: 'Test Community', isLongTermCommunity: false, longTermConfirmed: false,
   resultAnnouncementDate: iso(plusDays(30)), openingDate: iso(plusDays(40)), closingDate: iso(plusDays(70)),
-  operationWeeks: 5, googleEmail: '',
+  operationWeeks: 5, googleEmail: '', googlePassword: '',
 };
 const STEP2 = {
   applyServerInstall: 'yes', additionalOption: null, changeCharacterLimit: false, characterLimitValue: 0, searchOption: false,
@@ -137,6 +137,7 @@ const ui = {
     await ui.dialog(page, '작성 중인 내용 발견').getByRole('button', { name: '이어서 작성' }).click();
     await ui.waitStep(page, 4);
     await page.locator('#googleEmail').fill('test@gmail.com');
+    await page.locator('#googlePassword').fill('dummy-password');
     await ui.pick(ui.policyCheckbox(page));
     await ui.copyButton(page).click();
   },
@@ -835,6 +836,7 @@ Object.assign(SCENARIOS, {
     await tabTo(page, () => document.activeElement?.type === 'checkbox' && document.activeElement.closest('section')?.textContent.includes('질문 정책'), '정책 동의');
     await page.keyboard.press('Space');
     await typeInto('googleEmail', 'kb@gmail.com');
+    await typeInto('googlePassword', 'keyboard-pass');
     await tabTo(page, focusedText('신청서 복사하기'), '복사 버튼');
     await page.keyboard.press('Enter');
     const modal = ui.dialog(page, '복사가 완료되었습니다');

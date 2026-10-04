@@ -436,17 +436,22 @@ export function validateBotSymbol(symbol: string): ValidationError | null {
 /**
  * 커뮤니티 구글 계정 검증
  *
- * 입력란은 Step 4(최종 확인)에 있습니다. 이메일만 받고, 비밀번호는 신청서에 넣지 않습니다
- * (복사문에 평문으로 남아 크레페 메시지에 그대로 보였다 — 접수 후 따로 받음).
+ * 입력란은 Step 4(최종 확인)에 있습니다. 비밀번호는 브라우저에 저장하지 않고 복사문에만 들어가므로,
+ * 신청서를 복사하기 직전에 받습니다 (사용자 요청으로 다시 받음).
  */
 export function validateGoogleAccount(data: OrderFormData['step1']): ValidationError[] {
+  const errors: ValidationError[] = [];
   if (!data.googleEmail.trim()) {
-    return [{ field: 'googleEmail', message: '구글 이메일을 입력해 주세요.' }];
+    errors.push({ field: 'googleEmail', message: '구글 이메일을 입력해 주세요.' });
+  } else if (!isValidGmail(data.googleEmail)) {
+    errors.push({ field: 'googleEmail', message: '올바른 Gmail 주소를 입력해 주세요. (예: example@gmail.com)' });
   }
-  if (!isValidGmail(data.googleEmail)) {
-    return [{ field: 'googleEmail', message: '올바른 Gmail 주소를 입력해 주세요. (예: example@gmail.com)' }];
+  if (!data.googlePassword.trim()) {
+    errors.push({ field: 'googlePassword', message: '구글 비밀번호를 입력해 주세요.' });
+  } else if (data.googlePassword.trim().length < 8) {
+    errors.push({ field: 'googlePassword', message: '비밀번호는 최소 8자 이상이어야 합니다.' });
   }
-  return [];
+  return errors;
 }
 
 /**
@@ -1118,6 +1123,7 @@ function formatDateForDisplay(date: string): string {
  * 신청자도 받는 쪽도 누락을 알아채지 못한 채 접수되는 일이 반복됐다.
  */
 export const MISSING_GOOGLE_EMAIL_MARK = '[!] 이메일 미입력 — 신청자 확인 필요';
+export const MISSING_GOOGLE_PASSWORD_MARK = '[!] 비밀번호 미입력 — 신청자 확인 필요';
 
 /**
  * 최종 복사용 텍스트 생성
@@ -1137,9 +1143,9 @@ export function generateCopyText(data: OrderFormData, estimate: PriceEstimate, s
   } else {
     text += `${formatDateForDisplay(step1.openingDate)} ~ ${formatDateForDisplay(step1.closingDate)} (${step1.operationWeeks}주)\n\n`;
   }
-  // 빈 이메일이 조용히 지나가면 받는 쪽에서 누락을 알아채기 어렵다.
+  // 빈 값이 'abc@gmail.com / ' 처럼 조용히 지나가면 받는 쪽에서 누락을 알아채기 어렵다.
   // 검증에서 걸러지지만, 혹시 빠져나가더라도 눈에 띄도록 표시를 남긴다.
-  text += `${step1.googleEmail.trim() || MISSING_GOOGLE_EMAIL_MARK} (비밀번호는 접수 후 따로 전달)\n\n`;
+  text += `${step1.googleEmail.trim() || MISSING_GOOGLE_EMAIL_MARK} / ${step1.googlePassword.trim() || MISSING_GOOGLE_PASSWORD_MARK}\n\n`;
   text += `커미션 신청자명 : ${step1.applicantNickname.trim()}\n\n`;
 
   text += divider;

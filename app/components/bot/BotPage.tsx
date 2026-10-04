@@ -74,8 +74,8 @@ function BasicInfo({ onNavigate }: { onNavigate: NavigateFunction }) {
       />
       {/* 처음 보는 사람도 [ ] 키워드가 무엇인지 바로 알도록 한 장면 */}
       <div className="flex flex-col gap-3 rounded-card border border-border-100 bg-background-white p-5 lg:max-w-[560px] lg:p-6">
-        <p className="text-title5 text-text-primary">이렇게 움직여요</p>
-        <p className="text-body3 text-text-secondary">봇을 멘션하고 [ ] 안에 키워드를 적으면, 봇이 답변을 달아요.</p>
+        <p className="text-title5 text-text-primary">자동봇 사용 방법</p>
+        <p className="text-body3 text-text-secondary">봇 계정을 멘션하고 [ ] 안에 키워드를 적으면, 봇이 답변을 달아요.</p>
         <ChatExample turns={BOT_INTRO_CHAT} label="자동봇 사용 예시 대화" />
       </div>
     </TitledSection>

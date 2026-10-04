@@ -25,6 +25,7 @@ import {
   monthDayWithYear,
   isRealMonthDay,
   MISSING_GOOGLE_EMAIL_MARK,
+  MISSING_GOOGLE_PASSWORD_MARK,
   validateAccountId,
   validateDates,
   validateGoogleAccount,
@@ -80,6 +81,7 @@ function createFormData(): OrderFormData {
       closingDate: '',
       operationWeeks: 0,
       googleEmail: '',
+      googlePassword: '',
     },
     step2: {
       applyServerInstall: null,
@@ -277,10 +279,10 @@ check('안내 문구에 연도', getDeadlineBlackoutError('10/20', 'desiredDeadl
 // ===== 구글 계정 검증 (Step 1 → Step 4 이동) =====
 
 const emptyStep1 = createFormData().step1;
-// 구글 비밀번호는 신청서에서 받지 않는다 (복사문에 평문으로 남았다, 접수 후 따로 받음 — 5번 리뷰)
-check('빈 구글 계정은 이메일 오류 하나', validateGoogleAccount(emptyStep1).map((e) => e.field), ['googleEmail']);
-check('Gmail 이 아니면 오류', validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@naver.com' }).map((e) => e.field), ['googleEmail']);
-check('정상 입력이면 오류 없음', validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@gmail.com' }), []);
+check('빈 구글 계정은 이메일·비밀번호 두 가지 오류', validateGoogleAccount(emptyStep1).map((e) => e.field), ['googleEmail', 'googlePassword']);
+check('Gmail 이 아니면 오류', validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@naver.com', googlePassword: 'longenough' }).map((e) => e.field), ['googleEmail']);
+check('비밀번호 8자 미만이면 오류', validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@gmail.com', googlePassword: 'short' }).map((e) => e.field), ['googlePassword']);
+check('정상 입력이면 오류 없음', validateGoogleAccount({ ...emptyStep1, googleEmail: 'me@gmail.com', googlePassword: 'longenough' }), []);
 
 // 구글 계정은 Step 4 에서 받으므로 Step 1 검증에는 더 이상 포함되지 않는다
 const filledStep1 = {
@@ -306,7 +308,7 @@ check(
 
 const missingAccountOrder: OrderFormData = {
   ...serverOrder,
-  step1: { ...serverOrder.step1, googleEmail: '' },
+  step1: { ...serverOrder.step1, googleEmail: '', googlePassword: '' },
 };
 const missingAccountText = generateCopyText(
   missingAccountOrder,
@@ -318,7 +320,7 @@ check('빈 계정이 " / " 로만 남지 않는다', missingAccountText.includes
 
 const filledAccountOrder: OrderFormData = {
   ...serverOrder,
-  step1: { ...serverOrder.step1, googleEmail: 'me@gmail.com' },
+  step1: { ...serverOrder.step1, googleEmail: 'me@gmail.com', googlePassword: 'longenough' },
 };
 const filledAccountText = generateCopyText(
   filledAccountOrder,
@@ -326,7 +328,8 @@ const filledAccountText = generateCopyText(
   null
 );
 check('정상 입력이면 표시가 붙지 않는다', filledAccountText.includes('[!]'), false);
-check('복사문에는 이메일만, 비밀번호는 따로 전달 안내', [filledAccountText.includes('me@gmail.com (비밀번호는 접수 후 따로 전달)'), /비밀번호s*:/.test(filledAccountText)], [true, false]);
+check('비밀번호가 비면 복사 텍스트에 표시가 남는다', missingAccountText.includes(MISSING_GOOGLE_PASSWORD_MARK), true);
+check('정상 입력은 이메일 / 비밀번호로 들어간다', filledAccountText.includes('me@gmail.com / longenough'), true);
 
 // ===== TRPG 봇 (D100 / 2D6 3종세트) =====
 
