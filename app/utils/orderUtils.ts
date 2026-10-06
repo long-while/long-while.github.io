@@ -198,37 +198,43 @@ function parseMonthDayToDate(mmdd: string, reference: Date): Date | null {
 
 /**
  * 마감일이 운영 정책상 접수 불가 기간인지 검사한다.
- * - 2026년 10/15 ~ 10/28: 휴식기 (접수 불가)
+ * - 2026년 10/22 ~ 11/1: 휴식기 (접수 불가)
  * 연도를 함께 두어, 기간이 지나면 다음 해 같은 날짜는 막지 않는다 (4단계: 안내 문구에 연도가 없다는 리뷰).
  * 접수 가능하거나 파싱 불가하면 null.
  */
 type DeadlineBlackoutRange = {
   year: number;
-  month: number;
+  startMonth: number;
   startDay: number;
+  endMonth: number;
   endDay: number;
 };
 
 export const DEADLINE_BLACKOUT_RANGES: DeadlineBlackoutRange[] = [
-  { year: 2026, month: 10, startDay: 15, endDay: 28 },
+  { year: 2026, startMonth: 10, startDay: 22, endMonth: 11, endDay: 1 },
 ];
 
-function formatBlackoutRange({ year, month, startDay, endDay }: DeadlineBlackoutRange): string {
-  return `${year}년 ${month}/${startDay}~${month}/${endDay}`;
+function formatBlackoutRange({ year, startMonth, startDay, endMonth, endDay }: DeadlineBlackoutRange): string {
+  return `${year}년 ${startMonth}/${startDay}~${endMonth}/${endDay}`;
 }
 
-/** 안내 문구용 전체 접수 불가 기간 라벨 (예: '2026년 10/15~10/28') */
+function isWithinBlackout(date: Date, { year, startMonth, startDay, endMonth, endDay }: DeadlineBlackoutRange): boolean {
+  const start = new Date(year, startMonth - 1, startDay);
+  // 종료 월이 시작 월보다 앞이면 해를 넘긴 기간 (예: 12/28~1/3)
+  const endYear = endMonth < startMonth ? year + 1 : year;
+  const end = new Date(endYear, endMonth - 1, endDay);
+  return date >= start && date <= end;
+}
+
+/** 안내 문구용 전체 접수 불가 기간 라벨 (예: '2026년 10/22~11/1') */
 export const DEADLINE_BLACKOUT_LABEL = DEADLINE_BLACKOUT_RANGES.map(formatBlackoutRange).join(', ');
 
 export function getDeadlineBlackoutError(deadline: string, field: string, reference: Date = new Date()): ValidationError | null {
   // 다른 마감일 계산과 같은 규칙으로 연도를 정한다 (반년 넘게 지난 날짜는 다음 해)
   const date = parseMonthDayToDate(deadline, reference);
   if (!date) return null;
-  const [year, month, day] = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
 
-  const blocked = DEADLINE_BLACKOUT_RANGES.find(
-    (range) => year === range.year && month === range.month && day >= range.startDay && day <= range.endDay
-  );
+  const blocked = DEADLINE_BLACKOUT_RANGES.find((range) => isWithinBlackout(date, range));
   if (blocked) {
     return { field, message: `${formatBlackoutRange(blocked)}은 마감이 불가능한 기간입니다.` };
   }

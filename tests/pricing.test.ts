@@ -266,15 +266,16 @@ check('장기 소규모 복붙 텍스트 총액', longTermCopyText.includes('총
 
 // 4단계: 접수 불가 기간에 연도(2026)가 붙어, 실행하는 날짜와 상관없이 같은 결과가 나오게 기준일을 고정
 const BLACKOUT_REF = new Date(2026, 8, 1);
-check('10/20은 마감 불가', getDeadlineBlackoutError('10/20', 'desiredDeadline', BLACKOUT_REF)?.field, 'desiredDeadline');
-check('10/15은 마감 불가 (시작일)', getDeadlineBlackoutError('10/15', 'desiredDeadline', BLACKOUT_REF) !== null, true);
-check('10/28은 마감 불가 (종료일)', getDeadlineBlackoutError('10/28', 'desiredDeadline', BLACKOUT_REF) !== null, true);
-check('10/14는 마감 가능', getDeadlineBlackoutError('10/14', 'desiredDeadline', BLACKOUT_REF), null);
-check('10/29는 마감 가능', getDeadlineBlackoutError('10/29', 'desiredDeadline', BLACKOUT_REF), null);
+check('10/25는 마감 불가', getDeadlineBlackoutError('10/25', 'desiredDeadline', BLACKOUT_REF)?.field, 'desiredDeadline');
+check('10/22는 마감 불가 (시작일)', getDeadlineBlackoutError('10/22', 'desiredDeadline', BLACKOUT_REF) !== null, true);
+check('10/31은 마감 불가 (월말)', getDeadlineBlackoutError('10/31', 'desiredDeadline', BLACKOUT_REF) !== null, true);
+check('11/1은 마감 불가 (종료일)', getDeadlineBlackoutError('11/1', 'desiredDeadline', BLACKOUT_REF) !== null, true);
+check('10/21은 마감 가능', getDeadlineBlackoutError('10/21', 'desiredDeadline', BLACKOUT_REF), null);
+check('11/2는 마감 가능', getDeadlineBlackoutError('11/2', 'desiredDeadline', BLACKOUT_REF), null);
+check('10/15는 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('10/15', 'desiredDeadline', BLACKOUT_REF), null);
 check('8/22는 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('8/22', 'desiredDeadline', BLACKOUT_REF), null);
-check('10/3은 마감 가능 (예전 기간 해제)', getDeadlineBlackoutError('10/3', 'desiredDeadline', BLACKOUT_REF), null);
-check('다음 해 같은 날짜는 막지 않음', getDeadlineBlackoutError('10/20', 'desiredDeadline', new Date(2027, 8, 1)), null);
-check('안내 문구에 연도', getDeadlineBlackoutError('10/20', 'desiredDeadline', BLACKOUT_REF)?.message, '2026년 10/15~10/28은 마감이 불가능한 기간입니다.');
+check('다음 해 같은 날짜는 막지 않음', getDeadlineBlackoutError('10/25', 'desiredDeadline', new Date(2027, 8, 1)), null);
+check('안내 문구에 연도', getDeadlineBlackoutError('10/25', 'desiredDeadline', BLACKOUT_REF)?.message, '2026년 10/22~11/1은 마감이 불가능한 기간입니다.');
 
 // ===== 구글 계정 검증 (Step 1 → Step 4 이동) =====
 
