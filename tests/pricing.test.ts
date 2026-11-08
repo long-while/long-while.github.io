@@ -463,10 +463,10 @@ check('복붙 텍스트 highmem-4 기간 라벨', highmemText.includes('2개월 
 
 // ===== FAQ 분류 =====
 
-// 4단계: 답변 시간·용어 설명 추가(17), 문구 정리에서 이미지 3→1·렉 2→1 합침(14), 사용자 요청으로 용어 설명 삭제(13)
+// 4단계: 답변 시간·용어 설명 추가(17), 문구 정리에서 이미지 3→1·렉 2→1 합침(14), 사용자 요청으로 용어 설명 삭제(13), 테마 이미지 문항 분리(14), 사용자 요청으로 답변 시간 문항 삭제(13)
 check('FAQ 항목 수', FAQ_ITEMS.length, 13);
-// 사용자 요청으로 '마스토돈 가이드' 문항을 홈에도 (3 → 4)
-check('메인 대표 질문 수', FAQ_ITEMS.filter((item) => item.featured).length, 4);
+// 사용자 요청으로 '마스토돈 가이드' 문항을 홈에도 (3 → 4), 테마 이미지 문항 분리 (4 → 5)
+check('메인 대표 질문 수', FAQ_ITEMS.filter((item) => item.featured).length, 5);
 check(
   '분류별 질문 수',
   FAQ_CATEGORIES.map((category) => FAQ_ITEMS.filter((item) => item.category === category).length),
@@ -485,8 +485,8 @@ const faqAll = faqGroups.flatMap((group) => group.entries);
 check('분류별 순번은 1부터', faqGroups.map((group) => group.entries[0].number), [1, 1, 1]);
 check('빈 검색어는 전체', filterEntries(faqAll, '   ').length, 13);
 check('검색은 대소문자 무시 (masto.HOST)', filterEntries(faqAll, 'masto.HOST').map((e) => e.item.question), ['masto.host로 설치해주실 수 있나요?']);
-// 4단계 문구 정리로 '중국집' 비유가 빠져, 답변에만 있는 다른 낱말로 확인
-check('검색은 답변도 본다 (질문에 없는 낱말)', filterEntries(faqAll, '설치비만').map((e) => e.item.question), ['그럼 서버비는 커미션주님께 내면 되나요?']);
+// 답변 말투 수정으로 '설치비만'이 빠져, 답변에만 있는 '인테리어'로 확인
+check('검색은 답변도 본다 (질문에 없는 낱말)', filterEntries(faqAll, '인테리어').map((e) => e.item.question), ['그럼 서버비는 커미션주님께 내면 되나요?']);
 check('정규식 문자 검색어도 하이라이트가 깨지지 않음', splitByQuery('(3개월까진 서버비 무료)', '(3').map((p) => p.match), [true, false]);
 
 // ===== 조사 고르기 (R3) =====

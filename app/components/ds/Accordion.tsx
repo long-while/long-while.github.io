@@ -57,7 +57,7 @@ export function AccordionItem({ index, question, answer, defaultOpen = false, op
       <div id={panelId} role="region" aria-labelledby={buttonId} hidden={!isOpen} className="mt-7">
         <div className="flex gap-3 rounded-card bg-background-100 px-6 py-8 text-title4">
           {index !== undefined && <span className="shrink-0 text-brand">A{index}.</span>}
-          <div className="text-text-secondary">{answer}</div>
+          <div className="whitespace-pre-line text-text-secondary">{answer}</div>
         </div>
       </div>
     </div>
